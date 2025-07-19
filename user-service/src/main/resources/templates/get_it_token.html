@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google Sign-In Demo</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        function handleCredentialResponse(response) {
+          // response.credential là id_token bạn cần!
+          console.log("Google ID Token:", response.credential);
+
+          // Bạn có thể copy id_token này để test API backend
+          // Hoặc gửi thẳng sang backend ở đây
+        }
+        window.onload = function () {
+          google.accounts.id.initialize({
+            client_id: "326863745184-4dtikr87rt123imm3r44m1libo3dt4lc.apps.googleusercontent.com",
+            callback: handleCredentialResponse
+          });
+          google.accounts.id.renderButton(
+            document.getElementById("buttonDiv"),
+            { theme: "outline", size: "large" } // custom
+          );
+        }
+    </script>
+</head>
+<body>
+<div id="buttonDiv"></div>
+</body>
+</html>

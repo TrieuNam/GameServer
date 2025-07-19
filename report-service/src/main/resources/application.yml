@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: report-service
+
+
+  datasource:
+    url: jdbc:mysql://localhost:3309/report_game_h2
+    username: tpnam
+    password: 121831
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update    # update, create, create-drop, validate (dev/test nên để update hoặc create)
+    show-sql: true        # Log SQL ra console
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8092
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
