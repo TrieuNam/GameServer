@@ -1,0 +1,1071 @@
+{
+  "ship": [
+    {
+      "ship": "0",
+      "ship_color": "2",
+      "intercept_num": "1",
+      "time": "5",
+      "escort_reward": [
+        {
+          "item_id": "40066",
+          "num": "4"
+        },
+        {
+          "item_id": "40000",
+          "num": "200"
+        }
+      ],
+      "intercept_reward": [
+        {
+          "item_id": "40066",
+          "num": "1"
+        },
+        {
+          "item_id": "40000",
+          "num": "40"
+        }
+      ],
+      "intercept_lose": [
+        {
+          "item_id": "40000",
+          "num": "50"
+        }
+      ],
+      "help_reward": "1",
+      "escort_integral": "30",
+      "intercept_integral": "9",
+      "refresh_item": "40001",
+      "refresh_num": "10",
+      "up_rate": "10000"
+    },
+    {
+      "ship": "1",
+      "ship_color": "3",
+      "intercept_num": "1",
+      "time": "10",
+      "escort_reward": [
+        {
+          "item_id": "40066",
+          "num": "8"
+        },
+        {
+          "item_id": "40000",
+          "num": "400"
+        }
+      ],
+      "intercept_reward": [
+        {
+          "item_id": "40066",
+          "num": "2"
+        },
+        {
+          "item_id": "40000",
+          "num": "80"
+        }
+      ],
+      "intercept_lose": [
+        {
+          "item_id": "40000",
+          "num": "60"
+        }
+      ],
+      "help_reward": "1",
+      "escort_integral": "50",
+      "intercept_integral": "15",
+      "refresh_item": "40001",
+      "refresh_num": "20",
+      "up_rate": "10000"
+    },
+    {
+      "ship": "2",
+      "ship_color": "4",
+      "intercept_num": "1",
+      "time": "15",
+      "escort_reward": [
+        {
+          "item_id": "40066",
+          "num": "16"
+        },
+        {
+          "item_id": "40000",
+          "num": "600"
+        }
+      ],
+      "intercept_reward": [
+        {
+          "item_id": "40066",
+          "num": "4"
+        },
+        {
+          "item_id": "40000",
+          "num": "120"
+        }
+      ],
+      "intercept_lose": [
+        {
+          "item_id": "40000",
+          "num": "80"
+        }
+      ],
+      "help_reward": "1",
+      "escort_integral": "80",
+      "intercept_integral": "24",
+      "refresh_item": "40001",
+      "refresh_num": "30",
+      "up_rate": "10000"
+    },
+    {
+      "ship": "3",
+      "ship_color": "5",
+      "intercept_num": "1",
+      "time": "20",
+      "escort_reward": [
+        {
+          "item_id": "40066",
+          "num": "30"
+        },
+        {
+          "item_id": "40000",
+          "num": "800"
+        }
+      ],
+      "intercept_reward": [
+        {
+          "item_id": "40066",
+          "num": "6"
+        },
+        {
+          "item_id": "40000",
+          "num": "160"
+        }
+      ],
+      "intercept_lose": [
+        {
+          "item_id": "40000",
+          "num": "100"
+        }
+      ],
+      "help_reward": "1",
+      "escort_integral": "100",
+      "intercept_integral": "30",
+      "refresh_item": "40001",
+      "refresh_num": "40",
+      "up_rate": "10000"
+    },
+    {
+      "ship": "4",
+      "ship_color": "6",
+      "intercept_num": "1",
+      "time": "20",
+      "escort_reward": [
+        {
+          "item_id": "40066",
+          "num": "50"
+        },
+        {
+          "item_id": "40000",
+          "num": "1000"
+        }
+      ],
+      "intercept_reward": [
+        {
+          "item_id": "40066",
+          "num": "10"
+        },
+        {
+          "item_id": "40000",
+          "num": "200"
+        }
+      ],
+      "intercept_lose": [
+        {
+          "item_id": "40000",
+          "num": "120"
+        }
+      ],
+      "help_reward": "2",
+      "escort_integral": "120",
+      "intercept_integral": "36",
+      "refresh_item": "40001",
+      "refresh_num": "50",
+      "up_rate": "10000"
+    },
+    {
+      "ship": "5",
+      "ship_color": "7",
+      "intercept_num": "1",
+      "time": "20",
+      "escort_reward": [
+        {
+          "item_id": "40066",
+          "num": "80"
+        },
+        {
+          "item_id": "40000",
+          "num": "1400"
+        }
+      ],
+      "intercept_reward": [
+        {
+          "item_id": "40066",
+          "num": "16"
+        },
+        {
+          "item_id": "40000",
+          "num": "280"
+        }
+      ],
+      "intercept_lose": [
+        {
+          "item_id": "40000",
+          "num": "140"
+        }
+      ],
+      "help_reward": "2",
+      "escort_integral": "150",
+      "intercept_integral": "45",
+      "refresh_item": "0",
+      "refresh_num": "0",
+      "up_rate": "0"
+    }
+  ],
+  "help": [
+    {
+      "help_reward": "1",
+      "help": [
+        {
+          "item_id": "40000",
+          "num": "100"
+        }
+      ],
+      "rate": "2000"
+    },
+    {
+      "help_reward": "1",
+      "help": [
+        {
+          "item_id": "40001",
+          "num": "5"
+        }
+      ],
+      "rate": "2000"
+    },
+    {
+      "help_reward": "1",
+      "help": [
+        {
+          "item_id": "40066",
+          "num": "1"
+        }
+      ],
+      "rate": "5000"
+    },
+    {
+      "help_reward": "1",
+      "help": [
+        {
+          "item_id": "40000",
+          "num": "100"
+        },
+        {
+          "item_id": "40066",
+          "num": "1"
+        }
+      ],
+      "rate": "1000"
+    },
+    {
+      "help_reward": "2",
+      "help": [
+        {
+          "item_id": "40000",
+          "num": "150"
+        }
+      ],
+      "rate": "2000"
+    },
+    {
+      "help_reward": "2",
+      "help": [
+        {
+          "item_id": "40001",
+          "num": "8"
+        }
+      ],
+      "rate": "2000"
+    },
+    {
+      "help_reward": "2",
+      "help": [
+        {
+          "item_id": "40066",
+          "num": "1"
+        }
+      ],
+      "rate": "5000"
+    },
+    {
+      "help_reward": "2",
+      "help": [
+        {
+          "item_id": "40000",
+          "num": "150"
+        },
+        {
+          "item_id": "40066",
+          "num": "1"
+        }
+      ],
+      "rate": "1000"
+    }
+  ],
+  "rank": [
+    {
+      "rank_type": "0",
+      "seq": "1",
+      "paihang_1": "1",
+      "paihang_2": "1",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "5"
+        },
+        {
+          "item_id": "40004",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "rank_type": "0",
+      "seq": "2",
+      "paihang_1": "2",
+      "paihang_2": "2",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "5"
+        },
+        {
+          "item_id": "40004",
+          "num": "180"
+        }
+      ]
+    },
+    {
+      "rank_type": "0",
+      "seq": "3",
+      "paihang_1": "3",
+      "paihang_2": "3",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "4"
+        },
+        {
+          "item_id": "40004",
+          "num": "160"
+        }
+      ]
+    },
+    {
+      "rank_type": "0",
+      "seq": "4",
+      "paihang_1": "4",
+      "paihang_2": "4",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "4"
+        },
+        {
+          "item_id": "40004",
+          "num": "140"
+        }
+      ]
+    },
+    {
+      "rank_type": "0",
+      "seq": "5",
+      "paihang_1": "11",
+      "paihang_2": "20",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "3"
+        },
+        {
+          "item_id": "40004",
+          "num": "120"
+        }
+      ]
+    },
+    {
+      "rank_type": "0",
+      "seq": "6",
+      "paihang_1": "21",
+      "paihang_2": "50",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "3"
+        },
+        {
+          "item_id": "40004",
+          "num": "100"
+        }
+      ]
+    },
+    {
+      "rank_type": "0",
+      "seq": "7",
+      "paihang_1": "51",
+      "paihang_2": "100",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "2"
+        },
+        {
+          "item_id": "40004",
+          "num": "80"
+        }
+      ]
+    },
+    {
+      "rank_type": "0",
+      "seq": "8",
+      "paihang_1": "101",
+      "paihang_2": "200",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "2"
+        },
+        {
+          "item_id": "40004",
+          "num": "60"
+        }
+      ]
+    },
+    {
+      "rank_type": "0",
+      "seq": "9",
+      "paihang_1": "201",
+      "paihang_2": "0",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "1"
+        },
+        {
+          "item_id": "40004",
+          "num": "40"
+        }
+      ]
+    },
+    {
+      "rank_type": "1",
+      "seq": "1",
+      "paihang_1": "1",
+      "paihang_2": "1",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "8"
+        },
+        {
+          "item_id": "40004",
+          "num": "250"
+        }
+      ]
+    },
+    {
+      "rank_type": "1",
+      "seq": "2",
+      "paihang_1": "2",
+      "paihang_2": "2",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "7"
+        },
+        {
+          "item_id": "40004",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "rank_type": "1",
+      "seq": "3",
+      "paihang_1": "3",
+      "paihang_2": "3",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "6"
+        },
+        {
+          "item_id": "40004",
+          "num": "180"
+        }
+      ]
+    },
+    {
+      "rank_type": "1",
+      "seq": "4",
+      "paihang_1": "4",
+      "paihang_2": "4",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "5"
+        },
+        {
+          "item_id": "40004",
+          "num": "160"
+        }
+      ]
+    },
+    {
+      "rank_type": "1",
+      "seq": "5",
+      "paihang_1": "11",
+      "paihang_2": "20",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "4"
+        },
+        {
+          "item_id": "40004",
+          "num": "140"
+        }
+      ]
+    },
+    {
+      "rank_type": "1",
+      "seq": "6",
+      "paihang_1": "21",
+      "paihang_2": "50",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "3"
+        },
+        {
+          "item_id": "40004",
+          "num": "120"
+        }
+      ]
+    },
+    {
+      "rank_type": "1",
+      "seq": "7",
+      "paihang_1": "51",
+      "paihang_2": "100",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "2"
+        },
+        {
+          "item_id": "40004",
+          "num": "100"
+        }
+      ]
+    },
+    {
+      "rank_type": "1",
+      "seq": "8",
+      "paihang_1": "101",
+      "paihang_2": "200",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "2"
+        },
+        {
+          "item_id": "40004",
+          "num": "80"
+        }
+      ]
+    },
+    {
+      "rank_type": "1",
+      "seq": "9",
+      "paihang_1": "201",
+      "paihang_2": "0",
+      "paihang_reward": [
+        {
+          "item_id": "40067",
+          "num": "1"
+        },
+        {
+          "item_id": "40004",
+          "num": "60"
+        }
+      ]
+    }
+  ],
+  "other": [
+    {
+      "escort_num": "8",
+      "escort_record": "30",
+      "escort_rank": "50",
+      "intercept_rank": "50",
+      "refresh_time": "1",
+      "help_time": "50",
+      "intercept_time": "12",
+      "escort_rank_time": "62200",
+      "intercept_rank_time": "62200",
+      "show_ship": "50",
+      "show_max": "5",
+      "monster_id": "7001",
+      "monster_name": "\u52c7\u6562\u7684\u9a91\u58eb",
+      "monster_level": "10",
+      "monster_score": "15896",
+      "monster_icon": "120006",
+      "departure_interval": "10",
+      "departure_interval_max": "30",
+      "robot_fire": "50",
+      "open_tiem": "1900",
+      "continue_time_min": "120",
+      "max_round": "5",
+      "monster_group_id": "7024"
+    }
+  ],
+  "monster_name": [
+    {
+      "monster_name": "\u52c7\u6562\u7684\u52c7\u58eb",
+      "monster_score": "10293"
+    },
+    {
+      "monster_name": "\u5947\u602a\u7684\u52c7\u58eb",
+      "monster_score": "10859"
+    },
+    {
+      "monster_name": "\u66b4\u8e81\u7684\u52c7\u58eb",
+      "monster_score": "10470"
+    },
+    {
+      "monster_name": "\u6b22\u4e50\u7684\u52c7\u58eb",
+      "monster_score": "14421"
+    },
+    {
+      "monster_name": "\u641e\u7b11\u7684\u52c7\u58eb",
+      "monster_score": "10461"
+    },
+    {
+      "monster_name": "\u5fe0\u8bda\u7684\u52c7\u58eb",
+      "monster_score": "12653"
+    },
+    {
+      "monster_name": "\u601c\u60af\u7684\u52c7\u58eb",
+      "monster_score": "10933"
+    },
+    {
+      "monster_name": "\u52c7\u6562\u7684\u9a91\u58eb",
+      "monster_score": "10067"
+    },
+    {
+      "monster_name": "\u5947\u602a\u7684\u9a91\u58eb",
+      "monster_score": "11599"
+    },
+    {
+      "monster_name": "\u66b4\u8e81\u7684\u9a91\u58eb",
+      "monster_score": "12593"
+    },
+    {
+      "monster_name": "\u6b22\u4e50\u7684\u9a91\u58eb",
+      "monster_score": "10452"
+    },
+    {
+      "monster_name": "\u641e\u7b11\u7684\u9a91\u58eb",
+      "monster_score": "14343"
+    },
+    {
+      "monster_name": "\u5fe0\u8bda\u7684\u9a91\u58eb",
+      "monster_score": "10817"
+    },
+    {
+      "monster_name": "\u601c\u60af\u7684\u9a91\u58eb",
+      "monster_score": "12169"
+    },
+    {
+      "monster_name": "\u52c7\u6562\u7684\u6218\u58eb",
+      "monster_score": "13136"
+    },
+    {
+      "monster_name": "\u5947\u602a\u7684\u6218\u58eb",
+      "monster_score": "10669"
+    },
+    {
+      "monster_name": "\u66b4\u8e81\u7684\u6218\u58eb",
+      "monster_score": "13263"
+    },
+    {
+      "monster_name": "\u6b22\u4e50\u7684\u6218\u58eb",
+      "monster_score": "13066"
+    },
+    {
+      "monster_name": "\u641e\u7b11\u7684\u6218\u58eb",
+      "monster_score": "13776"
+    },
+    {
+      "monster_name": "\u5fe0\u8bda\u7684\u6218\u58eb",
+      "monster_score": "14595"
+    },
+    {
+      "monster_name": "\u601c\u60af\u7684\u6218\u58eb",
+      "monster_score": "11606"
+    },
+    {
+      "monster_name": "\u52c7\u6562\u7684\u5251\u58eb",
+      "monster_score": "10803"
+    },
+    {
+      "monster_name": "\u5947\u602a\u7684\u5251\u58eb",
+      "monster_score": "12334"
+    },
+    {
+      "monster_name": "\u66b4\u8e81\u7684\u5251\u58eb",
+      "monster_score": "10272"
+    },
+    {
+      "monster_name": "\u6b22\u4e50\u7684\u5251\u58eb",
+      "monster_score": "11334"
+    },
+    {
+      "monster_name": "\u641e\u7b11\u7684\u5251\u58eb",
+      "monster_score": "10245"
+    },
+    {
+      "monster_name": "\u5fe0\u8bda\u7684\u5251\u58eb",
+      "monster_score": "12195"
+    },
+    {
+      "monster_name": "\u601c\u60af\u7684\u5251\u58eb",
+      "monster_score": "13724"
+    },
+    {
+      "monster_name": "\u52c7\u6562\u7684\u5c0f\u4e11",
+      "monster_score": "14812"
+    },
+    {
+      "monster_name": "\u5947\u602a\u7684\u5c0f\u4e11",
+      "monster_score": "13825"
+    },
+    {
+      "monster_name": "\u66b4\u8e81\u7684\u5c0f\u4e11",
+      "monster_score": "12084"
+    },
+    {
+      "monster_name": "\u6b22\u4e50\u7684\u5c0f\u4e11",
+      "monster_score": "14216"
+    },
+    {
+      "monster_name": "\u641e\u7b11\u7684\u5c0f\u4e11",
+      "monster_score": "11059"
+    },
+    {
+      "monster_name": "\u5fe0\u8bda\u7684\u5c0f\u4e11",
+      "monster_score": "13893"
+    },
+    {
+      "monster_name": "\u601c\u60af\u7684\u5c0f\u4e11",
+      "monster_score": "11489"
+    },
+    {
+      "monster_name": "\u52c7\u6562\u7684\u523a\u5ba2",
+      "monster_score": "11621"
+    },
+    {
+      "monster_name": "\u5947\u602a\u7684\u523a\u5ba2",
+      "monster_score": "11390"
+    },
+    {
+      "monster_name": "\u66b4\u8e81\u7684\u523a\u5ba2",
+      "monster_score": "11486"
+    },
+    {
+      "monster_name": "\u6b22\u4e50\u7684\u523a\u5ba2",
+      "monster_score": "13081"
+    },
+    {
+      "monster_name": "\u641e\u7b11\u7684\u523a\u5ba2",
+      "monster_score": "12034"
+    },
+    {
+      "monster_name": "\u5fe0\u8bda\u7684\u523a\u5ba2",
+      "monster_score": "10384"
+    },
+    {
+      "monster_name": "\u601c\u60af\u7684\u523a\u5ba2",
+      "monster_score": "12563"
+    }
+  ],
+  "harm_rank": [
+    {
+      "harm_rank_min": "1",
+      "harm_rank_max": "20000",
+      "win": [
+        {
+          "item_id": "40000",
+          "num": "1000"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "20001",
+      "harm_rank_max": "40000",
+      "win": [
+        {
+          "item_id": "40004",
+          "num": "20"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "40001",
+      "harm_rank_max": "60000",
+      "win": [
+        {
+          "item_id": "68000",
+          "num": "2"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "60001",
+      "harm_rank_max": "90000",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "20"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "90001",
+      "harm_rank_max": "110000",
+      "win": [
+        {
+          "item_id": "40080",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "110001",
+      "harm_rank_max": "140000",
+      "win": [
+        {
+          "item_id": "68000",
+          "num": "3"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "140001",
+      "harm_rank_max": "160000",
+      "win": [
+        {
+          "item_id": "68000",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "160001",
+      "harm_rank_max": "190000",
+      "win": [
+        {
+          "item_id": "40066",
+          "num": "20"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "190001",
+      "harm_rank_max": "225000",
+      "win": [
+        {
+          "item_id": "68000",
+          "num": "3"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "225001",
+      "harm_rank_max": "260000",
+      "win": [
+        {
+          "item_id": "40000",
+          "num": "1500"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "260001",
+      "harm_rank_max": "300000",
+      "win": [
+        {
+          "item_id": "40004",
+          "num": "30"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "300001",
+      "harm_rank_max": "350000",
+      "win": [
+        {
+          "item_id": "68000",
+          "num": "8"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "350001",
+      "harm_rank_max": "375000",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "30"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "375001",
+      "harm_rank_max": "420000",
+      "win": [
+        {
+          "item_id": "40080",
+          "num": "150"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "420001",
+      "harm_rank_max": "450000",
+      "win": [
+        {
+          "item_id": "40066",
+          "num": "15"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "450001",
+      "harm_rank_max": "490000",
+      "win": [
+        {
+          "item_id": "68000",
+          "num": "2"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "490001",
+      "harm_rank_max": "520000",
+      "win": [
+        {
+          "item_id": "40080",
+          "num": "250"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "520001",
+      "harm_rank_max": "562000",
+      "win": [
+        {
+          "item_id": "68000",
+          "num": "7"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "562001",
+      "harm_rank_max": "597000",
+      "win": [
+        {
+          "item_id": "40066",
+          "num": "30"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "597001",
+      "harm_rank_max": "641000",
+      "win": [
+        {
+          "item_id": "40066",
+          "num": "50"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "641001",
+      "harm_rank_max": "677000",
+      "win": [
+        {
+          "item_id": "40080",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "677001",
+      "harm_rank_max": "724000",
+      "win": [
+        {
+          "item_id": "68000",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "724001",
+      "harm_rank_max": "763000",
+      "win": [
+        {
+          "item_id": "61002",
+          "num": "4"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "763001",
+      "harm_rank_max": "813000",
+      "win": [
+        {
+          "item_id": "40201",
+          "num": "2"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "813001",
+      "harm_rank_max": "854000",
+      "win": [
+        {
+          "item_id": "61008",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "harm_rank_min": "854001",
+      "harm_rank_max": "999999",
+      "win": [
+        {
+          "item_id": "61092",
+          "num": "1"
+        }
+      ]
+    }
+  ]
+}

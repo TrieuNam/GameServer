@@ -1,0 +1,32 @@
+option java_package = "org.SouthMillion.proto.Msgrune";
+
+message PB_RuneData{
+	optional int32	index = 1;					//!<格子index
+	optional int32	id = 2;						//!<铭文id
+	optional int32	level = 3;					//!<等级
+}
+
+message PB_SCRuneInfo {//!< 1670 铭文信息
+	optional int32	tower_level = 1;					//!<初始为0  通关1层后变成1
+	optional int32	turntable_num = 2;					//!<转盘能转几次
+	optional int32	turntable_flag = 3;					//!<转盘奖励领取记录(二进制)
+	optional int32	turntable_round = 4;				//!<初始为0 转完第一轮的奖励后变成1 
+	optional int32	daily_reward = 5;					//!<0表示每日奖励未领取
+	repeated int32	rune_wear_list = 6;					//!<穿戴的铭文对应背包的格子index
+	repeated PB_RuneData	rune_knapsack_list = 7;		//!<铭文背包
+	optional int32	pass_reward_index = 8;				//!<通关奖励的index
+}
+
+message PB_CSRuneReq {//!< 1671 铭文操作
+	optional int32	oper_type = 1;						//!<操作类型
+	optional int32	p1 = 2;								//!<参数
+	optional int32	p2 = 3;								//!<参数
+	repeated int32	p1_list = 4;						//!<分解铭文的背包index(数组)
+	repeated int32	p2_list = 5;						//!<分解水晶的物品id(数组)
+}
+
+message PB_SCRuneRet {//!< 1672 铭文回调
+	optional int32	ret_type = 1;						//!<操作类型
+	repeated int32	param = 2;							//!<参数列表(注意这是个数组)
+}
+

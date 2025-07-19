@@ -1,0 +1,31 @@
+{
+  "skill_eff": [
+    {
+      "seq": "1",
+      "effect_type": "1",
+      "param1": "100",
+      "param2": "0",
+      "param3": "0",
+      "param4": "0"
+    }
+  ],
+  "skill_cfg": [
+    {
+      "skill_id": "1",
+      "skill_level": "1",
+      "target_side_type": "1",
+      "target_num": "1",
+      "is_shanbi": "1",
+      "is_baoji": "1",
+      "is_lianji": "1",
+      "is_xixue": "1",
+      "is_jiyun": "1",
+      "is_fanji": "1",
+      "effect_num": "1",
+      "effect_1": "1",
+      "effect_2": "",
+      "effect_3": "",
+      "effect_4": ""
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+﻿{
+	"plat_name":"dev",
+	"rand_act_zhuanfu_type":"1",
+	"is_check_server_id":"0",
+	"allow_server_id_list":{
+		"0":{
+			"server_id":"1"
+		},
+		"1":{
+			"server_id":"2003"
+		}
+	}
+}
+
+

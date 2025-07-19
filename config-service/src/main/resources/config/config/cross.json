@@ -1,0 +1,30 @@
+{
+	"##CrossServerAddr":"小跨服",
+	"CrossServerAddr": {
+		"Ip": "127.0.0.1",
+		"Port": "10777",
+		"backlog":"64",
+		"##open_cross":"是否开启小跨服",
+		"open_cross": "1"
+	},
+	"##MiddleCrossServerAddr":"中跨服",
+	"MiddleCrossServerAddr": {
+		"Ip": "127.0.0.1",
+		"Port": "10778",
+		"backlog":"64",
+		"##open_cross":"是否开启中跨服",
+		"open_cross": "1"
+	},
+	"##BigCrossServerAddr":"大跨服",
+	"BigCrossServerAddr": {
+		"Ip": "127.0.0.1",
+		"Port": "10779",
+		"backlog":"64",
+		"##open_cross":"是否开启大跨服",
+		"open_cross": "1"
+	},
+	"##cross_server_type":"0:非跨服,1:小跨服,2:中跨服,3:大跨服",
+	"cross_server_type":"0",
+	"##cross_server_idx":"跨服战区ID,用于区分所属跨服的战区",
+	"cross_server_idx": "0"
+}

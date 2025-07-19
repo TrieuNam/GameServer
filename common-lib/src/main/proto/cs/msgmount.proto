@@ -1,0 +1,66 @@
+option java_package = "org.SouthMillion.proto.Msgmount";
+
+//!<MsgId:2140
+message PB_CSMountReq {//!<2140 操作
+	optional int32	req_type = 1;
+	optional int32	param = 2;
+	optional int32	param2 = 3;
+	optional int32	param3 = 4;
+}
+
+message PB_MountData{
+	optional int32	level = 1;				//!< 等级
+	optional int32	grade = 2;				//!< 阶级
+	optional int64	last_explore_time = 3;	//!< 上次收菜的时间
+
+}
+
+//!<MsgId:2141
+message PB_SCMountInfo {//!<2141 坐骑信息
+	optional int32 appearance_id = 1;
+	repeated PB_MountData mount_list = 2;	//!< 坐骑列表
+	repeated int32 pifu_list = 3;	//!< 皮肤列表  (等级)
+	optional uint32 free_time = 4;
+	optional int32 refresh_1_num = 5;
+	optional int32 refresh_2_num = 6;
+	optional int32 buy_flag = 7;
+	repeated int32 buy_seq_list = 8;
+}
+
+//!<MsgId:2142
+message PB_SCMountOpRet {//!<2142 操作回调
+	optional int32	ret_type = 1;
+	optional int32	param1 = 2;
+	optional int32	param2 = 3;
+}
+
+message PB_HarnessData{
+	optional int32	index = 1;					//!< 背包下标
+	optional int32	item_id = 2;				//!< 马具ID
+	optional int32	wearing_mark = 3;			//!< 1：穿戴
+	optional int32	attr_num = 4;				//!< 附加词条数量
+	repeated int32	attr_type = 5;				//!< 附加词条属性类型 长度：8
+	repeated int32	attr_vaule = 6;				//!< 附加词条属性值 	长度：8
+	optional int32	lock_flag = 7;				//!< 锁
+}
+
+//!<MsgId:2143
+message PB_SCMountHarnessListInfo {				//!<2143 马具列表信息
+	repeated PB_HarnessData harness_list = 1;	//!< 马具列表
+}
+
+//!<MsgId:2144
+message PB_SCMountHarnessOneInfo {				//!<2144 马具单个信息
+	optional int32 reason = 1;					//!< 下发理由
+	optional PB_HarnessData harness_data = 2;	//!< 马具单个数据
+}
+
+//!<MsgId:2145
+message PB_SCMountHarnessInfo {					//!<2145 坐骑马具信息
+	optional uint32 free_time = 1;				//!< 金币刷新下次免费时间戳
+	optional int32 refresh_1_num = 2;			//!< 金币刷新次数
+	optional int32 refresh_2_num = 3;			//!< 钻石刷新次数
+	optional int32 buy_flag = 4;				//!< 购买标识 位运算[0 3]
+	repeated int32 buy_seq_list = 5;			//!< 购买列表（seq）四个
+	repeated int32 wear_idx = 6;				//!< 穿戴的背包下标 四个
+}

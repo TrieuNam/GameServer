@@ -1,0 +1,82 @@
+{
+  "param_list": {
+    "update_package": true,
+    "update_url": "http://localhost:8080/api/config/local.json",
+    "report_url": "http://localhost:8080/report-service/api/report",
+    "report_url2": "http://localhost:8080/report-service/api/report",
+    "gm_report_url": "http://localhost:8080/api/client/gm/report",
+    "upload_url": "http://localhost:8080/api/upload",
+    "gift_fetch_url": "http://localhost:8080/api/c2s/use_card",
+    "verify_url": "http://localhost:8080/user-service/auth/login",
+    "verify_url2": "http://localhost:8080/user-service/auth/login/social",
+    "config_url": "http://localhost:8080/api/config",
+    "translate_url": "http://localhost:8080/api/translate",
+    "user_auth_url": "http://localhost:8080/api/api/c2s/user_auth",
+    "is_auth_url": "http://localhost:8080/api/c2s/is_auth",
+    "month_money_url": "http://localhost:8080/api/c2s/month_money",
+    "onlinetime_url": "http://localhost:8080/api/c2s/today_online_time",
+    "role_report_url": "http://localhost:8080/api/c2s/user_info",
+    "event_url": "http://localhost:8080/api/qzw/report_event",
+    "gm_buy_url": "http://localhost:8080/api/c2s/v_pay_h02",
+    "adv_gift_url": "http://localhost:8080/api/c2s/adv_gift",
+    "notice_query_url": "http://localhost:8080/api/c2s/fetch_info",
+    "error_report_url": "http://localhost:8080/api/error_report",
+    "update_notice_query_url": "http://localhost:8080/api/c2s/fetch_notice",
+    "user_protocol_url": "http://localhost:8083/api/c2s/fetch_privacy_notice",
+    "sensitive_words_url": "http://localhost:8080/api/sensitive_words_list",
+    "wx_getShareInfo_url": "http://localhost:8080/api/dev/get_share_info",
+    "wx_shareplay_url": "http://localhost:8080/api/dev/share_user_play",
+    "wx_getShareGift_url": "http://localhost:8080/api/dev/get_share_gift",
+    "switch_list": {
+      "audit_version": false,
+      "audit_green": false,
+      "log_print": true,
+      "error_screen": true,
+      "testin_report": true,
+      "countly_report": true,
+      "open_chongzhi": true,
+      "open_gm": true,
+      "update_assets": true,
+      "active_code": false,
+      "qqvip_gift": true,
+      "game_moniter": true,
+      "cg_config": 1
+    }
+  },
+  "server_info": {
+    "spid": "dev",
+    "recommand_list": [100, 1],
+    "last_server": 101,
+    "server_time": 1674908312,
+    "server_list": [ {
+      "id": 11,
+      "fsid": 11,
+      "name": "test",
+      "ip": "localhost",
+      "port": 8080,
+      "flag": 1,
+      "avatar": "r2",
+      "role_name": "yyy",
+      "role_level": 20,
+      "open_time": 1607585233,
+      "ahead_time": 300
+    }]
+  },
+  "version_info": {
+    "assets_info": {
+      "res": "232e1",
+      "resources": "f669f",
+      "main": ""
+    },
+    "package_info": {
+      "version": "0.0.1",
+      "name": "njcq",
+      "desc": "123456",
+      "url": "http:\/\/www.youyannet.com",
+      "size": 76338608,
+      "md5": "39627a68d9e152b0b5cac02ee471bb06",
+      "msg": "\u7248\u672c\u8fc7\u4f4e\uff0c\u8bf7\u4e0b\u8f7d\u5b89\u88c5\u6700\u65b0\u5b89\u88c5\u5305"
+    },
+    "update_data": ""
+  }
+}

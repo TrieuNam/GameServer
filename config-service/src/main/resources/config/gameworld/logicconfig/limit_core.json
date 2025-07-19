@@ -1,0 +1,543 @@
+{
+  "core": [
+    {
+      "limit_tpye": "1",
+      "limit_level": "0",
+      "parm": "10",
+      "need_item_id": "40500",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "1",
+      "limit_level": "1",
+      "parm": "15",
+      "need_item_id": "40500",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "1",
+      "limit_level": "2",
+      "parm": "18",
+      "need_item_id": "40500",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "1",
+      "limit_level": "3",
+      "parm": "22",
+      "need_item_id": "40500",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "1",
+      "limit_level": "4",
+      "parm": "25",
+      "need_item_id": "40500",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "1",
+      "limit_level": "5",
+      "parm": "30",
+      "need_item_id": "40500",
+      "need_core_num": "0"
+    },
+    {
+      "limit_tpye": "2",
+      "limit_level": "0",
+      "parm": "10",
+      "need_item_id": "40501",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "2",
+      "limit_level": "1",
+      "parm": "20",
+      "need_item_id": "40501",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "2",
+      "limit_level": "2",
+      "parm": "30",
+      "need_item_id": "40501",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "2",
+      "limit_level": "3",
+      "parm": "40",
+      "need_item_id": "40501",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "2",
+      "limit_level": "4",
+      "parm": "50",
+      "need_item_id": "40501",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "2",
+      "limit_level": "5",
+      "parm": "60",
+      "need_item_id": "40501",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "2",
+      "limit_level": "6",
+      "parm": "70",
+      "need_item_id": "40501",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "2",
+      "limit_level": "7",
+      "parm": "80",
+      "need_item_id": "40501",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "2",
+      "limit_level": "8",
+      "parm": "90",
+      "need_item_id": "40501",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "2",
+      "limit_level": "9",
+      "parm": "100",
+      "need_item_id": "40501",
+      "need_core_num": "0"
+    },
+    {
+      "limit_tpye": "3",
+      "limit_level": "0",
+      "parm": "2",
+      "need_item_id": "40502",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "3",
+      "limit_level": "1",
+      "parm": "3",
+      "need_item_id": "40502",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "3",
+      "limit_level": "2",
+      "parm": "4",
+      "need_item_id": "40502",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "3",
+      "limit_level": "3",
+      "parm": "5",
+      "need_item_id": "40502",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "3",
+      "limit_level": "4",
+      "parm": "6",
+      "need_item_id": "40502",
+      "need_core_num": "0"
+    },
+    {
+      "limit_tpye": "4",
+      "limit_level": "0",
+      "parm": "2",
+      "need_item_id": "40503",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "4",
+      "limit_level": "1",
+      "parm": "3",
+      "need_item_id": "40503",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "4",
+      "limit_level": "2",
+      "parm": "4",
+      "need_item_id": "40503",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "4",
+      "limit_level": "3",
+      "parm": "5",
+      "need_item_id": "40503",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "4",
+      "limit_level": "4",
+      "parm": "6",
+      "need_item_id": "40503",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "4",
+      "limit_level": "5",
+      "parm": "7",
+      "need_item_id": "40503",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "4",
+      "limit_level": "6",
+      "parm": "8",
+      "need_item_id": "40503",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "4",
+      "limit_level": "7",
+      "parm": "9",
+      "need_item_id": "40503",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "4",
+      "limit_level": "8",
+      "parm": "10",
+      "need_item_id": "40503",
+      "need_core_num": "0"
+    },
+    {
+      "limit_tpye": "5",
+      "limit_level": "0",
+      "parm": "10",
+      "need_item_id": "40504",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "5",
+      "limit_level": "1",
+      "parm": "20",
+      "need_item_id": "40504",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "5",
+      "limit_level": "2",
+      "parm": "30",
+      "need_item_id": "40504",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "5",
+      "limit_level": "3",
+      "parm": "40",
+      "need_item_id": "40504",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "5",
+      "limit_level": "4",
+      "parm": "50",
+      "need_item_id": "40504",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "5",
+      "limit_level": "5",
+      "parm": "60",
+      "need_item_id": "40504",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "5",
+      "limit_level": "6",
+      "parm": "70",
+      "need_item_id": "40504",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "5",
+      "limit_level": "7",
+      "parm": "80",
+      "need_item_id": "40504",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "5",
+      "limit_level": "8",
+      "parm": "90",
+      "need_item_id": "40504",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "5",
+      "limit_level": "9",
+      "parm": "100",
+      "need_item_id": "40504",
+      "need_core_num": "0"
+    },
+    {
+      "limit_tpye": "6",
+      "limit_level": "0",
+      "parm": "2",
+      "need_item_id": "40505",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "6",
+      "limit_level": "1",
+      "parm": "4",
+      "need_item_id": "40505",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "6",
+      "limit_level": "2",
+      "parm": "6",
+      "need_item_id": "40505",
+      "need_core_num": "5"
+    },
+    {
+      "limit_tpye": "6",
+      "limit_level": "3",
+      "parm": "8",
+      "need_item_id": "40505",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "6",
+      "limit_level": "4",
+      "parm": "10",
+      "need_item_id": "40505",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "6",
+      "limit_level": "5",
+      "parm": "12",
+      "need_item_id": "40505",
+      "need_core_num": "10"
+    },
+    {
+      "limit_tpye": "6",
+      "limit_level": "6",
+      "parm": "14",
+      "need_item_id": "40505",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "6",
+      "limit_level": "7",
+      "parm": "16",
+      "need_item_id": "40505",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "6",
+      "limit_level": "8",
+      "parm": "18",
+      "need_item_id": "40505",
+      "need_core_num": "15"
+    },
+    {
+      "limit_tpye": "6",
+      "limit_level": "9",
+      "parm": "20",
+      "need_item_id": "40505",
+      "need_core_num": "0"
+    }
+  ],
+  "corebox": [
+    {
+      "box_type": "0",
+      "box_item": "40500",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1666"
+    },
+    {
+      "box_type": "0",
+      "box_item": "40501",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "0",
+      "box_item": "40502",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "0",
+      "box_item": "40503",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "0",
+      "box_item": "40504",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "0",
+      "box_item": "40505",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1666"
+    },
+    {
+      "box_type": "1",
+      "box_item": "40500",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1666"
+    },
+    {
+      "box_type": "1",
+      "box_item": "40501",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "1",
+      "box_item": "40502",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "1",
+      "box_item": "40503",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "1",
+      "box_item": "40504",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "1",
+      "box_item": "40505",
+      "box_item_min": "1",
+      "box_item_max": "5",
+      "box_rate": "1666"
+    },
+    {
+      "box_type": "2",
+      "box_item": "40500",
+      "box_item_min": "5",
+      "box_item_max": "9",
+      "box_rate": "1666"
+    },
+    {
+      "box_type": "2",
+      "box_item": "40501",
+      "box_item_min": "5",
+      "box_item_max": "9",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "2",
+      "box_item": "40502",
+      "box_item_min": "5",
+      "box_item_max": "9",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "2",
+      "box_item": "40503",
+      "box_item_min": "5",
+      "box_item_max": "9",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "2",
+      "box_item": "40504",
+      "box_item_min": "5",
+      "box_item_max": "9",
+      "box_rate": "1667"
+    },
+    {
+      "box_type": "2",
+      "box_item": "40505",
+      "box_item_min": "5",
+      "box_item_max": "9",
+      "box_rate": "1666"
+    }
+  ],
+  "other": [
+    {
+      "price1": "100",
+      "price2": "250",
+      "reward_num": "3",
+      "level_open": "10"
+    }
+  ],
+  "threebox": [
+    {
+      "box_oder": "0",
+      "item": [
+        {
+          "item_id": "40500",
+          "num": "3"
+        },
+        {
+          "item_id": "40501",
+          "num": "2"
+        },
+        {
+          "item_id": "40502",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "box_oder": "1",
+      "item": [
+        {
+          "item_id": "40500",
+          "num": "2"
+        },
+        {
+          "item_id": "40501",
+          "num": "3"
+        },
+        {
+          "item_id": "40502",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "box_oder": "2",
+      "item": [
+        {
+          "item_id": "40500",
+          "num": "1"
+        },
+        {
+          "item_id": "40501",
+          "num": "2"
+        },
+        {
+          "item_id": "40502",
+          "num": "3"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+<configuration>
+    <!-- Gửi log tới logstash qua TCP port 5000 -->
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>localhost:5000</destination>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+    </appender>
+
+    <!-- Nếu muốn vừa log console vừa gửi logstash -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <customFields>{"service":"${spring.application.name}"}</customFields>
+        </encoder>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</Pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="LOGSTASH"/>
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

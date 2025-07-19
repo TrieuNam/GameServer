@@ -1,0 +1,502 @@
+{
+  "model": [
+    {
+      "id": "69000",
+      "name": "\u6728\u725b",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "11",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69001",
+      "name": "\u4eba\u9c7c",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "10",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69002",
+      "name": "\u5a1c\u8fe6",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "6",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69003",
+      "name": "\u72ee\u9e6b",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "9",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69004",
+      "name": "\u5996\u7cbe",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "8",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69005",
+      "name": "\u77ee\u4eba",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "10",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69006",
+      "name": "\u68a6\u9b47",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "8",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69007",
+      "name": "\u98de\u9a6c",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "7",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69008",
+      "name": "\u534a\u4eba\u9a6c",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "7",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69009",
+      "name": "\u9aa8\u9f99",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "11",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69010",
+      "name": "\u5de8\u4eba",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "6",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69011",
+      "name": "\u5deb\u5996",
+      "item_type": "16",
+      "color": "3",
+      "model": [],
+      "model_after": [
+        {
+          "type": "9",
+          "add": "1000"
+        }
+      ],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69012",
+      "name": "\u7f8e\u675c\u838e",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "16",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69013",
+      "name": "\u585e\u58ec",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "16",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69014",
+      "name": "\u5854\u7f57\u65af",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "15",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69015",
+      "name": "\u661f\u7075",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "12",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69016",
+      "name": "\u51e4\u51f0",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "13",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69017",
+      "name": "\u72ec\u89d2\u517d",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "14",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69018",
+      "name": "\u65af\u82ac\u514b\u65af",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "17",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69019",
+      "name": "\u6d77\u5fb7\u62c9",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "16",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69020",
+      "name": "\u6469\u7faf",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "15",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69021",
+      "name": "\u59d1\u83b7\u9e1f",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "12",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69022",
+      "name": "\u82ac\u91cc\u5c14",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "13",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69023",
+      "name": "\u5c3c\u5fb7\u970d\u683c",
+      "item_type": "16",
+      "color": "5",
+      "model": [
+        {
+          "type": "14",
+          "add": "350"
+        }
+      ],
+      "model_after": [],
+      "block_color_min": "5",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69024",
+      "name": "\u5e7c\u864e",
+      "item_type": "16",
+      "color": "2",
+      "model": [],
+      "model_after": [],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69025",
+      "name": "\u5e7c\u9e1f",
+      "item_type": "16",
+      "color": "2",
+      "model": [],
+      "model_after": [],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "69026",
+      "name": "\u5c0f\u72fc",
+      "item_type": "16",
+      "color": "2",
+      "model": [],
+      "model_after": [],
+      "block_color_min": "2",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    }
+  ]
+}

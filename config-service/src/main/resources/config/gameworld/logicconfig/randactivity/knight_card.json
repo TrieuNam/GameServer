@@ -1,0 +1,146 @@
+{
+  "knight_card": [
+    {
+      "first_buy_reward_item": [],
+      "buy_money": "680",
+      "time": "12"
+    }
+  ],
+  "knight_zheng": [
+    {
+      "level_min": "1",
+      "level_max": "59",
+      "seq": "1",
+      "guanggao_item": {
+        "item_id": "40000",
+        "num": "2000"
+      }
+    },
+    {
+      "level_min": "1",
+      "level_max": "59",
+      "seq": "2",
+      "guanggao_item": {
+        "item_id": "40001",
+        "num": "25"
+      }
+    },
+    {
+      "level_min": "1",
+      "level_max": "59",
+      "seq": "3",
+      "guanggao_item": {
+        "item_id": "40000",
+        "num": "4000"
+      }
+    },
+    {
+      "level_min": "1",
+      "level_max": "59",
+      "seq": "4",
+      "guanggao_item": {
+        "item_id": "40001",
+        "num": "40"
+      }
+    },
+    {
+      "level_min": "1",
+      "level_max": "59",
+      "seq": "5",
+      "guanggao_item": {
+        "item_id": "61072",
+        "num": "1"
+      }
+    },
+    {
+      "level_min": "60",
+      "level_max": "99",
+      "seq": "1",
+      "guanggao_item": {
+        "item_id": "40000",
+        "num": "5000"
+      }
+    },
+    {
+      "level_min": "60",
+      "level_max": "99",
+      "seq": "2",
+      "guanggao_item": {
+        "item_id": "40001",
+        "num": "40"
+      }
+    },
+    {
+      "level_min": "60",
+      "level_max": "99",
+      "seq": "3",
+      "guanggao_item": {
+        "item_id": "40000",
+        "num": "10000"
+      }
+    },
+    {
+      "level_min": "60",
+      "level_max": "99",
+      "seq": "4",
+      "guanggao_item": {
+        "item_id": "40001",
+        "num": "60"
+      }
+    },
+    {
+      "level_min": "60",
+      "level_max": "99",
+      "seq": "5",
+      "guanggao_item": {
+        "item_id": "61072",
+        "num": "1"
+      }
+    },
+    {
+      "level_min": "100",
+      "level_max": "300",
+      "seq": "1",
+      "guanggao_item": {
+        "item_id": "40000",
+        "num": "5000"
+      }
+    },
+    {
+      "level_min": "100",
+      "level_max": "300",
+      "seq": "2",
+      "guanggao_item": {
+        "item_id": "40001",
+        "num": "40"
+      }
+    },
+    {
+      "level_min": "100",
+      "level_max": "300",
+      "seq": "3",
+      "guanggao_item": {
+        "item_id": "40000",
+        "num": "10000"
+      }
+    },
+    {
+      "level_min": "100",
+      "level_max": "300",
+      "seq": "4",
+      "guanggao_item": {
+        "item_id": "40001",
+        "num": "60"
+      }
+    },
+    {
+      "level_min": "100",
+      "level_max": "300",
+      "seq": "5",
+      "guanggao_item": {
+        "item_id": "61072",
+        "num": "1"
+      }
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+option java_package = "org.SouthMillion.proto.Msgstarmap";
+
+//!<MsgId:2150
+message PB_CSStarMapReq {//!<2150 操作
+	optional int32	req_type = 1;
+	optional int32	param1 = 2;
+	optional int32	param2 = 3;
+	optional int32	param3 = 4;
+	repeated int32	param_list = 5;
+	optional int32	param4 = 6;
+	optional int32	param5 = 7;
+}
+
+message PB_SCStarMapData{
+	optional int32	type = 1;
+	optional int32	grade = 2;
+	optional int32	id = 3;
+	optional int32	level = 4;
+}
+
+message PB_NBStarNode{
+	optional int32 big_star_map_level = 1;			//!< 超星系等级 
+	optional int32 big_star_consume = 2;			//!< 超星系消耗 4条线的消耗倍率
+}
+
+//!<MsgId:2151
+message PB_SCStarMapInfo {//!<2151 星系信息
+	repeated PB_SCStarMapData star_map_list = 1;	//!< 星系等级
+	repeated PB_NBStarNode nb_star_list = 2;		//!< 超星系
+}
+
+//!<MsgId:2152
+message PB_SCStarMapOpRet {//!<2152 操作回调
+	optional int32	ret_type = 1;
+	optional int32	param1 = 2;
+	optional int32	param2 = 3;
+	optional int32	param3 = 4;
+	optional int32	param4 = 5;
+}

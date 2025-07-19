@@ -1,0 +1,395 @@
+{
+  "shop_configuration": [
+    {
+      "type": "0",
+      "item_group": "1",
+      "level_min": "1",
+      "level_max": "300"
+    },
+    {
+      "type": "0",
+      "item_group": "1",
+      "level_min": "1",
+      "level_max": "300"
+    },
+    {
+      "type": "0",
+      "item_group": "1",
+      "level_min": "1",
+      "level_max": "300"
+    },
+    {
+      "type": "0",
+      "item_group": "1",
+      "level_min": "1",
+      "level_max": "300"
+    },
+    {
+      "type": "0",
+      "item_group": "1",
+      "level_min": "1",
+      "level_max": "300"
+    },
+    {
+      "type": "0",
+      "item_group": "1",
+      "level_min": "1",
+      "level_max": "300"
+    }
+  ],
+  "item_group": [
+    {
+      "group_id": "1",
+      "seq": "0",
+      "item": {
+        "item_id": "40408",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "1",
+      "item": {
+        "item_id": "40409",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "2",
+      "item": {
+        "item_id": "40410",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "3",
+      "item": {
+        "item_id": "40411",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "4",
+      "item": {
+        "item_id": "40412",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "5",
+      "item": {
+        "item_id": "40413",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "6",
+      "item": {
+        "item_id": "40414",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "7",
+      "item": {
+        "item_id": "40415",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "8",
+      "item": {
+        "item_id": "40416",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "9",
+      "item": {
+        "item_id": "40417",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "10",
+      "item": {
+        "item_id": "40418",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "11",
+      "item": {
+        "item_id": "40419",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "12",
+      "item": {
+        "item_id": "40420",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "13",
+      "item": {
+        "item_id": "40421",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "14",
+      "item": {
+        "item_id": "40422",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "15",
+      "item": {
+        "item_id": "40423",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "600",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "16",
+      "item": {
+        "item_id": "40144",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "17",
+      "item": {
+        "item_id": "40145",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "18",
+      "item": {
+        "item_id": "40146",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "19",
+      "item": {
+        "item_id": "40147",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "20",
+      "item": {
+        "item_id": "40148",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "21",
+      "item": {
+        "item_id": "40149",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "22",
+      "item": {
+        "item_id": "40069",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "23",
+      "item": {
+        "item_id": "40070",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "24",
+      "item": {
+        "item_id": "40071",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "25",
+      "item": {
+        "item_id": "40072",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "26",
+      "item": {
+        "item_id": "40073",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    },
+    {
+      "group_id": "1",
+      "seq": "27",
+      "item": {
+        "item_id": "40074",
+        "num": "1"
+      },
+      "rate": "100",
+      "price_type": "1",
+      "price": "1200",
+      "limit_convert_count": "1"
+    }
+  ],
+  "other": [
+    {
+      "auto_time": "0",
+      "manual_price_type": "1",
+      "manual_price": "30",
+      "item_first": "0",
+      "item": {
+        "item_id": "40066",
+        "num": "1"
+      },
+      "time_refresh_free": "43200",
+      "time": "7",
+      "is_open": "1",
+      "version": "3",
+      "daily_refresh_times": "3"
+    }
+  ]
+}

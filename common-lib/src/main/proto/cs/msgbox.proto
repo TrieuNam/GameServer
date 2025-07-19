@@ -1,0 +1,57 @@
+option java_package = "org.SouthMillion.proto.Msgbox";
+
+import "cs/msgequip.proto";
+
+//!<MsgId:1610
+message PB_CSBoxReq {							//!< 1610 宝箱操作
+	optional int32	req_type = 1;				//!<操作类型 1:开箱子， 2:装备， 3:卖掉  4:购买  5:升级  6:道具加速(param-num)
+	optional int32	param = 2;					//!<参数
+}
+
+message PB_BoxSet
+{
+	optional int32	equip_eqality = 1;			//!<品质
+	optional int32	condition_first_mark = 2;	//!<筛选条件1(打钩)
+	optional int32	condition_first1 = 3;		//!<筛选条件1-1（属性类型）
+	optional int32	condition_first2 = 4;		//!<筛选条件1-2（属性类型）
+	optional int32	condition_second_mark = 5;	//!<筛选条件2(打钩)
+	optional int32	condition_second1 = 6;		//!<筛选条件2-1（属性类型）
+	optional int32	condition_second2 = 7;		//!<筛选条件2-1（属性类型）
+	optional int32	retain_mark	= 8;			//!<保留天赐及以上品质装备
+	optional int32	challenge_mark = 9;			//!<挑战券满时停止
+	optional int32	equip_cap_mark = 10;		//!<装备评分
+	optional int32	equip_sell_mark = 11;		//!< 0:出售 1:分解
+	optional int32	open_five_mark = 12;		//!< 1:五连开箱
+}
+
+//!<MsgId:1611
+message PB_CSBoxSetReq {						//!< 1611 宝箱自动开启设置
+	optional PB_BoxSet box_set = 1;				//!<宝箱设置
+}
+
+//!<MsgId:1615
+message PB_SCBoxEquipInfo {						//!< 1615 宝箱开出装备信息
+	optional int32	is_new = 1;					//!<是(没更换过):1	否(更换过):0
+	optional PB_EquipData equip_info = 2;		//!<装备信息
+}
+
+//!<MsgId:1616
+message PB_SCBoxInfo {							//!< 1616 宝箱信息
+	optional int32 box_level = 1;				//!<宝箱等级
+	optional int32 buy_times = 2;				//!<升级购买次数
+	optional uint32 timestamp = 3;				//!<宝箱升级时间戳
+	optional int32 arena_item_num = 4;			//!<开出竞技场券数量
+	optional int32 shi_zhuang_num = 5;			//!<每天开出时装数量
+	optional int32 level_fetch_flag = 6;		//!<升级购买次数奖励领取标识
+}
+
+//!<MsgId:1617
+message PB_SCBoxSetingInfo {					//!< 1617 宝箱自动开启设置信息
+	optional PB_BoxSet box_set = 1;				//!<宝箱设置
+}
+
+//!<MsgId:1618
+message PB_SCBoxSellInfo {						//!< 1618 宝箱出售信息
+	optional int32 sell_coin = 1;				//!<出售获得金币
+	optional int32 sell_exp = 2;				//!<出售获得经验
+}

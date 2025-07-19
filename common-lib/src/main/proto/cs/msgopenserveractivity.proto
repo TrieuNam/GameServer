@@ -1,0 +1,57 @@
+option java_package = "org.SouthMillion.proto.Msgopenserveractivity";
+
+//!<MsgId:2160
+message PB_CSSevenDaySignReq {//!<2160 七日签到请求
+	optional int32	opera_type = 1;
+	optional int32	param1 = 2;
+}
+
+//!<MsgId:2161
+message PB_SCSevenDaySignInfo{  //!<2161 七日签到全部信息
+	optional uint32	end_timestamp = 1;  // 活动结束时间戳
+    optional int32  days = 2;           // 第n天
+    optional int32  receive_flag = 3;   //领取flag [天数]
+}
+
+//!<MsgId:2162
+message PB_CSLuckUnpackingReq{    //!<2162 开箱大吉请求
+    optional int32	opera_type = 1;
+	optional int32	param1 = 2;
+}
+
+//!<MsgId:2163
+message PB_SCLuckUnpackingInfo{   //!<2163 开箱大吉信息
+	optional uint32	end_timestamp = 1;   // 活动结束时间戳
+    optional int32  receive_flag = 2;    // 领取flag [seq]
+	optional int32  open_box_num = 3;	 // 活动期间开箱子数量
+	optional int32  box_level = 4;		 // 活动期间升级箱子等级
+}
+
+//!<MsgId:2164
+message PB_CSNewAreaPreferentialReq{    //!<2164 新服特惠请求
+    optional int32	opera_type = 1;
+	optional int32	param1 = 2;
+}
+
+//!<MsgId:2165
+message PB_SCNewAreaPreferentialInfo{    //!<2165 新服特惠信息
+    optional uint32	end_timestamp = 1;  // 活动结束时间戳
+    repeated int32  buy_times = 2;      // 购买记录[12]
+}
+
+//!<MsgId:2166
+message PB_CSMarketShopReq{    //!<2166 集市商店请求
+    optional int32	opera_type = 1;
+	optional int32	param1 = 2;
+}
+
+//!<MsgId:2167
+message PB_SCMarketShopInfo{    //!<2167 集市商店信息
+    optional uint32	end_timestamp = 1;                // 活动结束时间戳
+    optional uint32	next_free_refresh_timestamp = 2;  // 下次免费刷新时间戳
+    optional uint32 next_auto_refresh_timestamp = 3;  // 下次自动刷新时间戳
+	optional int32 cur_shop_group = 4;                // 当前奖励组
+    repeated int32 shop_goods_seq = 5;                // 当前商品seq 
+    repeated int32 shop_buy_times = 6;                // 当前已购买times
+    optional int32 random_cnts = 7;                   // 随机次数 
+}

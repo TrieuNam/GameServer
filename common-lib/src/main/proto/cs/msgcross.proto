@@ -1,0 +1,37 @@
+option java_package = "org.SouthMillion.proto.Msgcross";
+
+//MsgId:2800
+message PB_CSCrossStartReq {                        //!< 协议 2800 开始跨服请求
+		optional int32 param = 1;					//!< 没啥用的参数
+}
+
+
+//MsgId:2801
+message PB_SCCrossStartAck{										//!< 2801  开始跨服返回 
+	repeated	bytes	gateway_hostname = 1;					//!< gateway的ip或域名
+	optional	int32 	gateway_port = 2;						//!< gateway的端口
+
+	repeated	bytes	role_name = 3;							//!< 角色名
+	optional	int32 	new_uid = 4;							//!< 新的uid
+	optional	int32 	scene_id = 5;							//!< 场景ID			\note 用于验证
+	optional	int32 	last_scene_id = 6;						//!< 上一个场景ID	\note 用于验证
+	optional	uint32 	time = 7;								//!< 时间戳			\note 用于验证
+			
+	repeated	bytes 	session_key = 8;						//!< 会话秘钥		\note 用于验证
+}
+
+
+//MsgId:2802
+message PB_CSBackToOriginServer {                        //!< 协议 2802 返回本服请求
+		optional int32 param = 1;						 //!< 没啥用的参数										
+}
+
+//MsgId:2803
+message PB_SCBackToOriginServer {                        //!< 协议 2803 返回本服返回
+	optional	int32 	scene_id = 1;							//!< 场景ID			\note 用于验证
+	optional	int32 	last_scene_id = 2;						//!< 上一个场景ID	\note 用于验证
+	optional	uint32 	time = 3;								//!< 时间戳			\note 用于验证
+	repeated	bytes 	session_key = 4;						//!< 会话秘钥		\note 用于验证	
+	repeated	bytes	gateway_hostname = 5;					//!< gateway的ip或域名
+	optional	int32 	gateway_port = 6;						//!< gateway的端口
+}

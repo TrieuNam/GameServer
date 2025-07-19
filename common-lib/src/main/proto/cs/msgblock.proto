@@ -1,0 +1,22 @@
+option java_package = "org.SouthMillion.proto.Msgblock";
+
+message PB_CSBlockReq {								//!< 2180 操作
+	optional int32	op_type = 1;					//!<操作类型
+	repeated int32	param = 2;						//!<参数
+}
+
+message PB_SCBlockNode{
+	optional int32 block_id	= 1;		//积木id	
+	optional int32 map_id	= 2;		//装在哪个模型上
+	optional int32 pos_x	= 3;		//坐标
+	optional int32 pos_y	= 4;		//坐标
+	optional int32 color	= 5;		//9个格子的颜色
+	optional int32 block_index = 6;		//积木index	
+}
+
+message PB_SCBuildBlockInfo {							//!< 2181 积木信息
+	optional int32 send_type = 1;						//!<回调类型
+	repeated PB_SCBlockNode block_list = 2;				//!<积木
+	optional int32 activate_seq = 3;					//!<激活到了seq几 初始为0
+	optional int32 map_id = 4;							//!<装备的模型
+}

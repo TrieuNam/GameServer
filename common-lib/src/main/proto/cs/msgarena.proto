@@ -1,0 +1,69 @@
+option java_package = "org.SouthMillion.proto.Msgarena";
+
+import "cs/msgrole.proto";
+
+message PB_CSArenaReq {//!< 9610 竞技场操作
+	optional int32	type = 1;
+	optional int32	p1 = 2;	
+}
+
+message PB_SCArenaInfo {//!< 9611 竞技场信息
+	repeated PB_RoleInfo roleinfo = 1;			//对手列表
+	optional int32 week_box_progress = 2;		//宝箱进度
+	optional int32 week_box_fetch_flag = 3;		//宝箱领取标识
+	optional int32 now_rank = 4;				//当前排名
+	optional int32 now_score = 5;				//当前积分
+	optional int64 fight_times = 6;				//挑战次数
+	repeated int32 target_score = 7;			//对手积分
+	repeated int32 target_rank = 8;				//对手排名
+}
+
+message PB_ArenaReport{
+	optional PB_RoleInfo target_info = 1;	//对方信息
+	optional int32 is_attack = 2;			//是否进攻方
+	optional int32 is_win = 3;				//是否胜利
+	optional int32 score = 4;				//积分变化
+	optional int64 time = 5;				//时间
+	optional int32 target_score = 6;		//对手积分
+}
+
+message PB_SCArenaReportList {//!< 9612 竞技场战报
+	repeated PB_ArenaReport report_list = 1;		
+}
+
+
+message PB_CSCrossArenaReq {//!< 9613 竞技场操作
+	optional int32	type = 1;
+	optional int32	p1 = 2;	
+}
+
+message PB_SCCrossArenaInfo {//!< 9614 竞技场信息
+	repeated PB_RoleInfo roleinfo = 1;			//对手列表
+	repeated int32 target_score = 2;			//对手积分
+	optional int32 today_refresh_times = 3;		//今日刷新次数
+	optional uint32 last_refresh_time = 4; 		//上次刷新时间
+	repeated uint32 target_fight_time = 5;		//上次挑战时间
+	repeated int32 is_fight = 6;				//是否挑战过
+	repeated int32 target_index = 7;			//index
+}
+
+message PB_CrossArenaReport{
+	optional PB_RoleInfo target_info = 1;	//对方信息
+	optional int32 is_attack = 2;			//是否进攻方
+	optional int32 is_win = 3;				//是否胜利
+	optional int32 score = 4;				//积分  0时可以复仇
+	optional int64 time = 5;				//时间
+	optional uint32 target_fight_time = 6;	//上次挑战时间
+	optional int32 target_score = 7;		//对手积分
+}
+
+message PB_SCCrossArenaReportList {//!< 9615 竞技场战报
+	repeated PB_CrossArenaReport report_list = 1;		
+}
+
+message PB_SCCrossArenaFightRet {//!< 9616 战斗结果
+	optional int32 attacker_score = 1;	
+	optional int32 attacker_change = 2;	
+	optional int32 defender_score = 3;	
+	optional int32 defender_change = 4;	
+}

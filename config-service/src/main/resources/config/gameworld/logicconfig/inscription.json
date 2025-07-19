@@ -1,0 +1,6359 @@
+{
+  "hole": [
+    {
+      "index": "0",
+      "type": "1",
+      "unlock": "0",
+      "show_item_id": "0"
+    },
+    {
+      "index": "1",
+      "type": "1",
+      "unlock": "0",
+      "show_item_id": "0"
+    },
+    {
+      "index": "2",
+      "type": "1",
+      "unlock": "0",
+      "show_item_id": "0"
+    },
+    {
+      "index": "3",
+      "type": "1",
+      "unlock": "10",
+      "show_item_id": "0"
+    },
+    {
+      "index": "4",
+      "type": "1",
+      "unlock": "20",
+      "show_item_id": "0"
+    },
+    {
+      "index": "5",
+      "type": "1",
+      "unlock": "30",
+      "show_item_id": "0"
+    },
+    {
+      "index": "6",
+      "type": "1",
+      "unlock": "40",
+      "show_item_id": "0"
+    },
+    {
+      "index": "7",
+      "type": "1",
+      "unlock": "50",
+      "show_item_id": "0"
+    },
+    {
+      "index": "8",
+      "type": "1",
+      "unlock": "60",
+      "show_item_id": "0"
+    },
+    {
+      "index": "9",
+      "type": "1",
+      "unlock": "70",
+      "show_item_id": "0"
+    },
+    {
+      "index": "10",
+      "type": "1",
+      "unlock": "80",
+      "show_item_id": "0"
+    },
+    {
+      "index": "11",
+      "type": "1",
+      "unlock": "90",
+      "show_item_id": "0"
+    },
+    {
+      "index": "12",
+      "type": "1",
+      "unlock": "100",
+      "show_item_id": "0"
+    },
+    {
+      "index": "13",
+      "type": "1",
+      "unlock": "110",
+      "show_item_id": "0"
+    },
+    {
+      "index": "14",
+      "type": "1",
+      "unlock": "120",
+      "show_item_id": "0"
+    },
+    {
+      "index": "15",
+      "type": "1",
+      "unlock": "130",
+      "show_item_id": "0"
+    },
+    {
+      "index": "16",
+      "type": "1",
+      "unlock": "140",
+      "show_item_id": "0"
+    },
+    {
+      "index": "17",
+      "type": "1",
+      "unlock": "150",
+      "show_item_id": "0"
+    },
+    {
+      "index": "18",
+      "type": "2",
+      "unlock": "0",
+      "show_item_id": "0"
+    },
+    {
+      "index": "19",
+      "type": "2",
+      "unlock": "0",
+      "show_item_id": "0"
+    }
+  ],
+  "collect": [
+    {
+      "id": "70000",
+      "type": "1",
+      "att_type": "1",
+      "color": "3",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "1",
+          "add": "2400"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "1",
+          "add": "900"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70001",
+      "type": "1",
+      "att_type": "1",
+      "color": "4",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "1",
+          "add": "4800"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "1",
+          "add": "1800"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70002",
+      "type": "1",
+      "att_type": "1",
+      "color": "5",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "1",
+          "add": "7200"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "1",
+          "add": "2700"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70003",
+      "type": "1",
+      "att_type": "1",
+      "color": "6",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "1",
+          "add": "9600"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "1",
+          "add": "3600"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70004",
+      "type": "1",
+      "att_type": "1",
+      "color": "7",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "1",
+          "add": "12000"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "1",
+          "add": "4500"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70005",
+      "type": "1",
+      "att_type": "2",
+      "color": "3",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "2",
+          "add": "480"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "2",
+          "add": "180"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70006",
+      "type": "1",
+      "att_type": "2",
+      "color": "4",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "2",
+          "add": "960"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "2",
+          "add": "360"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70007",
+      "type": "1",
+      "att_type": "2",
+      "color": "5",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "2",
+          "add": "1440"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "2",
+          "add": "540"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70008",
+      "type": "1",
+      "att_type": "2",
+      "color": "6",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "2",
+          "add": "1920"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "2",
+          "add": "720"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70009",
+      "type": "1",
+      "att_type": "2",
+      "color": "7",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "2",
+          "add": "2400"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "2",
+          "add": "900"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70010",
+      "type": "1",
+      "att_type": "3",
+      "color": "3",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "3",
+          "add": "480"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "3",
+          "add": "180"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70011",
+      "type": "1",
+      "att_type": "3",
+      "color": "4",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "3",
+          "add": "960"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "3",
+          "add": "360"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70012",
+      "type": "1",
+      "att_type": "3",
+      "color": "5",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "3",
+          "add": "1440"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "3",
+          "add": "540"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70013",
+      "type": "1",
+      "att_type": "3",
+      "color": "6",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "3",
+          "add": "1920"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "3",
+          "add": "720"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70014",
+      "type": "1",
+      "att_type": "3",
+      "color": "7",
+      "unlock": "0",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "3",
+          "add": "2400"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "3",
+          "add": "900"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70050",
+      "type": "1",
+      "att_type": "12",
+      "color": "3",
+      "unlock": "10",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "12",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "12",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70051",
+      "type": "1",
+      "att_type": "12",
+      "color": "4",
+      "unlock": "10",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "12",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "12",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70052",
+      "type": "1",
+      "att_type": "12",
+      "color": "5",
+      "unlock": "10",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "12",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "12",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70053",
+      "type": "1",
+      "att_type": "12",
+      "color": "6",
+      "unlock": "10",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "12",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "12",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70054",
+      "type": "1",
+      "att_type": "12",
+      "color": "7",
+      "unlock": "10",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "12",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "12",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70055",
+      "type": "1",
+      "att_type": "13",
+      "color": "3",
+      "unlock": "20",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "13",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "13",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70056",
+      "type": "1",
+      "att_type": "13",
+      "color": "4",
+      "unlock": "20",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "13",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "13",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70057",
+      "type": "1",
+      "att_type": "13",
+      "color": "5",
+      "unlock": "20",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "13",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "13",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70058",
+      "type": "1",
+      "att_type": "13",
+      "color": "6",
+      "unlock": "20",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "13",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "13",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70059",
+      "type": "1",
+      "att_type": "13",
+      "color": "7",
+      "unlock": "20",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "13",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "13",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70060",
+      "type": "1",
+      "att_type": "14",
+      "color": "3",
+      "unlock": "30",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "14",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "14",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70061",
+      "type": "1",
+      "att_type": "14",
+      "color": "4",
+      "unlock": "30",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "14",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "14",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70062",
+      "type": "1",
+      "att_type": "14",
+      "color": "5",
+      "unlock": "30",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "14",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "14",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70063",
+      "type": "1",
+      "att_type": "14",
+      "color": "6",
+      "unlock": "30",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "14",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "14",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70064",
+      "type": "1",
+      "att_type": "14",
+      "color": "7",
+      "unlock": "30",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "14",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "14",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70065",
+      "type": "1",
+      "att_type": "15",
+      "color": "3",
+      "unlock": "40",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "15",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "15",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70066",
+      "type": "1",
+      "att_type": "15",
+      "color": "4",
+      "unlock": "40",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "15",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "15",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70067",
+      "type": "1",
+      "att_type": "15",
+      "color": "5",
+      "unlock": "40",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "15",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "15",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70068",
+      "type": "1",
+      "att_type": "15",
+      "color": "6",
+      "unlock": "40",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "15",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "15",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70069",
+      "type": "1",
+      "att_type": "15",
+      "color": "7",
+      "unlock": "40",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "15",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "15",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70070",
+      "type": "1",
+      "att_type": "16",
+      "color": "3",
+      "unlock": "50",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "16",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "16",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70071",
+      "type": "1",
+      "att_type": "16",
+      "color": "4",
+      "unlock": "50",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "16",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "16",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70072",
+      "type": "1",
+      "att_type": "16",
+      "color": "5",
+      "unlock": "50",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "16",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "16",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70073",
+      "type": "1",
+      "att_type": "16",
+      "color": "6",
+      "unlock": "50",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "16",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "16",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70074",
+      "type": "1",
+      "att_type": "16",
+      "color": "7",
+      "unlock": "50",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "16",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "16",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70075",
+      "type": "1",
+      "att_type": "17",
+      "color": "3",
+      "unlock": "60",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "17",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "17",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70076",
+      "type": "1",
+      "att_type": "17",
+      "color": "4",
+      "unlock": "60",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "17",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "17",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70077",
+      "type": "1",
+      "att_type": "17",
+      "color": "5",
+      "unlock": "60",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "17",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "17",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70078",
+      "type": "1",
+      "att_type": "17",
+      "color": "6",
+      "unlock": "60",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "17",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "17",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70079",
+      "type": "1",
+      "att_type": "17",
+      "color": "7",
+      "unlock": "60",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "17",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "17",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70084",
+      "type": "1",
+      "att_type": "27",
+      "color": "3",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "27",
+          "add": "32"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "27",
+          "add": "12"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70085",
+      "type": "1",
+      "att_type": "27",
+      "color": "4",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "27",
+          "add": "64"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "27",
+          "add": "24"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70086",
+      "type": "1",
+      "att_type": "27",
+      "color": "5",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "27",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "27",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70087",
+      "type": "1",
+      "att_type": "27",
+      "color": "6",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "27",
+          "add": "128"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "27",
+          "add": "48"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70088",
+      "type": "1",
+      "att_type": "27",
+      "color": "7",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "27",
+          "add": "160"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "27",
+          "add": "60"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70089",
+      "type": "1",
+      "att_type": "28",
+      "color": "3",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "28",
+          "add": "32"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "28",
+          "add": "12"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70090",
+      "type": "1",
+      "att_type": "28",
+      "color": "4",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "28",
+          "add": "64"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "28",
+          "add": "24"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70091",
+      "type": "1",
+      "att_type": "28",
+      "color": "5",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "28",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "28",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70092",
+      "type": "1",
+      "att_type": "28",
+      "color": "6",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "28",
+          "add": "128"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "28",
+          "add": "48"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70093",
+      "type": "1",
+      "att_type": "28",
+      "color": "7",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "28",
+          "add": "160"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "28",
+          "add": "60"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70094",
+      "type": "1",
+      "att_type": "29",
+      "color": "3",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "29",
+          "add": "32"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "29",
+          "add": "12"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70095",
+      "type": "1",
+      "att_type": "29",
+      "color": "4",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "29",
+          "add": "64"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "29",
+          "add": "24"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70096",
+      "type": "1",
+      "att_type": "29",
+      "color": "5",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "29",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "29",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70097",
+      "type": "1",
+      "att_type": "29",
+      "color": "6",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "29",
+          "add": "128"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "29",
+          "add": "48"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70098",
+      "type": "1",
+      "att_type": "29",
+      "color": "7",
+      "unlock": "100",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "29",
+          "add": "160"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "29",
+          "add": "60"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70020",
+      "type": "1",
+      "att_type": "6",
+      "color": "3",
+      "unlock": "10",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "6",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "6",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70021",
+      "type": "1",
+      "att_type": "6",
+      "color": "4",
+      "unlock": "10",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "6",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "6",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70022",
+      "type": "1",
+      "att_type": "6",
+      "color": "5",
+      "unlock": "10",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "6",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "6",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70023",
+      "type": "1",
+      "att_type": "6",
+      "color": "6",
+      "unlock": "10",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "6",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "6",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70024",
+      "type": "1",
+      "att_type": "6",
+      "color": "7",
+      "unlock": "10",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "6",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "6",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70025",
+      "type": "1",
+      "att_type": "7",
+      "color": "3",
+      "unlock": "20",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "7",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "7",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70026",
+      "type": "1",
+      "att_type": "7",
+      "color": "4",
+      "unlock": "20",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "7",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "7",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70027",
+      "type": "1",
+      "att_type": "7",
+      "color": "5",
+      "unlock": "20",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "7",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "7",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70028",
+      "type": "1",
+      "att_type": "7",
+      "color": "6",
+      "unlock": "20",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "7",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "7",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70029",
+      "type": "1",
+      "att_type": "7",
+      "color": "7",
+      "unlock": "20",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "7",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "7",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70030",
+      "type": "1",
+      "att_type": "8",
+      "color": "3",
+      "unlock": "30",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "8",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "8",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70031",
+      "type": "1",
+      "att_type": "8",
+      "color": "4",
+      "unlock": "30",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "8",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "8",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70032",
+      "type": "1",
+      "att_type": "8",
+      "color": "5",
+      "unlock": "30",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "8",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "8",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70033",
+      "type": "1",
+      "att_type": "8",
+      "color": "6",
+      "unlock": "30",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "8",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "8",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70034",
+      "type": "1",
+      "att_type": "8",
+      "color": "7",
+      "unlock": "30",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "8",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "8",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70035",
+      "type": "1",
+      "att_type": "9",
+      "color": "3",
+      "unlock": "40",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "9",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "9",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70036",
+      "type": "1",
+      "att_type": "9",
+      "color": "4",
+      "unlock": "40",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "9",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "9",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70037",
+      "type": "1",
+      "att_type": "9",
+      "color": "5",
+      "unlock": "40",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "9",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "9",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70038",
+      "type": "1",
+      "att_type": "9",
+      "color": "6",
+      "unlock": "40",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "9",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "9",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70039",
+      "type": "1",
+      "att_type": "9",
+      "color": "7",
+      "unlock": "40",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "9",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "9",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70040",
+      "type": "1",
+      "att_type": "10",
+      "color": "3",
+      "unlock": "50",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "10",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "10",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70041",
+      "type": "1",
+      "att_type": "10",
+      "color": "4",
+      "unlock": "50",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "10",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "10",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70042",
+      "type": "1",
+      "att_type": "10",
+      "color": "5",
+      "unlock": "50",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "10",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "10",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70043",
+      "type": "1",
+      "att_type": "10",
+      "color": "6",
+      "unlock": "50",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "10",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "10",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70044",
+      "type": "1",
+      "att_type": "10",
+      "color": "7",
+      "unlock": "50",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "10",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "10",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70045",
+      "type": "1",
+      "att_type": "11",
+      "color": "3",
+      "unlock": "60",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "11",
+          "add": "24"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "11",
+          "add": "9"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70046",
+      "type": "1",
+      "att_type": "11",
+      "color": "4",
+      "unlock": "60",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "11",
+          "add": "48"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "11",
+          "add": "18"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70047",
+      "type": "1",
+      "att_type": "11",
+      "color": "5",
+      "unlock": "60",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "11",
+          "add": "72"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "11",
+          "add": "27"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70048",
+      "type": "1",
+      "att_type": "11",
+      "color": "6",
+      "unlock": "60",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "11",
+          "add": "96"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "11",
+          "add": "36"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70049",
+      "type": "1",
+      "att_type": "11",
+      "color": "7",
+      "unlock": "60",
+      "up_max_level": "30",
+      "base_att": [
+        {
+          "type": "11",
+          "add": "120"
+        }
+      ],
+      "up_att": [
+        {
+          "type": "11",
+          "add": "45"
+        }
+      ],
+      "skill_id": "0"
+    },
+    {
+      "id": "70081",
+      "type": "2",
+      "att_type": "18",
+      "color": "8",
+      "unlock": "0",
+      "up_max_level": "20",
+      "base_att": [],
+      "up_att": [],
+      "skill_id": "100"
+    },
+    {
+      "id": "70083",
+      "type": "2",
+      "att_type": "19",
+      "color": "8",
+      "unlock": "0",
+      "up_max_level": "20",
+      "base_att": [],
+      "up_att": [],
+      "skill_id": "101"
+    }
+  ],
+  "ts_mingwen": [
+    {
+      "id": "70081",
+      "level": "1",
+      "skill_id": "100",
+      "skill_level": "1",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "2",
+      "skill_id": "100",
+      "skill_level": "2",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "3",
+      "skill_id": "100",
+      "skill_level": "3",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "4",
+      "skill_id": "100",
+      "skill_level": "4",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "5",
+      "skill_id": "100",
+      "skill_level": "5",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "6",
+      "skill_id": "100",
+      "skill_level": "6",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "7",
+      "skill_id": "100",
+      "skill_level": "7",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "8",
+      "skill_id": "100",
+      "skill_level": "8",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "9",
+      "skill_id": "100",
+      "skill_level": "9",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "10",
+      "skill_id": "100",
+      "skill_level": "10",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "11",
+      "skill_id": "100",
+      "skill_level": "11",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "12",
+      "skill_id": "100",
+      "skill_level": "12",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "13",
+      "skill_id": "100",
+      "skill_level": "13",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "14",
+      "skill_id": "100",
+      "skill_level": "14",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "15",
+      "skill_id": "100",
+      "skill_level": "15",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "16",
+      "skill_id": "100",
+      "skill_level": "16",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "17",
+      "skill_id": "100",
+      "skill_level": "17",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "18",
+      "skill_id": "100",
+      "skill_level": "18",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "19",
+      "skill_id": "100",
+      "skill_level": "19",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70081",
+      "level": "20",
+      "skill_id": "100",
+      "skill_level": "20",
+      "up_item_id": "70081",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "1",
+      "skill_id": "101",
+      "skill_level": "1",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "2",
+      "skill_id": "101",
+      "skill_level": "2",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "3",
+      "skill_id": "101",
+      "skill_level": "3",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "4",
+      "skill_id": "101",
+      "skill_level": "4",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "5",
+      "skill_id": "101",
+      "skill_level": "5",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "6",
+      "skill_id": "101",
+      "skill_level": "6",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "7",
+      "skill_id": "101",
+      "skill_level": "7",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "8",
+      "skill_id": "101",
+      "skill_level": "8",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "9",
+      "skill_id": "101",
+      "skill_level": "9",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "10",
+      "skill_id": "101",
+      "skill_level": "10",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "11",
+      "skill_id": "101",
+      "skill_level": "11",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "12",
+      "skill_id": "101",
+      "skill_level": "12",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "13",
+      "skill_id": "101",
+      "skill_level": "13",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "14",
+      "skill_id": "101",
+      "skill_level": "14",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "15",
+      "skill_id": "101",
+      "skill_level": "15",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "16",
+      "skill_id": "101",
+      "skill_level": "16",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "17",
+      "skill_id": "101",
+      "skill_level": "17",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "18",
+      "skill_id": "101",
+      "skill_level": "18",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "19",
+      "skill_id": "101",
+      "skill_level": "19",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    },
+    {
+      "id": "70083",
+      "level": "20",
+      "skill_id": "101",
+      "skill_level": "20",
+      "up_item_id": "70083",
+      "up_item_num": "1",
+      "color": "8",
+      "up_max_level": "20"
+    }
+  ],
+  "upgrade": [
+    {
+      "type": "1",
+      "color": "3",
+      "level": "1",
+      "exp": "200",
+      "itemback": "80"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "2",
+      "exp": "250",
+      "itemback": "280"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "3",
+      "exp": "300",
+      "itemback": "530"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "4",
+      "exp": "350",
+      "itemback": "830"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "5",
+      "exp": "400",
+      "itemback": "1180"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "6",
+      "exp": "450",
+      "itemback": "1580"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "7",
+      "exp": "500",
+      "itemback": "2030"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "8",
+      "exp": "550",
+      "itemback": "2530"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "9",
+      "exp": "600",
+      "itemback": "3080"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "10",
+      "exp": "650",
+      "itemback": "3680"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "11",
+      "exp": "700",
+      "itemback": "4330"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "12",
+      "exp": "750",
+      "itemback": "5030"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "13",
+      "exp": "800",
+      "itemback": "5780"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "14",
+      "exp": "850",
+      "itemback": "6580"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "15",
+      "exp": "900",
+      "itemback": "7430"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "16",
+      "exp": "950",
+      "itemback": "8330"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "17",
+      "exp": "1000",
+      "itemback": "9280"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "18",
+      "exp": "1050",
+      "itemback": "10280"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "19",
+      "exp": "1100",
+      "itemback": "11330"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "20",
+      "exp": "1150",
+      "itemback": "12430"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "21",
+      "exp": "1200",
+      "itemback": "13580"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "22",
+      "exp": "1250",
+      "itemback": "14780"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "23",
+      "exp": "1300",
+      "itemback": "16030"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "24",
+      "exp": "1350",
+      "itemback": "17330"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "25",
+      "exp": "1400",
+      "itemback": "18680"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "26",
+      "exp": "1450",
+      "itemback": "20080"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "27",
+      "exp": "1500",
+      "itemback": "21530"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "28",
+      "exp": "1550",
+      "itemback": "23030"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "29",
+      "exp": "1600",
+      "itemback": "24580"
+    },
+    {
+      "type": "1",
+      "color": "3",
+      "level": "30",
+      "exp": "1650",
+      "itemback": "26180"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "1",
+      "exp": "400",
+      "itemback": "200"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "2",
+      "exp": "500",
+      "itemback": "600"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "3",
+      "exp": "600",
+      "itemback": "1100"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "4",
+      "exp": "700",
+      "itemback": "1700"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "5",
+      "exp": "800",
+      "itemback": "2400"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "6",
+      "exp": "900",
+      "itemback": "3200"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "7",
+      "exp": "1000",
+      "itemback": "4100"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "8",
+      "exp": "1100",
+      "itemback": "5100"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "9",
+      "exp": "1200",
+      "itemback": "6200"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "10",
+      "exp": "1300",
+      "itemback": "7400"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "11",
+      "exp": "1400",
+      "itemback": "8700"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "12",
+      "exp": "1500",
+      "itemback": "10100"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "13",
+      "exp": "1600",
+      "itemback": "11600"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "14",
+      "exp": "1700",
+      "itemback": "13200"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "15",
+      "exp": "1800",
+      "itemback": "14900"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "16",
+      "exp": "1900",
+      "itemback": "16700"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "17",
+      "exp": "2000",
+      "itemback": "18600"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "18",
+      "exp": "2100",
+      "itemback": "20600"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "19",
+      "exp": "2200",
+      "itemback": "22700"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "20",
+      "exp": "2300",
+      "itemback": "24900"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "21",
+      "exp": "2400",
+      "itemback": "27200"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "22",
+      "exp": "2500",
+      "itemback": "29600"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "23",
+      "exp": "2600",
+      "itemback": "32100"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "24",
+      "exp": "2700",
+      "itemback": "34700"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "25",
+      "exp": "2800",
+      "itemback": "37400"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "26",
+      "exp": "2900",
+      "itemback": "40200"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "27",
+      "exp": "3000",
+      "itemback": "43100"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "28",
+      "exp": "3100",
+      "itemback": "46100"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "29",
+      "exp": "3200",
+      "itemback": "49200"
+    },
+    {
+      "type": "1",
+      "color": "4",
+      "level": "30",
+      "exp": "3300",
+      "itemback": "52400"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "1",
+      "exp": "600",
+      "itemback": "600"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "2",
+      "exp": "750",
+      "itemback": "1200"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "3",
+      "exp": "900",
+      "itemback": "1950"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "4",
+      "exp": "1050",
+      "itemback": "2850"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "5",
+      "exp": "1200",
+      "itemback": "3900"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "6",
+      "exp": "1350",
+      "itemback": "5100"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "7",
+      "exp": "1500",
+      "itemback": "6450"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "8",
+      "exp": "1650",
+      "itemback": "7950"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "9",
+      "exp": "1800",
+      "itemback": "9600"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "10",
+      "exp": "1950",
+      "itemback": "11400"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "11",
+      "exp": "2100",
+      "itemback": "13350"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "12",
+      "exp": "2250",
+      "itemback": "15450"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "13",
+      "exp": "2400",
+      "itemback": "17700"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "14",
+      "exp": "2550",
+      "itemback": "20100"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "15",
+      "exp": "2700",
+      "itemback": "22650"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "16",
+      "exp": "2850",
+      "itemback": "25350"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "17",
+      "exp": "3000",
+      "itemback": "28200"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "18",
+      "exp": "3150",
+      "itemback": "31200"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "19",
+      "exp": "3300",
+      "itemback": "34350"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "20",
+      "exp": "3450",
+      "itemback": "37650"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "21",
+      "exp": "3600",
+      "itemback": "41100"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "22",
+      "exp": "3750",
+      "itemback": "44700"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "23",
+      "exp": "3900",
+      "itemback": "48450"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "24",
+      "exp": "4050",
+      "itemback": "52350"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "25",
+      "exp": "4200",
+      "itemback": "56400"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "26",
+      "exp": "4350",
+      "itemback": "60600"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "27",
+      "exp": "4500",
+      "itemback": "64950"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "28",
+      "exp": "4650",
+      "itemback": "69450"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "29",
+      "exp": "4800",
+      "itemback": "74100"
+    },
+    {
+      "type": "1",
+      "color": "5",
+      "level": "30",
+      "exp": "4950",
+      "itemback": "78900"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "1",
+      "exp": "800",
+      "itemback": "1200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "2",
+      "exp": "1000",
+      "itemback": "2000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "3",
+      "exp": "1200",
+      "itemback": "3000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "4",
+      "exp": "1400",
+      "itemback": "4200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "5",
+      "exp": "1600",
+      "itemback": "5600"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "6",
+      "exp": "1800",
+      "itemback": "7200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "7",
+      "exp": "2000",
+      "itemback": "9000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "8",
+      "exp": "2200",
+      "itemback": "11000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "9",
+      "exp": "2400",
+      "itemback": "13200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "10",
+      "exp": "2600",
+      "itemback": "15600"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "11",
+      "exp": "2800",
+      "itemback": "18200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "12",
+      "exp": "3000",
+      "itemback": "21000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "13",
+      "exp": "3200",
+      "itemback": "24000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "14",
+      "exp": "3400",
+      "itemback": "27200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "15",
+      "exp": "3600",
+      "itemback": "30600"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "16",
+      "exp": "3800",
+      "itemback": "34200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "17",
+      "exp": "4000",
+      "itemback": "38000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "18",
+      "exp": "4200",
+      "itemback": "42000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "19",
+      "exp": "4400",
+      "itemback": "46200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "20",
+      "exp": "4600",
+      "itemback": "50600"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "21",
+      "exp": "4800",
+      "itemback": "55200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "22",
+      "exp": "5000",
+      "itemback": "60000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "23",
+      "exp": "5200",
+      "itemback": "65000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "24",
+      "exp": "5400",
+      "itemback": "70200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "25",
+      "exp": "5600",
+      "itemback": "75600"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "26",
+      "exp": "5800",
+      "itemback": "81200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "27",
+      "exp": "6000",
+      "itemback": "87000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "28",
+      "exp": "6200",
+      "itemback": "93000"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "29",
+      "exp": "6400",
+      "itemback": "99200"
+    },
+    {
+      "type": "1",
+      "color": "6",
+      "level": "30",
+      "exp": "6600",
+      "itemback": "105600"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "1",
+      "exp": "1000",
+      "itemback": "2400"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "2",
+      "exp": "1250",
+      "itemback": "3400"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "3",
+      "exp": "1500",
+      "itemback": "4650"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "4",
+      "exp": "1750",
+      "itemback": "6150"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "5",
+      "exp": "2000",
+      "itemback": "7900"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "6",
+      "exp": "2250",
+      "itemback": "9900"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "7",
+      "exp": "2500",
+      "itemback": "12150"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "8",
+      "exp": "2750",
+      "itemback": "14650"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "9",
+      "exp": "3000",
+      "itemback": "17400"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "10",
+      "exp": "3250",
+      "itemback": "20400"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "11",
+      "exp": "3500",
+      "itemback": "23650"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "12",
+      "exp": "3750",
+      "itemback": "27150"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "13",
+      "exp": "4000",
+      "itemback": "30900"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "14",
+      "exp": "4250",
+      "itemback": "34900"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "15",
+      "exp": "4500",
+      "itemback": "39150"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "16",
+      "exp": "4750",
+      "itemback": "43650"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "17",
+      "exp": "5000",
+      "itemback": "48400"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "18",
+      "exp": "5250",
+      "itemback": "53400"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "19",
+      "exp": "5500",
+      "itemback": "58650"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "20",
+      "exp": "5750",
+      "itemback": "64150"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "21",
+      "exp": "6000",
+      "itemback": "69900"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "22",
+      "exp": "6250",
+      "itemback": "75900"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "23",
+      "exp": "6500",
+      "itemback": "82150"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "24",
+      "exp": "6750",
+      "itemback": "88650"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "25",
+      "exp": "7000",
+      "itemback": "95400"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "26",
+      "exp": "7250",
+      "itemback": "102400"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "27",
+      "exp": "7500",
+      "itemback": "109650"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "28",
+      "exp": "7750",
+      "itemback": "117150"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "29",
+      "exp": "8000",
+      "itemback": "124900"
+    },
+    {
+      "type": "1",
+      "color": "7",
+      "level": "30",
+      "exp": "8250",
+      "itemback": "132900"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "1",
+      "exp": "1200",
+      "itemback": "3200"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "2",
+      "exp": "1500",
+      "itemback": "4400"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "3",
+      "exp": "1800",
+      "itemback": "5900"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "4",
+      "exp": "2100",
+      "itemback": "7700"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "5",
+      "exp": "2400",
+      "itemback": "9800"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "6",
+      "exp": "2700",
+      "itemback": "12200"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "7",
+      "exp": "3000",
+      "itemback": "14900"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "8",
+      "exp": "3300",
+      "itemback": "17900"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "9",
+      "exp": "3600",
+      "itemback": "21200"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "10",
+      "exp": "3900",
+      "itemback": "24800"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "11",
+      "exp": "4200",
+      "itemback": "28700"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "12",
+      "exp": "4500",
+      "itemback": "32900"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "13",
+      "exp": "4800",
+      "itemback": "37400"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "14",
+      "exp": "5100",
+      "itemback": "42200"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "15",
+      "exp": "5400",
+      "itemback": "47300"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "16",
+      "exp": "5700",
+      "itemback": "52700"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "17",
+      "exp": "6000",
+      "itemback": "58400"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "18",
+      "exp": "6300",
+      "itemback": "64400"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "19",
+      "exp": "6600",
+      "itemback": "70700"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "20",
+      "exp": "6900",
+      "itemback": "77300"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "21",
+      "exp": "7200",
+      "itemback": "84200"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "22",
+      "exp": "7500",
+      "itemback": "91400"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "23",
+      "exp": "7800",
+      "itemback": "98900"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "24",
+      "exp": "8100",
+      "itemback": "106700"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "25",
+      "exp": "8400",
+      "itemback": "114800"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "26",
+      "exp": "8700",
+      "itemback": "123200"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "27",
+      "exp": "9000",
+      "itemback": "131900"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "28",
+      "exp": "9300",
+      "itemback": "140900"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "29",
+      "exp": "9600",
+      "itemback": "150200"
+    },
+    {
+      "type": "1",
+      "color": "8",
+      "level": "30",
+      "exp": "9900",
+      "itemback": "159800"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "1",
+      "exp": "1",
+      "itemback": "5000"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "2",
+      "exp": "1",
+      "itemback": "5480"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "3",
+      "exp": "1",
+      "itemback": "6120"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "4",
+      "exp": "1",
+      "itemback": "6920"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "5",
+      "exp": "1",
+      "itemback": "7880"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "6",
+      "exp": "1",
+      "itemback": "9000"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "7",
+      "exp": "1",
+      "itemback": "10280"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "8",
+      "exp": "1",
+      "itemback": "11720"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "9",
+      "exp": "1",
+      "itemback": "13320"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "10",
+      "exp": "1",
+      "itemback": "15080"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "11",
+      "exp": "1",
+      "itemback": "17000"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "12",
+      "exp": "1",
+      "itemback": "19080"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "13",
+      "exp": "1",
+      "itemback": "21320"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "14",
+      "exp": "1",
+      "itemback": "23720"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "15",
+      "exp": "1",
+      "itemback": "26280"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "16",
+      "exp": "1",
+      "itemback": "29000"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "17",
+      "exp": "1",
+      "itemback": "31880"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "18",
+      "exp": "1",
+      "itemback": "34920"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "19",
+      "exp": "1",
+      "itemback": "38120"
+    },
+    {
+      "type": "2",
+      "color": "8",
+      "level": "20",
+      "exp": "1",
+      "itemback": "41480"
+    }
+  ],
+  "other": [
+    {
+      "exp_id_0": "70101",
+      "exp_id_1": "70102",
+      "exp_id_2": "70103",
+      "exp_id_3": "70104",
+      "exp_0": "200",
+      "exp_1": "500",
+      "exp_2": "1000",
+      "exp_3": "2000",
+      "max_level": "30",
+      "max_bag": "300",
+      "up_item_id": "70100"
+    }
+  ],
+  "ins_back": [
+    {
+      "color": "3",
+      "level": "1",
+      "ins_back_num": "0"
+    },
+    {
+      "color": "3",
+      "level": "2",
+      "ins_back_num": "88"
+    },
+    {
+      "color": "3",
+      "level": "3",
+      "ins_back_num": "120"
+    },
+    {
+      "color": "3",
+      "level": "4",
+      "ins_back_num": "160"
+    },
+    {
+      "color": "3",
+      "level": "5",
+      "ins_back_num": "208"
+    },
+    {
+      "color": "3",
+      "level": "6",
+      "ins_back_num": "264"
+    },
+    {
+      "color": "3",
+      "level": "7",
+      "ins_back_num": "328"
+    },
+    {
+      "color": "3",
+      "level": "8",
+      "ins_back_num": "400"
+    },
+    {
+      "color": "3",
+      "level": "9",
+      "ins_back_num": "480"
+    },
+    {
+      "color": "3",
+      "level": "10",
+      "ins_back_num": "568"
+    },
+    {
+      "color": "3",
+      "level": "11",
+      "ins_back_num": "664"
+    },
+    {
+      "color": "3",
+      "level": "12",
+      "ins_back_num": "768"
+    },
+    {
+      "color": "3",
+      "level": "13",
+      "ins_back_num": "880"
+    },
+    {
+      "color": "3",
+      "level": "14",
+      "ins_back_num": "1000"
+    },
+    {
+      "color": "3",
+      "level": "15",
+      "ins_back_num": "1128"
+    },
+    {
+      "color": "3",
+      "level": "16",
+      "ins_back_num": "1264"
+    },
+    {
+      "color": "3",
+      "level": "17",
+      "ins_back_num": "1408"
+    },
+    {
+      "color": "3",
+      "level": "18",
+      "ins_back_num": "1560"
+    },
+    {
+      "color": "3",
+      "level": "19",
+      "ins_back_num": "1720"
+    },
+    {
+      "color": "3",
+      "level": "20",
+      "ins_back_num": "1888"
+    },
+    {
+      "color": "3",
+      "level": "21",
+      "ins_back_num": "2064"
+    },
+    {
+      "color": "3",
+      "level": "22",
+      "ins_back_num": "2248"
+    },
+    {
+      "color": "3",
+      "level": "23",
+      "ins_back_num": "2440"
+    },
+    {
+      "color": "3",
+      "level": "24",
+      "ins_back_num": "2640"
+    },
+    {
+      "color": "3",
+      "level": "25",
+      "ins_back_num": "2848"
+    },
+    {
+      "color": "3",
+      "level": "26",
+      "ins_back_num": "3064"
+    },
+    {
+      "color": "3",
+      "level": "27",
+      "ins_back_num": "3288"
+    },
+    {
+      "color": "3",
+      "level": "28",
+      "ins_back_num": "3520"
+    },
+    {
+      "color": "3",
+      "level": "29",
+      "ins_back_num": "3760"
+    },
+    {
+      "color": "3",
+      "level": "30",
+      "ins_back_num": "4008"
+    },
+    {
+      "color": "3",
+      "level": "31",
+      "ins_back_num": "4264"
+    },
+    {
+      "color": "3",
+      "level": "32",
+      "ins_back_num": "4528"
+    },
+    {
+      "color": "3",
+      "level": "33",
+      "ins_back_num": "4800"
+    },
+    {
+      "color": "3",
+      "level": "34",
+      "ins_back_num": "5080"
+    },
+    {
+      "color": "3",
+      "level": "35",
+      "ins_back_num": "5368"
+    },
+    {
+      "color": "3",
+      "level": "36",
+      "ins_back_num": "5664"
+    },
+    {
+      "color": "3",
+      "level": "37",
+      "ins_back_num": "5968"
+    },
+    {
+      "color": "3",
+      "level": "38",
+      "ins_back_num": "6280"
+    },
+    {
+      "color": "3",
+      "level": "39",
+      "ins_back_num": "6600"
+    },
+    {
+      "color": "3",
+      "level": "40",
+      "ins_back_num": "6928"
+    },
+    {
+      "color": "3",
+      "level": "41",
+      "ins_back_num": "7264"
+    },
+    {
+      "color": "3",
+      "level": "42",
+      "ins_back_num": "7608"
+    },
+    {
+      "color": "3",
+      "level": "43",
+      "ins_back_num": "7960"
+    },
+    {
+      "color": "3",
+      "level": "44",
+      "ins_back_num": "8320"
+    },
+    {
+      "color": "3",
+      "level": "45",
+      "ins_back_num": "8688"
+    },
+    {
+      "color": "3",
+      "level": "46",
+      "ins_back_num": "9064"
+    },
+    {
+      "color": "3",
+      "level": "47",
+      "ins_back_num": "9448"
+    },
+    {
+      "color": "3",
+      "level": "48",
+      "ins_back_num": "9840"
+    },
+    {
+      "color": "3",
+      "level": "49",
+      "ins_back_num": "10240"
+    },
+    {
+      "color": "3",
+      "level": "50",
+      "ins_back_num": "10648"
+    },
+    {
+      "color": "3",
+      "level": "51",
+      "ins_back_num": "11064"
+    },
+    {
+      "color": "3",
+      "level": "52",
+      "ins_back_num": "11488"
+    },
+    {
+      "color": "3",
+      "level": "53",
+      "ins_back_num": "11920"
+    },
+    {
+      "color": "3",
+      "level": "54",
+      "ins_back_num": "12360"
+    },
+    {
+      "color": "3",
+      "level": "55",
+      "ins_back_num": "12808"
+    },
+    {
+      "color": "3",
+      "level": "56",
+      "ins_back_num": "13264"
+    },
+    {
+      "color": "3",
+      "level": "57",
+      "ins_back_num": "13728"
+    },
+    {
+      "color": "3",
+      "level": "58",
+      "ins_back_num": "14200"
+    },
+    {
+      "color": "3",
+      "level": "59",
+      "ins_back_num": "14680"
+    },
+    {
+      "color": "3",
+      "level": "60",
+      "ins_back_num": "15168"
+    },
+    {
+      "color": "3",
+      "level": "61",
+      "ins_back_num": "15664"
+    },
+    {
+      "color": "3",
+      "level": "62",
+      "ins_back_num": "16168"
+    },
+    {
+      "color": "3",
+      "level": "63",
+      "ins_back_num": "16680"
+    },
+    {
+      "color": "3",
+      "level": "64",
+      "ins_back_num": "17200"
+    },
+    {
+      "color": "3",
+      "level": "65",
+      "ins_back_num": "17728"
+    },
+    {
+      "color": "3",
+      "level": "66",
+      "ins_back_num": "18264"
+    },
+    {
+      "color": "3",
+      "level": "67",
+      "ins_back_num": "18808"
+    },
+    {
+      "color": "3",
+      "level": "68",
+      "ins_back_num": "19360"
+    },
+    {
+      "color": "3",
+      "level": "69",
+      "ins_back_num": "19920"
+    },
+    {
+      "color": "3",
+      "level": "70",
+      "ins_back_num": "20488"
+    },
+    {
+      "color": "3",
+      "level": "71",
+      "ins_back_num": "21064"
+    },
+    {
+      "color": "3",
+      "level": "72",
+      "ins_back_num": "21648"
+    },
+    {
+      "color": "3",
+      "level": "73",
+      "ins_back_num": "22240"
+    },
+    {
+      "color": "3",
+      "level": "74",
+      "ins_back_num": "22840"
+    },
+    {
+      "color": "3",
+      "level": "75",
+      "ins_back_num": "23448"
+    },
+    {
+      "color": "3",
+      "level": "76",
+      "ins_back_num": "24064"
+    },
+    {
+      "color": "3",
+      "level": "77",
+      "ins_back_num": "24688"
+    },
+    {
+      "color": "3",
+      "level": "78",
+      "ins_back_num": "25320"
+    },
+    {
+      "color": "3",
+      "level": "79",
+      "ins_back_num": "25960"
+    },
+    {
+      "color": "3",
+      "level": "80",
+      "ins_back_num": "26608"
+    },
+    {
+      "color": "3",
+      "level": "81",
+      "ins_back_num": "27264"
+    },
+    {
+      "color": "3",
+      "level": "82",
+      "ins_back_num": "27928"
+    },
+    {
+      "color": "3",
+      "level": "83",
+      "ins_back_num": "28600"
+    },
+    {
+      "color": "3",
+      "level": "84",
+      "ins_back_num": "29280"
+    },
+    {
+      "color": "3",
+      "level": "85",
+      "ins_back_num": "29968"
+    },
+    {
+      "color": "3",
+      "level": "86",
+      "ins_back_num": "30664"
+    },
+    {
+      "color": "3",
+      "level": "87",
+      "ins_back_num": "31368"
+    },
+    {
+      "color": "3",
+      "level": "88",
+      "ins_back_num": "32080"
+    },
+    {
+      "color": "3",
+      "level": "89",
+      "ins_back_num": "32800"
+    },
+    {
+      "color": "3",
+      "level": "90",
+      "ins_back_num": "33528"
+    },
+    {
+      "color": "3",
+      "level": "91",
+      "ins_back_num": "34264"
+    },
+    {
+      "color": "3",
+      "level": "92",
+      "ins_back_num": "35008"
+    },
+    {
+      "color": "3",
+      "level": "93",
+      "ins_back_num": "35760"
+    },
+    {
+      "color": "3",
+      "level": "94",
+      "ins_back_num": "36520"
+    },
+    {
+      "color": "3",
+      "level": "95",
+      "ins_back_num": "37288"
+    },
+    {
+      "color": "3",
+      "level": "96",
+      "ins_back_num": "38064"
+    },
+    {
+      "color": "3",
+      "level": "97",
+      "ins_back_num": "38848"
+    },
+    {
+      "color": "3",
+      "level": "98",
+      "ins_back_num": "39640"
+    },
+    {
+      "color": "3",
+      "level": "99",
+      "ins_back_num": "40440"
+    },
+    {
+      "color": "3",
+      "level": "100",
+      "ins_back_num": "41248"
+    },
+    {
+      "color": "4",
+      "level": "1",
+      "ins_back_num": "0"
+    },
+    {
+      "color": "4",
+      "level": "2",
+      "ins_back_num": "208"
+    },
+    {
+      "color": "4",
+      "level": "3",
+      "ins_back_num": "272"
+    },
+    {
+      "color": "4",
+      "level": "4",
+      "ins_back_num": "352"
+    },
+    {
+      "color": "4",
+      "level": "5",
+      "ins_back_num": "448"
+    },
+    {
+      "color": "4",
+      "level": "6",
+      "ins_back_num": "560"
+    },
+    {
+      "color": "4",
+      "level": "7",
+      "ins_back_num": "688"
+    },
+    {
+      "color": "4",
+      "level": "8",
+      "ins_back_num": "832"
+    },
+    {
+      "color": "4",
+      "level": "9",
+      "ins_back_num": "992"
+    },
+    {
+      "color": "4",
+      "level": "10",
+      "ins_back_num": "1168"
+    },
+    {
+      "color": "4",
+      "level": "11",
+      "ins_back_num": "1360"
+    },
+    {
+      "color": "4",
+      "level": "12",
+      "ins_back_num": "1568"
+    },
+    {
+      "color": "4",
+      "level": "13",
+      "ins_back_num": "1792"
+    },
+    {
+      "color": "4",
+      "level": "14",
+      "ins_back_num": "2032"
+    },
+    {
+      "color": "4",
+      "level": "15",
+      "ins_back_num": "2288"
+    },
+    {
+      "color": "4",
+      "level": "16",
+      "ins_back_num": "2560"
+    },
+    {
+      "color": "4",
+      "level": "17",
+      "ins_back_num": "2848"
+    },
+    {
+      "color": "4",
+      "level": "18",
+      "ins_back_num": "3152"
+    },
+    {
+      "color": "4",
+      "level": "19",
+      "ins_back_num": "3472"
+    },
+    {
+      "color": "4",
+      "level": "20",
+      "ins_back_num": "3808"
+    },
+    {
+      "color": "4",
+      "level": "21",
+      "ins_back_num": "4160"
+    },
+    {
+      "color": "4",
+      "level": "22",
+      "ins_back_num": "4528"
+    },
+    {
+      "color": "4",
+      "level": "23",
+      "ins_back_num": "4912"
+    },
+    {
+      "color": "4",
+      "level": "24",
+      "ins_back_num": "5312"
+    },
+    {
+      "color": "4",
+      "level": "25",
+      "ins_back_num": "5728"
+    },
+    {
+      "color": "4",
+      "level": "26",
+      "ins_back_num": "6160"
+    },
+    {
+      "color": "4",
+      "level": "27",
+      "ins_back_num": "6608"
+    },
+    {
+      "color": "4",
+      "level": "28",
+      "ins_back_num": "7072"
+    },
+    {
+      "color": "4",
+      "level": "29",
+      "ins_back_num": "7552"
+    },
+    {
+      "color": "4",
+      "level": "30",
+      "ins_back_num": "8048"
+    },
+    {
+      "color": "4",
+      "level": "31",
+      "ins_back_num": "8560"
+    },
+    {
+      "color": "4",
+      "level": "32",
+      "ins_back_num": "9088"
+    },
+    {
+      "color": "4",
+      "level": "33",
+      "ins_back_num": "9632"
+    },
+    {
+      "color": "4",
+      "level": "34",
+      "ins_back_num": "10192"
+    },
+    {
+      "color": "4",
+      "level": "35",
+      "ins_back_num": "10768"
+    },
+    {
+      "color": "4",
+      "level": "36",
+      "ins_back_num": "11360"
+    },
+    {
+      "color": "4",
+      "level": "37",
+      "ins_back_num": "11968"
+    },
+    {
+      "color": "4",
+      "level": "38",
+      "ins_back_num": "12592"
+    },
+    {
+      "color": "4",
+      "level": "39",
+      "ins_back_num": "13232"
+    },
+    {
+      "color": "4",
+      "level": "40",
+      "ins_back_num": "13888"
+    },
+    {
+      "color": "4",
+      "level": "41",
+      "ins_back_num": "14560"
+    },
+    {
+      "color": "4",
+      "level": "42",
+      "ins_back_num": "15248"
+    },
+    {
+      "color": "4",
+      "level": "43",
+      "ins_back_num": "15952"
+    },
+    {
+      "color": "4",
+      "level": "44",
+      "ins_back_num": "16672"
+    },
+    {
+      "color": "4",
+      "level": "45",
+      "ins_back_num": "17408"
+    },
+    {
+      "color": "4",
+      "level": "46",
+      "ins_back_num": "18160"
+    },
+    {
+      "color": "4",
+      "level": "47",
+      "ins_back_num": "18928"
+    },
+    {
+      "color": "4",
+      "level": "48",
+      "ins_back_num": "19712"
+    },
+    {
+      "color": "4",
+      "level": "49",
+      "ins_back_num": "20512"
+    },
+    {
+      "color": "4",
+      "level": "50",
+      "ins_back_num": "21328"
+    },
+    {
+      "color": "4",
+      "level": "51",
+      "ins_back_num": "22160"
+    },
+    {
+      "color": "4",
+      "level": "52",
+      "ins_back_num": "23008"
+    },
+    {
+      "color": "4",
+      "level": "53",
+      "ins_back_num": "23872"
+    },
+    {
+      "color": "4",
+      "level": "54",
+      "ins_back_num": "24752"
+    },
+    {
+      "color": "4",
+      "level": "55",
+      "ins_back_num": "25648"
+    },
+    {
+      "color": "4",
+      "level": "56",
+      "ins_back_num": "26560"
+    },
+    {
+      "color": "4",
+      "level": "57",
+      "ins_back_num": "27488"
+    },
+    {
+      "color": "4",
+      "level": "58",
+      "ins_back_num": "28432"
+    },
+    {
+      "color": "4",
+      "level": "59",
+      "ins_back_num": "29392"
+    },
+    {
+      "color": "4",
+      "level": "60",
+      "ins_back_num": "30368"
+    },
+    {
+      "color": "4",
+      "level": "61",
+      "ins_back_num": "31360"
+    },
+    {
+      "color": "4",
+      "level": "62",
+      "ins_back_num": "32368"
+    },
+    {
+      "color": "4",
+      "level": "63",
+      "ins_back_num": "33392"
+    },
+    {
+      "color": "4",
+      "level": "64",
+      "ins_back_num": "34432"
+    },
+    {
+      "color": "4",
+      "level": "65",
+      "ins_back_num": "35488"
+    },
+    {
+      "color": "4",
+      "level": "66",
+      "ins_back_num": "36560"
+    },
+    {
+      "color": "4",
+      "level": "67",
+      "ins_back_num": "37648"
+    },
+    {
+      "color": "4",
+      "level": "68",
+      "ins_back_num": "38752"
+    },
+    {
+      "color": "4",
+      "level": "69",
+      "ins_back_num": "39872"
+    },
+    {
+      "color": "4",
+      "level": "70",
+      "ins_back_num": "41008"
+    },
+    {
+      "color": "4",
+      "level": "71",
+      "ins_back_num": "42160"
+    },
+    {
+      "color": "4",
+      "level": "72",
+      "ins_back_num": "43328"
+    },
+    {
+      "color": "4",
+      "level": "73",
+      "ins_back_num": "44512"
+    },
+    {
+      "color": "4",
+      "level": "74",
+      "ins_back_num": "45712"
+    },
+    {
+      "color": "4",
+      "level": "75",
+      "ins_back_num": "46928"
+    },
+    {
+      "color": "4",
+      "level": "76",
+      "ins_back_num": "48160"
+    },
+    {
+      "color": "4",
+      "level": "77",
+      "ins_back_num": "49408"
+    },
+    {
+      "color": "4",
+      "level": "78",
+      "ins_back_num": "50672"
+    },
+    {
+      "color": "4",
+      "level": "79",
+      "ins_back_num": "51952"
+    },
+    {
+      "color": "4",
+      "level": "80",
+      "ins_back_num": "53248"
+    },
+    {
+      "color": "4",
+      "level": "81",
+      "ins_back_num": "54560"
+    },
+    {
+      "color": "4",
+      "level": "82",
+      "ins_back_num": "55888"
+    },
+    {
+      "color": "4",
+      "level": "83",
+      "ins_back_num": "57232"
+    },
+    {
+      "color": "4",
+      "level": "84",
+      "ins_back_num": "58592"
+    },
+    {
+      "color": "4",
+      "level": "85",
+      "ins_back_num": "59968"
+    },
+    {
+      "color": "4",
+      "level": "86",
+      "ins_back_num": "61360"
+    },
+    {
+      "color": "4",
+      "level": "87",
+      "ins_back_num": "62768"
+    },
+    {
+      "color": "4",
+      "level": "88",
+      "ins_back_num": "64192"
+    },
+    {
+      "color": "4",
+      "level": "89",
+      "ins_back_num": "65632"
+    },
+    {
+      "color": "4",
+      "level": "90",
+      "ins_back_num": "67088"
+    },
+    {
+      "color": "4",
+      "level": "91",
+      "ins_back_num": "68560"
+    },
+    {
+      "color": "4",
+      "level": "92",
+      "ins_back_num": "70048"
+    },
+    {
+      "color": "4",
+      "level": "93",
+      "ins_back_num": "71552"
+    },
+    {
+      "color": "4",
+      "level": "94",
+      "ins_back_num": "73072"
+    },
+    {
+      "color": "4",
+      "level": "95",
+      "ins_back_num": "74608"
+    },
+    {
+      "color": "4",
+      "level": "96",
+      "ins_back_num": "76160"
+    },
+    {
+      "color": "4",
+      "level": "97",
+      "ins_back_num": "77728"
+    },
+    {
+      "color": "4",
+      "level": "98",
+      "ins_back_num": "79312"
+    },
+    {
+      "color": "4",
+      "level": "99",
+      "ins_back_num": "80912"
+    },
+    {
+      "color": "4",
+      "level": "100",
+      "ins_back_num": "82528"
+    },
+    {
+      "color": "5",
+      "level": "1",
+      "ins_back_num": "0"
+    },
+    {
+      "color": "5",
+      "level": "2",
+      "ins_back_num": "552"
+    },
+    {
+      "color": "5",
+      "level": "3",
+      "ins_back_num": "648"
+    },
+    {
+      "color": "5",
+      "level": "4",
+      "ins_back_num": "768"
+    },
+    {
+      "color": "5",
+      "level": "5",
+      "ins_back_num": "912"
+    },
+    {
+      "color": "5",
+      "level": "6",
+      "ins_back_num": "1080"
+    },
+    {
+      "color": "5",
+      "level": "7",
+      "ins_back_num": "1272"
+    },
+    {
+      "color": "5",
+      "level": "8",
+      "ins_back_num": "1488"
+    },
+    {
+      "color": "5",
+      "level": "9",
+      "ins_back_num": "1728"
+    },
+    {
+      "color": "5",
+      "level": "10",
+      "ins_back_num": "1992"
+    },
+    {
+      "color": "5",
+      "level": "11",
+      "ins_back_num": "2280"
+    },
+    {
+      "color": "5",
+      "level": "12",
+      "ins_back_num": "2592"
+    },
+    {
+      "color": "5",
+      "level": "13",
+      "ins_back_num": "2928"
+    },
+    {
+      "color": "5",
+      "level": "14",
+      "ins_back_num": "3288"
+    },
+    {
+      "color": "5",
+      "level": "15",
+      "ins_back_num": "3672"
+    },
+    {
+      "color": "5",
+      "level": "16",
+      "ins_back_num": "4080"
+    },
+    {
+      "color": "5",
+      "level": "17",
+      "ins_back_num": "4512"
+    },
+    {
+      "color": "5",
+      "level": "18",
+      "ins_back_num": "4968"
+    },
+    {
+      "color": "5",
+      "level": "19",
+      "ins_back_num": "5448"
+    },
+    {
+      "color": "5",
+      "level": "20",
+      "ins_back_num": "5952"
+    },
+    {
+      "color": "5",
+      "level": "21",
+      "ins_back_num": "6480"
+    },
+    {
+      "color": "5",
+      "level": "22",
+      "ins_back_num": "7032"
+    },
+    {
+      "color": "5",
+      "level": "23",
+      "ins_back_num": "7608"
+    },
+    {
+      "color": "5",
+      "level": "24",
+      "ins_back_num": "8208"
+    },
+    {
+      "color": "5",
+      "level": "25",
+      "ins_back_num": "8832"
+    },
+    {
+      "color": "5",
+      "level": "26",
+      "ins_back_num": "9480"
+    },
+    {
+      "color": "5",
+      "level": "27",
+      "ins_back_num": "10152"
+    },
+    {
+      "color": "5",
+      "level": "28",
+      "ins_back_num": "10848"
+    },
+    {
+      "color": "5",
+      "level": "29",
+      "ins_back_num": "11568"
+    },
+    {
+      "color": "5",
+      "level": "30",
+      "ins_back_num": "12312"
+    },
+    {
+      "color": "5",
+      "level": "31",
+      "ins_back_num": "13080"
+    },
+    {
+      "color": "5",
+      "level": "32",
+      "ins_back_num": "13872"
+    },
+    {
+      "color": "5",
+      "level": "33",
+      "ins_back_num": "14688"
+    },
+    {
+      "color": "5",
+      "level": "34",
+      "ins_back_num": "15528"
+    },
+    {
+      "color": "5",
+      "level": "35",
+      "ins_back_num": "16392"
+    },
+    {
+      "color": "5",
+      "level": "36",
+      "ins_back_num": "17280"
+    },
+    {
+      "color": "5",
+      "level": "37",
+      "ins_back_num": "18192"
+    },
+    {
+      "color": "5",
+      "level": "38",
+      "ins_back_num": "19128"
+    },
+    {
+      "color": "5",
+      "level": "39",
+      "ins_back_num": "20088"
+    },
+    {
+      "color": "5",
+      "level": "40",
+      "ins_back_num": "21072"
+    },
+    {
+      "color": "5",
+      "level": "41",
+      "ins_back_num": "22080"
+    },
+    {
+      "color": "5",
+      "level": "42",
+      "ins_back_num": "23112"
+    },
+    {
+      "color": "5",
+      "level": "43",
+      "ins_back_num": "24168"
+    },
+    {
+      "color": "5",
+      "level": "44",
+      "ins_back_num": "25248"
+    },
+    {
+      "color": "5",
+      "level": "45",
+      "ins_back_num": "26352"
+    },
+    {
+      "color": "5",
+      "level": "46",
+      "ins_back_num": "27480"
+    },
+    {
+      "color": "5",
+      "level": "47",
+      "ins_back_num": "28632"
+    },
+    {
+      "color": "5",
+      "level": "48",
+      "ins_back_num": "29808"
+    },
+    {
+      "color": "5",
+      "level": "49",
+      "ins_back_num": "31008"
+    },
+    {
+      "color": "5",
+      "level": "50",
+      "ins_back_num": "32232"
+    },
+    {
+      "color": "5",
+      "level": "51",
+      "ins_back_num": "33480"
+    },
+    {
+      "color": "5",
+      "level": "52",
+      "ins_back_num": "34752"
+    },
+    {
+      "color": "5",
+      "level": "53",
+      "ins_back_num": "36048"
+    },
+    {
+      "color": "5",
+      "level": "54",
+      "ins_back_num": "37368"
+    },
+    {
+      "color": "5",
+      "level": "55",
+      "ins_back_num": "38712"
+    },
+    {
+      "color": "5",
+      "level": "56",
+      "ins_back_num": "40080"
+    },
+    {
+      "color": "5",
+      "level": "57",
+      "ins_back_num": "41472"
+    },
+    {
+      "color": "5",
+      "level": "58",
+      "ins_back_num": "42888"
+    },
+    {
+      "color": "5",
+      "level": "59",
+      "ins_back_num": "44328"
+    },
+    {
+      "color": "5",
+      "level": "60",
+      "ins_back_num": "45792"
+    },
+    {
+      "color": "5",
+      "level": "61",
+      "ins_back_num": "47280"
+    },
+    {
+      "color": "5",
+      "level": "62",
+      "ins_back_num": "48792"
+    },
+    {
+      "color": "5",
+      "level": "63",
+      "ins_back_num": "50328"
+    },
+    {
+      "color": "5",
+      "level": "64",
+      "ins_back_num": "51888"
+    },
+    {
+      "color": "5",
+      "level": "65",
+      "ins_back_num": "53472"
+    },
+    {
+      "color": "5",
+      "level": "66",
+      "ins_back_num": "55080"
+    },
+    {
+      "color": "5",
+      "level": "67",
+      "ins_back_num": "56712"
+    },
+    {
+      "color": "5",
+      "level": "68",
+      "ins_back_num": "58368"
+    },
+    {
+      "color": "5",
+      "level": "69",
+      "ins_back_num": "60048"
+    },
+    {
+      "color": "5",
+      "level": "70",
+      "ins_back_num": "61752"
+    },
+    {
+      "color": "5",
+      "level": "71",
+      "ins_back_num": "63480"
+    },
+    {
+      "color": "5",
+      "level": "72",
+      "ins_back_num": "65232"
+    },
+    {
+      "color": "5",
+      "level": "73",
+      "ins_back_num": "67008"
+    },
+    {
+      "color": "5",
+      "level": "74",
+      "ins_back_num": "68808"
+    },
+    {
+      "color": "5",
+      "level": "75",
+      "ins_back_num": "70632"
+    },
+    {
+      "color": "5",
+      "level": "76",
+      "ins_back_num": "72480"
+    },
+    {
+      "color": "5",
+      "level": "77",
+      "ins_back_num": "74352"
+    },
+    {
+      "color": "5",
+      "level": "78",
+      "ins_back_num": "76248"
+    },
+    {
+      "color": "5",
+      "level": "79",
+      "ins_back_num": "78168"
+    },
+    {
+      "color": "5",
+      "level": "80",
+      "ins_back_num": "80112"
+    },
+    {
+      "color": "5",
+      "level": "81",
+      "ins_back_num": "82080"
+    },
+    {
+      "color": "5",
+      "level": "82",
+      "ins_back_num": "84072"
+    },
+    {
+      "color": "5",
+      "level": "83",
+      "ins_back_num": "86088"
+    },
+    {
+      "color": "5",
+      "level": "84",
+      "ins_back_num": "88128"
+    },
+    {
+      "color": "5",
+      "level": "85",
+      "ins_back_num": "90192"
+    },
+    {
+      "color": "5",
+      "level": "86",
+      "ins_back_num": "92280"
+    },
+    {
+      "color": "5",
+      "level": "87",
+      "ins_back_num": "94392"
+    },
+    {
+      "color": "5",
+      "level": "88",
+      "ins_back_num": "96528"
+    },
+    {
+      "color": "5",
+      "level": "89",
+      "ins_back_num": "98688"
+    },
+    {
+      "color": "5",
+      "level": "90",
+      "ins_back_num": "100872"
+    },
+    {
+      "color": "5",
+      "level": "91",
+      "ins_back_num": "103080"
+    },
+    {
+      "color": "5",
+      "level": "92",
+      "ins_back_num": "105312"
+    },
+    {
+      "color": "5",
+      "level": "93",
+      "ins_back_num": "107568"
+    },
+    {
+      "color": "5",
+      "level": "94",
+      "ins_back_num": "109848"
+    },
+    {
+      "color": "5",
+      "level": "95",
+      "ins_back_num": "112152"
+    },
+    {
+      "color": "5",
+      "level": "96",
+      "ins_back_num": "114480"
+    },
+    {
+      "color": "5",
+      "level": "97",
+      "ins_back_num": "116832"
+    },
+    {
+      "color": "5",
+      "level": "98",
+      "ins_back_num": "119208"
+    },
+    {
+      "color": "5",
+      "level": "99",
+      "ins_back_num": "121608"
+    },
+    {
+      "color": "5",
+      "level": "100",
+      "ins_back_num": "124032"
+    },
+    {
+      "color": "6",
+      "level": "1",
+      "ins_back_num": "0"
+    },
+    {
+      "color": "6",
+      "level": "2",
+      "ins_back_num": "1056"
+    },
+    {
+      "color": "6",
+      "level": "3",
+      "ins_back_num": "1184"
+    },
+    {
+      "color": "6",
+      "level": "4",
+      "ins_back_num": "1344"
+    },
+    {
+      "color": "6",
+      "level": "5",
+      "ins_back_num": "1536"
+    },
+    {
+      "color": "6",
+      "level": "6",
+      "ins_back_num": "1760"
+    },
+    {
+      "color": "6",
+      "level": "7",
+      "ins_back_num": "2016"
+    },
+    {
+      "color": "6",
+      "level": "8",
+      "ins_back_num": "2304"
+    },
+    {
+      "color": "6",
+      "level": "9",
+      "ins_back_num": "2624"
+    },
+    {
+      "color": "6",
+      "level": "10",
+      "ins_back_num": "2976"
+    },
+    {
+      "color": "6",
+      "level": "11",
+      "ins_back_num": "3360"
+    },
+    {
+      "color": "6",
+      "level": "12",
+      "ins_back_num": "3776"
+    },
+    {
+      "color": "6",
+      "level": "13",
+      "ins_back_num": "4224"
+    },
+    {
+      "color": "6",
+      "level": "14",
+      "ins_back_num": "4704"
+    },
+    {
+      "color": "6",
+      "level": "15",
+      "ins_back_num": "5216"
+    },
+    {
+      "color": "6",
+      "level": "16",
+      "ins_back_num": "5760"
+    },
+    {
+      "color": "6",
+      "level": "17",
+      "ins_back_num": "6336"
+    },
+    {
+      "color": "6",
+      "level": "18",
+      "ins_back_num": "6944"
+    },
+    {
+      "color": "6",
+      "level": "19",
+      "ins_back_num": "7584"
+    },
+    {
+      "color": "6",
+      "level": "20",
+      "ins_back_num": "8256"
+    },
+    {
+      "color": "6",
+      "level": "21",
+      "ins_back_num": "8960"
+    },
+    {
+      "color": "6",
+      "level": "22",
+      "ins_back_num": "9696"
+    },
+    {
+      "color": "6",
+      "level": "23",
+      "ins_back_num": "10464"
+    },
+    {
+      "color": "6",
+      "level": "24",
+      "ins_back_num": "11264"
+    },
+    {
+      "color": "6",
+      "level": "25",
+      "ins_back_num": "12096"
+    },
+    {
+      "color": "6",
+      "level": "26",
+      "ins_back_num": "12960"
+    },
+    {
+      "color": "6",
+      "level": "27",
+      "ins_back_num": "13856"
+    },
+    {
+      "color": "6",
+      "level": "28",
+      "ins_back_num": "14784"
+    },
+    {
+      "color": "6",
+      "level": "29",
+      "ins_back_num": "15744"
+    },
+    {
+      "color": "6",
+      "level": "30",
+      "ins_back_num": "16736"
+    },
+    {
+      "color": "6",
+      "level": "31",
+      "ins_back_num": "17760"
+    },
+    {
+      "color": "6",
+      "level": "32",
+      "ins_back_num": "18816"
+    },
+    {
+      "color": "6",
+      "level": "33",
+      "ins_back_num": "19904"
+    },
+    {
+      "color": "6",
+      "level": "34",
+      "ins_back_num": "21024"
+    },
+    {
+      "color": "6",
+      "level": "35",
+      "ins_back_num": "22176"
+    },
+    {
+      "color": "6",
+      "level": "36",
+      "ins_back_num": "23360"
+    },
+    {
+      "color": "6",
+      "level": "37",
+      "ins_back_num": "24576"
+    },
+    {
+      "color": "6",
+      "level": "38",
+      "ins_back_num": "25824"
+    },
+    {
+      "color": "6",
+      "level": "39",
+      "ins_back_num": "27104"
+    },
+    {
+      "color": "6",
+      "level": "40",
+      "ins_back_num": "28416"
+    },
+    {
+      "color": "6",
+      "level": "41",
+      "ins_back_num": "29760"
+    },
+    {
+      "color": "6",
+      "level": "42",
+      "ins_back_num": "31136"
+    },
+    {
+      "color": "6",
+      "level": "43",
+      "ins_back_num": "32544"
+    },
+    {
+      "color": "6",
+      "level": "44",
+      "ins_back_num": "33984"
+    },
+    {
+      "color": "6",
+      "level": "45",
+      "ins_back_num": "35456"
+    },
+    {
+      "color": "6",
+      "level": "46",
+      "ins_back_num": "36960"
+    },
+    {
+      "color": "6",
+      "level": "47",
+      "ins_back_num": "38496"
+    },
+    {
+      "color": "6",
+      "level": "48",
+      "ins_back_num": "40064"
+    },
+    {
+      "color": "6",
+      "level": "49",
+      "ins_back_num": "41664"
+    },
+    {
+      "color": "6",
+      "level": "50",
+      "ins_back_num": "43296"
+    },
+    {
+      "color": "6",
+      "level": "51",
+      "ins_back_num": "44960"
+    },
+    {
+      "color": "6",
+      "level": "52",
+      "ins_back_num": "46656"
+    },
+    {
+      "color": "6",
+      "level": "53",
+      "ins_back_num": "48384"
+    },
+    {
+      "color": "6",
+      "level": "54",
+      "ins_back_num": "50144"
+    },
+    {
+      "color": "6",
+      "level": "55",
+      "ins_back_num": "51936"
+    },
+    {
+      "color": "6",
+      "level": "56",
+      "ins_back_num": "53760"
+    },
+    {
+      "color": "6",
+      "level": "57",
+      "ins_back_num": "55616"
+    },
+    {
+      "color": "6",
+      "level": "58",
+      "ins_back_num": "57504"
+    },
+    {
+      "color": "6",
+      "level": "59",
+      "ins_back_num": "59424"
+    },
+    {
+      "color": "6",
+      "level": "60",
+      "ins_back_num": "61376"
+    },
+    {
+      "color": "6",
+      "level": "61",
+      "ins_back_num": "63360"
+    },
+    {
+      "color": "6",
+      "level": "62",
+      "ins_back_num": "65376"
+    },
+    {
+      "color": "6",
+      "level": "63",
+      "ins_back_num": "67424"
+    },
+    {
+      "color": "6",
+      "level": "64",
+      "ins_back_num": "69504"
+    },
+    {
+      "color": "6",
+      "level": "65",
+      "ins_back_num": "71616"
+    },
+    {
+      "color": "6",
+      "level": "66",
+      "ins_back_num": "73760"
+    },
+    {
+      "color": "6",
+      "level": "67",
+      "ins_back_num": "75936"
+    },
+    {
+      "color": "6",
+      "level": "68",
+      "ins_back_num": "78144"
+    },
+    {
+      "color": "6",
+      "level": "69",
+      "ins_back_num": "80384"
+    },
+    {
+      "color": "6",
+      "level": "70",
+      "ins_back_num": "82656"
+    },
+    {
+      "color": "6",
+      "level": "71",
+      "ins_back_num": "84960"
+    },
+    {
+      "color": "6",
+      "level": "72",
+      "ins_back_num": "87296"
+    },
+    {
+      "color": "6",
+      "level": "73",
+      "ins_back_num": "89664"
+    },
+    {
+      "color": "6",
+      "level": "74",
+      "ins_back_num": "92064"
+    },
+    {
+      "color": "6",
+      "level": "75",
+      "ins_back_num": "94496"
+    },
+    {
+      "color": "6",
+      "level": "76",
+      "ins_back_num": "96960"
+    },
+    {
+      "color": "6",
+      "level": "77",
+      "ins_back_num": "99456"
+    },
+    {
+      "color": "6",
+      "level": "78",
+      "ins_back_num": "101984"
+    },
+    {
+      "color": "6",
+      "level": "79",
+      "ins_back_num": "104544"
+    },
+    {
+      "color": "6",
+      "level": "80",
+      "ins_back_num": "107136"
+    },
+    {
+      "color": "6",
+      "level": "81",
+      "ins_back_num": "109760"
+    },
+    {
+      "color": "6",
+      "level": "82",
+      "ins_back_num": "112416"
+    },
+    {
+      "color": "6",
+      "level": "83",
+      "ins_back_num": "115104"
+    },
+    {
+      "color": "6",
+      "level": "84",
+      "ins_back_num": "117824"
+    },
+    {
+      "color": "6",
+      "level": "85",
+      "ins_back_num": "120576"
+    },
+    {
+      "color": "6",
+      "level": "86",
+      "ins_back_num": "123360"
+    },
+    {
+      "color": "6",
+      "level": "87",
+      "ins_back_num": "126176"
+    },
+    {
+      "color": "6",
+      "level": "88",
+      "ins_back_num": "129024"
+    },
+    {
+      "color": "6",
+      "level": "89",
+      "ins_back_num": "131904"
+    },
+    {
+      "color": "6",
+      "level": "90",
+      "ins_back_num": "134816"
+    },
+    {
+      "color": "6",
+      "level": "91",
+      "ins_back_num": "137760"
+    },
+    {
+      "color": "6",
+      "level": "92",
+      "ins_back_num": "140736"
+    },
+    {
+      "color": "6",
+      "level": "93",
+      "ins_back_num": "143744"
+    },
+    {
+      "color": "6",
+      "level": "94",
+      "ins_back_num": "146784"
+    },
+    {
+      "color": "6",
+      "level": "95",
+      "ins_back_num": "149856"
+    },
+    {
+      "color": "6",
+      "level": "96",
+      "ins_back_num": "152960"
+    },
+    {
+      "color": "6",
+      "level": "97",
+      "ins_back_num": "156096"
+    },
+    {
+      "color": "6",
+      "level": "98",
+      "ins_back_num": "159264"
+    },
+    {
+      "color": "6",
+      "level": "99",
+      "ins_back_num": "162464"
+    },
+    {
+      "color": "6",
+      "level": "100",
+      "ins_back_num": "165696"
+    },
+    {
+      "color": "7",
+      "level": "1",
+      "ins_back_num": "0"
+    },
+    {
+      "color": "7",
+      "level": "2",
+      "ins_back_num": "2040"
+    },
+    {
+      "color": "7",
+      "level": "3",
+      "ins_back_num": "2200"
+    },
+    {
+      "color": "7",
+      "level": "4",
+      "ins_back_num": "2400"
+    },
+    {
+      "color": "7",
+      "level": "5",
+      "ins_back_num": "2640"
+    },
+    {
+      "color": "7",
+      "level": "6",
+      "ins_back_num": "2920"
+    },
+    {
+      "color": "7",
+      "level": "7",
+      "ins_back_num": "3240"
+    },
+    {
+      "color": "7",
+      "level": "8",
+      "ins_back_num": "3600"
+    },
+    {
+      "color": "7",
+      "level": "9",
+      "ins_back_num": "4000"
+    },
+    {
+      "color": "7",
+      "level": "10",
+      "ins_back_num": "4440"
+    },
+    {
+      "color": "7",
+      "level": "11",
+      "ins_back_num": "4920"
+    },
+    {
+      "color": "7",
+      "level": "12",
+      "ins_back_num": "5440"
+    },
+    {
+      "color": "7",
+      "level": "13",
+      "ins_back_num": "6000"
+    },
+    {
+      "color": "7",
+      "level": "14",
+      "ins_back_num": "6600"
+    },
+    {
+      "color": "7",
+      "level": "15",
+      "ins_back_num": "7240"
+    },
+    {
+      "color": "7",
+      "level": "16",
+      "ins_back_num": "7920"
+    },
+    {
+      "color": "7",
+      "level": "17",
+      "ins_back_num": "8640"
+    },
+    {
+      "color": "7",
+      "level": "18",
+      "ins_back_num": "9400"
+    },
+    {
+      "color": "7",
+      "level": "19",
+      "ins_back_num": "10200"
+    },
+    {
+      "color": "7",
+      "level": "20",
+      "ins_back_num": "11040"
+    },
+    {
+      "color": "7",
+      "level": "21",
+      "ins_back_num": "11920"
+    },
+    {
+      "color": "7",
+      "level": "22",
+      "ins_back_num": "12840"
+    },
+    {
+      "color": "7",
+      "level": "23",
+      "ins_back_num": "13800"
+    },
+    {
+      "color": "7",
+      "level": "24",
+      "ins_back_num": "14800"
+    },
+    {
+      "color": "7",
+      "level": "25",
+      "ins_back_num": "15840"
+    },
+    {
+      "color": "7",
+      "level": "26",
+      "ins_back_num": "16920"
+    },
+    {
+      "color": "7",
+      "level": "27",
+      "ins_back_num": "18040"
+    },
+    {
+      "color": "7",
+      "level": "28",
+      "ins_back_num": "19200"
+    },
+    {
+      "color": "7",
+      "level": "29",
+      "ins_back_num": "20400"
+    },
+    {
+      "color": "7",
+      "level": "30",
+      "ins_back_num": "21640"
+    },
+    {
+      "color": "7",
+      "level": "31",
+      "ins_back_num": "22920"
+    },
+    {
+      "color": "7",
+      "level": "32",
+      "ins_back_num": "24240"
+    },
+    {
+      "color": "7",
+      "level": "33",
+      "ins_back_num": "25600"
+    },
+    {
+      "color": "7",
+      "level": "34",
+      "ins_back_num": "27000"
+    },
+    {
+      "color": "7",
+      "level": "35",
+      "ins_back_num": "28440"
+    },
+    {
+      "color": "7",
+      "level": "36",
+      "ins_back_num": "29920"
+    },
+    {
+      "color": "7",
+      "level": "37",
+      "ins_back_num": "31440"
+    },
+    {
+      "color": "7",
+      "level": "38",
+      "ins_back_num": "33000"
+    },
+    {
+      "color": "7",
+      "level": "39",
+      "ins_back_num": "34600"
+    },
+    {
+      "color": "7",
+      "level": "40",
+      "ins_back_num": "36240"
+    },
+    {
+      "color": "7",
+      "level": "41",
+      "ins_back_num": "37920"
+    },
+    {
+      "color": "7",
+      "level": "42",
+      "ins_back_num": "39640"
+    },
+    {
+      "color": "7",
+      "level": "43",
+      "ins_back_num": "41400"
+    },
+    {
+      "color": "7",
+      "level": "44",
+      "ins_back_num": "43200"
+    },
+    {
+      "color": "7",
+      "level": "45",
+      "ins_back_num": "45040"
+    },
+    {
+      "color": "7",
+      "level": "46",
+      "ins_back_num": "46920"
+    },
+    {
+      "color": "7",
+      "level": "47",
+      "ins_back_num": "48840"
+    },
+    {
+      "color": "7",
+      "level": "48",
+      "ins_back_num": "50800"
+    },
+    {
+      "color": "7",
+      "level": "49",
+      "ins_back_num": "52800"
+    },
+    {
+      "color": "7",
+      "level": "50",
+      "ins_back_num": "54840"
+    },
+    {
+      "color": "7",
+      "level": "51",
+      "ins_back_num": "56920"
+    },
+    {
+      "color": "7",
+      "level": "52",
+      "ins_back_num": "59040"
+    },
+    {
+      "color": "7",
+      "level": "53",
+      "ins_back_num": "61200"
+    },
+    {
+      "color": "7",
+      "level": "54",
+      "ins_back_num": "63400"
+    },
+    {
+      "color": "7",
+      "level": "55",
+      "ins_back_num": "65640"
+    },
+    {
+      "color": "7",
+      "level": "56",
+      "ins_back_num": "67920"
+    },
+    {
+      "color": "7",
+      "level": "57",
+      "ins_back_num": "70240"
+    },
+    {
+      "color": "7",
+      "level": "58",
+      "ins_back_num": "72600"
+    },
+    {
+      "color": "7",
+      "level": "59",
+      "ins_back_num": "75000"
+    },
+    {
+      "color": "7",
+      "level": "60",
+      "ins_back_num": "77440"
+    },
+    {
+      "color": "7",
+      "level": "61",
+      "ins_back_num": "79920"
+    },
+    {
+      "color": "7",
+      "level": "62",
+      "ins_back_num": "82440"
+    },
+    {
+      "color": "7",
+      "level": "63",
+      "ins_back_num": "85000"
+    },
+    {
+      "color": "7",
+      "level": "64",
+      "ins_back_num": "87600"
+    },
+    {
+      "color": "7",
+      "level": "65",
+      "ins_back_num": "90240"
+    },
+    {
+      "color": "7",
+      "level": "66",
+      "ins_back_num": "92920"
+    },
+    {
+      "color": "7",
+      "level": "67",
+      "ins_back_num": "95640"
+    },
+    {
+      "color": "7",
+      "level": "68",
+      "ins_back_num": "98400"
+    },
+    {
+      "color": "7",
+      "level": "69",
+      "ins_back_num": "101200"
+    },
+    {
+      "color": "7",
+      "level": "70",
+      "ins_back_num": "104040"
+    },
+    {
+      "color": "7",
+      "level": "71",
+      "ins_back_num": "106920"
+    },
+    {
+      "color": "7",
+      "level": "72",
+      "ins_back_num": "109840"
+    },
+    {
+      "color": "7",
+      "level": "73",
+      "ins_back_num": "112800"
+    },
+    {
+      "color": "7",
+      "level": "74",
+      "ins_back_num": "115800"
+    },
+    {
+      "color": "7",
+      "level": "75",
+      "ins_back_num": "118840"
+    },
+    {
+      "color": "7",
+      "level": "76",
+      "ins_back_num": "121920"
+    },
+    {
+      "color": "7",
+      "level": "77",
+      "ins_back_num": "125040"
+    },
+    {
+      "color": "7",
+      "level": "78",
+      "ins_back_num": "128200"
+    },
+    {
+      "color": "7",
+      "level": "79",
+      "ins_back_num": "131400"
+    },
+    {
+      "color": "7",
+      "level": "80",
+      "ins_back_num": "134640"
+    },
+    {
+      "color": "7",
+      "level": "81",
+      "ins_back_num": "137920"
+    },
+    {
+      "color": "7",
+      "level": "82",
+      "ins_back_num": "141240"
+    },
+    {
+      "color": "7",
+      "level": "83",
+      "ins_back_num": "144600"
+    },
+    {
+      "color": "7",
+      "level": "84",
+      "ins_back_num": "148000"
+    },
+    {
+      "color": "7",
+      "level": "85",
+      "ins_back_num": "151440"
+    },
+    {
+      "color": "7",
+      "level": "86",
+      "ins_back_num": "154920"
+    },
+    {
+      "color": "7",
+      "level": "87",
+      "ins_back_num": "158440"
+    },
+    {
+      "color": "7",
+      "level": "88",
+      "ins_back_num": "162000"
+    },
+    {
+      "color": "7",
+      "level": "89",
+      "ins_back_num": "165600"
+    },
+    {
+      "color": "7",
+      "level": "90",
+      "ins_back_num": "169240"
+    },
+    {
+      "color": "7",
+      "level": "91",
+      "ins_back_num": "172920"
+    },
+    {
+      "color": "7",
+      "level": "92",
+      "ins_back_num": "176640"
+    },
+    {
+      "color": "7",
+      "level": "93",
+      "ins_back_num": "180400"
+    },
+    {
+      "color": "7",
+      "level": "94",
+      "ins_back_num": "184200"
+    },
+    {
+      "color": "7",
+      "level": "95",
+      "ins_back_num": "188040"
+    },
+    {
+      "color": "7",
+      "level": "96",
+      "ins_back_num": "191920"
+    },
+    {
+      "color": "7",
+      "level": "97",
+      "ins_back_num": "195840"
+    },
+    {
+      "color": "7",
+      "level": "98",
+      "ins_back_num": "199800"
+    },
+    {
+      "color": "7",
+      "level": "99",
+      "ins_back_num": "203800"
+    },
+    {
+      "color": "7",
+      "level": "100",
+      "ins_back_num": "207840"
+    }
+  ]
+}

@@ -1,0 +1,1551 @@
+{
+  "duobao_rate": [
+    {
+      "duobao_type": "0",
+      "eight_grid": "1",
+      "rate": "2500"
+    },
+    {
+      "duobao_type": "0",
+      "eight_grid": "2",
+      "rate": "2500"
+    },
+    {
+      "duobao_type": "0",
+      "eight_grid": "3",
+      "rate": "1500"
+    },
+    {
+      "duobao_type": "0",
+      "eight_grid": "4",
+      "rate": "1500"
+    },
+    {
+      "duobao_type": "0",
+      "eight_grid": "5",
+      "rate": "700"
+    },
+    {
+      "duobao_type": "0",
+      "eight_grid": "6",
+      "rate": "700"
+    },
+    {
+      "duobao_type": "0",
+      "eight_grid": "7",
+      "rate": "300"
+    },
+    {
+      "duobao_type": "0",
+      "eight_grid": "8",
+      "rate": "300"
+    },
+    {
+      "duobao_type": "1",
+      "eight_grid": "9",
+      "rate": "200"
+    },
+    {
+      "duobao_type": "1",
+      "eight_grid": "10",
+      "rate": "3100"
+    },
+    {
+      "duobao_type": "1",
+      "eight_grid": "11",
+      "rate": "200"
+    },
+    {
+      "duobao_type": "1",
+      "eight_grid": "12",
+      "rate": "3100"
+    },
+    {
+      "duobao_type": "1",
+      "eight_grid": "13",
+      "rate": "200"
+    },
+    {
+      "duobao_type": "1",
+      "eight_grid": "14",
+      "rate": "1500"
+    },
+    {
+      "duobao_type": "1",
+      "eight_grid": "15",
+      "rate": "200"
+    },
+    {
+      "duobao_type": "1",
+      "eight_grid": "16",
+      "rate": "1500"
+    }
+  ],
+  "duobao": [
+    {
+      "eight_grid": "1",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "1",
+      "win": [
+        {
+          "item_id": "55000",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "10",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "2",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "2",
+      "win": [
+        {
+          "item_id": "55001",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "10",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "3",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "3",
+      "win": [
+        {
+          "item_id": "55002",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "10",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "4",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "4",
+      "win": [
+        {
+          "item_id": "55003",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "10",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "5",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "5",
+      "win": [
+        {
+          "item_id": "55000",
+          "num": "50"
+        }
+      ],
+      "acquire_num": "3",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "6",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "6",
+      "win": [
+        {
+          "item_id": "55001",
+          "num": "50"
+        }
+      ],
+      "acquire_num": "3",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "7",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "7",
+      "win": [
+        {
+          "item_id": "55002",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "8",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "8",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "8",
+      "win": [
+        {
+          "item_id": "55003",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "8",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "9",
+      "win": [
+        {
+          "item_id": "41006",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "10",
+      "win": [
+        {
+          "item_id": "41007",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "11",
+      "win": [
+        {
+          "item_id": "41008",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "12",
+      "win": [
+        {
+          "item_id": "41009",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "13",
+      "win": [
+        {
+          "item_id": "41010",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "14",
+      "win": [
+        {
+          "item_id": "41011",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "10",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "15",
+      "win": [
+        {
+          "item_id": "55004",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "20",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "11",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "16",
+      "win": [
+        {
+          "item_id": "41000",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "11",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "17",
+      "win": [
+        {
+          "item_id": "41001",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "12",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "18",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "20",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "13",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "19",
+      "win": [
+        {
+          "item_id": "41002",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "13",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "20",
+      "win": [
+        {
+          "item_id": "41003",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "14",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "21",
+      "win": [
+        {
+          "item_id": "55004",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "20",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "15",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "22",
+      "win": [
+        {
+          "item_id": "41004",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "15",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "23",
+      "win": [
+        {
+          "item_id": "41005",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "24",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "20",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "25",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "26",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "27",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "28",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "29",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "30",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "31",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "32",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "33",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "34",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "35",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "36",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "37",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "38",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "39",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "40",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "41",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "1",
+      "level_max": "99",
+      "index": "42",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "1",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "43",
+      "win": [
+        {
+          "item_id": "55000",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "10",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "2",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "44",
+      "win": [
+        {
+          "item_id": "55001",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "10",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "3",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "45",
+      "win": [
+        {
+          "item_id": "55002",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "10",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "4",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "46",
+      "win": [
+        {
+          "item_id": "55003",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "10",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "5",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "47",
+      "win": [
+        {
+          "item_id": "55000",
+          "num": "50"
+        }
+      ],
+      "acquire_num": "3",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "6",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "48",
+      "win": [
+        {
+          "item_id": "55001",
+          "num": "50"
+        }
+      ],
+      "acquire_num": "3",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "7",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "49",
+      "win": [
+        {
+          "item_id": "55002",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "8",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "8",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "50",
+      "win": [
+        {
+          "item_id": "55003",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "8",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "51",
+      "win": [
+        {
+          "item_id": "41006",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "52",
+      "win": [
+        {
+          "item_id": "41007",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "53",
+      "win": [
+        {
+          "item_id": "41008",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "54",
+      "win": [
+        {
+          "item_id": "41009",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "55",
+      "win": [
+        {
+          "item_id": "41010",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "9",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "56",
+      "win": [
+        {
+          "item_id": "41011",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "10",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "57",
+      "win": [
+        {
+          "item_id": "55004",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "20",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "11",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "58",
+      "win": [
+        {
+          "item_id": "41000",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "11",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "59",
+      "win": [
+        {
+          "item_id": "41001",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "12",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "60",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "10"
+        }
+      ],
+      "acquire_num": "20",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "13",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "61",
+      "win": [
+        {
+          "item_id": "41002",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "13",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "62",
+      "win": [
+        {
+          "item_id": "41003",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "14",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "63",
+      "win": [
+        {
+          "item_id": "55004",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "20",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "15",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "64",
+      "win": [
+        {
+          "item_id": "41004",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "15",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "65",
+      "win": [
+        {
+          "item_id": "41005",
+          "num": "1"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "5000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "66",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "20",
+      "rate_grid": "10000",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "67",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "68",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "69",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "70",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "71",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "72",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "73",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "74",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "75",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "76",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "77",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "78",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "79",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "80",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "81",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "82",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "83",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "1",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    },
+    {
+      "eight_grid": "16",
+      "level_min": "100",
+      "level_max": "300",
+      "index": "84",
+      "win": [
+        {
+          "item_id": "55005",
+          "num": "20"
+        }
+      ],
+      "acquire_num": "20",
+      "rate_grid": "0",
+      "integral": "1",
+      "id_record": "1"
+    }
+  ],
+  "jifen_jiangli": [
+    {
+      "duobao_type": "0",
+      "level": "1",
+      "integral": "10",
+      "win": [
+        {
+          "item_id": "55002",
+          "num": "50"
+        }
+      ]
+    },
+    {
+      "duobao_type": "0",
+      "level": "2",
+      "integral": "30",
+      "win": [
+        {
+          "item_id": "55003",
+          "num": "50"
+        }
+      ]
+    },
+    {
+      "duobao_type": "0",
+      "level": "3",
+      "integral": "50",
+      "win": [
+        {
+          "item_id": "40006",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "duobao_type": "0",
+      "level": "4",
+      "integral": "70",
+      "win": [
+        {
+          "item_id": "40006",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "duobao_type": "0",
+      "level": "5",
+      "integral": "100",
+      "win": [
+        {
+          "item_id": "40006",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "duobao_type": "1",
+      "level": "1",
+      "integral": "10",
+      "win": [
+        {
+          "item_id": "40006",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "duobao_type": "1",
+      "level": "2",
+      "integral": "30",
+      "win": [
+        {
+          "item_id": "40006",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "duobao_type": "1",
+      "level": "3",
+      "integral": "50",
+      "win": [
+        {
+          "item_id": "40006",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "duobao_type": "1",
+      "level": "4",
+      "integral": "70",
+      "win": [
+        {
+          "item_id": "40006",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "duobao_type": "1",
+      "level": "5",
+      "integral": "100",
+      "win": [
+        {
+          "item_id": "40006",
+          "num": "1"
+        }
+      ]
+    }
+  ],
+  "other": [
+    {
+      "chuji_id": "40005",
+      "gaoji_id": "40006",
+      "mianfei_refresh": "2",
+      "refresh_time": "3",
+      "reset": "2"
+    }
+  ]
+}

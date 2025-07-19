@@ -1,0 +1,36 @@
+option java_package = "org.SouthMillion.proto.Msgpagoda";
+
+message PB_CSShiLianPagodaReq {//!< 2120 试炼之塔 操作
+	optional int32	type = 1;				//!<操作类型
+	optional int32	p1 = 2;				//!<参数
+	optional int32	p2 = 3;				//!<参数
+}
+
+message PB_SCShiLianPagodaInfo {//!< 2121 试炼之塔 信息
+	optional int32	pass_level = 1;				//!<通关层数 初始0
+	optional int32	best_leve = 2;				//!<最高层数
+	repeated int32	use_item = 3;				//!<当前使用的战利品 初始-1 解锁后为0 
+	repeated int32	random_id = 4;				//!<掉落的战利品
+	optional uint32 season_end_time = 5;		//!<赛季结算时间
+}
+
+message PB_CSGuMoPagodaReq {//!< 2122 锢魔之塔 操作
+	optional int32	type = 1;				//!<操作类型
+	optional int32	p1 = 2;				//!<参数
+	optional int32	p2 = 3;				//!<参数
+}
+
+message PB_SCGuMoPagodaListInfo {//!< 2123 锢魔之塔 列表信息
+	optional int32 day_reward = 1;							//!<每日奖励是否领取
+	optional int32 lastday_level = 2;						//!<每日奖励层数
+}
+
+message PB_GuMoPagodaLayer{
+	optional int32	star_flag = 1;				//!<星级标记 0-2 表示第一关的 三个星 3-5表示第二关 以此类推
+	optional int32	box_flag = 2;				//!<宝箱标记
+}
+
+message PB_SCGuMoPagodaLayerInfo {//!< 2124 锢魔之塔 层信息
+	optional int32 layer =1;								//!<层数
+	repeated PB_GuMoPagodaLayer	layer_info = 2;				//!<信息
+}

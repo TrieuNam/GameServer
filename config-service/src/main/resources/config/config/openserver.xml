@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+	<server_real_start_time>2021-12-28 00:26:00</server_real_start_time>		<!-- 正式开服时间 格式 yyyy-MM-dd HH:mm:ss -->
+	<server_real_combine_time>2013-05-04 10:00:00</server_real_combine_time>		<!-- 正式合服时间 格式 yyyy-MM-dd HH:mm:ss 默认不填 -->
+</config>

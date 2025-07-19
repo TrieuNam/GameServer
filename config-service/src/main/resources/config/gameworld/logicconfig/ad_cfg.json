@@ -1,0 +1,192 @@
+{
+  "ad_type": [
+    {
+      "seq": "1",
+      "ad_type": "1",
+      "ad_name": "\u6bcf\u65e5\u798f\u5229",
+      "ad_award": [
+        {
+          "item_id": "40001",
+          "num": "25"
+        }
+      ],
+      "interval": "10",
+      "ad_param": "5",
+      "is_notice": "1",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "2",
+      "ad_type": "2",
+      "ad_name": "\u5b9d\u7bb1\u5347\u7ea7\u52a0\u901f\u5377\u798f\u5229",
+      "ad_award": [
+        {
+          "item_id": "40007",
+          "num": "6"
+        }
+      ],
+      "interval": "120",
+      "ad_param": "5",
+      "is_notice": "0",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "3",
+      "ad_type": "3",
+      "ad_name": "\u85cf\u54c1\u5347\u7ea7\u52a0\u901f",
+      "ad_award": [
+        {
+          "item_id": "40008",
+          "num": "6"
+        }
+      ],
+      "interval": "120",
+      "ad_param": "5",
+      "is_notice": "0",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "4",
+      "ad_type": "4",
+      "ad_name": "\u94ed\u6587\u4e4b\u5854\u62bd\u5956\u770b\u5e7f\u544a\u52a0\u6b21\u6570",
+      "ad_award": [
+        {
+          "item_id": "40009",
+          "num": "1"
+        }
+      ],
+      "interval": "10",
+      "ad_param": "3",
+      "is_notice": "0",
+      "up_ad": "10",
+      "param": "0"
+    },
+    {
+      "seq": "5",
+      "ad_type": "5",
+      "ad_name": "\u9001\u7d2f\u5145\u989d\u5ea6",
+      "ad_award": [],
+      "interval": "10",
+      "ad_param": "0",
+      "is_notice": "0",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "6",
+      "ad_type": "6",
+      "ad_name": "\u9001\u593a\u5b9d\u4ee4",
+      "ad_award": [],
+      "interval": "10",
+      "ad_param": "0",
+      "is_notice": "1",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "7",
+      "ad_type": "7",
+      "ad_name": "\u770b\u5e7f\u544a\u9886\u53cc\u500d\u5206\u4eab\u5956\u52b1",
+      "ad_award": [],
+      "interval": "10",
+      "ad_param": "0",
+      "is_notice": "0",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "8",
+      "ad_type": "8",
+      "ad_name": "\u9a91\u58eb\u4e4b\u8bc1",
+      "ad_award": [],
+      "interval": "10",
+      "ad_param": "30",
+      "is_notice": "0",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "9",
+      "ad_type": "9",
+      "ad_name": "\u5ba0\u7269\u62bd\u5956",
+      "ad_award": [],
+      "interval": "480",
+      "ad_param": "3",
+      "is_notice": "0",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "10",
+      "ad_type": "10",
+      "ad_name": "\u770b\u5e7f\u544a\u9886\u53cc\u500d\u666e\u901a\u7b49\u7ea7\u57fa\u91d1\u5956\u52b1",
+      "ad_award": [],
+      "interval": "0",
+      "ad_param": "0",
+      "is_notice": "0",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "11",
+      "ad_type": "11",
+      "ad_name": "\u770b\u5e7f\u544a\u9886\u53cc\u500d\u666e\u901a\u5b9d\u7bb1\u57fa\u91d1\u5956\u52b1",
+      "ad_award": [],
+      "interval": "0",
+      "ad_param": "0",
+      "is_notice": "0",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "12",
+      "ad_type": "12",
+      "ad_name": "\u5b9d\u7bb1\u62bd\u5956",
+      "ad_award": [],
+      "interval": "480",
+      "ad_param": "3",
+      "is_notice": "0",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "13",
+      "ad_type": "13",
+      "ad_name": "\u521b\u89d2\u7b2c\u4e8c\u5929\u9886\u53d6\u514d\u8d39\u793c\u5305\u9700\u8981\u770b\u5e7f\u544a",
+      "ad_award": [],
+      "interval": "10",
+      "ad_param": "0",
+      "is_notice": "0",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "14",
+      "ad_type": "14",
+      "ad_name": "\u94ed\u6587\u5b9d\u7bb1\u62bd\u5956",
+      "ad_award": [],
+      "interval": "480",
+      "ad_param": "3",
+      "is_notice": "0",
+      "up_ad": "0",
+      "param": "0"
+    },
+    {
+      "seq": "15",
+      "ad_type": "15",
+      "ad_name": "\u9886\u5730\u5237\u65b0",
+      "ad_award": [],
+      "interval": "5",
+      "ad_param": "5",
+      "is_notice": "0",
+      "up_ad": "5",
+      "param": "0"
+    }
+  ],
+  "other": [
+    []
+  ]
+}

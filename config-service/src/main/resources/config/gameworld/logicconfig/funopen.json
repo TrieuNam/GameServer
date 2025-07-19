@@ -1,0 +1,670 @@
+{
+  "funopen": [
+    {
+      "seq": "1",
+      "server_id": "0",
+      "level": "3",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "2",
+      "server_id": "1",
+      "level": "20",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "3",
+      "server_id": "2",
+      "level": "35",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "4",
+      "server_id": "3",
+      "level": "35",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "6",
+      "server_id": "4",
+      "level": "10",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "7",
+      "server_id": "5",
+      "level": "25",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "8",
+      "server_id": "6",
+      "level": "10",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "9",
+      "server_id": "7",
+      "level": "110",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "10",
+      "server_id": "8",
+      "level": "10",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "11",
+      "server_id": "9",
+      "level": "130",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "12",
+      "server_id": "10",
+      "level": "130",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "13",
+      "server_id": "11",
+      "level": "95",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "14",
+      "server_id": "12",
+      "level": "16",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "15",
+      "server_id": "13",
+      "level": "50",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "16",
+      "server_id": "14",
+      "level": "70",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "17",
+      "server_id": "0",
+      "level": "50",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "18",
+      "server_id": "16",
+      "level": "20",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "19",
+      "server_id": "17",
+      "level": "8",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "20",
+      "server_id": "18",
+      "level": "8",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "21",
+      "server_id": "19",
+      "level": "8",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "22",
+      "server_id": "20",
+      "level": "8",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "23",
+      "server_id": "0",
+      "level": "2",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "24",
+      "server_id": "0",
+      "level": "5",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "25",
+      "server_id": "0",
+      "level": "25",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "26",
+      "server_id": "0",
+      "level": "12",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "27",
+      "server_id": "2049",
+      "level": "10",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "28",
+      "server_id": "2050",
+      "level": "10",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "29",
+      "server_id": "2052",
+      "level": "5",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "30",
+      "server_id": "2053",
+      "level": "20",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "31",
+      "server_id": "2054",
+      "level": "17",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "32",
+      "server_id": "2055",
+      "level": "15",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "33",
+      "server_id": "2056",
+      "level": "25",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "34",
+      "server_id": "2051",
+      "level": "35",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "35",
+      "server_id": "2058",
+      "level": "35",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "36",
+      "server_id": "2059",
+      "level": "35",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "37",
+      "server_id": "2060",
+      "level": "35",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "38",
+      "server_id": "2057",
+      "level": "10",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "39",
+      "server_id": "2062",
+      "level": "10",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "40",
+      "server_id": "2063",
+      "level": "25",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "41",
+      "server_id": "0",
+      "level": "105",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "42",
+      "server_id": "0",
+      "level": "105",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "43",
+      "server_id": "0",
+      "level": "10",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "44",
+      "server_id": "2066",
+      "level": "75",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "45",
+      "server_id": "2067",
+      "level": "35",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "46",
+      "server_id": "2064",
+      "level": "75",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "47",
+      "server_id": "2068",
+      "level": "28",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "48",
+      "server_id": "2070",
+      "level": "20",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "49",
+      "server_id": "2069",
+      "level": "35",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "50",
+      "server_id": "2065",
+      "level": "100",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "51",
+      "server_id": "2071",
+      "level": "40",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "52",
+      "server_id": "0",
+      "level": "30",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "53",
+      "server_id": "2072",
+      "level": "35",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "54",
+      "server_id": "21",
+      "level": "80",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "55",
+      "server_id": "22",
+      "level": "90",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "56",
+      "server_id": "24",
+      "level": "15",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "57",
+      "server_id": "23",
+      "level": "60",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "58",
+      "server_id": "2073",
+      "level": "30",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "59",
+      "server_id": "2061",
+      "level": "12",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "60",
+      "server_id": "0",
+      "level": "10",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "61",
+      "server_id": "0",
+      "level": "20",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "62",
+      "server_id": "0",
+      "level": "75",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "63",
+      "server_id": "26",
+      "level": "60",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "64",
+      "server_id": "27",
+      "level": "70",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "65",
+      "server_id": "28",
+      "level": "70",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "66",
+      "server_id": "2074",
+      "level": "65",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "67",
+      "server_id": "29",
+      "level": "100",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "68",
+      "server_id": "0",
+      "level": "50",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "69",
+      "server_id": "15",
+      "level": "3",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "70",
+      "server_id": "2075",
+      "level": "20",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "71",
+      "server_id": "2076",
+      "level": "10",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "72",
+      "server_id": "0",
+      "level": "100",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "73",
+      "server_id": "0",
+      "level": "100",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "74",
+      "server_id": "0",
+      "level": "100",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    },
+    {
+      "seq": "75",
+      "server_id": "30",
+      "level": "30",
+      "task": "0",
+      "time_stamp": "",
+      "old_level": "",
+      "old_task": ""
+    }
+  ]
+}

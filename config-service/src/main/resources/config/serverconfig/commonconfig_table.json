@@ -1,0 +1,31 @@
+{
+        "NoCacheTable":[
+            {"Table":"accountgold"},
+            {"Table":"command"},
+            {"Table":"publicnotice"},
+            {"Table":"systemmail"},
+			{"Table":"role_cmd"},
+			{"Table":"role_id_map"}
+        ],
+        "NoDelayTables":[
+            {"Table":"login"},
+            {"Table":"role_name_map"},
+            {"Table":"worldstatus"},
+            {"Table":"offlineregister"},
+            {"Table":"mail"},
+            {"Table":"activity_data"},
+            {"Table":"crossstatus"},
+            {"Table":"global_command"},
+            {"Table":"global_status"},
+            {"Table":"rank"},
+            {"Table":"arena"},
+            {"Table":"escort_ship"},
+            {"Table":"escort_report"},
+            {"Table":"territory"},
+            {"Table":"territory_reward"},
+            {"Table":"cross_arena"},
+            {"Table":"guild"},
+            {"Table":"guild_role"},
+            {"Table":"guild_report"}
+        ]
+}

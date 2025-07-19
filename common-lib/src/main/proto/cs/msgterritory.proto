@@ -1,0 +1,80 @@
+option java_package = "org.SouthMillion.proto.Msgterritory";
+
+import "cs/msgrole.proto";
+
+message PB_CSTerritoryReq {//!< 9630 操作
+	optional int32	type = 1;	//操作类型
+	repeated int32	param = 2;	//操作参数数组
+}
+
+message PB_SCTerritoryItemNode{
+	optional int32 seq = 1;
+	optional int32 index = 2;
+	
+	optional int32 			attacker_num = 3;			//往上拉的怪有几只 为0时 下面的参数不会发
+	optional int32 			attacker_efficiency = 4;	//往上拉的怪的效率百分比
+	optional PB_RoleInfo	attacker_info = 5;			//往上拉的角色信息
+
+	optional int32 			defender_num = 6;			//往下拉的怪有几只 为0时 下面的参数不会发
+	optional int32 			defender_efficiency = 7;	//往下拉的怪的效率百分比
+
+	optional uint32			refresh_time = 8;			//刷出新货物的时间
+	optional double			pos = 9;					//当前位置(0,10000)
+	optional uint32 		end_time = 10;				//结束时间戳
+
+}
+
+message PB_SCTerritoryInfo {//!< 9631 领地信息
+	optional PB_RoleInfo	role_info = 1;				//主人信息
+	optional int32			territory_level = 2;		//领地等级
+	optional int32 			bot_num = 3;				//工具人数量(其他人的领地不发)
+	optional int32			bot_run_num = 4;			//工具人出动数量(其他人的领地不发)
+	optional int32			bot_buy_count = 5;			//买了几次工具人(其他人的领地不发)
+	optional int32			reward_count = 6;			//拉货次数(其他人的领地不发)
+
+	repeated PB_SCTerritoryItemNode item_list = 7;		//货箱
+
+	optional int32			reason = 8;
+}
+
+
+message PB_SCTerritoryNeighbourRole{
+	optional PB_RoleInfo	role_info = 1;			//仇人角色信息
+	repeated int32 			item_seq = 2;			//货物列表
+}		
+
+message PB_SCTerritoryNeighbourInfo {//!< 9632 邻居信息
+	optional int32			neighbour_time = 1;						//上次刷新邻居时间
+	repeated PB_SCTerritoryNeighbourRole	neighbour_list = 2;		//邻居信息
+	repeated PB_SCTerritoryNeighbourRole	enemy_list = 3;			//仇人信息
+}
+
+message PB_SCTerritoryBotNode {
+		optional PB_RoleInfo	attacker_info = 1;						//进攻方
+		optional int32	attacker_num = 2;								//进攻方数量
+		optional PB_RoleInfo	defender_info = 3;						//防守方
+		optional int32	defender_num = 4;								//防守方数量
+		optional uint32 end_time = 5;									//结束时间戳
+		optional int32  item_seq = 6;									//货箱seq
+		optional int32  item_index = 7;									//货箱index
+}
+
+message PB_SCTerritoryBotInfo {//!< 9633 工具人派遣情况
+	repeated PB_SCTerritoryBotNode	bot_list = 1;	
+}
+
+message PB_SCTerritoryReportNode{
+	optional PB_RoleInfo role_info=1;	//角色
+	optional bytes report_sub=2;		//标题
+	optional bytes report_text=3;		//内容
+	optional uint32 report_time=4;		//时间
+}
+
+message PB_SCTerritoryReportInfo {//!< 9634 日志
+	repeated PB_SCTerritoryReportNode	report_list = 1;	
+}
+
+
+message PB_SCTerritoryRedInfo {//!< 9635 红点
+	optional int32	reward_flag = 1;	
+}

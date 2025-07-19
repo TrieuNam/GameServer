@@ -1,0 +1,636 @@
+{
+  "pet_game": [
+    {
+      "level": "1",
+      "monster_id": "12001",
+      "monster_icon": "12001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "100"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "18"
+    },
+    {
+      "level": "2",
+      "monster_id": "12002",
+      "monster_icon": "12002",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "200"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "20"
+    },
+    {
+      "level": "3",
+      "monster_id": "12003",
+      "monster_icon": "12003",
+      "win": [
+        {
+          "item_id": "40226",
+          "num": "1"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "22"
+    },
+    {
+      "level": "4",
+      "monster_id": "12004",
+      "monster_icon": "12004",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "100"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "19"
+    },
+    {
+      "level": "5",
+      "monster_id": "12005",
+      "monster_icon": "12005",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "200"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "17"
+    },
+    {
+      "level": "6",
+      "monster_id": "12006",
+      "monster_icon": "12006",
+      "win": [
+        {
+          "item_id": "40227",
+          "num": "1"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "21"
+    },
+    {
+      "level": "7",
+      "monster_id": "12007",
+      "monster_icon": "12007",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "100"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "9"
+    },
+    {
+      "level": "8",
+      "monster_id": "12008",
+      "monster_icon": "12008",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "200"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "7"
+    },
+    {
+      "level": "9",
+      "monster_id": "12009",
+      "monster_icon": "12009",
+      "win": [
+        {
+          "item_id": "40228",
+          "num": "1"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "5"
+    },
+    {
+      "level": "10",
+      "monster_id": "12010",
+      "monster_icon": "12010",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "100"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "30"
+    },
+    {
+      "level": "11",
+      "monster_id": "12011",
+      "monster_icon": "12011",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "200"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "32"
+    },
+    {
+      "level": "12",
+      "monster_id": "12012",
+      "monster_icon": "12012",
+      "win": [
+        {
+          "item_id": "40229",
+          "num": "1"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "34"
+    },
+    {
+      "level": "13",
+      "monster_id": "12013",
+      "monster_icon": "12013",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "100"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "24"
+    },
+    {
+      "level": "14",
+      "monster_id": "12014",
+      "monster_icon": "12014",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "200"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "26"
+    },
+    {
+      "level": "15",
+      "monster_id": "12015",
+      "monster_icon": "12015",
+      "win": [
+        {
+          "item_id": "40230",
+          "num": "1"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "28"
+    },
+    {
+      "level": "16",
+      "monster_id": "12016",
+      "monster_icon": "12016",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "50"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "26"
+    },
+    {
+      "level": "17",
+      "monster_id": "12017",
+      "monster_icon": "12017",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "50"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "27"
+    },
+    {
+      "level": "18",
+      "monster_id": "12018",
+      "monster_icon": "12018",
+      "win": [
+        {
+          "item_id": "40231",
+          "num": "1"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "21"
+    },
+    {
+      "level": "19",
+      "monster_id": "12019",
+      "monster_icon": "12019",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "50"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "40"
+    },
+    {
+      "level": "20",
+      "monster_id": "12020",
+      "monster_icon": "12020",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "50"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "40"
+    },
+    {
+      "level": "21",
+      "monster_id": "12021",
+      "monster_icon": "12021",
+      "win": [
+        {
+          "item_id": "40232",
+          "num": "1"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "40"
+    },
+    {
+      "level": "22",
+      "monster_id": "12022",
+      "monster_icon": "12022",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "50"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "32"
+    },
+    {
+      "level": "23",
+      "monster_id": "12023",
+      "monster_icon": "12023",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "50"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "8"
+    },
+    {
+      "level": "24",
+      "monster_id": "12024",
+      "monster_icon": "12024",
+      "win": [
+        {
+          "item_id": "40233",
+          "num": "1"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "21"
+    },
+    {
+      "level": "25",
+      "monster_id": "12025",
+      "monster_icon": "12025",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "50"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "5"
+    },
+    {
+      "level": "26",
+      "monster_id": "12026",
+      "monster_icon": "12026",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "50"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "15"
+    },
+    {
+      "level": "27",
+      "monster_id": "12027",
+      "monster_icon": "12027",
+      "win": [
+        {
+          "item_id": "40234",
+          "num": "1"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "23"
+    },
+    {
+      "level": "28",
+      "monster_id": "12028",
+      "monster_icon": "12028",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "50"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "23"
+    },
+    {
+      "level": "29",
+      "monster_id": "12029",
+      "monster_icon": "12029",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "50"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "25"
+    },
+    {
+      "level": "30",
+      "monster_id": "12030",
+      "monster_icon": "12030",
+      "win": [
+        {
+          "item_id": "40235",
+          "num": "1"
+        }
+      ],
+      "rule_count": "1",
+      "rule_id": "27"
+    }
+  ],
+  "challenge_rule": [
+    {
+      "rule_id": "1",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u751f\u547d\u503c\u4e0a\u9650\u4e0b\u964d20%",
+      "rule_value": "2000",
+      "rule_type": "1"
+    },
+    {
+      "rule_id": "2",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u653b\u51fb\u529b\u4e0b\u964d20%",
+      "rule_value": "2000",
+      "rule_type": "2"
+    },
+    {
+      "rule_id": "3",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u9632\u5fa1\u529b\u4e0b\u964d20%",
+      "rule_value": "2000",
+      "rule_type": "3"
+    },
+    {
+      "rule_id": "4",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u901f\u5ea6\u4e0b\u964d20%",
+      "rule_value": "2000",
+      "rule_type": "4"
+    },
+    {
+      "rule_id": "5",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5438\u8840\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "5"
+    },
+    {
+      "rule_id": "6",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u53cd\u51fb\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "6"
+    },
+    {
+      "rule_id": "7",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u8fde\u51fb\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "7"
+    },
+    {
+      "rule_id": "8",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u95ea\u907f\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "8"
+    },
+    {
+      "rule_id": "9",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u66b4\u51fb\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "9"
+    },
+    {
+      "rule_id": "10",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u51fb\u6655\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "10"
+    },
+    {
+      "rule_id": "11",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u5438\u8840\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "11"
+    },
+    {
+      "rule_id": "12",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u53cd\u51fb\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "12"
+    },
+    {
+      "rule_id": "13",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u8fde\u51fb\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "13"
+    },
+    {
+      "rule_id": "14",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u95ea\u907f\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "14"
+    },
+    {
+      "rule_id": "15",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u66b4\u51fb\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "15"
+    },
+    {
+      "rule_id": "16",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u51fb\u6655\u4e0b\u964d80%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "8000",
+      "rule_type": "16"
+    },
+    {
+      "rule_id": "17",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5438\u8840\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "5"
+    },
+    {
+      "rule_id": "18",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u53cd\u51fb\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "6"
+    },
+    {
+      "rule_id": "19",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u8fde\u51fb\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "7"
+    },
+    {
+      "rule_id": "20",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u95ea\u907f\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "8"
+    },
+    {
+      "rule_id": "21",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u66b4\u51fb\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "9"
+    },
+    {
+      "rule_id": "22",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u51fb\u6655\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "10"
+    },
+    {
+      "rule_id": "23",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u5438\u8840\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "11"
+    },
+    {
+      "rule_id": "24",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u53cd\u51fb\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "12"
+    },
+    {
+      "rule_id": "25",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u8fde\u51fb\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "13"
+    },
+    {
+      "rule_id": "26",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u95ea\u907f\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "14"
+    },
+    {
+      "rule_id": "27",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u66b4\u51fb\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "15"
+    },
+    {
+      "rule_id": "28",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u51fb\u6655\u4e0b\u964d50%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "5000",
+      "rule_type": "16"
+    },
+    {
+      "rule_id": "29",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5438\u8840\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "5"
+    },
+    {
+      "rule_id": "30",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u53cd\u51fb\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "6"
+    },
+    {
+      "rule_id": "31",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u8fde\u51fb\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "7"
+    },
+    {
+      "rule_id": "32",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u95ea\u907f\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "8"
+    },
+    {
+      "rule_id": "33",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u66b4\u51fb\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "9"
+    },
+    {
+      "rule_id": "34",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u51fb\u6655\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "10"
+    },
+    {
+      "rule_id": "35",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u5438\u8840\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "11"
+    },
+    {
+      "rule_id": "36",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u53cd\u51fb\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "12"
+    },
+    {
+      "rule_id": "37",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u8fde\u51fb\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "13"
+    },
+    {
+      "rule_id": "38",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u95ea\u907f\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "14"
+    },
+    {
+      "rule_id": "39",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u66b4\u51fb\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "15"
+    },
+    {
+      "rule_id": "40",
+      "rule_desc": "\u672c\u5173\u5361\u73a9\u5bb6\u5ffd\u7565\u51fb\u6655\u4e0b\u964d30%\uff08\u81f3\u5c11\u4e3a0%\uff09",
+      "rule_value": "3000",
+      "rule_type": "16"
+    }
+  ]
+}

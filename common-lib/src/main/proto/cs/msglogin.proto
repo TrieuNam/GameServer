@@ -1,0 +1,23 @@
+// syntax = "proto3";                                              //!< proto3 必须添加该行
+option java_package = "org.SouthMillion.proto.Msglogin";
+
+//MsgId:7056
+message PB_CSLoginToAccount {                                   //!< 协议 7056 请求登录到账号
+    optional fixed32 login_time = 1;                             //!< 登录时间戳  （用于验证是否登录了后台）
+    optional string  login_str = 2;                              //!< 登录字符串  （用于验证是否登录了后台）
+    optional string  pname = 3;                                  //!< 账户名
+    optional int32 server = 4;                                   //!< 登录到哪个服
+    optional int32 plat_spid = 5;                                //!< 平台ID
+    optional string device_id = 6;                               //!< 设备id  
+}
+
+//MsgId:7000
+message PB_SCLoginToAccount {                                    //!< 7000 登录到账号的返回
+    optional  int32 result = 1;                                  //!<  结果 \see __LoginAckResult
+    optional fixed32 forbid_time = 2;                            //!<  封禁时间
+}
+
+
+//MsgId:7004
+message PB_SCAccountKeyError {                                    //!< 7004 KEY不对通知
+}

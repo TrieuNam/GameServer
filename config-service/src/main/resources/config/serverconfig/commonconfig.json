@@ -1,0 +1,146 @@
+{
+    "IPConfig":{
+        "DB_Server_Addr":{
+            "IsDelayLoad":"1",
+            "DBAccounter":{
+                "Fast_DB_Name":"h2_cn",
+                "Fast_DB_Init_Size_MB":"100",
+                "Mysql_DB_Username":"root",
+                "Mysql_DB_Password":"newpass",
+                "Mysql_Addr_IP":"127.0.0.1",
+                "Mysql_Addr_Port":"3306",
+                "Mysql_DB_Charset":"utf8",
+                "Mysql_DB_Name":"h2_cn",
+                "FlushInterval":"500",
+                "Module_Addr_IP":"127.0.0.1",
+                "Module_Addr_Port":"55201"
+            },
+            "DBGlobal":{
+                "Fast_DB_Name":"h2_cn",
+                "Fast_DB_Init_Size_MB":"100",
+                "Mysql_DB_Username":"root",
+                "Mysql_DB_Password":"newpass",
+                "Mysql_Addr_IP":"127.0.0.1",
+                "Mysql_Addr_Port":"3306",
+                "Mysql_DB_Charset":"utf8",
+                "Mysql_DB_Name":"h2_cn",
+                "FlushInterval":"500",
+                "Module_Addr_IP":"127.0.0.1",
+                "Module_Addr_Port":"55201"
+            },
+            "DBName":{
+                "Fast_DB_Name":"h2_cn",
+                "Fast_DB_Init_Size_MB":"100",
+                "Mysql_DB_Username":"root",
+                "Mysql_DB_Password":"newpass",
+                "Mysql_Addr_IP":"127.0.0.1",
+                "Mysql_Addr_Port":"3306",
+                "Mysql_DB_Charset":"utf8",
+                "Mysql_DB_Name":"h2_cn",
+                "FlushInterval":"500",
+                "Module_Addr_IP":"127.0.0.1",
+                "Module_Addr_Port":"55201"
+            },
+            "DBSystem":{
+                "Fast_DB_Name":"h2_cn",
+                "Fast_DB_Init_Size_MB":"100",
+                "Mysql_DB_Username":"root",
+                "Mysql_DB_Password":"newpass",
+                "Mysql_Addr_IP":"127.0.0.1",
+                "Mysql_Addr_Port":"3306",
+                "Mysql_DB_Charset":"utf8",
+                "Mysql_DB_Name":"h2_cn",
+                "FlushInterval":"500",
+                "Module_Addr_IP":"127.0.0.1",
+                "Module_Addr_Port":"55201"
+            },
+            "DBRole":{
+                "Fast_DB_Name":"h2_cn",
+                "Fast_DB_Init_Size_MB":"100",
+                "Mysql_DB_Username":"root",
+                "Mysql_DB_Password":"newpass",
+                "Mysql_Addr_IP":"127.0.0.1",
+                "Mysql_Addr_Port":"3306",
+                "Mysql_DB_Charset":"utf8",
+                "Mysql_DB_Name":"h2_cn",
+                "FlushInterval":"500",
+                "Module_Addr_IP":"127.0.0.1",
+                "Module_Addr_Port":"55201"
+            },
+            "DBCross":{
+                "Fast_DB_Name":"h2_cn",
+                "Fast_DB_Init_Size_MB":"100",
+                "Mysql_DB_Username":"root",
+                "Mysql_DB_Password":"newpass",
+                "Mysql_Addr_IP":"127.0.0.1",
+                "Mysql_Addr_Port":"3306",
+                "Mysql_DB_Charset":"utf8",
+                "Mysql_DB_Name":"h2_cn",
+                "FlushInterval":"500",
+                "Module_Addr_IP":"127.0.0.1",
+                "Module_Addr_Port":"55201"
+            }
+        },
+        "Battle_Server_Addr":{
+            "AllowIPPrefix":"127.0.0.1",
+            "BattleServerNum":"1",
+            "RegisterInfo_0":{
+                "LocalIP":"127.0.0.1",
+                "ListenPort":"55202",
+                "BackLog":"64"
+            },
+            "RegisterInfo_1":{
+                "LocalIP":"127.0.0.1",
+                "ListenPort":"55203",
+                "BackLog":"64"
+            },
+            "RegisterInfo_2":{     
+                "LocalIP":"127.0.0.1",
+                "ListenPort":"55204",
+                "BackLog":"64"
+            }
+        },
+        "Scene_Server_Addr":{
+            "AllowIPPrefix":"127.0.0.1",
+            "LocalIP":"127.0.0.1",
+            "ListenPort":"55205",
+            "BackLog":"64"
+        },
+        "GameWorld_Server_Addr":{
+            "AllowIPPrefix":"127.0.0.1",
+            "GameServer":{
+                "LocalIP":"127.0.0.1",
+                "ListenPort":"55206",
+                "BackLog":"64",
+                "ForGlobal":{
+                    "ListenPort":"55207"
+                }
+            }
+        },
+        "GatewayModule":{
+            "AllowIPPrefix":"127.0.0.1",
+            "LocalIP":"127.0.0.1",
+            "ListenPort":"55208",
+            "BackLog":"64"
+        }
+    },
+  "OtherConfig":{
+    "SessionKey":"123453443567",
+    "LoginServer_AccountCheckType": "0",
+    "SystemCmdCheckInterval": "15",
+    "TimeOut": 
+    {
+      "IS_Check_TimeOut": "1",
+      "Check_TimeOut_Interval_MS": "5000",
+      "Gateway_Heartbeat_DeadTime_MS": "300000",
+      "Gameworld_Heartbeat_DeadTime_MS": "300000",
+      "BattleServer_Heartbeat_DeadTime_MS": "300000",
+      "Global_Heartbeat_DeadTime_MS": "300000",
+      "Scene_Heartbeat_DeadTime_MS": "300000",
+      "Cross_Heartbeat_DeadTime_MS": "300000"
+    },
+    "dynamic_cfg_path": "../config/dynamic_cfg.josn",
+    "namefilter_open_flag": "0",
+    "is_micro_pc_open": "0"
+  }
+}

@@ -1,0 +1,11 @@
+{
+	"server_max_role_num":"10000",
+	"gm_switch":"1",
+	"is_open_msg_cache":"1",
+	"frame_login_num":"500",
+	"db_cmd_check_time":"3",
+	"notification_begin":"10",
+	"notification_end":"22",
+	"is_notification":"1",
+	"mount_reset_time":"1681509600"
+}

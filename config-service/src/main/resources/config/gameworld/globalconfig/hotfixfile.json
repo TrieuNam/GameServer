@@ -1,0 +1,28 @@
+{
+  "gameworld": [
+	{
+      "so_name": "HOTFIX_2023041303_OnShoping.so",
+      "symbol": "_ZN9ClothShop9OnShopingEii"
+    },
+	{
+	  "so_name": "HOTFIX_2023041303_ReCalcAttr.so",
+      "symbol": "_ZN10BuildBlock10ReCalcAttrER13AttributeListb"
+    },
+	{
+	  "so_name": "HOTFIX_2023041303_OnMapWear.so",
+      "symbol": "_ZN10BuildBlock9OnMapWearEi"
+    }
+	],
+  "battle": {
+    "data": {
+      "so_name": "HOTFIX_2022112502_PerformSkill.so",
+      "symbol": "_ZNK15BattleSkillBase12PerformSkillEP6BattleP15BattleCharacterssss"
+    }
+  },
+  "global": {
+    "data": {
+      "so_name": "HOTFIX_2022112502_PerformSkill.so",
+      "symbol": "_ZNK15BattleSkillBase12PerformSkillEP6BattleP15BattleCharacterssss"
+    }
+  }
+}

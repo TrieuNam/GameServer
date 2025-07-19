@@ -1,0 +1,183 @@
+option java_package = "org.SouthMillion.proto.Msgrole";
+// syntax = "proto3";                                              //!< proto3 必须添加该行
+
+import "cs/msgequip.proto";
+
+message PB_Appearance
+{
+	optional int32 surface_weapon=1;				//!< 幻化武器
+	optional int32 surface_shield=2;				//!< 幻化盾牌
+	optional int32 surface_body=3;					//!< 幻化身体
+	optional int32 surface_mount=4;					//!< 幻化坐骑
+	optional int32 surface_head=5;					//!< 幻化头盔
+	optional int32 surface_angel=6;					//!< 幻化天使
+}
+
+message PB_RoleInfo
+{
+	optional int32 role_id = 1;							//!< 角色id
+	optional bytes name = 2;							//!< 角色名 GameName = char[32]
+	optional int32 level = 3;							//!< 等级
+	optional int64 cap = 4;								//!< 战力
+	optional int32 head_pic_id = 5;						//!< 头像ID
+	optional int32 title_id = 6;						//!< 称号ID
+	optional bytes guild_name = 7;						//!< 公会名 GuildName = char[32]
+	optional int32 knight_level = 8;					//!< 骑士团手册等级
+	optional bytes head_char = 9;						//!< 微信头像地址
+}
+
+//MsgId:1400
+message PB_SCRoleInfoAck {								//!< 1400 请求角色信息返回
+	optional int64 cur_exp = 1;							//!< 当前经验值
+	optional int64 create_time = 2;						//!< 创角时间
+	optional PB_RoleInfo roleinfo = 3;					//!< 基础信息
+	optional PB_Appearance appearance = 4;				//!< 外观
+}
+
+
+message PB_AttrPair{
+	optional int32  attr_type = 1;						//!< 属性类型号 \see enum BATTLE_ATTR
+	optional int64  attr_value =2;						//!< 属性的值
+}
+
+//MsgId:1401
+message PB_SCRoleAttrList{								//!< 1401 属性列表下发
+	optional	int32 notify_reason = 1;				//!< 下发的理由 \see NOTIFY_REASON
+	optional	int64 capability = 2;					//!< 玩家战力(评分)
+	repeated	PB_AttrPair attr_list = 3;				//!< 属性列表
+}
+
+
+//MsgId:1402
+message PB_SCRoleExpChange {                       		//!< 1402 经验改变通知
+		optional int64 change_exp = 1;					//!< 改变的经验
+		optional int64 cur_exp = 2;						//!< 改变后经验
+}
+
+//MsgId:1403
+message PB_SCRoleLevelChange {                          //!< 1403 等级改变通知
+		optional int32  level = 1;						//!< 等级
+		optional int64  exp = 2;						//!< 当前经验
+}
+
+//MsgId:1404
+message PB_SCAttrListReason{							//!< 1404 属性来源列表下发
+	optional	int32 notify_reason = 1;				//!< 下发的理由 \see REASON_TYPE
+	optional	int64 capability = 2;					//!< 玩家战力(评分)
+	repeated	PB_AttrPair attr_list = 3;				//!< 属性列表
+}
+
+//MsgId:1450
+message PB_CSAllInfoReq {                       			 //!< 协议 1450 角色所有模块信息请求	
+	optional int32 reserve = 1;                              //!<  备用  \see 			
+}
+
+//MsgId:1451
+message PB_CSFetchTaskRewardReq {                       			//!< 1451 领取任务奖励	
+}
+
+//MsgId:1452
+message PB_SCTaskProgressInfo {                                  //!<  1452 	任务 进度				
+		optional int32  id = 1;								//!< 当前任务id
+		optional int32  progress = 2;						//!< 当前任务进度
+}
+
+message PB_system_set{
+		optional int32   system_set_type = 1;					// 设置类型
+		optional int32   system_set_param = 2;					// 设置值
+};
+
+//MsgId:1460
+message PB_CSRoleSystemSetReq {                                  //!<  1460 更改设置					
+		repeated PB_system_set   system_set_list = 1;			
+}
+
+//MsgId:1461
+message PB_SCRoleSystemSetInfo {                                  //!< 1461 下发设置
+    	repeated PB_system_set  system_set_list = 1;                       
+}
+
+//MsgId:1405
+message PB_CSRoleWXInfoSetReq {                                  //!<  1405 微信信息设置					
+		optional bytes name=1;					//名字
+		optional bytes head_char=2;				//头像
+}
+
+/////////////////////////////
+/////////////////////////////
+//////重置角色基础信息///////
+/////////////////////////////
+message PB_RoleBaseInfo {//!< 角色基础信息
+	optional bytes new_name = 1;	//!< 角色名字 最长64个字节
+	optional int32	new_sex = 2;	//!< 角色性别
+	optional int64 new_name_str_id = 3;	//!< 服务器随机名字id
+}
+
+//MsgId:1054
+message PB_CSRoleResetBaseReq {//!<1054 重置角色基础信息
+	enum ReqType
+	{
+		CREAT_ROLE = 0;	//!< 创角重置
+		COST_ITEM = 1;	//!< 消耗道具重置
+	};
+	optional ReqType req_type = 1;	//!< 操作类型
+    optional PB_RoleBaseInfo new_base_info = 2;  //!< 新的基础信息
+}
+
+//MsgId:1005
+message PB_SCRoleCreatResetInfo {//!<1005 角色创角重置信息  
+	optional int32 finish_creat_role_reset = 1;//!< 已完成创角重置
+
+	//!< 本来是依赖主线任务/成就系统的 但是提前要 主线任务/成就系统考虑用此标记判断 或 删除此标记改到任务系统/成就系统
+}
+
+
+/////////////////////////////
+/////////////////////////////
+//////随机角色名字///////////
+/////////////////////////////
+
+//MsgId:7153
+message PB_CSGetRandNameStrIDReq {//!<7153 获取随机名字请求
+	optional int32 sex = 1;	//!< 名字性别
+}
+
+//MsgId:7154
+message PB_SCGetRandNameStrIDRet {//!<7154   获取随机名字返回
+	optional int32 front_sex = 1;		//!< 前缀性别
+	optional int32 front_id = 2;		//!< 前缀名字id
+	optional int32 middle_sex = 3;		//!< 中缀性别
+	optional int32 middle_id = 4;		//!< 中缀名字id
+	optional int32 last_sex = 5;		//!< 后缀性别
+	optional int32 last_id = 6;			//!< 后缀名字id
+	optional int64 rand_name_str_id = 7;//!< 随机名字id 
+}
+
+/////////////////////////////
+///////////请求玩家信息///////
+/////////////////////////////
+
+//MsgId:1462
+message PB_CSGetOtherRoleInfo {//!<1462   请求其他玩家信息
+	optional int32 uid = 1;
+}
+
+message PB_SCOtherPet {						
+	optional int32 pet_id = 5;							//!< 宠物id
+	optional int32 pet_level = 6;						//!< 宠物等级
+	optional int32 pet_order = 7;						//!< 宠物阶级
+	repeated PB_AttrPair pet_attr_list = 8;				//!< 宠物属性列表
+	optional int64 pet_cap = 9;							//!< 宠物战力
+}
+//MsgId:1463
+message PB_SCGetOtherRoleRet {							//!< 1463 请求回调
+	optional int32 uid = 1;								//!< 
+	optional PB_RoleInfo roleinfo = 2;					//!< 基础信息
+	optional PB_Appearance appearance = 3;				//!< 外观
+	repeated PB_AttrPair role_attr_list = 4;			//!< 玩家属性列表
+	repeated PB_SCOtherPet pet_list =5;					//!< 宠物列表
+	repeated PB_EquipData equip_list = 6;				//!< 装备列表
+	optional int32 angel_appearance = 7;				//!< 天使外观
+	optional int32 star_map_level = 8;					//!< 星图
+	optional int32 gem_level = 9;						//!< 宝石
+}

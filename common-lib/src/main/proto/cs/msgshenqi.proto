@@ -1,0 +1,47 @@
+option java_package = "org.SouthMillion.proto.Msgshenqi";
+// syntax = "proto3";
+
+//!<MsgId:1675
+message PB_CSShenQiReq {//!<神器系统操作
+	optional int32	req_type = 1;				//!<操作类型
+	optional int32	param1 = 2;					//!<参数1
+	optional int32	param2 = 3;					//!<参数2
+}
+
+message PB_ShenQiData {//!<神器信息
+	optional int32	num = 1;					//!<神器数量
+	optional int32	level = 2;					//!<神器等级
+}
+
+//!<MsgId:1676
+message PB_SCShenQiListInfo {//!<神器列表信息
+	repeated PB_ShenQiData shenqi_list = 1;		//!<神器列表
+}
+
+//!<MsgId:1677
+message PB_SCShenQiOneInfo {//!<神器单个信息
+	optional int32 id = 1;						//!<神器id
+	optional PB_ShenQiData shenqi_data = 2;		//!<神器信息
+}
+
+//!<MsgId:1678
+message PB_SCShenQiOtherInfo {//!<神器其他信息
+	optional int32	wearing_id = 1;				//!<神器穿戴id
+	optional int32	free_times = 2;				//!<免费抽奖次数
+}
+
+//!<MsgId:1679
+message PB_SCShenQiDrawInfo {//!<神器抽奖信息
+	repeated int32	cell_list = 1;				//!<抽中列表
+}
+
+
+message PB_ShenQiRecordData {//!<记录信息
+	optional uint32	time = 1;					//!<记录时间
+	repeated int32	cell_list = 2;				//!<抽中格子 数组最大6
+}
+
+//!<MsgId:1680
+message PB_SCShenQiRecordInfo {//!<神器抽奖记录信息
+	repeated PB_ShenQiRecordData record_list = 1;//!<记录列表
+}

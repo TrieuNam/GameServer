@@ -1,0 +1,44 @@
+{
+  "config": [
+    {
+      "spid": "dev",
+      "speak_world_lv": "1",
+      "speak_guild_lv": "1",
+      "speak_world_cd": "15",
+      "speak_guild_cd": "15",
+      "creating_roles_time": "0",
+      "creating_roles_number": "0",
+      "guild_recruitment_s": "3600"
+    },
+    {
+      "spid": "37w",
+      "speak_world_lv": "50",
+      "speak_guild_lv": "50",
+      "speak_world_cd": "30",
+      "speak_guild_cd": "30",
+      "creating_roles_time": "0",
+      "creating_roles_number": "1300",
+      "guild_recruitment_s": "7200"
+    },
+    {
+      "spid": "de2",
+      "speak_world_lv": "15",
+      "speak_guild_lv": "15",
+      "speak_world_cd": "15",
+      "speak_guild_cd": "15",
+      "creating_roles_time": "0",
+      "creating_roles_number": "0",
+      "guild_recruitment_s": "3600"
+    },
+    {
+      "spid": "tp1",
+      "speak_world_lv": "1",
+      "speak_guild_lv": "1",
+      "speak_world_cd": "15",
+      "speak_guild_cd": "15",
+      "creating_roles_time": "0",
+      "creating_roles_number": "0",
+      "guild_recruitment_s": "3600"
+    }
+  ]
+}

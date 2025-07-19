@@ -1,0 +1,354 @@
+option java_package = "org.SouthMillion.proto.Msgrandactivity";
+
+import "cs/msgrole.proto";
+
+//!<MsgId:3000
+message PB_CSRandActivityOperaReq {//!<3000 操作
+	optional int32	rand_activity_type = 1;
+	optional int32	opera_type = 2;
+	optional int32	param1 = 3;
+	optional int32	param2 = 4;
+	optional int32	param3 = 5;
+}
+
+//!<MsgId:3001
+message PB_SCChongZhiInfo{
+	optional int64 	history_chongzhi = 1;
+	optional int32	history_chongzhi_count = 2;
+	optional int32	today_chongzhi = 3;
+	repeated int32	chongzhi_reward_times = 4;
+}
+
+//!<MsgId:3002
+message PB_SCChongZhiInfoChange {
+	optional int64 	history_chongzhi = 1;
+	optional int32	history_chongzhi_count = 2;
+	optional int32	today_chongzhi = 3;
+	optional int32	seq = 4;
+	optional int32	times = 5;
+}
+
+//!<MsgId:3003
+message PB_SCActivityStatus {
+	// optional int32	activity_open_type = 1;
+	optional int32	activity_type = 1;
+	optional int32	status = 2;
+	optional int32	is_broadcast = 3;
+	optional uint32	next_status_switch_time = 4;
+	optional uint32	param_1 = 5;
+	optional uint32	param_2 = 6;
+}
+
+//!<MsgId:3004
+message PB_CSChongZhiConfigReq {
+	optional int32 currency = 1;	// 金额类型 （0：人民币  1：新台币  2：美金）玩家的货币类型
+	optional bytes spid_str = 2;	// 根据客户端显示的spid来做
+}
+
+
+message PB_ChongzhiInfo {
+	optional int32 seq = 1;					// 序号，从0开始
+	optional int32 extra_reward_type = 2;	// 额外奖励类型 (0:不奖励  1：绑元  2：至尊会员  3：铜币  4：元宝）
+	optional int32 add_gold = 3;			// 加多少元宝
+	optional int32 extra_reward = 4;		// 额外送的奖励数量
+	optional int32 money_show = 5;			// 100倍的金额， 需要除以100（兼容美金带有小数）
+	optional bytes description_first_chongzhi = 6;	// 首次充值描述   DESCRIPTION_STR_LEN = 128
+}
+
+//!<MsgId:3005
+message PB_SCChongZhiConfigInfo {
+	optional int32 currency_type = 1;		// 原样返回需要显示的金额类型 （0：人民币  1：新台币  2：美金）
+	optional int32 info_count = 2;			// info数组元素数量
+	repeated PB_ChongzhiInfo info_list = 3;	// info数组  CHONGZHI_REWARD_CONFIG_MAX_NUM = 32
+}
+
+
+//!<MsgId:3010
+message PB_SCRaBoxFundInfo {						//!< 3010 宝箱基金信息
+	optional int32 phase_buy_flag = 1;				// 阶段购买标识 位运算
+	optional int64 common_fetch_flag = 2;			// 普通奖励领取标识 位运算
+	optional int64 senior_fetch_flag = 3;			// 高级奖励领取标识 位运算
+}
+
+//!<MsgId:3011
+message PB_SCRaLevelFundInfo {						//!< 3011 等级基金信息
+	optional int32 phase_buy_flag = 1;				// 阶段购买标识 位运算
+	optional int64 common_fetch_flag = 2;			// 普通奖励领取标识 位运算
+	optional int64 senior_fetch_flag = 3;			// 高级奖励领取标识 位运算
+}
+
+//!<MsgId:3012
+message PB_SCRaFirstChongInfo {						//!< 3012 首充信息
+	optional int32 first_chong_mark = 1;			// 是否首充
+	optional int32 fetch_mark = 2;					// 是否已领取
+}
+
+//!<MsgId:3013
+message PB_SCRaLeiChongInfo {						//!< 3013 累充信息
+	optional int64 fetch_flag = 1;					// 领取标识 位运算
+}
+
+//!<MsgId:3014
+message PB_SCRaDailyGiftInfo {						//!< 3014 日常礼包
+	optional int32 level = 1;						// 当日等级
+	repeated int32 buy_count = 2;					// 购买次数
+}
+
+//!<MsgId:3015
+message PB_SCRaCommodityGuildInfo{					//!< 3015 随机活动-商品行会信息
+	optional int32 cur_discount = 1;				//折扣
+	repeated int32 purchased_times = 2;				//已购买次数[10]
+	optional int32 open_level = 3;					// 活动开启时玩家等级
+}
+
+message PB_RaMonthCardData
+{
+	optional int32	card_type = 1;					//!<月卡类型
+	optional int32	fetch_mark = 2;					//!<当日是否领取
+	optional int32	have_days = 3;					//!<剩余天数
+	optional uint32	end_timestamp = 4;				//!<结束时间戳
+	optional int32	first_buy_mark = 5;				//!<是否已首次购买 0:未买过 1:已买过
+	optional int32	buy_level = 6;					//!<购买时候的等级
+}
+//!<MsgId:3016
+message PB_SCRaMonthCardInfo{						//!< 3016 月卡信息
+	repeated PB_RaMonthCardData card_list = 1;		//月卡列表信息
+}
+
+message PB_RaLuckCouttesyGiftDef{
+	optional int32 is_valid = 1;		// 是否是有效礼包
+	optional int32 gift_seq = 2;		// 礼包配置seq
+	optional uint32 end_timestamp = 3;	// 礼包结束时间戳
+}
+
+//!MsgId:3017
+message PB_SCRaLuckCourtesyInfo{						//!< 3017 随机活动-幸运礼遇信息
+	optional int32 open_level = 1;						// 活动开启时玩家等级
+	repeated PB_RaLuckCouttesyGiftDef gift_info = 2;	//礼包信息
+}
+
+//!MsgId:3018
+message PB_SCRaWeekendRechargeInfo{			//!< 3018 随机活动-周末累充信息
+	optional int32 open_level = 1;			// 活动开启时玩家等级
+	optional int32 total_chongzhi = 2;		// 活动期间充值金额
+	optional int32 receive_flag = 3;		// 领取奖励flag[seq]
+}
+
+//!MsgId:3019
+message PB_SCRaCaveLootInfo{					//!< 3019 随机活动-洞穴夺宝信息
+	optional int32 open_level = 1;				// 活动开启时玩家等级
+	optional int32 lottery_count = 2;			// 抽奖次数
+	optional int32 total_chongzhi = 3;			// 活动期间充值金额
+	optional int32 chongzhi_receive_flag = 4;	// 累充奖励领取flag
+	repeated int32 buy_times = 5;				// 礼包购买次数
+	repeated int32 task_param = 6;				// 礼包购买次数
+	repeated int32 reward_receive = 7;			// 奖励领取进度[任务索引]
+}
+
+//!MsgId:3020
+message PB_SCRaFriendInfo{					//!< 3020 随机活动-好友邀请
+	optional int32 friend_count = 1;		// 邀请次数
+	optional int32 reward_flag = 2;			// 领取标记
+}
+
+//!MsgId:3021
+message PB_SCRaChestManorInfo{				//!< 3021 随机活动-宝箱庄园
+	optional int32 open_level = 1;			// 活动开启时玩家等级
+	repeated int32 buy_times = 2;			// 礼包购买次数
+}
+
+//!<MsgId:3022
+message PB_SCRaCapacityFundInfo {				//!< 3022 评分基金信息
+	optional int32 phase_buy_flag = 1;			// 阶段购买标识 位运算
+	optional int64 common_fetch_flag = 2;		// 普通奖励领取标识 位运算
+	optional int64 senior_fetch_flag = 3;		// 高级奖励领取标识 位运算
+}
+
+message PB_SCRaRuneTowerFundInfo {				//!< 3027 铭文之塔
+	optional int32 phase_buy_flag = 1;			// 阶段购买标识 位运算
+	optional int64 common_fetch_flag = 2;		// 普通奖励领取标识 位运算
+	optional int64 senior_fetch_flag = 3;		// 高级奖励领取标识 位运算
+}
+
+message PB_SCRaGuMoTowerFundInfo {				//!< 3026 箍魔之塔
+	optional int32 phase_buy_flag = 1;			// 阶段购买标识 位运算
+	optional int64 common_fetch_flag = 2;		// 普通奖励领取标识 位运算
+	optional int64 senior_fetch_flag = 3;		// 高级奖励领取标识 位运算
+}
+
+message PB_SCRaDailySharingInfo {				//!< 3023 每日分享
+	optional int32 fetch_count = 1;				// 领取次数
+}
+
+//!MsgId:3024
+message PB_SCRaFaZhenGalaInfo{					//!< 3024 法阵盛典
+	optional int32 level = 1;					// 活动开启时玩家等级
+	optional uint32 end_timestamp = 2;			// 玩家活动结束时间戳
+	optional int32 fetch_flag = 3;				// 任务领取标识 位运算
+	repeated int32 task_num = 4;				// 任务ID完成次数
+	repeated int32 gift_num = 5;				// 礼包购买次数
+}
+
+//!MsgId:3025
+message PB_SCRaStarMapGalaInfo{					//!< 3025 星图盛典
+	optional int32 level = 1;					// 活动开启时玩家等级
+	optional uint32 end_timestamp = 2;			// 玩家活动结束时间戳
+	optional int32 fetch_flag = 3;				// 任务领取标识 位运算
+	repeated int32 task_num = 4;				// 任务类型完成次数
+	repeated int32 gift_num = 5;				// 礼包购买次数
+}
+
+//!MsgId:3028
+message PB_SCRaChaoZhiXianLiInfo{				//!< 3028 超值献礼
+	optional int32 level = 1;					// 活动开启时玩家等级
+	optional int32 buy_mark = 2;				// 是否购买
+	repeated int32 item_num = 3;				// 物品数量
+}
+
+//!MsgId:3029
+message PB_SCRaNewServerInfo {					//!< 3029 新服比拼
+	repeated int32 fetch_flag = 1;				//领取标识(二进制)(数组下标对应rank_type)
+}
+
+//!MsgId:3030
+message PB_SCRaWeekendHaoLiInfo{				//!< 3030 周末豪礼
+	optional int32 level = 1;					// 活动开启时玩家等级
+	repeated int32 buy_times = 2;				// 礼包购买次数
+}
+
+//!MsgId:3031
+message PB_SCRaNewServerGlobalInfo {			//!< 3031 新服比拼
+	repeated uint32 end_time = 1;				//阶段结束时间 0表示已发放
+}
+
+//!MsgId:3032
+message PB_SCRaLianChongZengLiInfo {			//!< 3032 连充赠礼
+	optional int32 level = 1;					// 活动开启时玩家等级
+	optional int32 cur_task_day = 2;			// 当前任务天数
+	optional int32 today_task_finish = 3;		// 今日任务是否完成
+	repeated int32 chongzhi_task_proceed = 4;	// 充值任务进度[64]
+	repeated int32 friend_task_proceed = 5;		// 邀请好友任务进度[64]
+	repeated int32 receive_rewards_flag = 6;	// 奖励领取flag[64]
+}
+
+//!MsgId:3033
+message PB_SCRaWarOrderInfo {					//!< 3033 无限战令
+	optional int32 open_level = 1;				// 活动开启时玩家等级
+	optional int32 is_buy = 2;					// 是否购买高级战令
+	optional uint32 time_seq_timestamp = 3;		// 当前索引的时间戳
+	optional int32 level = 4;					// 战令等级
+	optional int32 exp = 5;						// 战令经验
+	optional int64 common_fetch_falg = 6;		// 普通奖励领取标识 位运算
+	optional int64 senior_fetch_falg = 7;		// 高级奖励领取标识 位运算
+	optional int32 day_task_falg = 8;			// 每日任务对应索引完成标识
+	optional int32 week_task_falg = 9;			// 每周任务对应索引完成标识
+	repeated int32 day_task_num = 10;			// 每日任务类型完成次数 数组长度：任务类型数量
+	repeated int32 week_task_num = 11;			// 每周任务类型完成次数 数组长度：任务类型数量
+}
+
+message PB_BitMapDescribe{	// 对bitmap转为数组
+	repeated int32 flag = 1;
+}
+
+message PB_SCRaWeekendLianChongInfo{				//!< 3034 周末连充
+	optional int32 level = 1;								// 活动开启时玩家等级
+	optional int64 day_chong_zhi_num = 2;					// 当天充值元宝数
+	repeated PB_BitMapDescribe day_can_fetch_flag_list = 3;	// 奖励是否可领取标识
+	repeated PB_BitMapDescribe day_fecth_flag_list = 4;		// 奖励是否已领取标识
+	optional PB_BitMapDescribe extra_reward_flag = 5;		// 额外奖励标识
+	repeated int64 chong_zhi_num = 6;						// 每天充值金额
+}
+
+//!MsgId:3035
+message PB_SCRaAdvertisementEquityInfo {		//!< 3035 广告权益（骑士福利）
+	optional int32 is_buy = 1;					//是否购买
+	optional int32 fetch_flag = 2;				//领取标识
+	optional uint32 refresh_time = 3;			//刷新时间
+}
+
+message PB_SCRANewServerRankNode
+{
+	optional int64 value = 1;				//!<排行榜的值
+	optional int32 rank = 2;				//!<排名
+	optional PB_RoleInfo roleinfo = 3;		//!<人物信息
+}
+
+message PB_SCRANewServerRankList {//!< 3036 新服比拼 排行榜信息
+	optional int32	type = 1;							//!<排行榜类型
+	repeated PB_SCRANewServerRankNode ranklist = 2;		//!<角色列表
+	optional int32	my_rank = 3;						//!<我的排名
+	optional int64	my_rank_value = 4;					//!<我的排名值
+	optional int32	my_best_rank = 5;					//!<我的最高排名
+}
+
+message PB_SCRaShenqiDuobaoTask {
+	optional int32  task_seq = 1; // 任务索引
+	optional int32  progress = 2; // 任务进度
+	optional bool   has_fetched = 3; // 奖励是否已领取
+}
+
+message PB_SCRaShenqiDuobaoGift {
+	optional int32    gift_seq = 1; // 礼包索引
+	optional int32    buy_times = 2;// 已购次数
+}
+
+message PB_SCRaShenqiDuobao { //!< 3037 神器夺宝活动个人信息
+	optional int32  role_level = 1;						//!< 开启活动时玩家的等级
+	repeated PB_SCRaShenqiDuobaoTask tasks = 2;			//!< 任务数据
+	repeated PB_SCRaShenqiDuobaoGift gifts = 3;			//!< 礼包数据
+}
+
+message PB_TianXuanGiftData {
+	optional int32 seq = 1;		// 礼包序号
+	optional int32 buy_num = 2;	// 已购买次数
+}
+
+message PB_SCRaTianXuanGift { //!< 3038 天选之礼活动个人信息
+	optional int32 role_level = 1;						//!< 开启活动时玩家的等级
+	optional uint32 gift_open_timestamp = 2;			//!< 礼包开启时间戳  （为0表示处于等待充值的状态）
+	optional uint32 gift_close_timestamp = 3;			//!< 礼包关闭时间戳	 （为0表示处于等待充值的状态）
+	optional uint32 gift_cd_end_timestamp = 4;			//!< 礼包CD结束时间戳（为0表示处于等待充值的状态）
+	optional bool has_fetch_free_gift = 5;				//!< 是否已领取免费礼包 （礼包开启期间有效）
+	optional int32 group_id = 6;						//!< 礼包组ID
+	optional int32 accumulated_chongzhi_num = 7;		//!< 已充值钻石数（国服除以10即可得到人民币数，海外版本可能需要改）
+	repeated PB_TianXuanGiftData gifts = 8;				//!< 礼包数据
+}
+
+message PB_SCRaTerritoryGift { //!< 3039 领地礼包活动个人信息
+	optional int32 buy_count = 1;						//!< 购买次数
+	optional int32 now_type = 2;						//!< 当前阶段
+	optional uint32 next_time = 3;						//!< 结束时间
+}
+
+message PB_SCRaJifenZhuanpan { //!< 3040 积分转盘活动个人信息
+	optional int32 role_level = 1;						//!< 开启活动时玩家的等级
+	optional int32 reward_group = 2;					//!< 奖励组
+	optional int32 times_to_big_prize = 3;				//!< 剩余XXX次必得大奖
+	optional int32 jifen = 4;							//!< 剩余积分数
+	repeated int32 reward_seqs = 5;						//!< 抽奖结果（长度可能为0,1,10  收到长度为1或10时应发领奖请求）
+}
+
+
+
+message PB_SCRaCustomizedGift { //!< 3041
+	optional int32 role_level = 1;						//!< 开启活动时玩家的等级
+	optional bool is_open = 2;		                    //!< 是否已开启礼包（决定是否展示活动界面）				
+	optional bool has_buy_gift = 3;						//!< 是否已购买礼包（决定是否能领取奖励）
+	
+	enum FetchFlag {
+		CAN_NOT_FETCH = 0;	//!< 还不能领取
+		OK_TO_FETCH = 1;	//!< 可以领取
+		FETCHED = 2;		//!< 已经领取
+	}
+	repeated FetchFlag fetch_flags = 4;					//!< 每个奖励的领取标记
+}
+
+message PB_ExclusiveGiftData {
+	optional uint32 end_timestamp = 1;					//!< 礼包结束时间戳
+	optional int32 already_buy_times = 2;				//!< 已买次数
+	optional int32 seq = 3;								//!< 礼包索引
+}
+
+message PB_SCRaExclusiveGift { //!< 3042 专属礼包个人信息
+	repeated PB_ExclusiveGiftData gifts = 1;			//!< 礼包列表 （需自行排序）
+}

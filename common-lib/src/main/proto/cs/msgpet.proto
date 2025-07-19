@@ -1,0 +1,101 @@
+option java_package = "org.SouthMillion.proto.Msgpet";
+
+//!<MsgId:2100
+message PB_CSRolePetReq {//!< 宠物  角色操作
+	optional int32	req_type = 1;		//!<操作类型
+	optional int32	param_1 = 2;		//!<参数1
+	optional int32	param_2 = 3;		//!<参数2
+	optional int32	param_3 = 4;		//!<参数3
+
+	repeated int32	param_list = 5;			//!<参数list
+}
+
+message PB_SCRolePetData{
+	optional int32	pet_index 		= 1;//宠物背包的index
+	optional int32	pet_id 			= 2;//宠物信息表的 宠物ID
+	optional int32	pet_level 		= 3;//宠物升级表的 宠物等级
+	optional int32	pet_exp			= 4;//经验
+	optional int32	pet_order 		= 5;//宠物觉醒的 宠物阶数
+	
+	repeated int32	skill_list 		= 6;//宠物技能列表表 的 技能ID
+	repeated int32	gem_item_id 	= 7;//宠物普通宝石表 的 宝石ID
+	repeated int32	ts_gem_index 	= 8;//特殊宝石的格子index
+
+	repeated int32	attr_list 		= 9;//属性列表
+	optional int64	capability 		= 10;//战力
+	optional int32	skill_lock_flag	= 11;//技能锁
+}
+
+message PB_SCRoleTSGemData{
+	optional int32	gem_index = 1;//特殊宝石背包的index
+	optional int32	gem_level = 2;//宠物特殊宝石表的 宝石等级
+	optional int32	pet_index = 3;//穿在哪个宠物上 没穿的为0
+	repeated int32	attr_type = 4;//属性类型
+	repeated int32	attr_value = 5;//属性值
+}
+
+message PB_SCRoleClothData{
+	optional int32 item_id=1;
+	optional int32 level=2;
+	optional int32 pet_index=3;//穿在哪个宠物身上
+}
+
+//!<MsgId:2101
+message PB_SCRolePetAllInfo {//登录时下发
+	repeated int32	fight_pet_index = 1;//出战的宠物的宠物背包index
+	repeated PB_SCRolePetData	pet_list = 2;//宠物背包
+	repeated PB_SCRoleTSGemData	ts_gem_list = 3;//特殊宝石背包
+	repeated PB_SCRoleClothData	cloth_list = 4;//皮肤列表
+}
+
+//!<MsgId:2102
+message PB_SCRolePetSignleInfo {//有改变时下发 一个宠物的信息
+	optional PB_SCRolePetData	pet_node = 1;
+}
+
+//!<MsgId:2103
+message PB_SCRoleTSGemSignleInfo {//有改变时下发 一个特殊宝石的信息
+	optional PB_SCRoleTSGemData	ts_gem_node = 1;
+}
+
+//!<MsgId:2104
+message PB_SCRolePetRetInfo {//操作回调
+	optional int32	ret_type = 1;
+	optional int32	ret_p1 = 2;
+	optional int32	ret_p2 = 3;
+}
+
+
+message PB_OneKeyPetGemInfo {
+	optional bool is_ts_gem = 1; 	//是否特殊宝石
+	optional bool is_inlayed = 2;	//是否已镶嵌
+	optional int32 pet_index = 3;	//宠物index (未镶嵌就填0)
+	optional int32 slot_index = 4;	//槽位index (未镶嵌就填0)
+	optional int32 item_id = 5;		//宝石物品ID
+	optional int32 ts_gem_index = 6;//特殊宝石在宝石背包中的index 
+}
+
+//!<MsgId:2105
+message PB_CSPetOneKeyUpLevelGemReq {//一键升级宝石
+	repeated PB_OneKeyPetGemInfo items = 1;	 //一键升级的宝石
+}
+
+//!<MsgId:2106
+message PB_SCPetSendEvoAttr {//下发进化后属性
+	optional int32 pet_index=1;
+	repeated int32 attr_list=2;
+}
+
+message PB_SCPetRemainsNode{
+		optional int32 seq=1;
+		optional int32 grade=2;
+		optional int32 level=3;
+		optional int32 exp=4;
+		optional int32 cloth_id=5;
+		optional int32 index=6;
+}
+
+message PB_SCPetRemainsList{//2107 圣遗物列表
+	optional int32 send_type=1;//0:全部 1:单个
+	repeated PB_SCPetRemainsNode remains_list=2;
+}
