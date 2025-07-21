@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class HeartbeatRequest {
     private String sessionId;
-    private Integer roleId;
+    private String roleId;
 }

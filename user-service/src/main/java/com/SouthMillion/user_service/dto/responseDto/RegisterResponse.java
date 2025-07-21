@@ -4,7 +4,9 @@ import lombok.Data;
 
 @Data
 public class RegisterResponse {
-    private int ret;         // 0: OK, 1: trùng user, 2: lỗi khác
+    private int ret;
     private String message;
     private Long userId;
+    private String roleId;
+    private String roleName;
 }

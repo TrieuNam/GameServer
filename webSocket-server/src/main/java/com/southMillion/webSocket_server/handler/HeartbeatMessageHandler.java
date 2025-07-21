@@ -27,7 +27,7 @@ public class HeartbeatMessageHandler implements GameMessageHandler {
 
             // 2. Lấy sessionId/roleId (giả sử bạn lưu attribute khi login)
             String sessionId = (String) session.getAttributes().get("sessionId");
-            Integer roleId = (Integer) session.getAttributes().get("roleId");
+            String roleId = (String) session.getAttributes().get("roleId");
             if (sessionId == null || roleId == null) {
                 System.out.println("sessionId/roleId not found in session!");
                 session.close();

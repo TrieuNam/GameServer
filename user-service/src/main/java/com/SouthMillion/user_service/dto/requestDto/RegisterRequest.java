@@ -15,7 +15,13 @@ public class RegisterRequest {
     private String username;
     private String password;
     private String email;
-    private Integer accountType; // có thể mặc định 1
-    private Integer fcmFlag;     // có thể mặc định 0
-    private String openid;       // nếu cần, hoặc null
+    private Integer accountType;
+    private Integer fcmFlag;
+    private String openid;
+
+    // Thêm các field cho role mặc định (nếu muốn nhận từ client)
+    private String roleName;
+    private String serverId;
+    private int level;
+    private String vip;
 }

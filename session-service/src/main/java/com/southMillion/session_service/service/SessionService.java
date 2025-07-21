@@ -17,7 +17,7 @@ public class SessionService {
     @Autowired
     private SessionHistoryRepository historyRepository;
 
-    public void heartbeat(String sessionId, Integer roleId) {
+    public void heartbeat(String sessionId, String roleId) {
         SessionDto session = sessionRepository.findBySessionId(sessionId);
         long now = System.currentTimeMillis() / 1000;
         if (session == null) {

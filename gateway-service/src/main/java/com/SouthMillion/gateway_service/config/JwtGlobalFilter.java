@@ -30,7 +30,7 @@ public class JwtGlobalFilter implements GlobalFilter, Ordered {
         String path = exchange.getRequest().getPath().toString();
         // Bỏ qua JWT check cho các route public, ví dụ login/register
         if (path.startsWith("/user-service/auth") || path.startsWith("/report-service/api/report")
-        || path.startsWith("/webSocket-server/ws/game")) {
+        || path.startsWith("/webSocket-server/ws/game") || path.startsWith("/session-service/session/heartbeat")) {
             return chain.filter(exchange);
         }
 

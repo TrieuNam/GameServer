@@ -2,16 +2,17 @@ package com.SouthMillion.user_service.service;
 
 import com.SouthMillion.user_service.dto.requestDto.RegisterRequest;
 import com.SouthMillion.user_service.dto.responseDto.RegisterResponse;
+import com.SouthMillion.user_service.model.RoleAttr;
 import com.SouthMillion.user_service.model.ActivityLog;
 import com.SouthMillion.user_service.model.Role;
 import com.SouthMillion.user_service.model.User;
 import com.SouthMillion.user_service.repository.ActivityLogRepository;
+import com.SouthMillion.user_service.repository.RoleAttrRepository;
 import com.SouthMillion.user_service.repository.RoleRepository;
 import com.SouthMillion.user_service.repository.UserRepository;
 import com.SouthMillion.user_service.utils.AdVerifier;
 import com.SouthMillion.user_service.utils.PaymentVerifier;
 import com.SouthMillion.user_service.utils.SocialVerifier;
-import jakarta.transaction.Transactional;
 import org.SouthMillion.dto.user.*;
 import org.SouthMillion.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,9 +128,23 @@ public class MyUserDetailsService implements UserDetailsService {
         user.setStatus("active");
         user = repo.save(user);
 
+        // Tạo role mặc định (tuỳ logic, có thể sinh roleId random hoặc auto-increment)
+        Role role = new Role();
+        role.setRoleId(UUID.randomUUID().toString());
+        role.setRoleName(req.getRoleName() != null ? req.getRoleName() : req.getUsername() + "_role");
+        role.setServerId(req.getServerId() != null ? req.getServerId() : "1"); // Nếu client không gửi thì default "1"
+        role.setLevel(req.getLevel() != 0 ? req.getLevel() : 1);
+        role.setVip(req.getVip() != null ? req.getVip() : "0");
+        role.setLastLoginTime(System.currentTimeMillis() / 1000L);
+        role.setUser(user);
+
+        role = roleRepository.save(role);
+
         resp.setRet(0);
         resp.setMessage("Register success");
         resp.setUserId(user.getId());
+        resp.setRoleId(role.getRoleId()); // Nếu response có trường này
+        resp.setRoleName(role.getRoleName()); // Nếu response có trường này
         return resp;
     }
 
@@ -184,7 +199,6 @@ public class MyUserDetailsService implements UserDetailsService {
     }
 
 
-
     public void paymentCallback(PaymentCallbackDTO dto) {
         if (!PaymentVerifier.verify(dto.getTransactionId(), dto.getUserId(), dto.getAmount()))
             throw new RuntimeException("Invalid transaction");
@@ -202,7 +216,6 @@ public class MyUserDetailsService implements UserDetailsService {
         logActivity(user.getId(), "ads_reward", dto.getAdProvider());
         return true;
     }
-
 
 
 }
