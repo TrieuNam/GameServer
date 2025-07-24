@@ -25,9 +25,3 @@ spring:
       properties:
         spring.json.trusted.packages: '*'
 
-
-config-service:
-  url: http://localhost:8083
-
-pet-service:
-  url: http://localhost:8085

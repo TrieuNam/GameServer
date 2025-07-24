@@ -1,1 +1,25 @@
-spring.application.name=task-service
+spring:
+  application:
+    name: task-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3312/task_db
+    username: tpnam
+    password: 121831
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: update
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  kafka:
+    bootstrap-servers: localhost:9092
+
+server:
+  port: 8097
+

@@ -1,7 +1,9 @@
 package com.southMillion.webSocket_server.handler;
 
 
-import com.southMillion.webSocket_server.service.ServerInfoServiceClient;
+import com.southMillion.webSocket_server.service.client.ServerInfoServiceClient;
+import com.southMillion.webSocket_server.service.producer.WebsocketEventProducer;
+import org.SouthMillion.dto.serverInfor.ServerTimeEventDto;
 import org.SouthMillion.proto.Msgserver.Msgserver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -14,6 +16,9 @@ public class TimeRequestMessageHandler implements GameMessageHandler {
 
     @Autowired
     private ServerInfoServiceClient serverInfoService;
+
+    @Autowired
+    private WebsocketEventProducer eventProducer; // Thêm vào
 
     @Override
     public void handle(WebSocketSession session, byte[] payload) {
@@ -34,12 +39,28 @@ public class TimeRequestMessageHandler implements GameMessageHandler {
 
             sendResponse(session, 9000, resp.toByteArray());
 
+            // Gửi event Kafka cho task-service & report-service
+            String userId = (session.getAttributes().get("userId") != null)
+                    ? String.valueOf(session.getAttributes().get("userId"))
+                    : "unknown";
+
+            // Nên wrap payload thành DTO cho dễ maintain
+            ServerTimeEventDto eventDto = new ServerTimeEventDto(now, serverStart, openDays, combineTime);
+
+            eventProducer.sendGameEvent(
+                    userId,
+                    "SERVER_TIME_REQUEST",
+                    eventDto
+            );
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public int getMsgId() { return 9050; }
+    public int getMsgId() {
+        return 9050;
+    }
 
 }

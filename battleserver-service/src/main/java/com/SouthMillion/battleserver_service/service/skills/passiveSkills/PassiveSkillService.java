@@ -3,7 +3,7 @@ package com.SouthMillion.battleserver_service.service.skills.passiveSkills;
 import com.SouthMillion.battleserver_service.service.serviceClient.ConfigServiceClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.SouthMillion.dto.PassiveSkillDTO;
+import org.SouthMillion.dto.battle.PassiveSkillDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

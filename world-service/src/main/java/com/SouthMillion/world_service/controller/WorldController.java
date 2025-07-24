@@ -3,10 +3,10 @@ package com.SouthMillion.world_service.controller;
 import com.SouthMillion.world_service.service.MonsterCache;
 import com.SouthMillion.world_service.service.client.BattleServiceClient;
 import lombok.Data;
-import org.SouthMillion.dto.BattleRequestDTO;
-import org.SouthMillion.dto.BattleResultDTO;
-import org.SouthMillion.dto.MonsterInstanceDTO;
-import org.SouthMillion.dto.MonsterKilledRequestDTO;
+import org.SouthMillion.dto.battle.BattleRequestDTO;
+import org.SouthMillion.dto.battle.BattleResultDTO;
+import org.SouthMillion.dto.battle.MonsterInstanceDTO;
+import org.SouthMillion.dto.battle.MonsterKilledRequestDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

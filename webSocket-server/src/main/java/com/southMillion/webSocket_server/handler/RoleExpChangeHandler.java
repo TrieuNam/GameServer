@@ -1,6 +1,8 @@
 package com.southMillion.webSocket_server.handler;
 
-import com.southMillion.webSocket_server.service.UserServiceFeignClient;
+import com.southMillion.webSocket_server.service.client.UserServiceFeignClient;
+import com.southMillion.webSocket_server.service.producer.WebsocketEventProducer;
+import org.SouthMillion.dto.user.RoleExpChangeEvent;
 import org.SouthMillion.proto.Msgrole.Msgrole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -13,6 +15,9 @@ public class RoleExpChangeHandler implements GameMessageHandler {
     @Autowired
     private UserServiceFeignClient userService;
 
+    @Autowired
+    private WebsocketEventProducer eventProducer;
+
     @Override
     public void handle(WebSocketSession session, byte[] payload) {
         try {
@@ -24,6 +29,12 @@ public class RoleExpChangeHandler implements GameMessageHandler {
                     .setChangeExp(100) // Nếu muốn tính chênh lệch exp thì lấy thêm param hoặc cache
                     .build();
             sendResponse(session, 1402, resp.toByteArray());
+
+            eventProducer.sendGameEvent(
+                    roleId,
+                    "ROLE_EXP_CHANGE",
+                    new RoleExpChangeEvent(roleId, exp, 100) // 100 là số exp thay đổi, có thể truyền động nếu cần
+            );
         } catch (Exception e) {
             e.printStackTrace();
         }

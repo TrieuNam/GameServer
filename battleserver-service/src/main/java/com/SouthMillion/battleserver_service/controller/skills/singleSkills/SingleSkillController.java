@@ -1,8 +1,8 @@
 package com.SouthMillion.battleserver_service.controller.skills.singleSkills;
 
 import com.SouthMillion.battleserver_service.service.skills.singleSkills.SingleSkillService;
-import org.SouthMillion.dto.SingleSkillDTO;
-import org.SouthMillion.dto.SingleSkillEffectDTO;
+import org.SouthMillion.dto.battle.SingleSkillDTO;
+import org.SouthMillion.dto.battle.SingleSkillEffectDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

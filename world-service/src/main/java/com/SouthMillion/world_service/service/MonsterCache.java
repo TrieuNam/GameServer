@@ -3,9 +3,9 @@ package com.SouthMillion.world_service.service;
 
 import com.SouthMillion.world_service.service.client.ConfigServiceClient;
 import jakarta.annotation.PostConstruct;
-import org.SouthMillion.dto.MonsterDTO;
-import org.SouthMillion.dto.MonsterGroupDTO;
-import org.SouthMillion.dto.MonsterInstanceDTO;
+import org.SouthMillion.dto.battle.MonsterDTO;
+import org.SouthMillion.dto.battle.MonsterGroupDTO;
+import org.SouthMillion.dto.battle.MonsterInstanceDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

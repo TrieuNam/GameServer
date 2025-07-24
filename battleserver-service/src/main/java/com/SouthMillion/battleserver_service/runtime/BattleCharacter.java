@@ -1,9 +1,9 @@
 package com.SouthMillion.battleserver_service.runtime;
 
 import lombok.Data;
-import org.SouthMillion.dto.BuffStatusDTO;
-import org.SouthMillion.dto.MonsterInstanceDTO;
-import org.SouthMillion.dto.PassiveSkillDTO;
+import org.SouthMillion.dto.battle.BuffStatusDTO;
+import org.SouthMillion.dto.battle.MonsterInstanceDTO;
+import org.SouthMillion.dto.battle.PassiveSkillDTO;
 
 import java.util.ArrayList;
 import java.util.Iterator;

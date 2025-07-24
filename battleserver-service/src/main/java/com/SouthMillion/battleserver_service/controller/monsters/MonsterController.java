@@ -1,7 +1,7 @@
 package com.SouthMillion.battleserver_service.controller.monsters;
 
 import com.SouthMillion.battleserver_service.service.monsters.MonsterService;
-import org.SouthMillion.dto.MonsterDTO;
+import org.SouthMillion.dto.battle.MonsterDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

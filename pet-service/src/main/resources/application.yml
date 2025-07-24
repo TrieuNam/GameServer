@@ -1,12 +1,22 @@
 spring:
   application:
     name: pet-service
+  datasource:
+    url: jdbc:mysql://localhost:3314/petDB?useUnicode=true&characterEncoding=UTF-8
+    username: tpnam
+    password: 121831
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 server:
-  port: 8085
+  port: 8101
 
-config-service:
-  url: http://localhost:8083
 
 eureka:
   instance:

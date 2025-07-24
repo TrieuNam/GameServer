@@ -3,8 +3,8 @@ package com.SouthMillion.battleserver_service.service.skills.singleSkills;
 import com.SouthMillion.battleserver_service.service.serviceClient.ConfigServiceClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.SouthMillion.dto.SingleSkillDTO;
-import org.SouthMillion.dto.SingleSkillEffectDTO;
+import org.SouthMillion.dto.battle.SingleSkillDTO;
+import org.SouthMillion.dto.battle.SingleSkillEffectDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

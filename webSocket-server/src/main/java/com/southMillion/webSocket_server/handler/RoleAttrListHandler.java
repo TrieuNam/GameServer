@@ -1,7 +1,9 @@
 package com.southMillion.webSocket_server.handler;
 
-import com.southMillion.webSocket_server.service.UserServiceFeignClient;
+import com.southMillion.webSocket_server.service.client.UserServiceFeignClient;
+import com.southMillion.webSocket_server.service.producer.WebsocketEventProducer;
 import org.SouthMillion.dto.user.RoleAttrDto;
+import org.SouthMillion.dto.user.RoleAttrListEvent;
 import org.SouthMillion.dto.user.RoleDto;
 import org.SouthMillion.proto.Msgrole.Msgrole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,9 @@ import static com.southMillion.webSocket_server.utils.websocketSendResponse.send
 public class RoleAttrListHandler implements GameMessageHandler {
     @Autowired
     private UserServiceFeignClient userService;
+
+    @Autowired
+    private WebsocketEventProducer eventProducer;
 
     @Override
     public void handle(WebSocketSession session, byte[] payload) {
@@ -36,6 +41,11 @@ public class RoleAttrListHandler implements GameMessageHandler {
                 );
             }
             sendResponse(session, 1401, builder.build().toByteArray());
+            eventProducer.sendGameEvent(
+                    roleId,
+                    "ROLE_ATTR_LIST",
+                    new RoleAttrListEvent(role, attrs)
+            );
         } catch (Exception e) {
             e.printStackTrace();
         }

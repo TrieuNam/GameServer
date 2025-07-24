@@ -3,18 +3,15 @@ package com.southMillion.webSocket_server.handler;
 import com.southMillion.webSocket_server.config.SessionManager;
 import com.southMillion.webSocket_server.send.CrossConnectInfoSender;
 import com.southMillion.webSocket_server.send.DisconnectNoticeSender;
-import com.southMillion.webSocket_server.send.TimeDateInfoSender;
-import com.southMillion.webSocket_server.service.UserServiceFeignClient;
+import com.southMillion.webSocket_server.service.client.UserServiceFeignClient;
+import com.southMillion.webSocket_server.service.producer.WebsocketEventProducer;
 import org.SouthMillion.dto.user.LoginVerify;
 import org.SouthMillion.dto.user.ResponseServerData;
 import org.SouthMillion.proto.Msglogin.Msglogin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +30,9 @@ public class LoginMessageHandler implements GameMessageHandler {
     private DisconnectNoticeSender disconnectNoticeSender;
 //    @Autowired
 //    private TimeDateInfoSender timeDateInfoSender;
+
+    @Autowired
+    private WebsocketEventProducer eventProducer;
 
     @Autowired
     private SessionManager sessionManager;
@@ -74,6 +74,12 @@ public class LoginMessageHandler implements GameMessageHandler {
                 Msglogin.PB_SCLoginToAccount response = respBuilder.build();
                 sendResponse(session, 7000, response.toByteArray());
 
+                // GỬI EVENT KAFKA ĐĂNG NHẬP THÀNH CÔNG
+                eventProducer.sendGameEvent(
+                        username,    // userId
+                        "LOGIN_SUCCESS",
+                        result      // payload (toàn bộ info trả về từ userServiceFeignClient)
+                );
 
                 WebSocketSession oldSession = sessionManager.getSessionByUsername(username);
                 if (oldSession != null && oldSession.isOpen() && oldSession != session) {
@@ -109,6 +115,13 @@ public class LoginMessageHandler implements GameMessageHandler {
                 Msglogin.PB_SCAccountKeyError.Builder errBuilder = Msglogin.PB_SCAccountKeyError.newBuilder();
                 Msglogin.PB_SCAccountKeyError errResp = errBuilder.build();
                 sendResponse(session, 7004, errResp.toByteArray());
+                // [Trả về lỗi login]
+                eventProducer.sendGameEvent(
+                        username,
+                        "LOGIN_FAILED",
+                        result      // payload, hoặc truyền error info
+                );
+
             }
 
         } catch (Exception e) {
@@ -121,6 +134,12 @@ public class LoginMessageHandler implements GameMessageHandler {
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
+            // Ngoài ra có thể gửi event báo lỗi parse/gọi service nếu muốn tracking lỗi hệ thống
+            eventProducer.sendGameEvent(
+                    "unknown",
+                    "LOGIN_EXCEPTION",
+                    e.getMessage()
+            );
         }
     }
 

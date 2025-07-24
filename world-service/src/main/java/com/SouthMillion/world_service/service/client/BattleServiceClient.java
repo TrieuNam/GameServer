@@ -1,7 +1,7 @@
 package com.SouthMillion.world_service.service.client;
 
-import org.SouthMillion.dto.BattleRequestDTO;
-import org.SouthMillion.dto.BattleResultDTO;
+import org.SouthMillion.dto.battle.BattleRequestDTO;
+import org.SouthMillion.dto.battle.BattleResultDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

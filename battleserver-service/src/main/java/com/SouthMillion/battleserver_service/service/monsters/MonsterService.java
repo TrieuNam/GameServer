@@ -3,7 +3,7 @@ package com.SouthMillion.battleserver_service.service.monsters;
 import com.SouthMillion.battleserver_service.service.serviceClient.ConfigServiceClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.SouthMillion.dto.MonsterDTO;
+import org.SouthMillion.dto.battle.MonsterDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

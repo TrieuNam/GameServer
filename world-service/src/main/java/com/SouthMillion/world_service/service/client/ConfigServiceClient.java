@@ -1,6 +1,6 @@
 package com.SouthMillion.world_service.service.client;
 
-import org.SouthMillion.dto.*;
+import org.SouthMillion.dto.battle.*;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 

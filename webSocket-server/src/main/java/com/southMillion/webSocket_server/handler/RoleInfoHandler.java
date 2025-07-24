@@ -1,7 +1,8 @@
 package com.southMillion.webSocket_server.handler;
 
 import com.google.protobuf.ByteString;
-import com.southMillion.webSocket_server.service.UserServiceFeignClient;
+import com.southMillion.webSocket_server.service.client.UserServiceFeignClient;
+import com.southMillion.webSocket_server.service.producer.WebsocketEventProducer;
 import org.SouthMillion.dto.user.RoleDto;
 import org.SouthMillion.proto.Msgrole.Msgrole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,9 @@ import static com.southMillion.webSocket_server.utils.websocketSendResponse.send
 public class RoleInfoHandler implements GameMessageHandler {
     @Autowired
     private UserServiceFeignClient userService;
+
+    @Autowired
+    private WebsocketEventProducer eventProducer;
 
     @Override
     public void handle(WebSocketSession session, byte[] payload) {
@@ -36,6 +40,13 @@ public class RoleInfoHandler implements GameMessageHandler {
             // Nếu có attrs hoặc appearance, mapping thêm...
 
             sendResponse(session, 1400, builder.build().toByteArray());
+
+            // Gửi event Kafka cho task-service & report-service
+            eventProducer.sendGameEvent(
+                    roleId,
+                    "ROLE_INFO",
+                    role
+            );
         } catch (Exception e) {
             e.printStackTrace();
         }

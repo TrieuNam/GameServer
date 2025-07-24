@@ -1,9 +1,9 @@
 package com.SouthMillion.battleserver_service.runtime;
 
-import org.SouthMillion.dto.BattleRequestDTO;
-import org.SouthMillion.dto.MonsterInstanceDTO;
-import org.SouthMillion.dto.PassiveSkillDTO;
-import org.SouthMillion.dto.PetInstanceDTO;
+import org.SouthMillion.dto.battle.BattleRequestDTO;
+import org.SouthMillion.dto.battle.MonsterInstanceDTO;
+import org.SouthMillion.dto.battle.PassiveSkillDTO;
+import org.SouthMillion.dto.battle.PetInstanceDTO;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -2,12 +2,11 @@ package com.SouthMillion.user_service.controller;
 
 import com.SouthMillion.user_service.model.User;
 import com.SouthMillion.user_service.repository.UserRepository;
-import org.SouthMillion.dto.UserDto;
-import org.SouthMillion.dto.user.BattleStateDTO;
-import org.SouthMillion.dto.user.OnlineStateDTO;
+import com.SouthMillion.user_service.service.UserSettingsService;
+import org.SouthMillion.dto.battle.UserDto;
+import org.SouthMillion.dto.user.UserSettingsDto;
 import org.SouthMillion.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,6 +19,9 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private UserSettingsService settingsService;
+
     @GetMapping("/{id}")
     public UserDto getUserById(@PathVariable Long id) {
         User user = repo.findById(id).orElseThrow();
@@ -30,5 +32,13 @@ public class UserController {
         return dto;
     }
 
+    @PostMapping("/settings")
+    public void updateSettings(@RequestBody UserSettingsDto dto) {
+        settingsService.updateSettings(dto);
+    }
 
+    @GetMapping("/settings")
+    public UserSettingsDto getSettings(@RequestParam String userKey) {
+        return settingsService.getSettings(userKey);
+    }
 }

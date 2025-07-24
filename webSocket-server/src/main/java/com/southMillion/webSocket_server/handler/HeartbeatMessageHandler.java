@@ -1,15 +1,13 @@
 package com.southMillion.webSocket_server.handler;
 
-import com.southMillion.webSocket_server.service.SessionFeignClient;
+import com.southMillion.webSocket_server.service.client.SessionFeignClient;
+import com.southMillion.webSocket_server.service.producer.WebsocketEventProducer;
+import org.SouthMillion.dto.session.HeartbeatEventDto;
 import org.SouthMillion.dto.session.HeartbeatRequest;
 import org.SouthMillion.proto.Msgserver.Msgserver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.WebSocketSession;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 import static com.southMillion.webSocket_server.utils.websocketSendResponse.sendResponse;
 
@@ -17,6 +15,8 @@ import static com.southMillion.webSocket_server.utils.websocketSendResponse.send
 public class HeartbeatMessageHandler implements GameMessageHandler {
     @Autowired
     private SessionFeignClient sessionServiceFeignClient;
+    @Autowired
+    private WebsocketEventProducer eventProducer; // Bổ sung inject bean này
 
     @Override
     public void handle(WebSocketSession session, byte[] payload) {
@@ -25,7 +25,7 @@ public class HeartbeatMessageHandler implements GameMessageHandler {
             Msgserver.PB_CSHeartbeatReq req = Msgserver.PB_CSHeartbeatReq.parseFrom(payload);
             System.out.println("Heartbeat received. reserve=" + req.getReserve());
 
-            // 2. Lấy sessionId/roleId (giả sử bạn lưu attribute khi login)
+            // 2. Lấy sessionId/roleId
             String sessionId = (String) session.getAttributes().get("sessionId");
             String roleId = (String) session.getAttributes().get("roleId");
             if (sessionId == null || roleId == null) {
@@ -46,16 +46,20 @@ public class HeartbeatMessageHandler implements GameMessageHandler {
                     .build();
             sendResponse(session, 1003, resp.toByteArray());
 
+            // 5. Gửi event Kafka cho tracking, analytics,...
+            eventProducer.sendGameEvent(
+                    roleId,
+                    "HEARTBEAT",
+                    new HeartbeatEventDto(sessionId, roleId, System.currentTimeMillis())
+            );
+
         } catch (Exception e) {
             e.printStackTrace();
-            // Optionally, bạn có thể đóng kết nối hoặc gửi lỗi cho client
         }
     }
 
     @Override
     public int getMsgId() {
-        return 1053; // Đúng với MsgId của heartbeat request
+        return 1053;
     }
-
-
 }

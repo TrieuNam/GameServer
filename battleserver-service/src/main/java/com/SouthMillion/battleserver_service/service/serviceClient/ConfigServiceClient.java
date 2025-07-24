@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 
-@FeignClient(name = "config-service", url = "${config-service.url}")
+@FeignClient(name = "config-service")
 public interface ConfigServiceClient {
     @GetMapping("/api/config/monster_group")
     JsonNode getConfigFile();
