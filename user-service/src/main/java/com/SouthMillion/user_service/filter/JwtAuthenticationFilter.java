@@ -1,6 +1,6 @@
 package com.SouthMillion.user_service.filter;
 
-import com.SouthMillion.user_service.service.MyUserDetailsService;
+import com.SouthMillion.user_service.service.impl.UserGameServiceImpl;
 import com.SouthMillion.user_service.utils.JwtConfig;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,7 +21,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     JwtConfig jwtUtil;
 
     @Autowired
-    private MyUserDetailsService userDetailsService;
+    private UserGameServiceImpl userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -47,6 +47,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         String path = request.getServletPath();
-        return path.startsWith("/auth/");
+        return path.startsWith("/**/auth/**");
     }
 }

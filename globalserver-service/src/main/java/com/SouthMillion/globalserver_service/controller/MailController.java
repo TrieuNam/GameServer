@@ -1,6 +1,7 @@
 package com.SouthMillion.globalserver_service.controller;
 
-import com.SouthMillion.globalserver_service.service.MailService;
+import com.SouthMillion.globalserver_service.service.MailServiceImpl;
+import org.SouthMillion.dto.globalserver.MailAckInfo;
 import org.SouthMillion.dto.globalserver.MailDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -11,35 +12,39 @@ import java.util.List;
 @RequestMapping("/api/mail")
 public class MailController {
     @Autowired
-    private MailService mailService;
+    private MailServiceImpl mailService;
 
-    // Lấy danh sách mail
+    // Lấy danh sách mail cho user
     @GetMapping("/list/{userId}")
-    public List<MailDTO> list(@PathVariable Long userId) {
-        return mailService.getUserMailList(userId);
+    public List<MailDTO> getMailList(@PathVariable Long userId) {
+        return mailService.getMailList(userId);
     }
 
-    // Lấy chi tiết mail
-    @GetMapping("/detail/{userId}/{mailId}")
-    public MailDTO detail(@PathVariable Long userId, @PathVariable Integer mailId) {
-        return mailService.getMailDetail(mailId, userId);
+    // Lấy chi tiết mail theo mailIndex
+    @GetMapping("/detail/{userId}/{mailIndex}")
+    public MailDTO getMailDetail(@PathVariable Long userId, @PathVariable Integer mailIndex) {
+        return mailService.getMailDetail(userId, mailIndex);
     }
 
-    // Đọc mail (mark read)
-    @PostMapping("/read/{userId}/{mailId}")
-    public void read(@PathVariable Long userId, @PathVariable Integer mailId) {
-        mailService.readMail(mailId, userId);
+    // Xóa mail (danh sách mailIndexes)
+    @PostMapping("/delete/{userId}")
+    public List<MailAckInfo> deleteMails(@PathVariable Long userId, @RequestBody List<Integer> mailIndexes) {
+        return mailService.deleteMails(userId, mailIndexes);
     }
 
-    // Nhận thưởng mail
-    @PostMapping("/fetch/{userId}/{mailId}")
-    public void fetch(@PathVariable Long userId, @PathVariable Integer mailId) {
-        mailService.fetchMail(mailId, userId);
+    // Nhận thưởng mail (danh sách mailIndexes)
+    @PostMapping("/fetch/{userId}")
+    public List<MailAckInfo> fetchMails(@PathVariable Long userId, @RequestBody List<Integer> mailIndexes) {
+        return mailService.fetchMails(userId, mailIndexes);
     }
 
-    // Xoá mail
-    @DeleteMapping("/delete/{userId}/{mailId}")
-    public void delete(@PathVariable Long userId, @PathVariable Integer mailId) {
-        mailService.deleteMail(mailId, userId);
+    // Thao tác tổng hợp (type: 1=xóa, 2=đọc, 3=nhận)
+    @PostMapping("/op/{userId}")
+    public MailAckInfo mailOperation(
+            @PathVariable Long userId,
+            @RequestParam Integer type,
+            @RequestParam Integer p1,
+            @RequestParam(required = false) Integer p2) {
+        return mailService.mailOperation(userId, type, p1, p2);
     }
 }

@@ -10,7 +10,6 @@ import lombok.*;
 @Builder
 public class MailEvent {
     private Long userId;
-    private Integer mailId;
-    private String action; // "FETCH", "DELETE", "READ", ...
-    private Long timestamp;
+    private Integer mailIndex;
+    private String action; // READ, FETCH, DELETE, ...
 }

@@ -22,4 +22,12 @@ public class websocketSendResponse {
             e.printStackTrace();
         }
     }
+
+    public static Integer getUserIdFromSession(WebSocketSession session) {
+        Object userId = session.getAttributes().get("uid"); // hoặc "userId"
+        if (userId instanceof Integer) return (Integer) userId;
+        if (userId instanceof Long) return ((Long) userId).intValue();
+        if (userId instanceof String) return Integer.valueOf((String) userId);
+        throw new RuntimeException("UserId not found in WebSocket session!");
+    }
 }

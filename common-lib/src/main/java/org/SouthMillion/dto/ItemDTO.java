@@ -2,6 +2,7 @@ package org.SouthMillion.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+import org.SouthMillion.proto.Msgknapsack.Msgknapsack;
 
 @Builder
 @AllArgsConstructor
@@ -9,9 +10,17 @@ import lombok.*;
 @Setter
 @Getter
 public class ItemDTO {
+
     @JsonProperty("item_id")
-    private String itemId;
+    private Integer itemId;
     @JsonProperty("num")
-    private String num;
-    // getter/setter
+    private Integer num;
+
+    // Convert sang proto
+    public Msgknapsack.PB_ItemData toProto() {
+        return Msgknapsack.PB_ItemData.newBuilder()
+                .setItemId(itemId == null ? 0 : itemId)
+                .setNum(num == null ? 0 : num)
+                .build();
+    }
 }

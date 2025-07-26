@@ -2,6 +2,7 @@ package com.SouthMillion.item_service.service;
 
 import com.SouthMillion.item_service.entity.MysteryShopEntity;
 import com.SouthMillion.item_service.repository.MysteryShopRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.SouthMillion.dto.item.MysteryShopDTO;
 import org.SouthMillion.dto.item.MysteryShopEvent;
@@ -21,65 +22,88 @@ import java.util.stream.Collectors;
 public class MysteryShopService {
     @Autowired
     private MysteryShopRepository repo;
-    @Autowired private StringRedisTemplate redis;
-    @Autowired private KafkaTemplate<String, MysteryShopEvent> kafka;
+    @Autowired
+    private StringRedisTemplate redis;
+    @Autowired
+    private KafkaTemplate<String, MysteryShopEvent> kafka;
 
-    private static final String MYSTERY_SHOP_KEY = "mysteryshop:limit:%d";
+    private static final String MYSTERY_SHOP_KEY = "mysteryshop:info:%d";
+    private static final ObjectMapper mapper = new ObjectMapper();
 
-    public List<MysteryShopDTO> getLimit(Long userId) {
+    // Lấy info mystery shop cho user (có cache)
+    public MysteryShopDTO getShopInfo(Long userId) {
+        int uid = userId.intValue();
         String key = String.format(MYSTERY_SHOP_KEY, userId);
         String cache = redis.opsForValue().get(key);
-        if (cache != null) return parseJsonList(cache);
+        if (cache != null) return parseJson(cache);
 
-        List<MysteryShopEntity> list = repo.findByUserId(userId);
-        List<MysteryShopDTO> dtos = list.stream().map(this::toDto).collect(Collectors.toList());
-        redis.opsForValue().set(key, toJson(dtos), Duration.ofMinutes(5));
-        return dtos;
-    }
-
-    public void buy(Long userId, Integer index, Integer num) {
-        int maxBuy = 3;
-        Optional<MysteryShopEntity> optional = repo.findByUserIdAndItemIndex(userId, index);
-        MysteryShopEntity entity = optional.orElse(null);
-
-        if (entity == null) {
-            if (num > maxBuy)
-                throw new RuntimeException("Vượt quá giới hạn mua");
-            entity = new MysteryShopEntity();
-            entity.setUserId(userId);
-            entity.setItemIndex(index);
-            entity.setBuyNum(num);
-        } else {
-            if (entity.getBuyNum() + num > maxBuy)
-                throw new RuntimeException("Vượt quá giới hạn mua");
-            entity.setBuyNum(entity.getBuyNum() + num);
-        }
-        repo.save(entity);
-
-        List<MysteryShopEntity> all = repo.findByUserId(userId);
-        List<MysteryShopDTO> dtos = all.stream().map(this::toDto).collect(Collectors.toList());
-        redis.opsForValue().set(String.format(MYSTERY_SHOP_KEY, userId), toJson(dtos), Duration.ofMinutes(5));
-
-        kafka.send("mysteryshop-event", new MysteryShopEvent(userId, index, num, "BUY"));
-    }
-
-    private MysteryShopDTO toDto(MysteryShopEntity entity) {
-        MysteryShopDTO dto = new MysteryShopDTO();
-        dto.setItemIndex(entity.getItemIndex());
-        dto.setBuyNum(entity.getBuyNum());
+        MysteryShopEntity entity = repo.findById(uid).orElseGet(() -> {
+            MysteryShopEntity e = new MysteryShopEntity();
+            e.setUserId(uid);
+            e.setBuyFlag(0);
+            e.setIndexListJson("[]"); // chưa có shop nào
+            repo.save(e);
+            return e;
+        });
+        MysteryShopDTO dto = MysteryShopEntity.fromEntity(entity);
+        redis.opsForValue().set(key, toJson(dto), Duration.ofMinutes(5));
         return dto;
     }
-    private List<MysteryShopDTO> parseJsonList(String json) {
+
+    // Mua item (index trong indexList)
+    public void buy(Long userId, Integer index) {
+        int uid = userId.intValue();
+        MysteryShopEntity entity = repo.findById(uid)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy shop info user"));
+        List<Integer> indexList = parseIndexes(entity.getIndexListJson());
+
+        // Kiểm tra index hợp lệ
+        if (!indexList.contains(index))
+            throw new RuntimeException("Hàng không tồn tại trong shop user");
+
+        // Kiểm tra đã mua chưa bằng bitmask buyFlag
+        int bit = 1 << index;
+        if ((entity.getBuyFlag() & bit) != 0)
+            throw new RuntimeException("Đã mua item này");
+
+        entity.setBuyFlag(entity.getBuyFlag() | bit);
+        repo.save(entity);
+
+        redis.delete(String.format(MYSTERY_SHOP_KEY, userId));
+        kafka.send("mysteryshop-event", new MysteryShopEvent(userId, index, 1, "BUY"));
+    }
+
+    // Đổi shop mới (random indexList, reset buyFlag)
+    public void refreshShop(Long userId, List<Integer> newIndexes) {
+        int uid = userId.intValue();
+        MysteryShopEntity entity = repo.findById(uid).orElseThrow();
+        entity.setBuyFlag(0);
+        entity.setIndexListJson(toJson(newIndexes));
+        repo.save(entity);
+        redis.delete(String.format(MYSTERY_SHOP_KEY, uid));
+    }
+
+    // Helper parse
+    public static List<Integer> parseIndexes(String json) {
+        if (json == null || json.isEmpty()) return List.of();
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            return Arrays.asList(mapper.readValue(json, MysteryShopDTO[].class));
+            return mapper.readValue(json, new TypeReference<List<Integer>>() {
+            });
         } catch (Exception e) {
-            return new ArrayList<>();
+            return List.of();
         }
     }
+
+    private MysteryShopDTO parseJson(String json) {
+        try {
+            return mapper.readValue(json, MysteryShopDTO.class);
+        } catch (Exception e) {
+            return new MysteryShopDTO();
+        }
+    }
+
     private String toJson(Object o) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(o);
         } catch (Exception e) {
             return "[]";

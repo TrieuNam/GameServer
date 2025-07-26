@@ -11,15 +11,23 @@ import java.util.List;
 @RequestMapping("/api/mysteryshop")
 public class MysteryShopController {
     @Autowired
-    private MysteryShopService mysteryShopService;
+    private MysteryShopService shopService;
 
-    @GetMapping("/limit/{userId}")
-    public List<MysteryShopDTO> limit(@PathVariable Long userId) {
-        return mysteryShopService.getLimit(userId);
+    // Lấy thông tin shop user
+    @GetMapping("/info/{userId}")
+    public MysteryShopDTO info(@PathVariable Long userId) {
+        return shopService.getShopInfo(userId);
     }
 
-    @PostMapping("/buy/{userId}/{index}/{num}")
-    public void buy(@PathVariable Long userId, @PathVariable Integer index, @PathVariable Integer num) {
-        mysteryShopService.buy(userId, index, num);
+    // Mua item
+    @PostMapping("/buy/{userId}/{index}")
+    public void buy(@PathVariable Long userId, @PathVariable Integer index) {
+        shopService.buy(userId, index);
+    }
+
+    // Đổi shop (random lại hàng shop cho user, ví dụ truyền từ config)
+    @PostMapping("/refresh/{userId}")
+    public void refresh(@PathVariable Long userId, @RequestBody List<Integer> newIndexes) {
+        shopService.refreshShop(userId, newIndexes);
     }
 }
