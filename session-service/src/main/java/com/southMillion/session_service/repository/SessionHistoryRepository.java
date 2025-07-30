@@ -6,5 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SessionHistoryRepository extends JpaRepository<SessionHistory, Long> {
-    SessionHistory findTopByRoleIdAndSessionIdOrderByLoginTimeDesc(String roleId, String sessionId);
 }

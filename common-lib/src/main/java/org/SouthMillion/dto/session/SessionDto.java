@@ -10,6 +10,6 @@ import lombok.*;
 @NoArgsConstructor
 public class SessionDto {
     private String sessionId;
-    private String roleId;
+    private Integer roleId;
     private Long lastActive;
 }

@@ -1,16 +1,20 @@
 package org.SouthMillion.dto.user.response;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import org.SouthMillion.dto.user.RoleDatumDTO;
+import org.SouthMillion.dto.user.UserDTO;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 @Data
-@Setter
-@Getter
-public class LoginResponseDTO implements Serializable {
-    private int result;         // 0: ok, 1: sai password, 2: user không tồn tại
-    private String message;
-    private int forbidTime;
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class LoginResponseDTO {
+    private int ret; // kết quả login: 0 = ok, 1 = sai, 2 = banned
+    private String msg;
+    private UserDTO user;
+    private Map<String, RoleDatumDTO> role_data;
 }

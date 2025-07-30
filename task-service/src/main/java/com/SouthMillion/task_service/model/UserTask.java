@@ -15,8 +15,9 @@ public class UserTask {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long userId;
-    private Long taskDefId;
+    private String userId;
+    @Column(name = "task_id")
+    private Integer taskId;
     private int progress;
     private int status; // 0: doing, 1: done, 2: claimed
     private Long updateTime;

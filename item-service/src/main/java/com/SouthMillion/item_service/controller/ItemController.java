@@ -1,10 +1,9 @@
 package com.SouthMillion.item_service.controller;
 
-import com.SouthMillion.item_service.entity.ItemEntity;
 import com.SouthMillion.item_service.service.ItemService;
-import lombok.RequiredArgsConstructor;
-import org.SouthMillion.dto.item.BuyItemRequest;
-import org.SouthMillion.dto.item.ItemDto;
+import org.SouthMillion.dto.item.Knapsack.ItemDTO;
+import org.SouthMillion.dto.item.Knapsack.ItemRetrieveConfigDTO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,50 +11,49 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/item")
-@RequiredArgsConstructor
 public class ItemController {
-    private final ItemService service;
+    @Autowired
+    private ItemService itemService;
 
-    @GetMapping("/get")
-    public ResponseEntity<ItemDto> get(@RequestParam String userId, @RequestParam int itemId) {
-        ItemDto item = service.getItemDto(userId, itemId);
-        if (item == null) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(item);
+    @GetMapping("/{userId}")
+    public List<ItemDTO> getItems(@PathVariable String userId) {
+        return itemService.getAllByUser(userId);
     }
 
-    @GetMapping("/list")
-    public ResponseEntity<List<ItemDto>> list(@RequestParam String userId) {
-        return ResponseEntity.ok(service.getAllItemsDto(userId));
-    }
-
-    @PostMapping("/add")
-    public ResponseEntity<ItemDto> addOrIncrease(
-            @RequestParam String userId,
-            @RequestParam int itemId,
-            @RequestParam int amount) {
-        ItemDto result = service.addOrIncreaseItemDto(userId, itemId, amount);
-        return ResponseEntity.ok(result);
-    }
-
-    @PostMapping("/buy")
-    public ResponseEntity<?> buy(
-            @RequestParam String userId,
-            @RequestParam int itemId,
-            @RequestParam int amount) {
+    @PostMapping("/{userId}/add")
+    public ResponseEntity<?> addItem(@PathVariable String userId, @RequestParam int itemId, @RequestParam int count) {
         try {
-            service.buyItem(userId, itemId, amount);
+            itemService.addItem(userId, itemId, count);
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<?> delete(
-            @RequestParam String userId,
-            @RequestParam int itemId) {
-        boolean ok = service.deleteItem(userId, itemId);
-        if (ok) return ResponseEntity.ok().build();
-        return ResponseEntity.notFound().build();
+    @PostMapping("/{userId}/consume")
+    public ResponseEntity<?> consumeItem(@PathVariable String userId, @RequestParam int itemId, @RequestParam int count) {
+        try {
+            boolean success = itemService.consumeItem(userId, itemId, count);
+            if (!success) return ResponseEntity.badRequest().body("Not enough item or itemId invalid");
+            return ResponseEntity.ok(true);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
+
+    @GetMapping("/{userId}/notenough/{itemId}")
+    public ResponseEntity<Boolean> isNotEnough(
+            @PathVariable String userId,
+            @PathVariable int itemId,
+            @RequestParam int count // số lượng cần kiểm tra
+    ) {
+        boolean enough = itemService.hasEnoughItem(userId, itemId, count);
+        return ResponseEntity.ok(!enough); // true: không đủ, false: đủ
+    }
+
+    @GetMapping("/{userId}/single")
+    public ItemDTO getSingle(@PathVariable String userId, @RequestParam int itemId) {
+        return itemService.getSingle(userId, itemId);
+    }
+
 }

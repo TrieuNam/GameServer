@@ -1,5 +1,6 @@
 package com.SouthMillion.task_service.service;
 
+import com.SouthMillion.task_service.model.CompletedTaskEntity;
 import com.SouthMillion.task_service.model.UserTask;
 import com.SouthMillion.task_service.repository.UserTaskRepository;
 
@@ -17,22 +18,23 @@ import java.util.stream.Collectors;
 
 public class TaskService {
     @Autowired
-    private  UserTaskRepository userTaskRepo;
+    private UserTaskRepository userTaskRepo;
     @Autowired
-    private  StringRedisTemplate redisTemplate;
+    private StringRedisTemplate redisTemplate;
 
-    private String getCacheKey(Long userId) {
+    private String getCacheKey(String userId) {
         return "task:user:" + userId;
     }
 
     // Lấy tiến độ nhiệm vụ từ cache, nếu không có thì lấy DB rồi cache lại
-    public List<TaskProgressDto> getTaskProgress(Long userId) {
+    public List<TaskProgressDto> getTaskProgress(String userId) {
         String cacheKey = getCacheKey(userId);
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
             try {
                 return new com.fasterxml.jackson.databind.ObjectMapper()
-                        .readValue(cached, new com.fasterxml.jackson.core.type.TypeReference<List<TaskProgressDto>>() {});
+                        .readValue(cached, new com.fasterxml.jackson.core.type.TypeReference<List<TaskProgressDto>>() {
+                        });
             } catch (Exception e) {
                 // Nếu lỗi, bỏ qua, load lại từ DB
             }
@@ -42,7 +44,7 @@ public class TaskService {
         List<TaskProgressDto> result = tasks.stream().map(t -> {
             TaskProgressDto dto = new TaskProgressDto();
             dto.setUserId(t.getUserId());
-            dto.setTaskDefId(t.getTaskDefId());
+            dto.setTaskId(t.getTaskId());
             dto.setProgress(t.getProgress());
             dto.setStatus(t.getStatus());
             dto.setUpdateTime(t.getUpdateTime());
@@ -52,13 +54,14 @@ public class TaskService {
         try {
             redisTemplate.opsForValue().set(cacheKey,
                     new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(result));
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         return result;
     }
 
     // Nhận thưởng nhiệm vụ
     public TaskProgressDto claimTask(TaskClaimRequest req) {
-        Long userId = req.getUserId();
+        String userId = req.getUserId();
         Long taskDefId = req.getTaskDefId();
 
         UserTask userTask = null;
@@ -72,7 +75,7 @@ public class TaskService {
                     .findFirst()
                     .orElseThrow(() -> new RuntimeException("No claimable task!"));
         } else {
-            userTask = userTaskRepo.findByUserIdAndTaskDefId(userId, taskDefId)
+            userTask = userTaskRepo.findByUserIdAndTaskId(userId, taskDefId)
                     .orElseThrow(() -> new RuntimeException("Task not found!"));
             if (userTask.getStatus() != 1) throw new RuntimeException("Task not completed!");
         }
@@ -89,7 +92,7 @@ public class TaskService {
         // Trả về tiến độ mới
         TaskProgressDto dto = new TaskProgressDto();
         dto.setUserId(userTask.getUserId());
-        dto.setTaskDefId(userTask.getTaskDefId());
+        dto.setTaskId(userTask.getTaskId());
         dto.setProgress(userTask.getProgress());
         dto.setStatus(userTask.getStatus());
         dto.setUpdateTime(userTask.getUpdateTime());
@@ -97,12 +100,12 @@ public class TaskService {
     }
 
     // Sync lại cache (sau mỗi lần update)
-    public void refreshCache(Long userId) {
+    public void refreshCache(String userId) {
         List<UserTask> tasks = userTaskRepo.findByUserId(userId);
         List<TaskProgressDto> result = tasks.stream().map(t -> {
             TaskProgressDto dto = new TaskProgressDto();
             dto.setUserId(t.getUserId());
-            dto.setTaskDefId(t.getTaskDefId());
+            dto.setTaskId(t.getTaskId());
             dto.setProgress(t.getProgress());
             dto.setStatus(t.getStatus());
             dto.setUpdateTime(t.getUpdateTime());
@@ -111,6 +114,11 @@ public class TaskService {
         try {
             redisTemplate.opsForValue().set(getCacheKey(userId),
                     new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(result));
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
+    }
+
+    public boolean hasCompletedTask(String userId, Integer taskId) {
+        return userTaskRepo.findByUserIdAndTaskId(userId, taskId).isPresent();
     }
 }

@@ -9,14 +9,14 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/task")
+@RequestMapping("api/task")
 @RequiredArgsConstructor
 public class TaskController {
     private final TaskService taskService;
 
     // 1452: Lấy tiến độ nhiệm vụ
     @GetMapping("/progress")
-    public List<TaskProgressDto> getTaskProgress(@RequestParam Long userId) {
+    public List<TaskProgressDto> getTaskProgress(@RequestParam String userId) {
         return taskService.getTaskProgress(userId);
     }
 
@@ -24,5 +24,10 @@ public class TaskController {
     @PostMapping("/claim-reward")
     public TaskProgressDto claimReward(@RequestBody TaskClaimRequest req) {
         return taskService.claimTask(req);
+    }
+
+    @GetMapping("/completed")
+    public Boolean hasCompletedTask(@RequestParam("userId") String userId, @RequestParam("taskId") Integer taskId){
+        return  taskService.hasCompletedTask(userId,taskId);
     }
 }

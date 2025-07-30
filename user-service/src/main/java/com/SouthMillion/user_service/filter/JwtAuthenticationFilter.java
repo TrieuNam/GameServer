@@ -1,6 +1,6 @@
 package com.SouthMillion.user_service.filter;
 
-import com.SouthMillion.user_service.service.impl.UserGameServiceImpl;
+import com.SouthMillion.user_service.service.UserService;
 import com.SouthMillion.user_service.utils.JwtConfig;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,7 +21,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     JwtConfig jwtUtil;
 
     @Autowired
-    private UserGameServiceImpl userDetailsService;
+    private UserService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)

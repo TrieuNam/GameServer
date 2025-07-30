@@ -17,7 +17,7 @@ public class SessionHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String roleId;
+    private Integer roleId;
     private String sessionId;
     private Instant loginTime;
     private Instant logoutTime;

@@ -7,7 +7,7 @@
     "gm_report_url": "http://localhost:8080/api/client/gm/report",
     "upload_url": "http://localhost:8080/api/upload",
     "gift_fetch_url": "http://localhost:8080/api/c2s/use_card",
-    "verify_url": "http://localhost:8080/user-service/auth/login",
+    "verify_url": "http://localhost:8080/user-service/api/usergame/auth/login",
     "verify_url2": "http://localhost:8080/user-service/auth/login/social",
     "config_url": "http://localhost:8080/api/config",
     "translate_url": "http://localhost:8080/api/translate",

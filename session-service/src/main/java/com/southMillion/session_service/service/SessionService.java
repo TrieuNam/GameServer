@@ -1,9 +1,13 @@
 package com.southMillion.session_service.service;
 
+import com.southMillion.session_service.entity.SessionEntity;
 import com.southMillion.session_service.entity.SessionHistory;
 import com.southMillion.session_service.repository.SessionHistoryRepository;
+import com.southMillion.session_service.config.SessionRedits;
 import com.southMillion.session_service.repository.SessionRepository;
+import org.SouthMillion.dto.session.DisconnectNoticeDTO;
 import org.SouthMillion.dto.session.SessionDto;
+import org.SouthMillion.dto.session.TimeAckDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,55 +15,50 @@ import java.time.Instant;
 
 @Service
 public class SessionService {
+
     @Autowired
-    private SessionRepository sessionRepository;
+    private SessionRepository repo;
+
+    @Autowired
+    private SessionRedits sessionRepository;
 
     @Autowired
     private SessionHistoryRepository historyRepository;
 
-    public void heartbeat(String sessionId, String roleId) {
-        SessionDto session = sessionRepository.findBySessionId(sessionId);
-        long now = System.currentTimeMillis() / 1000;
-        if (session == null) {
-            session = new SessionDto(sessionId, roleId, now);
-            // Ghi nhận login event vào DB
-            SessionHistory his = new SessionHistory();
-            his.setRoleId(roleId);
-            his.setSessionId(sessionId);
-            his.setLoginTime(Instant.now());
-            historyRepository.save(his);
-        } else {
-            session.setLastActive(now);
-        }
-        session.setRoleId(roleId);
-        sessionRepository.save(session);
-    }
 
-    public void removeSession(String sessionId) {
-        SessionDto session = sessionRepository.findBySessionId(sessionId);
-        if (session != null) {
-            // Ghi nhận logout vào DB
-            SessionHistory his = historyRepository.findTopByRoleIdAndSessionIdOrderByLoginTimeDesc(session.getRoleId(), session.getSessionId());
-            if (his != null && his.getLogoutTime() == null) {
-                his.setLogoutTime(Instant.now());
+    public void updateHeartbeat(String sessionId, Integer roleId) {
+            SessionDto session = sessionRepository.findBySessionId(sessionId);
+            long now = System.currentTimeMillis() / 1000;
+            if (session == null) {
+                session = new SessionDto(sessionId, roleId, now);
+                // Ghi nhận login event vào DB
+                SessionHistory his = new SessionHistory();
+                his.setRoleId(roleId);
+                his.setSessionId(sessionId);
+                his.setLoginTime(Instant.now());
                 historyRepository.save(his);
+            } else {
+                session.setLastActive(now);
             }
-        }
-        sessionRepository.remove(sessionId);
+            session.setRoleId(roleId);
+            sessionRepository.save(session);
     }
 
-    public SessionDto getSession(String sessionId) {
-        return sessionRepository.findBySessionId(sessionId);
+    public TimeAckDTO getTimeAck() {
+        TimeAckDTO dto = new TimeAckDTO();
+        dto.setServerTime(System.currentTimeMillis() / 1000);
+        dto.setServerRealStartTime(1720000000L);  // mock
+        dto.setOpenDays(100);
+        dto.setServerRealCombineTime(1720000000L);
+        return dto;
     }
 
-    public boolean isOnline(Integer roleId) {
-        SessionDto session = sessionRepository.findByRoleId(roleId);
-        if (session == null) return false;
-        long now = System.currentTimeMillis() / 1000;
-        return (now - session.getLastActive() <= 60);
+    public DisconnectNoticeDTO getDisconnectInfo(Long userId) {
+        DisconnectNoticeDTO dto = new DisconnectNoticeDTO();
+        dto.setReason(1);
+        dto.setRoleId(1234);
+        dto.setUserName("DemoUser");
+        return dto;
     }
 
-    public SessionDto getSessionByRoleId(Integer roleId) {
-        return sessionRepository.findByRoleId(roleId);
-    }
 }

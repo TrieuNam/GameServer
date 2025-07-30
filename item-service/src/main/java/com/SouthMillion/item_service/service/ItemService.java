@@ -2,123 +2,95 @@ package com.SouthMillion.item_service.service;
 
 import com.SouthMillion.item_service.entity.ItemEntity;
 import com.SouthMillion.item_service.repository.ItemRepository;
-import com.SouthMillion.item_service.service.cache.ItemCacheService;
-import com.SouthMillion.item_service.service.producer.ItemEventProducer;
-import lombok.RequiredArgsConstructor;
-import org.SouthMillion.dto.item.ItemDto;
+import com.SouthMillion.item_service.service.config.ItemConfigService;
+import org.SouthMillion.dto.item.Knapsack.ItemConfigDTO;
+import org.SouthMillion.dto.item.Knapsack.ItemDTO;
+import org.SouthMillion.utils.JsonUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class ItemService {
-    private final ItemRepository itemRepository;
-    private final ItemCacheService itemCacheService;
-    private final ItemEventProducer itemEventProducer;
+    @Autowired
+    private ItemRepository repo;
+    @Autowired
+    private StringRedisTemplate redis;
+    @Autowired
+    private ItemConfigService itemConfigService;
+    private static final String REDIS_KEY_FMT = "item:user:%d";
 
-    // Lấy 1 item
-    public ItemDto getItemDto(String userId, int itemId) {
-        ItemEntity entity = getItem(userId, itemId);
-        return entity != null ? toDto(entity) : null;
+    public List<ItemDTO> getAllByUser(String userId) {
+        String key = String.format(REDIS_KEY_FMT, userId);
+        String cache = redis.opsForValue().get(key);
+        if (cache != null) {
+            return JsonUtil.fromJsonList(cache, ItemDTO.class);
+        }
+        List<ItemDTO> list = repo.findByUserId(userId).stream()
+                .map(ItemEntity::fromEntity)
+                .collect(Collectors.toList());
+        redis.opsForValue().set(key, JsonUtil.toJson(list), Duration.ofMinutes(5));
+        return list;
     }
 
-    // Lấy tất cả item
-    public List<ItemDto> getAllItemsDto(String userId) {
-        return getAllItems(userId).stream().map(this::toDto).collect(Collectors.toList());
+    public ItemDTO getSingle(String userId, Integer itemId) {
+        return repo.findByUserIdAndItemId(userId, itemId)
+                .map(ItemEntity::fromEntity).orElse(null);
     }
 
-    // Thêm/tăng item
-    public ItemDto addOrIncreaseItemDto(String userId, int itemId, int amount) {
-        ItemEntity entity = addOrIncreaseItem(userId, itemId, amount);
-        return toDto(entity);
+    public Integer getUserItemCount(String userId, Integer itemId) {
+        Optional<ItemEntity> item = repo.findByUserIdAndItemId(userId, itemId);
+        return item != null ? item.get().getCount() : 0;
     }
 
-    // Mua/trừ item
-    public void buyItem(String userId, int itemId, int amount) {
-        ItemEntity item = itemRepository.findByUserIdAndItemId(userId, itemId)
-                .orElseThrow(() -> new RuntimeException("Not enough item"));
-        if (item.getAmount() < amount) throw new RuntimeException("Not enough item");
-        item.setAmount(item.getAmount() - amount);
-        ItemEntity saved = itemRepository.save(item);
-        itemCacheService.putItemToCache(saved);
+    public void addItem(String userId, Integer itemId, int count) {
+        Object config = itemConfigService.getConfigById(itemId);
+        if (config == null) throw new IllegalArgumentException("Invalid itemId " + itemId);
 
-        // Gửi event Kafka
-        itemEventProducer.sendItemEvent(userId, "ITEM_BOUGHT",
-                ItemDto.builder()
-                        .id(saved.getId())
-                        .userId(saved.getUserId())
-                        .itemId(saved.getItemId())
-                        .amount(saved.getAmount())
-                        .build()
-        );
+        ItemEntity entity = repo.findByUserIdAndItemId(userId, itemId)
+                .orElseGet(() -> {
+                    ItemEntity e = new ItemEntity();
+                    e.setUserId(userId);
+                    e.setItemId(itemId);
+                    e.setCount(0);
+                    return e;
+                });
+        entity.setCount(entity.getCount() + count);
+        repo.save(entity);
+        invalidateCache(userId);
     }
 
-    // Xóa item
-    public boolean deleteItem(String userId, int itemId) {
-        Optional<ItemEntity> itemOpt = itemRepository.findByUserIdAndItemId(userId, itemId);
-        if (itemOpt.isPresent()) {
-            itemRepository.delete(itemOpt.get());
-            itemCacheService.removeItemFromCache(userId, itemId);
+    public boolean consumeItem(String userId, Integer itemId, int count) {
+        Object config = itemConfigService.getConfigById(itemId);
+        if (config == null) return false;
 
-            // Gửi event Kafka
-            itemEventProducer.sendItemEvent(userId, "ITEM_DELETED", ItemDto.builder()
-                    .id(itemOpt.get().getId())
-                    .userId(userId)
-                    .itemId(itemId)
-                    .amount(0)
-                    .build()
-            );
+        Optional<ItemEntity> opt = repo.findByUserIdAndItemId(userId, itemId);
+        if (opt.isPresent() && opt.get().getCount() >= count) {
+            ItemEntity e = opt.get();
+            e.setCount(e.getCount() - count);
+            repo.save(e);
+            invalidateCache(userId);
             return true;
         }
         return false;
     }
 
-    // --------- CÁC HÀM NỘI BỘ ENTITY --------
-
-    // Lấy 1 item (entity)
-    public ItemEntity getItem(String userId, int itemId) {
-        ItemEntity item = itemCacheService.getItemFromCache(userId, itemId);
-        if (item != null) return item;
-        item = itemRepository.findByUserIdAndItemId(userId, itemId).orElse(null);
-        if (item != null) itemCacheService.putItemToCache(item);
-        return item;
+    private void invalidateCache(String userId) {
+        redis.delete(String.format(REDIS_KEY_FMT, userId));
     }
 
-    // Lấy tất cả item (entity)
-    public List<ItemEntity> getAllItems(String userId) {
-        return itemRepository.findByUserId(userId);
+    public boolean hasEnoughItem(String userId, int itemId, int requiredCount) {
+        // Kiểm tra itemId hợp lệ
+        Object config = itemConfigService.getConfigById(itemId);
+        if (config == null) return false;
+
+        Optional<ItemEntity> entityOpt = repo.findByUserIdAndItemId(userId, itemId);
+        return entityOpt.isPresent() && entityOpt.get().getCount() >= requiredCount;
     }
 
-    // Thêm/tăng item (entity)
-    public ItemEntity addOrIncreaseItem(String userId, int itemId, int amount) {
-        ItemEntity item = itemRepository.findByUserIdAndItemId(userId, itemId)
-                .orElse(ItemEntity.builder().userId(userId).itemId(itemId).amount(0).build());
-        item.setAmount(item.getAmount() + amount);
-        ItemEntity saved = itemRepository.save(item);
-        itemCacheService.putItemToCache(saved);
-
-        // Gửi event Kafka
-        itemEventProducer.sendItemEvent(userId, "ITEM_ADDED_OR_INCREASED",
-                ItemDto.builder()
-                        .id(saved.getId())
-                        .userId(saved.getUserId())
-                        .itemId(saved.getItemId())
-                        .amount(saved.getAmount())
-                        .build()
-        );
-        return saved;
-    }
-
-    // ENTITY <-> DTO MAPPING
-    public ItemDto toDto(ItemEntity entity) {
-        return ItemDto.builder()
-                .id(entity.getId())
-                .userId(entity.getUserId())
-                .itemId(entity.getItemId())
-                .amount(entity.getAmount())
-                .build();
-    }
 }

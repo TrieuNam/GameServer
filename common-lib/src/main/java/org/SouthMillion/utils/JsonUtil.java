@@ -3,9 +3,10 @@ package org.SouthMillion.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.SouthMillion.dto.item.GemInlayDTO;
+
 
 import java.util.List;
+import java.util.Map;
 
 public class JsonUtil {
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -24,16 +25,16 @@ public class JsonUtil {
         }
     }
 
-    public static List<GemInlayDTO> parseGemList(String gemListJson) {
-        if (gemListJson == null || gemListJson.isEmpty()) return List.of();
+    // Parse từ json String sang Map<Integer, Object> (hoặc Map<Integer, T> nếu dùng generic)
+    public static <K, V> Map<K, V> fromJsonToMap(String json, Class<K> keyClass, Class<V> valueClass) {
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(gemListJson, new TypeReference<List<GemInlayDTO>>() {});
+            // TypeReference giúp parse map có key kiểu Integer và value kiểu Object
+            return MAPPER.readValue(json, new TypeReference<Map<K, V>>() {});
         } catch (Exception e) {
-            // Log lỗi nếu cần
-            return List.of();
+            throw new RuntimeException("Failed to parse map from JSON", e);
         }
     }
+
 
     public static String toJson(Object obj) {
         try {

@@ -1,23 +1,25 @@
 package com.SouthMillion.item_service.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.SouthMillion.dto.item.Knapsack.ItemDTO;
+import org.springframework.beans.BeanUtils;
 
 @Entity
-@Table(name = "items")
+@Table(name = "user_item")
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class ItemEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String userId;
-    private int itemId;
-    private int amount;
+    private Integer itemId;
+    private Integer count;
+
+    public static ItemDTO fromEntity(ItemEntity e) {
+        ItemDTO dto = new ItemDTO();
+        BeanUtils.copyProperties(e, dto);
+        return dto;
+    }
 }
