@@ -2,7 +2,6 @@ package com.SouthMillion.task_service.controller;
 
 import com.SouthMillion.task_service.service.ShiZhuangService;
 import lombok.RequiredArgsConstructor;
-import org.SouthMillion.dto.ShiZhuang.ShiZhuangDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,4 +35,39 @@ public class ShiZhuangController {
         boolean ok = service.delete(userId, id);
         return ok ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
+
+    // API mua thời trang (shop)
+    @PostMapping("/buy")
+    public ResponseEntity<?> buyClothes(@RequestParam("roleId") String roleId,
+                                        @RequestParam("clothesId") Integer clothesId,
+                                        @RequestParam("num") Integer num,
+                                        @RequestParam("buyMoney") Integer buyMoney,
+                                        @RequestParam("addPayGold") Integer addPayGold,
+                                        @RequestParam("buyParam2") Integer buyParam2) {
+        service.buyClothes(roleId, clothesId, num, buyMoney, addPayGold, buyParam2);
+        return ResponseEntity.ok().build();
+    }
+
+    // API mặc thời trang
+    @PostMapping("/wear")
+    public ResponseEntity<?> wear(@RequestParam String roleId,
+                                  @RequestParam Integer clothesId) {
+        service.wearClothes(roleId, clothesId);
+        return ResponseEntity.ok().build();
+    }
+
+    // API nâng cấp thời trang
+    @PostMapping("/levelup")
+    public ResponseEntity<?> levelUp(@RequestParam String roleId,
+                                     @RequestParam Integer clothesId) {
+        service.levelUpClothes(roleId, clothesId);
+        return ResponseEntity.ok().build();
+    }
+
+    // API lấy danh sách thời trang sở hữu
+    @GetMapping("/list/{roleId}")
+    public List<PlayerClothesDTO> getClothes(@PathVariable String roleId) {
+        return service.getClothes(roleId);
+    }
+
 }

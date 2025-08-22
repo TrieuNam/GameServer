@@ -1,0 +1,41 @@
+server:
+  port: 8104
+
+spring:
+  application:
+    name: bag-service
+
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: jdbc:mysql://localhost:3318/db_bag_service
+    username: tpnam
+    password: 121831
+
+  jpa:
+    hibernate:
+      ddl-auto: none          # 🚫 tắt update để nhường quyền cho Flyway
+    properties:
+      hibernate.jdbc.time_zone: UTC
+      hibernate.format_sql: true
+      hibernate.show_sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true  # ✅ đánh dấu baseline cho schema đang có
+    baseline-version: 1        # mốc baseline là 1 (mặc định cũng là 1)
+    # table: flyway_schema_history  # (tùy chọn) tên bảng lịch sử, mặc định như này
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+logging:
+  level:
+    com.SouthMillion.bag_service: INFO

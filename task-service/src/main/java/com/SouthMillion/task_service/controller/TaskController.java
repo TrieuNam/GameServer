@@ -1,33 +1,33 @@
 package com.SouthMillion.task_service.controller;
 
-import com.SouthMillion.task_service.service.TaskService;
+import com.SouthMillion.task_service.service.TaskDomainService;
 import lombok.RequiredArgsConstructor;
-import org.SouthMillion.dto.task.TaskClaimRequest;
-import org.SouthMillion.dto.task.TaskProgressDto;
+import org.SouthMillion.api.GenericResult;
+import org.SouthMillion.dto.task.TaskClaimReq;
+import org.SouthMillion.dto.task.TaskListResp;
+import org.SouthMillion.dto.task.TaskReportReq;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("api/task")
+@RequestMapping("/api/task")
 @RequiredArgsConstructor
 public class TaskController {
-    private final TaskService taskService;
+    private final TaskDomainService taskService;
 
-    // 1452: Lấy tiến độ nhiệm vụ
-    @GetMapping("/progress")
-    public List<TaskProgressDto> getTaskProgress(@RequestParam String userId) {
-        return taskService.getTaskProgress(userId);
+    @GetMapping("/{playerId}/all")
+    public GenericResult<TaskListResp> all(@PathVariable String playerId) {
+        return GenericResult.ok(taskService.getAllTasks(playerId));
     }
 
-    // 1451: Nhận thưởng nhiệm vụ
-    @PostMapping("/claim-reward")
-    public TaskProgressDto claimReward(@RequestBody TaskClaimRequest req) {
-        return taskService.claimTask(req);
+    @PostMapping("/report")
+    public GenericResult<Void> report(@RequestBody TaskReportReq req) {
+        taskService.reportProgress(req);
+        return GenericResult.ok(null);
     }
 
-    @GetMapping("/completed")
-    public Boolean hasCompletedTask(@RequestParam("userId") String userId, @RequestParam("taskId") Integer taskId){
-        return  taskService.hasCompletedTask(userId,taskId);
+    @PostMapping("/claim")
+    public GenericResult<Void> claim(@RequestBody TaskClaimReq req) {
+        taskService.claim(req);
+        return GenericResult.ok(null);
     }
 }

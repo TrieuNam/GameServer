@@ -1,13 +1,23 @@
 package com.SouthMillion.config_service;
 
+import com.SouthMillion.config_service.config.ConfigProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
+
+/**
+ * WHAT: Ứng dụng Spring Boot của config-service.
+ * WHY: Điểm khởi động service.
+ * WHERE: entrypoint của service.
+ * HOW: Bật @EnableConfigurationProperties để đọc cấu hình 'config.*' từ application.yml.
+ */
 @SpringBootApplication
+@EnableConfigurationProperties(ConfigProperties.class)
 public class ConfigServiceApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ConfigServiceApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(ConfigServiceApplication.class, args);
+    }
 
 }

@@ -1,24 +1,35 @@
 package com.southMillion.webSocket_server.config;
 
-import com.southMillion.webSocket_server.handler.GameSocketHandler;
+import com.southMillion.webSocket_server.handler.GameWsHandler;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.socket.config.annotation.EnableWebSocket;
-import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
-import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.web.reactive.HandlerMapping;
+import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
+import org.springframework.web.reactive.socket.WebSocketHandler;
+import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
-@EnableWebSocket
-public class WebSocketConfig implements WebSocketConfigurer {
-    private final GameSocketHandler gameSocketHandler;
+@RequiredArgsConstructor
+public class WebSocketConfig {
 
-    // Inject GameSocketHandler từ Spring context!
-    public WebSocketConfig(GameSocketHandler gameSocketHandler) {
-        this.gameSocketHandler = gameSocketHandler;
+    private final GameWsHandler gameWsHandler;
+
+    @Bean
+    public HandlerMapping wsMapping() {
+        Map<String, WebSocketHandler> map = new HashMap<>();
+        map.put("/ws/game", gameWsHandler); // backend nhận /ws/game (gateway StripPrefix=1)
+        SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
+        mapping.setOrder(-1);
+        mapping.setUrlMap(map);
+        return mapping;
     }
 
-    @Override
-    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(gameSocketHandler, "/webSocket-server/ws/game")
-                .setAllowedOrigins("*");
+    @Bean
+    public WebSocketHandlerAdapter handlerAdapter() {
+        return new WebSocketHandlerAdapter();
     }
 }

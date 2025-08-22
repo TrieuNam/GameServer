@@ -14,7 +14,7 @@ import java.util.Base64;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "*")
+@CrossOrigin("*")
 public class ReportController {
 
     @Autowired

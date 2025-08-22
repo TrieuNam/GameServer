@@ -1,6 +1,23 @@
 server:
   port: 8084
 
+spring:
+  application:
+    name: arena-service
+  datasource:
+    url: jdbc:mysql://mysql:3327/game_arena?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=utf8mb4
+    username: tpnam
+    password: 121831
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+
 eureka:
   instance:
     prefer-ip-address: true
@@ -9,10 +26,3 @@ eureka:
     registerWithEureka: true
     service-url:
       defaultZone: http://localhost:8761/eureka/
-
-spring:
-  application:
-    name: arena-service
-
-config-service:
-  url: http://localhost:8083

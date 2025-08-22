@@ -2,7 +2,6 @@ package com.SouthMillion.pet_service.service;
 
 import com.SouthMillion.pet_service.entity.PetRemainsEntity;
 import com.SouthMillion.pet_service.repository.PetRemainsRepository;
-import org.SouthMillion.dto.pet.PetRemainsDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

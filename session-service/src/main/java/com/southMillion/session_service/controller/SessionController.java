@@ -1,29 +1,37 @@
 package com.southMillion.session_service.controller;
 
-import org.SouthMillion.dto.session.*;
 import com.southMillion.session_service.service.SessionService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.southMillion.session_service.service.SessionStore;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.SouthMillion.dto.session.LogoutRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+import java.util.Set;
+
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/session")
 public class SessionController {
+    private final SessionService sessionService;
+    private final SessionStore store;
 
-    @Autowired
-    private SessionService service;
-
-    @PostMapping("/heartbeat")
-    public void heartbeat(@RequestBody HeartbeatRequest req) {
-        service.updateHeartbeat(req.getSessionId(), req.getRoleId());
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@Valid @RequestBody LogoutRequest req) {
+        sessionService.logout(req.getSessionId());
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/time")
-    public TimeAckDTO getTime() {
-        return service.getTimeAck();
+    @GetMapping("/list/{userId}")
+    public ResponseEntity<Set<String>> list(@PathVariable String userId){
+        return ResponseEntity.ok(store.listByUser(userId));
     }
 
-    @GetMapping("/{userId}/disconnect")
-    public DisconnectNoticeDTO getDisconnect(@PathVariable Long userId) {
-        return service.getDisconnectInfo(userId);
+    @PostMapping("/revoke-all/{userId}")
+    public ResponseEntity<Map<String,String>> revokeAll(@PathVariable String userId){
+        store.revokeAll(userId);
+        return ResponseEntity.ok(Map.of("status","ok"));
     }
 }

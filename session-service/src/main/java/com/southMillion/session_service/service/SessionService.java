@@ -1,64 +1,67 @@
 package com.southMillion.session_service.service;
 
-import com.southMillion.session_service.entity.SessionEntity;
-import com.southMillion.session_service.entity.SessionHistory;
-import com.southMillion.session_service.repository.SessionHistoryRepository;
-import com.southMillion.session_service.config.SessionRedits;
-import com.southMillion.session_service.repository.SessionRepository;
-import org.SouthMillion.dto.session.DisconnectNoticeDTO;
-import org.SouthMillion.dto.session.SessionDto;
-import org.SouthMillion.dto.session.TimeAckDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+
+import com.southMillion.session_service.config.JwtProperties;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import lombok.RequiredArgsConstructor;
+import org.SouthMillion.dto.session.TokenPair;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class SessionService {
+    private final JwtService jwt;
+    private final SessionStore store;
+    private final JwtProperties props;
 
-    @Autowired
-    private SessionRepository repo;
-
-    @Autowired
-    private SessionRedits sessionRepository;
-
-    @Autowired
-    private SessionHistoryRepository historyRepository;
-
-
-    public void updateHeartbeat(String sessionId, Integer roleId) {
-            SessionDto session = sessionRepository.findBySessionId(sessionId);
-            long now = System.currentTimeMillis() / 1000;
-            if (session == null) {
-                session = new SessionDto(sessionId, roleId, now);
-                // Ghi nhận login event vào DB
-                SessionHistory his = new SessionHistory();
-                his.setRoleId(roleId);
-                his.setSessionId(sessionId);
-                his.setLoginTime(Instant.now());
-                historyRepository.save(his);
-            } else {
-                session.setLastActive(now);
-            }
-            session.setRoleId(roleId);
-            sessionRepository.save(session);
+    public TokenPair issue(String userId, String username, String ip, String ua) {
+        String sid = UUID.randomUUID().toString();
+        String access = jwt.createAccessToken(userId, username, sid, Map.of());
+        String refresh = jwt.createRefreshToken(userId, username, sid);
+        long now = Instant.now().getEpochSecond();
+        long accExp = now + props.getAccessTtlSeconds();
+        long refExp = now + props.getRefreshTtlSeconds();
+        store.saveSession(sid, userId, username, refresh, props.getRefreshTtlSeconds(), ip, ua);
+        return TokenPair.builder()
+                .accessToken(access).accessExpiresAt(accExp)
+                .refreshToken(refresh).refreshExpiresAt(refExp)
+                .sessionId(sid)
+                .build();
     }
 
-    public TimeAckDTO getTimeAck() {
-        TimeAckDTO dto = new TimeAckDTO();
-        dto.setServerTime(System.currentTimeMillis() / 1000);
-        dto.setServerRealStartTime(1720000000L);  // mock
-        dto.setOpenDays(100);
-        dto.setServerRealCombineTime(1720000000L);
-        return dto;
+    public TokenPair refresh(String refreshToken) {
+        Jws<io.jsonwebtoken.Claims> j = jwt.parse(refreshToken);
+        Claims c = j.getBody();
+        if (!"refresh".equals(c.get("type"))) throw new IllegalArgumentException("invalid token type");
+        String userId = c.getSubject();
+        String username = String.valueOf(c.get("uname"));
+        String sid = String.valueOf(c.get("sid"));
+        if (!store.verifyRefresh(sid, refreshToken)) {
+            throw new IllegalStateException("refresh revoked or rotated");
+        }
+        String newAccess = jwt.createAccessToken(userId, username, sid, Map.of());
+        long now = Instant.now().getEpochSecond();
+        long accExp = now + props.getAccessTtlSeconds();
+        String newRefresh = refreshToken;
+        long refExp = c.getExpiration().toInstant().getEpochSecond();
+        if (props.isRotateRefresh()) {
+            newRefresh = jwt.createRefreshToken(userId, username, sid);
+            refExp = now + props.getRefreshTtlSeconds();
+            store.updateRefresh(sid, newRefresh, props.getRefreshTtlSeconds());
+        }
+        return TokenPair.builder()
+                .accessToken(newAccess).accessExpiresAt(accExp)
+                .refreshToken(newRefresh).refreshExpiresAt(refExp)
+                .sessionId(sid)
+                .build();
     }
 
-    public DisconnectNoticeDTO getDisconnectInfo(Long userId) {
-        DisconnectNoticeDTO dto = new DisconnectNoticeDTO();
-        dto.setReason(1);
-        dto.setRoleId(1234);
-        dto.setUserName("DemoUser");
-        return dto;
+    public void logout(String sessionId) {
+        store.delete(sessionId);
     }
-
 }

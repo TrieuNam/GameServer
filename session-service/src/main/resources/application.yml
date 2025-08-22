@@ -1,28 +1,40 @@
 server:
   port: 8096
-
 spring:
   application:
     name: session-service
-  data:
-    redis:
-      host: localhost  # hoặc "redis" nếu dùng docker-compose
-      port: 6379
-  datasource:
-    url: jdbc:mysql://localhost:3311/session_db
-    username: tpnam
-    password: 121831
-    driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    password: ${REDIS_PASSWORD:}
+    lettuce:
+      pool:
+        max-active: 16
+        max-idle: 8
+        min-idle: 0
+    codec:
+      max-in-memory-size: 10MB   # nếu JSON lớn (bag/equip…)
 
+# Eureka
 eureka:
-  instance:
-    prefer-ip-address: true
   client:
-    fetchRegistry: true
-    registerWithEureka: true
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
       defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+jwt:
+  issuer: "SouthMillion"
+  secret: ${JWT_SECRET:xxx}
+  access-ttl-seconds: 900        # 15 phút
+  refresh-ttl-seconds: 604800    # 7 ngày
+  rotate-refresh: true
+
+ratelimit:
+  enabled: true
+  window-seconds: 60
+  login-limit: 10           # mỗi IP+username / 60s
+  refresh-limit: 60         # mỗi user / 60s
+  generic-limit: 300        # mặc định / ip / 60s

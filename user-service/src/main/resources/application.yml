@@ -1,25 +1,48 @@
+server:
+  port: 8091
+  servlet:
+    context-path: /
+
 spring:
   application:
     name: user-service
+
   datasource:
     url: jdbc:mysql://localhost:3308/db_user_service
     username: tpnam
     password: 121831
-    driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: true
 
-server:
-  port: 8091
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 
 eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      # chạy local JVM, Eureka trên máy bạn
+      defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
-  client:
-    fetchRegistry: true
-    registerWithEureka: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
+    instance-id: "${spring.application.name}:${server.port}"
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+
+logging:
+  level:
+    org.springframework.cloud.netflix.eureka: DEBUG

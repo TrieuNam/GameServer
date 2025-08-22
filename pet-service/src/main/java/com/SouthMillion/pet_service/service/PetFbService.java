@@ -3,7 +3,6 @@ package com.SouthMillion.pet_service.service;
 import com.SouthMillion.pet_service.entity.PetFbEntity;
 import com.SouthMillion.pet_service.repository.PetFbRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.SouthMillion.dto.globalserver.PetFbDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;

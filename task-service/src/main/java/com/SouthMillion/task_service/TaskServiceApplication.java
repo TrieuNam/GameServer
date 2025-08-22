@@ -7,7 +7,6 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @EnableFeignClients
-@EnableCaching
 public class TaskServiceApplication {
 
 	public static void main(String[] args) {

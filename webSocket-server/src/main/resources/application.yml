@@ -1,18 +1,11 @@
-spring:
-  application:
-    name: webSocket-server
-
-  kafka:
-    bootstrap-servers: localhost:9092
-    producer:
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-    consumer:
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-    properties:
-      spring.json.trusted.packages: "*"
 server:
   port: 8094
 
+spring:
+  application:
+    name: websocket-server   # rất quan trọng: gateway route dùng lb:ws://websocket-server
+  main:
+    web-application-type: reactive
 
 eureka:
   instance:
@@ -20,5 +13,41 @@ eureka:
   client:
     fetchRegistry: true
     registerWithEureka: true
-    service-url:
+    serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# optional: cấu hình feign timeouts
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: FULL   # log URL, headers, body request/response
+        connectTimeout: 3000
+        readTimeout: 5000
+  okhttp:
+    enabled: true           # nếu dùng OkHttp (khuyên dùng)
+
+app:
+  server:
+    startEpoch: 0        # epoch giây lần đầu mở server (để tính open_days)
+    combineEpoch: 0      # epoch giây lần combine server (nếu có)
+
+logging:
+  level:
+    root: INFO
+    com.SouthMillion: DEBUG
+    feign: DEBUG
+    feign.Logger: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
+    # Rất quan trọng: bật DEBUG cho package của interface Feign của bạn
+    com.SouthMillion.role_service.feign: DEBUG
+    com.SouthMillion.bag_service.feign: DEBUG
+    com.SouthMillion.equip_service.feign: DEBUG
+    com.SouthMillion.wallet_service.feign: DEBUG
+    com.SouthMillion.box_service.feign: DEBUG

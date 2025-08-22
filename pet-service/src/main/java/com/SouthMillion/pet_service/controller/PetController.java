@@ -1,10 +1,7 @@
 package com.SouthMillion.pet_service.controller;
 
 import com.SouthMillion.pet_service.service.PetService;
-import org.SouthMillion.dto.pet.PetDTO;
-import org.SouthMillion.dto.pet.PetItemDTO;
-import org.SouthMillion.dto.pet.PetStatsDTO;
-import org.SouthMillion.dto.pet.PetWeaponDTO;
+import org.SouthMillion.dto.pet.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,15 +14,21 @@ public class PetController {
     @Autowired
     private PetService petService;
 
+    @GetMapping("/{roleId}/all-info")
+    public ResponseEntity<PetAllInfoDTO> getPetAllInfo(@PathVariable String roleId) {
+        PetAllInfoDTO info = petService.getPetAllInfo(roleId);
+        return ResponseEntity.ok(info);
+    }
+
     @GetMapping("/{petId}")
-    public ResponseEntity<PetDTO> getPetById(@PathVariable int petId) {
-        PetDTO pet = petService.getPetById(petId);
+    public ResponseEntity<PetConfigDTO.PetDTO> getPetById(@PathVariable int petId) {
+        PetConfigDTO.PetDTO pet = petService.getPetById(petId);
         if (pet == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(pet);
     }
 
     @GetMapping
-    public List<PetDTO> getAllPets() {
+    public List<PetConfigDTO.PetDTO> getAllPets() {
         return petService.getAllPets();
     }
 
@@ -36,6 +39,38 @@ public class PetController {
             @RequestParam(required = false) Integer weaponId
     ) {
         return petService.calcPetStats(petId, itemId, weaponId);
+    }
+
+    @GetMapping("/{roleId}/{petIndex}")
+    public ResponseEntity<PetDataDTO> getPetData(@PathVariable String roleId, @PathVariable int petIndex) {
+        PetDataDTO pet = petService.getPetData(roleId, petIndex);
+        return ResponseEntity.ok(pet);
+    }
+
+    @GetMapping("/{roleId}/ts-gem/{gemIndex}")
+    public ResponseEntity<PetTSGemDataDTO> getTSGemData(@PathVariable String roleId, @PathVariable int gemIndex) {
+        PetTSGemDataDTO gem = petService.getTSGemData(roleId, gemIndex);
+        return ResponseEntity.ok(gem);
+    }
+
+    @GetMapping("/{roleId}/cloth-list")
+    public List<PetClothDataDTO> getClothList(@PathVariable String roleId) {
+        return petService.getClothList(roleId);
+    }
+
+    @PostMapping("/{roleId}/pet-op")
+    public PetOpResultDTO petOperate(@PathVariable String roleId, @RequestBody PetOpRequestDTO req) {
+        return petService.petOperate(roleId, req);
+    }
+
+    @PostMapping("/{roleId}/one-key-up-gem")
+    public PetGemOpResultDTO oneKeyUpLevelGem(@PathVariable String roleId, @RequestBody List<PetOneKeyGemInfoDTO> items) {
+        return petService.oneKeyUpLevelGem(roleId, items);
+    }
+
+    @GetMapping("/{roleId}/evo-attr/{petIndex}")
+    public PetEvoAttrDTO getPetEvoAttr(@PathVariable String roleId, @PathVariable int petIndex) {
+        return petService.getPetEvoAttr(roleId, petIndex);
     }
 
     @GetMapping("/item/{itemId}")
@@ -80,8 +115,8 @@ public class PetController {
     }
     @PostMapping("/team-battle")
     public String teamBattle(@RequestBody List<Integer> teamA, @RequestBody List<Integer> teamB) {
-        List<PetDTO> a = teamA.stream().map(petService::getPetById).toList();
-        List<PetDTO> b = teamB.stream().map(petService::getPetById).toList();
+        List<PetConfigDTO.PetDTO> a = teamA.stream().map(petService::getPetById).toList();
+        List<PetConfigDTO.PetDTO> b = teamB.stream().map(petService::getPetById).toList();
         return petService.teamBattle(a, b);
     }
 }

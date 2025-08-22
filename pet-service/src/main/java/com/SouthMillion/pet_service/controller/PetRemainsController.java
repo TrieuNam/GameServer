@@ -1,7 +1,6 @@
 package com.SouthMillion.pet_service.controller;
 
 import com.SouthMillion.pet_service.service.PetRemainsService;
-import org.SouthMillion.dto.pet.PetRemainsDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

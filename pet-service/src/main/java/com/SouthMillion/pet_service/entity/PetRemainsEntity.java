@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.SouthMillion.dto.pet.PetRemainsDTO;
 
 @Entity
 @Table(name = "pet_remains")
@@ -26,6 +25,7 @@ public class PetRemainsEntity {
     private Integer level;    // Cấp độ
     private Integer exp;      // Kinh nghiệm
     private Integer clothId;  // ID của trang phục (nếu có)
+    @Column(name = "pet_index")
     private Integer index;    // Index trong bag hoặc slot
 
     // Nếu cần, thêm createdAt, updatedAt...
