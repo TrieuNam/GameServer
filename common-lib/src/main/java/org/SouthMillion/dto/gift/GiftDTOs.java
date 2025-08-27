@@ -1,5 +1,6 @@
 package org.SouthMillion.dto.gift;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
@@ -55,4 +56,6 @@ public class GiftDTOs {
         private int randNum;      // số lần rút mỗi lần mở
         private List<RollItem> pool; // danh sách phần tử trong gift.json (itemId + count); rate không trả về để đơn giản
     }
+
+
 }

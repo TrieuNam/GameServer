@@ -25,7 +25,7 @@ public class LuckUnpackConfigCache {
 
     public void ensureLoaded() {
         String cur = etag.get();
-        ResponseEntity<byte[]> resp = cfg.byPath(props.getConfig().getKaixiangPath(), cur);
+        ResponseEntity<byte[]> resp = cfg.byPath(props.getConfig().getKaixiangPath(), null , 1);
         if (resp.getStatusCode().is2xxSuccessful() && resp.getBody()!=null) {
             try {
                 String json = new String(resp.getBody(), StandardCharsets.UTF_8);

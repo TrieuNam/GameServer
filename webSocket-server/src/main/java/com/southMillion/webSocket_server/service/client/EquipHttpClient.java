@@ -15,4 +15,8 @@ public interface EquipHttpClient {
 
     @PostMapping("/unequip")
     EquipDTOs.OkResp unequip(@RequestBody EquipDTOs.UnequipReq req);
+
+    @PostMapping("/wear/{roleId}/{itemId}")
+    EquipDTOs.OkResp wear(@PathVariable("roleId") String roleId,
+                          @PathVariable("itemId") int itemId);
 }

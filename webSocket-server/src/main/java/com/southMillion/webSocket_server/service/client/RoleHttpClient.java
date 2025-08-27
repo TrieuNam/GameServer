@@ -8,11 +8,11 @@ import org.springframework.web.bind.annotation.*;
 @FeignClient(name="role-service", path="/api/role")
 public interface RoleHttpClient {
     @GetMapping("/list")
-    org.SouthMillion.dto.role.RoleDTOs.ListResp list(@RequestParam("userId") String userId);
+    RoleDTOs.ListResp list(@RequestParam("userId") String userId);
 
     @PostMapping
-    org.SouthMillion.dto.role.RoleDTOs.RoleResp create(@RequestBody org.SouthMillion.dto.role.RoleDTOs.CreateRoleReq req);
+    RoleDTOs.RoleResp create(@RequestBody RoleDTOs.CreateRoleReq req);
 
     @GetMapping("/{roleId}")
-    org.SouthMillion.dto.role.RoleDTOs.RoleResp detail(@PathVariable("roleId") String roleId);
+    RoleDTOs.RoleResp detail(@PathVariable("roleId") String roleId);
 }

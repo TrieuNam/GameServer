@@ -1,6 +1,7 @@
 package com.SouthMillion.role_service.controller;
 
 import com.SouthMillion.role_service.service.RoleService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.role.RoleDTOs;
 import org.springframework.http.HttpStatus;
@@ -17,30 +18,29 @@ public class RoleController {
 
     // WebSocket đang gọi: GET /api/role/list?userId=...
     @GetMapping("/list")
-    public RoleDTOs.ListResp list(@RequestParam("userId") String userId) {
+    public RoleDTOs.ListResp list(@RequestParam(name = "userId") String userId) {
         return svc.listByUser(userId);
     }
 
     @GetMapping("/{roleId}")
-    public RoleDTOs.RoleResp detail(@PathVariable String roleId) {
+    public RoleDTOs.RoleResp detail(@PathVariable("roleId") String roleId) {
         return svc.detail(roleId);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public RoleDTOs.RoleResp create(@RequestBody @Validated RoleDTOs.CreateRoleReq req) {
+    public RoleDTOs.RoleResp create(@RequestBody @Valid RoleDTOs.CreateRoleReq req) {
         return svc.create(req);
     }
 
-    @PostMapping("/{roleId}/exp/add")
-    public RoleDTOs.RoleResp addExp(@PathVariable String roleId,
-                                    @RequestBody @Validated RoleDTOs.AddExpReq body) {
-        return svc.addExp(roleId, body.getAddExp());
+    @PostMapping("/exp/add")
+    public void addExp(@RequestBody RoleDTOs.AddExpReq req) {
+        svc.addExp(req.getRoleId(), req.getExp()); // tự bạn hiện thực
     }
 
     @PostMapping("/{roleId}/rename")
-    public RoleDTOs.RoleResp rename(@PathVariable String roleId,
-                                    @RequestBody @Validated RoleDTOs.RenameReq body) {
+    public RoleDTOs.RoleResp rename(@PathVariable("roleId") String roleId,
+                                    @RequestBody @Valid RoleDTOs.RenameReq body) {
         return svc.rename(roleId, body.getName());
     }
 }

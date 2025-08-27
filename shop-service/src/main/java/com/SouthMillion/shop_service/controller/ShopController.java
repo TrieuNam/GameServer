@@ -14,6 +14,23 @@ public class ShopController {
 
     private final ShopService svc;
 
+
+    /**
+     * Bootstrap shop info for a role:
+     * - Mystery shop items (randomized per request)
+     * - Slots & next reset epoch (midnight in configured TZ)
+     *
+     * Optional query:
+     * - level: override role level (fallback: query role-service)
+     * - slots: override number of mystery slots (fallback: app.shenmi.default-slots)
+     */
+    @GetMapping("/info")
+    public ResultDTO<ShopDTOs.InfoResp> info(@RequestParam("roleId") String roleId,
+                                             @RequestParam(value = "level", required = false) Integer level,
+                                             @RequestParam(value = "slots", required = false) Integer slots) {
+        return svc.info(roleId, level, slots);
+    }
+
     @PostMapping("/list/common")
     public ResultDTO<ShopDTOs.ShopListResp> listCommon(@Valid @RequestBody ShopDTOs.ListCommonReq req) {
         return svc.listCommon(req);

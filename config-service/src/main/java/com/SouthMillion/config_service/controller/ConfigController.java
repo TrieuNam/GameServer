@@ -9,6 +9,7 @@ import org.SouthMillion.dto.config.ConfigEnvelope;
 import org.SouthMillion.dto.config.ConfigFileData;
 import org.SouthMillion.dto.config.Hashing;
 import org.springframework.http.*;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
@@ -74,8 +75,6 @@ public class ConfigController {
         if (d == null) {
             return store.getFileByKey(absKey).map(e -> new AbstractMap.SimpleEntry<>(e, false));
         }
-        // Nếu tồn tại trong cache (kể cả mới load vào), ta đánh dấu HIT khi đã có sẵn,
-        // còn MISS khi mới load thì cũng coi như MISS=>HIT sau lần đầu. Đơn giản: nếu l1 đã có thì là HIT.
         boolean hit = l1.asMap().containsKey(cacheKey);
         return Optional.of(new AbstractMap.SimpleEntry<>(d, hit));
     }
@@ -237,27 +236,52 @@ public class ConfigController {
     // ============================================================
 
     @GetMapping("/bundle")
-    public ResponseEntity<List<ConfigEnvelope<String>>> bundle(@RequestParam("keys") String keys) {
-        var list = Arrays.stream(keys.split(","))
-                .map(String::trim).filter(s -> !s.isEmpty())
-                .map(k -> {
-                    String absKey = k.startsWith("config/") ? k : ("config/" + k.replaceAll("^/+", ""));
-                    return cachedHit(absKey).map(e -> {
-                        var f = e.getKey();
-                        String payload = switch (f.contentType()) {
-                            case "application/json", "application/xml", "text/plain" ->
-                                    new String(f.content(), StandardCharsets.UTF_8);
-                            default -> Base64.getEncoder().encodeToString(f.content());
-                        };
-                        return new ConfigEnvelope<>(f.key(), f.revision(), f.lastModifiedEpoch(), f.etag(), payload);
-                    });
-                })
+    public ResponseEntity<List<ConfigEnvelope<String>>> bundle(
+            @RequestParam MultiValueMap<String, String> params) {
+
+        List<String> keys = new ArrayList<>(params.getOrDefault("keys", List.of()));
+        if (keys.size() == 1 && keys.get(0) != null && keys.get(0).contains(",")) {
+            keys = Arrays.stream(keys.get(0).split(","))
+                    .map(String::trim).filter(s -> !s.isEmpty())
+                    .toList();
+        }
+
+        LinkedHashSet<String> normalized = new LinkedHashSet<>();
+        for (String k : keys) {
+            String absKey = normalizeAbsKey(k);
+            if (absKey != null) normalized.add(absKey);
+        }
+
+        var list = normalized.stream()
+                .map(this::cachedHit)           // Optional<SimpleEntry<ConfigFileData, Boolean>>
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toList());
+                .map(e -> {
+                    var f = e.getKey();
+                    String payload = switch (f.contentType()) {
+                        case "application/json", "application/xml", "text/plain" ->
+                                new String(f.content(), java.nio.charset.StandardCharsets.UTF_8);
+                        default -> java.util.Base64.getEncoder().encodeToString(f.content());
+                    };
+                    return new ConfigEnvelope<>(f.key(), f.revision(), f.lastModifiedEpoch(), f.etag(), payload);
+                })
+                .toList();
+
         return ResponseEntity.ok(list);
     }
 
+    // HỢP NHẤT QUY TẮC CHUẨN HOÁ VỚI CLIENT
+    private static String normalizeAbsKey(String k) {
+        if (k == null) return null;
+        String v = k.trim();
+        if (v.isEmpty()) return null;
+        if (v.startsWith("/")) v = v.substring(1);
+
+        if (v.startsWith("config/"))   return v;                 // đã tuyệt đối
+        if (v.startsWith("logicconfig/")) return "config/" + v;  // shorthand logicconfig
+        // còn lại -> coi là leaf của item
+        return "config/gameworld/item/" + v;
+    }
     @GetMapping("/index")
     public Map<String, Object> index() {
         return Map.of(

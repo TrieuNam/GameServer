@@ -118,6 +118,12 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>10.17.0</version>
+            </plugin>
         </plugins>
     </build>
 

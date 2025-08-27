@@ -15,7 +15,8 @@ public interface ConfigFeign {
     @GetMapping("/by-path")
     ResponseEntity<byte[]> byPath(
             @RequestParam("p") String rel,
-            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch
+            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch,
+            @RequestParam(value = "force", required = false, defaultValue = "0") int force
     );
     // Tiện ích riêng cho item/equipment nếu cần:
     @GetMapping("/gameworld/item/{name}")

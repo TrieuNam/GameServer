@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagAddItemReq;
 import org.SouthMillion.dto.bag.BagConsumeReq;
 import org.SouthMillion.dto.gift.GiftDTOs;
+import org.SouthMillion.dto.wallet.ResultDTO;
 import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -43,15 +44,19 @@ public class GiftService {
         var pool = box.getItems().stream()
                 .map(x -> new GiftDTOs.RollItem(x.getItemId(), x.getCount()))
                 .collect(Collectors.toList());
+
         return GiftDTOs.GiftInfoResp.builder()
                 .giftItemId(giftItemId)
                 .giftType(box.getGiftType())
                 .randNum(box.getRandNum())
-                .pool(pool).build();
+                .pool(pool)
+                .build();
     }
 
     public GiftDTOs.OpenResp open(GiftDTOs.OpenReq req) {
-        int bagType = req.getBagType() > 0 ? req.getBagType() : defaultBagType;
+        final int bagType = (req.getBagType() > 0)
+                ? req.getBagType()
+                : defaultBagType;
 
         var compiled = cfg.compile();
         var box = compiled.get(req.getGiftItemId());
@@ -59,10 +64,10 @@ public class GiftService {
             return GiftDTOs.OpenResp.builder().ok(false).error("GIFT_NOT_FOUND").consumed(0).build();
         }
 
-        // Roll items for N times
+        // ===== 1) Roll items theo cấu hình =====
         Map<Long, Long> gain = new HashMap<>();
         if (box.getGiftType() == 1) {
-            // DefGift: coi như cho toàn bộ list, lặp count lần
+            // DefGift: cho toàn bộ list, lặp count lần
             for (int i = 0; i < req.getCount(); i++) {
                 for (var gi : box.getItems()) {
                     gain.merge(gi.getItemId(), gi.getCount(), Long::sum);
@@ -70,10 +75,12 @@ public class GiftService {
             }
         } else {
             // RandGift: mỗi hộp rút randNum lần, mỗi lần 1 item theo trọng số rate
-            int totalWeight = box.getItems().stream().mapToInt(GiftConfigCache.GiftItem::getRate).sum();
-            if (totalWeight <= 0) totalWeight = box.getItems().size();
+            int totalWeight = box.getItems().stream().mapToInt(it -> Math.max(1, it.getRate())).sum();
+            if (totalWeight <= 0) totalWeight = Math.max(1, box.getItems().size());
+
             for (int t = 0; t < req.getCount(); t++) {
-                for (int r = 0; r < Math.max(1, box.getRandNum()); r++) {
+                int times = Math.max(1, box.getRandNum());
+                for (int r = 0; r < times; r++) {
                     int v = rnd.nextInt(totalWeight) + 1;
                     int acc = 0;
                     for (var gi : box.getItems()) {
@@ -87,9 +94,9 @@ public class GiftService {
             }
         }
 
-        // Lấy meta để tách virtual (ví) / normal (túi)
+        // ===== 2) Tra meta để tách virtual (ví) / normal (túi) =====
         Set<Long> itemIds = new HashSet<>(gain.keySet());
-        itemIds.add(req.getGiftItemId()); // để phòng cần check thêm
+        itemIds.add(req.getGiftItemId()); // phòng check thêm
         String csv = itemIds.stream().map(String::valueOf).collect(Collectors.joining(","));
         Map<String, Map<String, Object>> meta = itemMetaFeign.batchMeta(csv);
         if (meta == null) meta = Map.of();
@@ -103,35 +110,42 @@ public class GiftService {
             var m = meta.get(String.valueOf(id));
             int isVirtual = (m == null) ? 0 : ((Number) m.getOrDefault("isVirtual", 0)).intValue();
             if (isVirtual == 1) {
-                walletAdds.add(new WalletDTOs.Change(id, cnt));
+                walletAdds.add(WalletDTOs.Change.builder().itemId(id).amount(cnt).build());
             } else {
                 bagAdds.add(new BagAddItemReq.Item(id, cnt));
             }
         }
 
-        // 1) Consume hộp quà ở túi
-        var consume = new BagConsumeReq(req.getRoleId(), bagType,
-                List.of(new BagConsumeReq.Cost(req.getGiftItemId(), req.getCount())));
+        // ===== 3) Tiêu thụ hộp trong bag =====
+        var consume = new BagConsumeReq(
+                req.getRoleId(), bagType,
+                List.of(new BagConsumeReq.Cost(req.getGiftItemId(), req.getCount()))
+        );
         var cResp = bagFeign.consume(consume);
         if (cResp == null || !cResp.ok()) {
             String err = (cResp == null) ? "BAG_CONSUME_FAIL" : cResp.error();
             return GiftDTOs.OpenResp.builder().ok(false).error(err).consumed(0).build();
         }
 
-        // 2) Cộng ví (nếu có)
+        // ===== 4) Cộng ví (nếu có) =====
         Map<Long, Long> walletChanged = Map.of();
         if (!walletAdds.isEmpty()) {
-            var wReq = new WalletDTOs.BatchReq(req.getRoleId(), walletAdds);
-            var wResp = walletFeign.batchAdd(wReq);
+            var wReq = WalletDTOs.BatchReq.builder()
+                    .roleId(req.getRoleId())
+                    .changes(walletAdds)
+                    .reasonType(null).reason(null).idemKey(null)
+                    .build();
+
+            ResultDTO<WalletDTOs.MutateResp> wResp = walletFeign.batchAdd(wReq);
             if (wResp == null || wResp.getCode() != 0 || wResp.getData() == null || !wResp.getData().ok()) {
-                String err = (wResp == null) ? "WALLET_ADD_FAIL" :
-                        (wResp.getMessage() != null ? wResp.getMessage() : "WALLET_ADD_FAIL");
+                String err = (wResp == null) ? "WALLET_ADD_FAIL"
+                        : (wResp.getMessage() != null ? wResp.getMessage() : "WALLET_ADD_FAIL");
                 return GiftDTOs.OpenResp.builder().ok(false).error(err).consumed(0).build();
             }
             walletChanged = wResp.getData().newBalances();
         }
 
-        // 3) Cộng túi (nếu có)
+        // ===== 5) Cộng túi (nếu có) =====
         if (!bagAdds.isEmpty()) {
             var aReq = new BagAddItemReq(req.getRoleId(), bagType, bagAdds);
             var aResp = bagFeign.add(aReq);
@@ -141,7 +155,7 @@ public class GiftService {
             }
         }
 
-        // Build response
+        // ===== 6) Build response =====
         List<GiftDTOs.RollItem> bagItems = bagAdds.stream()
                 .map(it -> new GiftDTOs.RollItem(it.itemId(), it.count()))
                 .collect(Collectors.toList());

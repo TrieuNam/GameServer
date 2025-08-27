@@ -81,11 +81,12 @@ public class ClasspathConfigStore implements ConfigStore {
         }
     }
 
-    @Override public Optional<ConfigFileData> getFileByKey(String pathKey) {
+    @Override
+    public Optional<ConfigFileData> getFileByKey(String pathKey) {
         try {
             String rel = mapKeyToRelPath(pathKey);
             return getByRelativePath(rel);
-        } catch (IllegalArgumentException e) {
+        } catch (Exception e) {           // bắt rộng để không bao giờ 500 vì bug mapping
             return Optional.empty();
         }
     }
@@ -125,43 +126,76 @@ public class ClasspathConfigStore implements ConfigStore {
         // unify to "config/<rel>"
         return "config/" + rel.replace('\\','/');
     }
-    private String mapKeyToRelPath(String key){
-        String s= null;
-        if (!key.startsWith("config/")) {
-             s = "config/" + key;
-        }
-        String rest = s.substring("config/".length());
-        String[] parts = rest.split("/", 3); // e.g. gameworld/item/<leaf>
-        if (parts.length < 2) throw new IllegalArgumentException("bad key");
+    private static boolean hasExt(String p) {
+        int i = p.lastIndexOf('.');
+        return i > p.lastIndexOf('/');    // có dấu chấm sau dấu slash cuối cùng -> có ext
+    }
+    private static String ensureExt(String path, String ext) {
+        return path.endsWith(ext) ? path : path + ext;
+    }
 
-        String domain = parts[0]; // gameworld | serverconfig | ...
-        String type   = parts[1]; // item|logic|drop|global|skill|monster|file
-        String leaf   = parts.length>=3 ? parts[2] : "";
+    private String mapKeyToRelPath(String key){
+        if (key == null) throw new IllegalArgumentException("key is null");
+        String s = key.trim();
+        if (s.isEmpty()) throw new IllegalArgumentException("key is blank");
+        if (s.startsWith("/")) s = s.substring(1);
+
+        // Đảm bảo có prefix "config/"
+        if (!s.startsWith("config/")) {
+            s = "config/" + s;
+        }
+
+        // Từ đây luôn an toàn
+        String rest = s.substring("config/".length()); // ví dụ: "gameworld/item/block_item"
+
+        // Tách domain/type/leaf: "gameworld/item/<leaf>"
+        String[] parts = rest.split("/", 3);
+        if (parts.length < 2) throw new IllegalArgumentException("bad key: " + key);
+
+        String domain = parts[0];                // gameworld | serverconfig | ...
+        String type   = parts[1];                // item|logicconfig|drop|global|skill|monster|file|...
+        String leaf   = (parts.length >= 3) ? parts[2] : "";
 
         if ("gameworld".equals(domain)) {
             switch (type) {
-                case "item":   return "gameworld/item/" + leaf + ".json";
-                case "logicconfig":  return "gameworld/logicconfig/" + leaf + ".json"; // leaf có thể chứa "randactivity/xxx"
-                case "drop":   return "gameworld/drop/" + leaf + ".xml";
-                case "global": return "gameworld/globalconfig/" + leaf + ".json";
-                case "skill":  return "gameworld/skill/" + leaf + ".json";
-                case "monster":return "gameworld/monster/" + leaf + ".json";
-                case "file":   return "gameworld/" + leaf; // leaf kèm extension
-                default: throw new IllegalArgumentException("unsupported type: "+type);
+                case "item":        return ensureExt("gameworld/item/"         + leaf, ".json");
+                case "logicconfig": return ensureExt("gameworld/logicconfig/"  + leaf, ".json");
+                case "drop":        return ensureExt("gameworld/drop/"         + leaf, ".xml");
+                case "global":      return ensureExt("gameworld/globalconfig/" + leaf, ".json");
+                case "skill":       return ensureExt("gameworld/skill/"        + leaf, ".json");
+                case "monster":     return ensureExt("gameworld/monster/"      + leaf, ".json");
+                case "file":        return "gameworld/" + leaf; // leaf đã kèm ext
+                default:
+                    throw new IllegalArgumentException("unsupported type: " + type);
             }
         } else if ("serverconfig".equals(domain)) {
-            // thử theo thứ tự json->xml->txt
+            // Cho phép có/không có extension
             String base = "serverconfig/" + leaf;
-            if (byRelPath.containsKey(base + ".json")) return base + ".json";
-            if (byRelPath.containsKey(base + ".xml"))  return base + ".xml";
-            if (byRelPath.containsKey(base + ".txt"))  return base + ".txt";
-            // nếu leaf đã có extension, trả thẳng
-            if (byRelPath.containsKey(base)) return base;
-            throw new IllegalArgumentException("not found: "+base);
+            if (hasExt(leaf)) {
+                if (byRelPath.containsKey(base)) return base;
+            } else {
+                if (byRelPath.containsKey(base + ".json")) return base + ".json";
+                if (byRelPath.containsKey(base + ".xml"))  return base + ".xml";
+                if (byRelPath.containsKey(base + ".txt"))  return base + ".txt";
+            }
+            throw new IllegalArgumentException("not found: " + base);
         } else {
-            // cho phép key "config/<any rel>" đã có ext
+            // (1) Cho phép raw relative dưới "config/" nếu tồn tại
             if (byRelPath.containsKey(rest)) return rest;
-            throw new IllegalArgumentException("unsupported domain: "+domain);
+
+            // (2) Hỗ trợ shorthand "logicconfig/..." cũ
+            if (rest.startsWith("logicconfig/")) {
+                String candidate = ensureExt(rest, ".json");
+                if (byRelPath.containsKey(candidate)) return candidate;
+            }
+
+            // (3) Nếu caller lỡ đưa kiểu "config/block_item" → coi như leaf item rút gọn
+            if (!rest.contains("/")) {
+                String candidate = ensureExt("gameworld/item/" + rest, ".json");
+                if (byRelPath.containsKey(candidate)) return candidate;
+            }
+
+            throw new IllegalArgumentException("unsupported domain: " + domain);
         }
     }
 }

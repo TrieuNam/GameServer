@@ -3,6 +3,7 @@ package org.SouthMillion.dto.shop;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
 import java.util.List;
 
@@ -42,6 +43,17 @@ public class ShopDTOs {
             int levelMin,
             int levelMax
     ) {}
+
+    @Getter
+    @Setter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class InfoResp {
+        private int mysterySlots;
+        private long nextResetEpoch;
+        private ShopListResp mystery; // reuse list cấu trúc hiện có
+    }
 
     public record ShopListResp(List<ShopItem> items) {}
 

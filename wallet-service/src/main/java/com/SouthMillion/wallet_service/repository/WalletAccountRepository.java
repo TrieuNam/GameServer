@@ -4,13 +4,14 @@ import com.SouthMillion.wallet_service.entity.WalletAccount;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
 public interface WalletAccountRepository extends JpaRepository<WalletAccount, Long> {
     Optional<WalletAccount> findByRoleIdAndItemId(String roleId, Long itemId);
-    List<WalletAccount> findByRoleIdAndItemIdIn(String roleId, List<Long> itemIds);
-
+    List<WalletAccount> findByRoleIdAndItemIdIn(String roleId, Collection<Long> itemIds);
+    List<WalletAccount> findByRoleId(String roleId); // <— dùng cho /info
     @Modifying
     @Query("""
       update WalletAccount a

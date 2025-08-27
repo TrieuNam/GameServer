@@ -1,7 +1,9 @@
 package com.SouthMillion.box_service.controller;
 
+import com.SouthMillion.box_service.service.BoxEquipService;
 import com.SouthMillion.box_service.service.BoxService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.box.BoxDTOs;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class BoxController {
     private final BoxService svc;
+    private final BoxEquipService boxEquipService;
 
     @GetMapping("/info")
     public BoxDTOs.InfoResp info(@RequestParam("roleId") String roleId) {
@@ -51,5 +54,31 @@ public class BoxController {
     @PostMapping("/luck/receive")
     public BoxDTOs.OkResp luckReceive(@Valid @RequestBody BoxDTOs.LuckReceiveReq req){
         return svc.luckReceive(req.getRoleId(), req.getSeq());
+    }
+
+    @GetMapping("/setting")
+    public BoxDTOs.BoxSettingResp getSetting(@RequestParam("roleId")  String roleId) {
+        return svc.getSetting(roleId);
+    }
+
+    @PostMapping("/setting")
+    public BoxDTOs.BoxSettingResp saveSetting(@RequestBody BoxDTOs.BoxSettingReq req) {
+        return svc.saveSetting(req.getRoleId(), req.getBoxSet());
+    }
+
+    @PostMapping("/decompose")
+    public BoxDTOs.DecomposeResp decompose(@RequestParam("roleId")  String roleId) {
+        return svc.decompose(roleId);
+    }
+
+    @PostMapping("/pending")
+    public BoxDTOs.OkResp setPending(@RequestBody BoxDTOs.SetPendingReq req) {
+        svc.savePending(req.getRoleId(), req.getPending());
+        return BoxDTOs.OkResp.builder().build();
+    }
+
+    @GetMapping("/equipInfo")
+    public BoxDTOs.EquipInfo equipInfo(@RequestParam("roleId") String roleId) {
+        return boxEquipService.getEquipInfo(roleId);
     }
 }

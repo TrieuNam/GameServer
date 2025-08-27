@@ -1,10 +1,14 @@
 package com.southMillion.webSocket_server.service;
 
 import com.southMillion.webSocket_server.dto.PlayerSession;
+import lombok.extern.slf4j.Slf4j;
+import org.SouthMillion.dto.item.ItemMeta;
+import org.SouthMillion.dto.item.ItemType;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 /**
@@ -13,16 +17,22 @@ import java.util.stream.Collectors;
  *  - Gom nhóm theo userId / roleId
  *  - Cho phép cập nhật ràng buộc khi đăng nhập xong (userId/roleId có thể đến muộn sau khi mở WS)
  */
+@Slf4j
 @Component
 public class SessionRegistry {
 
     // wsId -> PlayerSession
     private final ConcurrentHashMap<String, PlayerSession> byWs = new ConcurrentHashMap<>();
 
+    private final Map<Integer, ItemMeta> metas = new ConcurrentHashMap<>();
+    private final Map<Integer, Integer> normalizedIndex = new ConcurrentHashMap<>();
+    private final AtomicBoolean loaded = new AtomicBoolean(false);
+
     // userId -> set of wsId
     private final ConcurrentHashMap<String, Set<String>> wsByUser = new ConcurrentHashMap<>();
     // roleId -> set of wsId
     private final ConcurrentHashMap<String, Set<String>> wsByRole = new ConcurrentHashMap<>();
+
 
     // đảo chiều để gỡ ràng buộc cũ khi update
     private final ConcurrentHashMap<String, String> userByWs = new ConcurrentHashMap<>();
@@ -125,4 +135,5 @@ public class SessionRegistry {
     private static String emptyToNull(String s) {
         return (s == null || s.isBlank()) ? null : s;
     }
+
 }

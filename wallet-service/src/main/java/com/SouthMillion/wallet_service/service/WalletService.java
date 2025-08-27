@@ -22,19 +22,6 @@ public class WalletService {
     private final WalletLedgerRepository ledRepo;
     private final ItemMetaFeign itemMeta;
 
-    private Map<Long, Boolean> ensureVirtual(Collection<Long> ids) {
-        if (ids.isEmpty()) return Map.of();
-        String csv = ids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
-        Map<String, Map<String,Object>> metas = itemMeta.batchMeta(csv);
-        Map<Long, Boolean> out = new HashMap<>();
-        for (Long id : ids) {
-            Map<String,Object> v = metas.getOrDefault(String.valueOf(id), Map.of());
-            boolean virt = ((Number)v.getOrDefault("isVirtual", 0)).intValue() == 1;
-            out.put(id, virt);
-        }
-        return out;
-    }
-
     @Transactional
     public WalletDTOs.MutateResp batchAdd(WalletDTOs.BatchReq req) {
         long now = Instant.now().getEpochSecond();
@@ -171,5 +158,58 @@ public class WalletService {
         for (Long id : itemIds) ret.put(id, 0L);
         for (var r : rows) ret.put(r.getItemId(), r.getBalance());
         return ret;
+    }
+
+    @Transactional()
+    public WalletDTOs.BalancesResp info(String roleId) {
+        long now = Instant.now().getEpochSecond();
+
+        // Lấy tất cả account ví của roleId
+        var accounts = accRepo.findByRoleId(roleId); // cần method này trong repository
+
+        if (accounts == null || accounts.isEmpty()) {
+            return WalletDTOs.BalancesResp.builder()
+                    .roleId(roleId)
+                    .balances(Collections.emptyMap())
+                    .atEpochSec(now)
+                    .build();
+        }
+
+        // Lọc chỉ các item là virtual (không hard-code danh sách tiền tệ)
+        List<Long> ids = accounts.stream()
+                .map(WalletAccount::getItemId)
+                .distinct()
+                .collect(Collectors.toList());
+
+        Map<Long, Boolean> virtualMap = ensureVirtual(ids);
+
+        Map<Long, Long> balances = new LinkedHashMap<>();
+        accounts.stream()
+                .sorted(Comparator.comparingLong(WalletAccount::getItemId))
+                .forEach(acc -> {
+                    if (virtualMap.getOrDefault(acc.getItemId(), false)) {
+                        balances.put(acc.getItemId(), acc.getBalance() == null ? 0L : acc.getBalance());
+                    }
+                });
+
+        return WalletDTOs.BalancesResp.builder()
+                .roleId(roleId)
+                .balances(balances)
+                .atEpochSec(now)
+                .build();
+    }
+
+    // ===== đã có sẵn trong code bạn đưa (nhắc lại ở đây để liền mạch) =====
+    private Map<Long, Boolean> ensureVirtual(Collection<Long> ids) {
+        if (ids.isEmpty()) return Map.of();
+        String csv = ids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
+        Map<String, Map<String,Object>> metas = itemMeta.batchMeta(csv);
+        Map<Long, Boolean> out = new HashMap<>();
+        for (Long id : ids) {
+            Map<String,Object> v = metas.getOrDefault(String.valueOf(id), Map.of());
+            boolean virt = ((Number)v.getOrDefault("isVirtual", 0)).intValue() == 1;
+            out.put(id, virt);
+        }
+        return out;
     }
 }

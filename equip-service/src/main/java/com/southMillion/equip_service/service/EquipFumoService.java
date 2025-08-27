@@ -37,7 +37,6 @@ public class EquipFumoService {
 
     @Transactional
     public EquipFumoDTOs.FumoOneResp addExp(EquipFumoDTOs.AddExpReq req) {
-        // 1) consume vật phẩm (nếu có)
         if (req.costItems() != null && !req.costItems().isEmpty()) {
             var deltas = req.costItems().entrySet().stream()
                     .map(e -> new BagDTOs.ItemDelta(e.getKey(), e.getValue(), false, "fumo_add_exp"))
@@ -45,12 +44,10 @@ public class EquipFumoService {
             var consume = new BagDTOs.ConsumeReq(req.roleId(), (byte)0, deltas, 1603, 1);
             var ok = bagFeign.consume(consume);
             if (ok == null || !ok.ok()) {
-                return new EquipFumoDTOs.FumoOneResp(req.equipType(),
-                        null /* failed -> không thay đổi */);
+                return new EquipFumoDTOs.FumoOneResp(req.equipType(), null);
             }
         }
 
-        // 2) upsert & tăng exp
         var e = repo.findByRoleIdAndEquipType(req.roleId(), req.equipType())
                 .orElseGet(() -> EquipFumoEntity.builder()
                         .roleId(req.roleId())
@@ -64,10 +61,7 @@ public class EquipFumoService {
         int maxLv = props.getFumoMaxLevel();
         while (level < maxLv) {
             int need = expNeedForLevel(level + 1);
-            if (exp >= need) {
-                exp -= need;
-                level++;
-            } else break;
+            if (exp >= need) { exp -= need; level++; } else break;
         }
         e.setLevel(level);
         e.setExp(Math.max(exp, 0));
@@ -91,19 +85,15 @@ public class EquipFumoService {
 
     @Transactional
     public EquipFumoDTOs.OkResp reset(EquipFumoDTOs.ResetReq req) {
-        // Optional: consume cost items before reset
         consumeIfNeeded(req.roleId(), req.costItems(), "fumo_reset");
         var e = repo.findByRoleIdAndEquipType(req.roleId(), req.equipType()).orElse(null);
         if (e == null) return EquipFumoDTOs.OkResp.OK();
-        e.setLevel(0);
-        e.setExp(0);
-        e.setEndTime(0);
+        e.setLevel(0); e.setExp(0); e.setEndTime(0);
         repo.save(e);
         return EquipFumoDTOs.OkResp.OK();
     }
 
-    // ===== helpers
-
+    // helpers
     private void consumeIfNeeded(String roleId, Map<Integer,Long> items, String reason) {
         if (items == null || items.isEmpty()) return;
         var deltas = items.entrySet().stream()
@@ -114,7 +104,6 @@ public class EquipFumoService {
     }
 
     private int expNeedForLevel(int targetLevel) {
-        // công thức đơn giản: need = base + grow*(L-1)
         int base = props.getFumoBaseExp();
         int grow = props.getFumoGrowExp();
         long val = (long) base + (long) grow * (targetLevel - 1L);

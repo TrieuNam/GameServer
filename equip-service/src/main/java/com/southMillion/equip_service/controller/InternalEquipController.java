@@ -1,30 +1,81 @@
 package com.southMillion.equip_service.controller;
 
+import com.southMillion.equip_service.service.EquipFumoService;
 import com.southMillion.equip_service.service.EquipService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.equip.EquipDTOs;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
-@RequestMapping("/internal/equip")
+@RequestMapping(value = "/internal/equip", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 public class InternalEquipController {
 
-    private final EquipService svc;
+    private final EquipService equipService;
+    private final EquipFumoService fumoService;
+
+    // ====== BASIC (để service khác có thể dùng) ======
 
     @GetMapping("/{roleId}")
-    public EquipDTOs.ListResp list(@PathVariable String roleId) {
-        return svc.list(roleId);
+    public EquipDTOs.ListResp list(@PathVariable("roleId") String roleId) {
+        return equipService.list(roleId);
     }
 
-    @PostMapping("/equip")
+    @PostMapping(value = "/equip", consumes = MediaType.APPLICATION_JSON_VALUE)
     public EquipDTOs.OkResp equip(@Valid @RequestBody EquipDTOs.EquipReq req) {
-        return svc.equip(req);
+        return equipService.equip(req);
     }
 
-    @PostMapping("/unequip")
+    @PostMapping(value = "/unequip", consumes = MediaType.APPLICATION_JSON_VALUE)
     public EquipDTOs.OkResp unequip(@Valid @RequestBody EquipDTOs.UnequipReq req) {
-        return svc.unequip(req);
+        return equipService.unequip(req);
+    }
+
+    // ====== APIs PHỤC VỤ BoxService (giữa microservices) ======
+
+    /** BoxService gọi để mặc món pending; trả về món cũ (replaced) nếu có. */
+    @PostMapping(value = "/wear-from-box", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> wearFromBox(@RequestBody Map<String, Object> req) {
+        // req: { roleId: string, item: { ...pendingSpec... } }
+        return equipService.wearFromBox(req);
+    }
+
+    /** BoxService gọi để tính tiền & exp bán equip (không thực thi). */
+    @PostMapping(value = "/compute-sell", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> computeSell(@RequestBody Map<String, Object> req) {
+        // req: { roleId: string, item: {...} }
+        return equipService.computeSell(req);
+    }
+
+    /** BoxService gọi để phân giải; trả itemId/num/exp. */
+    @PostMapping(value = "/decompose", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> decompose(@RequestBody Map<String, Object> req) {
+        // req: { roleId: string, item: {...} }
+        return equipService.decompose(req);
+    }
+
+    /** Kiểm tra item có phải equip không. */
+    @PostMapping(value = "/item-kind", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> itemKind(@RequestBody Map<String, Object> req) {
+        // req: { itemId: int }
+        return equipService.itemKind(req);
+    }
+
+    /** Resolve itemId theo equipType/quality/level. */
+    @PostMapping(value = "/resolve-item-id", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> resolveItemId(@RequestBody Map<String, Object> req) {
+        // req: { equipType: int, quality: int, level: int }
+        return equipService.resolveItemId(req);
+    }
+
+    /** Lấy meta (equipType/quality/...) theo itemId. */
+    @PostMapping(value = "/item-meta", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public Map<String, Object> itemMeta(@RequestBody Map<String, Object> req) {
+        // req: { itemId: int }
+        return equipService.itemMeta(req);
     }
 }

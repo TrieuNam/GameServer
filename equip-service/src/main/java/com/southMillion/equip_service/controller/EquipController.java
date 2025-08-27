@@ -7,11 +7,12 @@ import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.equip.EquipDTOs;
 import org.SouthMillion.dto.equip.EquipFumoDTOs;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/equip")
+@RequestMapping(value = "/api/equip", produces = MediaType.APPLICATION_JSON_VALUE)
 public class EquipController {
 
     private final EquipService equipService;
@@ -20,20 +21,29 @@ public class EquipController {
     // ======= Equip basic =======
 
     @GetMapping("/{roleId}")
-    public EquipDTOs.ListResp list(@PathVariable String roleId) {
+    public EquipDTOs.ListResp list(@PathVariable("roleId") String roleId) {
         return equipService.list(roleId);
     }
 
-    @PostMapping("/equip")
+    @PostMapping(value = "/equip", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
     public EquipDTOs.OkResp equip(@Valid @RequestBody EquipDTOs.EquipReq req) {
         return equipService.equip(req);
     }
 
-    @PostMapping("/unequip")
+    @PostMapping(value = "/unequip", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
     public EquipDTOs.OkResp unequip(@Valid @RequestBody EquipDTOs.UnequipReq req) {
         return equipService.unequip(req);
+    }
+
+    // NEW: wear theo itemId trong túi. Optional: ?bagType=1 (mặc định lấy từ props)
+    @PostMapping("/wear/{roleId}/{itemId}")
+    @ResponseStatus(HttpStatus.OK)
+    public EquipDTOs.OkResp wear(@PathVariable("roleId") String roleId,
+                                 @PathVariable("itemId") int itemId,
+                                 @RequestParam(value = "bagType", required = false) Integer bagType) {
+        return equipService.wear(roleId, itemId, bagType);
     }
 
     // ======= Fumo =======
@@ -44,21 +54,22 @@ public class EquipController {
     }
 
     @GetMapping("/fumo/{roleId}/{equipType}")
-    public EquipFumoDTOs.FumoOneResp fumoOne(@PathVariable("roleId") String roleId,@PathVariable("equipType") int equipType) {
+    public EquipFumoDTOs.FumoOneResp fumoOne(@PathVariable("roleId") String roleId,
+                                             @PathVariable("equipType") int equipType) {
         return fumoService.one(roleId, equipType);
     }
 
-    @PostMapping("/fumo/add-exp")
+    @PostMapping(value = "/fumo/add-exp", consumes = MediaType.APPLICATION_JSON_VALUE)
     public EquipFumoDTOs.FumoOneResp addExp(@Valid @RequestBody EquipFumoDTOs.AddExpReq req) {
         return fumoService.addExp(req);
     }
 
-    @PostMapping("/fumo/activate")
+    @PostMapping(value = "/fumo/activate", consumes = MediaType.APPLICATION_JSON_VALUE)
     public EquipFumoDTOs.FumoOneResp activate(@Valid @RequestBody EquipFumoDTOs.ActivateReq req) {
         return fumoService.activate(req);
     }
 
-    @PostMapping("/fumo/reset")
+    @PostMapping(value = "/fumo/reset", consumes = MediaType.APPLICATION_JSON_VALUE)
     public EquipFumoDTOs.OkResp reset(@Valid @RequestBody EquipFumoDTOs.ResetReq req) {
         return fumoService.reset(req);
     }

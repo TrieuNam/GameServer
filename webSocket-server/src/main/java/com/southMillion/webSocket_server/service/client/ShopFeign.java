@@ -25,4 +25,10 @@ public interface ShopFeign {
     @GetMapping("/list/mystery")
     ResultDTO<ShopDTOs.ShopListResp> listMystery(@RequestParam("level") int level,
                                                  @RequestParam(value = "slots", required = false) Integer slots);
+
+
+    @GetMapping("/info")
+     ResultDTO<ShopDTOs.InfoResp> info(@RequestParam("roleId") String roleId,
+                                             @RequestParam(value = "level", required = false) Integer level,
+                                             @RequestParam(value = "slots", required = false) Integer slots) ;
 }

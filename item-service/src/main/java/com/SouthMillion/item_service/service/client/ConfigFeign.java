@@ -30,6 +30,7 @@ public interface ConfigFeign {
                                     @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch);
 
     // Tối ưu: lấy nhiều file 1 lượt /config/bundle?keys=k1,k2,...
+    // CSV
     @GetMapping("/bundle")
-    ResponseEntity<List<ConfigEnvelope<String>>> bundle(@RequestParam("keys") String keysCsv);
+    ResponseEntity<List<ConfigEnvelope<String>>> bundleCsv(@RequestParam("keys") String keysCsv);
 }

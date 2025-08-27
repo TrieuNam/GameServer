@@ -28,4 +28,19 @@ public class GiftController {
     public GiftDTOs.OpenResp open(@Valid @RequestBody GiftDTOs.OpenReq req) {
         return svc.open(req);
     }
+
+
+    /** API mới: mở gift qua query params -> để gọi thẳng giftFeign.use(rid, itemId, num) */
+    @PostMapping("/use")
+    public GiftDTOs.OpenResp use(@RequestParam("roleId") String roleId,
+                                 @RequestParam("itemId") long giftItemId,
+                                 @RequestParam("num") int num,
+                                 @RequestParam(value = "bagType", required = false) Integer bagType) {
+        GiftDTOs.OpenReq req = new GiftDTOs.OpenReq();
+        req.setRoleId(roleId);
+        req.setGiftItemId(giftItemId);
+        req.setCount(num);
+        if (bagType != null) req.setBagType(bagType);
+        return svc.open(req);
+    }
 }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Component
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ public class GiftConfigResolver {
     private volatile Integer cachedId;
 
     public int resolveStarterGiftItemId() {
+
         // 1) Ưu tiên cấu hình cố định
         if (props.getInitItemId() > 0) {
             return Math.toIntExact(props.getInitItemId());
@@ -27,7 +29,7 @@ public class GiftConfigResolver {
 
         // Lấy file config theo REL dưới "config/" => "gameworld/item/gift.json"
         // Dùng force=1 để luôn trả 200 + body (tránh 304 Not Modified).
-        var resp = cfg.byPath("gameworld/item/gift.json", null);
+        var resp = cfg.byPath("gameworld/item/gift.json", null, 1);
         if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) {
             throw new IllegalStateException("Không lấy được gift.json, status=" + resp.getStatusCode());
         }

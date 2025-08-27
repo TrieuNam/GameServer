@@ -4,19 +4,36 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-@Component
-@ConfigurationProperties(prefix="equip")
 @Data
+@Component
+@ConfigurationProperties(prefix = "equip")
 public class EquipProperties {
-    /** Level tối đa cho Fumo */
-    private int fumoMaxLevel = 20;
 
-    /** EXP cơ sở cần để lên level 1 */
-    private int fumoBaseExp = 100;
+    /**
+     * Loại túi dùng cho trang bị (mặc/Tháo). Dùng khi request không chỉ định bagType.
+     */
+    private byte equipBagType = 0;
 
-    /** Mỗi level tăng thêm exp cần thiết = base + grow*(level-1) */
-    private int fumoGrowExp = 50;
+    // ===== Fallback tính COIN khi bán (nếu meta không có sell_price) =====
+    private long sellCoinBase = 0L;
+    private long sellCoinPerQuality = 0L;
+    private long sellCoinPerLevel = 0L;
 
-    /** bagType dùng cho item trang bị trong inventory (0=bag thường; 1=túi trang bị) */
-    private byte equipBagType = 1;
+    // ===== Fallback tính EXP khi bán (nếu meta không có sell_exp) =====
+    private long sellExpBase = 0L;
+    private long sellExpPerQuality = 0L;
+    private long sellExpPerLevel = 0L;
+
+    // ===== Fallback phân giải (nếu meta không có decompose_*) =====
+    /** Item vật liệu rơi ra khi phân giải (fallback). */
+    private int  decomposeItemId = 0;
+    /** Số lượng cơ bản khi phân giải (fallback). */
+    private long decomposeNumBase = 0L;
+    /** Mỗi cấp trang bị cộng thêm bao nhiêu vật liệu (fallback). */
+    private long decomposeNumPerLevel = 0L;
+
+    // ===== Fumo =====
+    private int fumoMaxLevel = 50;
+    private int fumoBaseExp  = 100;
+    private int fumoGrowExp  = 50;
 }

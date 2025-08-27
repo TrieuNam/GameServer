@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.wallet.ResultDTO;
 import org.SouthMillion.dto.wallet.WalletDTOs;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,8 +32,16 @@ public class InternalWalletController {
 
     @GetMapping("/{roleId}")
     public ResultDTO<WalletDTOs.BalancesResp> get(
-            @PathVariable String roleId,
+            @PathVariable("roleId") String roleId,
             @RequestParam("itemIds") List<Long> itemIds) {
         return ResultDTO.ok(svc.get(roleId, itemIds));
+    }
+
+    @GetMapping("/info")
+    public WalletDTOs.BalancesResp info(@RequestParam("roleId") String roleId) {
+        if (!StringUtils.hasText(roleId)) {
+            throw new IllegalArgumentException("roleId is required");
+        }
+        return svc.info(roleId.trim());
     }
 }

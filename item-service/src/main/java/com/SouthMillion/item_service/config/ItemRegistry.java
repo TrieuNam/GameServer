@@ -2,17 +2,20 @@ package com.SouthMillion.item_service.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.item.ItemMeta;
 import org.SouthMillion.dto.item.ItemType;
 import org.SouthMillion.dto.item.RawItemRow;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 @RequiredArgsConstructor
@@ -25,47 +28,71 @@ public class ItemRegistry {
     private final Map<Integer, RawItemRow> rawById  = new ConcurrentHashMap<>();
 
     private volatile String currentRevision = "";
-
-    // Cache parse per file để tránh parse lặp
     private final Cache<String, Boolean> parsedFile = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofMinutes(10))
             .maximumSize(512).build();
 
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
+
+    /** Tự nạp khi app sẵn sàng (an toàn nếu ConfigClient cần context fully up) */
+    @EventListener(ApplicationReadyEvent.class)
+    public void onAppReady() {
+        ensureLoaded();
+    }
+
+    /** Cho phép controller/services gọi để đảm bảo đã nạp */
+    public void ensureLoaded() {
+        if (initialized.get() && !metaById.isEmpty()) return;
+        synchronized (this) {
+            if (initialized.get() && !metaById.isEmpty()) return;
+            warmup();                   // đã synchronized sẵn
+            initialized.set(true);
+        }
+    }
+
+    /** Dùng trong endpoint reload thủ công (tuỳ bạn có muốn hay không) */
+    public synchronized void reload(boolean force) {
+        parsedFile.invalidateAll();
+        initialized.set(false);
+        warmup();
+        initialized.set(true);
+    }
+
     public synchronized void warmup() {
-        List<String> leaves = cfg.listItems(); // ví dụ ["other","equipment","gift",...]
-        // Warmup nhanh bằng bundle (ít overhead HTTP)
-        cfg.getItemsByBundle(leaves); // cache L1 ở ConfigClient
+        List<String> leaves = cfg.listItems();        // ví dụ ["other","equipment","gift",...]
+        cfg.getItemsByBundle(leaves);                 // L1 cache trong ConfigClient
 
         for (String leaf : leaves) {
-            // Bỏ qua file backup nếu có
-            if (leaf.endsWith("~")) continue;
+            if (leaf.endsWith("~")) continue;         // bỏ file backup
             loadItemLeaf(leaf);
         }
 
-        // Đọc các logic *_item.json (tuỳ dự án bạn có bao nhiêu file)
-        // ví dụ: logicconfig/gem_item.json, logicconfig/scroll_item.json ...
-        // Nếu chắc chắn tồn tại, gọi thẳng:
+        // nạp các file logic *_item.json cần thiết
         safeLoadLogic("logicconfig/bag_cfg.json");
         // safeLoadLogic("logicconfig/gem_item.json");
         // safeLoadLogic("logicconfig/scroll_item.json");
-        // ... thêm khi cần
     }
 
-    public Optional<ItemMeta> meta(int id) { return Optional.ofNullable(metaById.get(id)); }
-    public Optional<RawItemRow> raw(int id)  { return Optional.ofNullable(rawById.get(id)); }
+    public Optional<ItemMeta> meta(int id) {
+        ensureLoaded();                                // <- quan trọng
+        return Optional.ofNullable(metaById.get(id));
+    }
+    public Optional<RawItemRow> raw(int id)  {
+        ensureLoaded();
+        return Optional.ofNullable(rawById.get(id));
+    }
     public String revision() { return currentRevision; }
+    public int size() { return metaById.size(); }
 
     // ====== helpers ======
 
     private void loadItemLeaf(String leaf) {
         var payload = cfg.getItemLeaf(leaf);
         if (payload.fromNetwork()) {
-            // nếu nhận body mới thì parse lại file
             parseAndIndex(leaf, payload.body());
             currentRevision = payload.revision();
             parsedFile.put("item/"+leaf, true);
         } else if (parsedFile.getIfPresent("item/"+leaf) == null) {
-            // cache hit nhưng chưa parse ở tiến trình này
             parseAndIndex(leaf, payload.body());
             currentRevision = payload.revision();
             parsedFile.put("item/"+leaf, true);
@@ -75,8 +102,7 @@ public class ItemRegistry {
     private void safeLoadLogic(String logicLeaf) {
         try {
             var p = cfg.getLogicLeaf(logicLeaf);
-            // Với logic *_item.json nếu cần parse tiếp để lập map phụ trợ thì làm ở đây
-            // (hiện tại: chưa cần index vào metaById => giữ làm phụ trợ tính toán)
+            // parse phụ trợ (nếu cần) ở đây
         } catch (Exception ignore) {}
     }
 
@@ -113,7 +139,7 @@ public class ItemRegistry {
 
         var meta = new ItemMeta(
                 id, name, ItemType.fromCode(itemTypeCode),
-                virtualItem, pileLimit, sell, invalid,
+                virtualItem, (int) pileLimit, (int) sell, invalid,
                 topNode, sourceLeaf
         );
         metaById.put(id, meta);
@@ -121,12 +147,18 @@ public class ItemRegistry {
         Map<String,String> fields = new HashMap<>();
         row.fieldNames().forEachRemaining(fn -> {
             var v = row.get(fn);
-            fields.put(fn, v==null ? null : v.asText());
+            fields.put(fn, (v == null || v.isNull()) ? null : v.asText());
         });
         rawById.put(id, new RawItemRow(id, topNode, sourceLeaf, fields));
     }
 
-    private static int asInt(JsonNode n, int d){ try { return Integer.parseInt(n.asText().trim()); } catch (Exception e){ return d; } }
-    private static long asLong(JsonNode n, long d){ try { return Long.parseLong(n.asText().trim()); } catch (Exception e){ return d; } }
+    private static int asInt(JsonNode n, int d){
+        try { return (n==null||n.isNull())? d : Integer.parseInt(n.asText().trim()); }
+        catch (Exception e){ return d; }
+    }
+    private static long asLong(JsonNode n, long d){
+        try { return (n==null||n.isNull())? d : Long.parseLong(n.asText().trim()); }
+        catch (Exception e){ return d; }
+    }
     private static String asText(JsonNode n, String d){ return (n==null||n.isNull()) ? d : n.asText(); }
 }

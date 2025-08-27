@@ -3,6 +3,7 @@ package com.southMillion.webSocket_server.service.client;
 import org.SouthMillion.dto.wallet.ResultDTO;
 import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,4 +20,8 @@ public interface WalletHttpClient {
     @GetMapping("/{roleId}")
     ResultDTO<WalletDTOs.BalancesResp> get(@PathVariable("roleId") String roleId,
                                            @RequestParam("itemIds") List<Long> itemIds);
+
+    @GetMapping("/info")
+     WalletDTOs.BalancesResp info(@RequestParam("roleId") String roleId) ;
+
 }

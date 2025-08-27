@@ -19,4 +19,6 @@ public class PlayerSession {
     private Sinks.Many<byte[]> outbound;
 
     private boolean loggedIn;
+
+    private Integer roleLevel;
 }

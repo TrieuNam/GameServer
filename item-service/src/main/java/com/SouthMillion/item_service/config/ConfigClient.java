@@ -39,20 +39,37 @@ public class ConfigClient {
     }
 
     public Payload getItemLeaf(String name) {
-        String key = "config/gameworld/item/" + name;
-        String ifNone = Optional.ofNullable(l1.get(key)).map(e -> e.etag).orElse(null);
+        String raw = (name == null ? "" : name).replaceAll("^/+", "").replaceAll("/+$", "");
+        boolean isExpenseShort = "expense/expense".equals(raw);
 
-        ResponseEntity<byte[]> resp = feign.getItem(name, ifNone);
+        // Gọi server bằng leaf đúng (expense -> expense/expense),
+        // nhưng cache key chính vẫn là ".../expense" theo ý bạn
+        String feignLeaf = isExpenseShort ? "expense" : raw;
+
+        String keyPrimary = "config/gameworld/item/" + (isExpenseShort ? "expense" : raw);
+        String keyAlias   = isExpenseShort ? "config/gameworld/item/expense" : keyPrimary;
+
+        // Ưu tiên lấy ETag từ keyPrimary; nếu chưa có, thử alias
+        String ifNone = Optional.ofNullable(l1.get(keyPrimary)).map(e -> e.etag)
+                .orElseGet(() -> Optional.ofNullable(l1.get(keyAlias)).map(e -> e.etag).orElse(null));
+
+        ResponseEntity<byte[]> resp = feign.getItem(feignLeaf, ifNone);
         if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
             String etag = resp.getHeaders().getETag();
             String rev  = resp.getHeaders().getFirst("X-Config-Revision");
             byte[] body = resp.getBody();
-            l1.put(key, new CacheEntry(key, etag, rev, body));
+
+            // Ghi cả 2 key để tránh lệch cache (an toàn khi bạn từng cache bằng alias)
+            l1.put(keyPrimary, new CacheEntry(keyPrimary, etag, rev, body));
+            if (!keyAlias.equals(keyPrimary)) {
+                l1.put(keyAlias, new CacheEntry(keyAlias, etag, rev, body));
+            }
             return new Payload(body, rev, etag, true);
         }
-        // 304 Not Modified -> dùng cache
-        CacheEntry ce = l1.get(key);
-        if (ce == null) throw new IllegalStateException("No cache for key="+key+" (304 without cache)");
+
+        // 304 hoặc lỗi mạng -> dùng cache (primary trước, alias sau)
+        CacheEntry ce = Optional.ofNullable(l1.get(keyPrimary)).orElse(l1.get(keyAlias));
+        if (ce == null) throw new IllegalStateException("No cache for key=" + keyPrimary + " (304/err without cache)");
         return new Payload(ce.body, ce.revision, ce.etag, false);
     }
 
@@ -75,22 +92,36 @@ public class ConfigClient {
     }
 
     // Lấy nhiều item qua /bundle để warmup nhanh
-    public Map<String, Payload> getItemsByBundle(Collection<String> itemLeaves) {
-        // keysCsv = "config/gameworld/item/a,config/gameworld/item/b"
-        String keysCsv = itemLeaves.stream()
-                .map(leaf -> "config/gameworld/item/" + leaf)
-                .collect(Collectors.joining(","));
-        ResponseEntity<List<ConfigEnvelope<String>>> resp = feign.bundle(keysCsv);
-        var out = new HashMap<String, Payload>();
-        if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) return out;
+    public record Payload(byte[] body, String revision, String etag, boolean fromNetwork) {}
 
-        for (var env : resp.getBody()) {
-            byte[] body = env.content() == null ? new byte[0] : env.content().getBytes(StandardCharsets.UTF_8);
-            l1.put(env.key(), new CacheEntry(env.key(), env.etag(), env.revision(), body));
-            out.put(env.key(), new Payload(body, env.revision(), env.etag(), true));
-        }
-        return out;
+    public List<ConfigEnvelope<String>> getItemsByBundle(Collection<String> rawKeys) {
+        String csv = toCsvKeys(rawKeys);
+        var resp = feign.bundleCsv(csv);
+        return (resp != null && resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null)
+                ? resp.getBody() : List.of();
     }
 
-    public record Payload(byte[] body, String revision, String etag, boolean fromNetwork) {}
+    /** CHỈNH Ở ĐÂY: chuẩn hoá “leaf” thành absolute key đúng gốc */
+    private static String toCsvKeys(Collection<String> rawKeys) {
+        if (rawKeys == null || rawKeys.isEmpty()) return "";
+        LinkedHashSet<String> normalized = new LinkedHashSet<>();
+        for (String k : rawKeys) {
+            if (k == null || k.isBlank()) continue;
+            String v = k.trim();
+            if (v.startsWith("/")) v = v.substring(1);
+
+            if (v.startsWith("config/")) {
+                // đã tuyệt đối -> giữ nguyên
+                normalized.add(v);
+            } else if (v.startsWith("logicconfig/")) {
+                // logicconfig shorthand -> thêm "config/"
+                normalized.add("config/" + v);
+            } else {
+                // leaf item shorthand -> ép vào gameworld/item
+                // ví dụ: "block_item" -> "config/gameworld/item/block_item"
+                normalized.add("config/gameworld/item/" + v);
+            }
+        }
+        return String.join(",", normalized);
+    }
 }

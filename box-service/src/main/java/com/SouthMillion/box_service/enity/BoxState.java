@@ -10,7 +10,7 @@ public class BoxState {
 
     private int boxLevel = 1;
     private int boxBuyTimes = 0;
-    private long levelUpEndEpoch = 0L;
+    private long levelUpEndEpoch = 1L;
     private int levelFetchFlag = 0;
 
     private int openBoxTotal = 0;
@@ -18,4 +18,9 @@ public class BoxState {
 
     @Lob @Column(columnDefinition="TEXT")
     private String pendingJson; // JSON của “pendingOpenedEquip” (color, level, attrs,...)
+
+    @Column(name = "shi_zhuang_num") private int shiZhuangNum;
+    @Column(name = "arena_item_num") private int arenaItemNum;
+    @Column(name = "daily_ymd") private String dailyYmd;              // "yyyy-MM-dd" (UTC)
+    @Column(name = "last_open_epoch") private long lastOpenEpoch;     // epoch seconds throttle
 }

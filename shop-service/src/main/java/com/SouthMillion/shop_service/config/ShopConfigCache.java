@@ -44,7 +44,7 @@ public class ShopConfigCache {
         JsonNode cached = cache.getIfPresent(path);
         String etag = etags.get(path);
 
-        ResponseEntity<byte[]> res = configFeign.byPath(path, etag);
+        ResponseEntity<byte[]> res = configFeign.byPath(path, null,1);
         if (res.getStatusCode().is2xxSuccessful() && res.getBody()!=null) {
             String body = new String(res.getBody(), StandardCharsets.UTF_8);
             JsonNode node = safeTree(body);
@@ -57,7 +57,7 @@ public class ShopConfigCache {
         if (cached != null) return cached;
 
         // fallback: nếu 304 nhưng cache null (lần đầu), gọi lại không header
-        ResponseEntity<byte[]> res2 = configFeign.byPath(path, null);
+        ResponseEntity<byte[]> res2 = configFeign.byPath(path, null,1);
         String body = new String(res2.getBody(), StandardCharsets.UTF_8);
         JsonNode node = safeTree(body);
         cache.put(path, node);

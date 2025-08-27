@@ -26,27 +26,22 @@ public class BagService {
     private final BagSlotRepository slotRepo;
     private final ItemMetaService itemMeta;
     private final BagConfigCache bagCfg;
-    private final EntityManager em;
+    private final EntityManager em; // (nếu cần flush trong vài chỗ đặc biệt)
+
+    // ====================== util & mapping ======================
 
     private int defaultStartCapacity(byte bagType) {
-        var b = bagCfg.getCfg().bag.stream().filter(x -> ((Number)x.get("bag_id")).intValue() == bagType)
+        var b = bagCfg.getCfg().bag.stream()
+                .filter(x -> ((Number) x.get("bag_id")).intValue() == bagType)
                 .findFirst().orElse(Map.of("start_num", 80));
-        return ((Number)b.getOrDefault("start_num", 80)).intValue();
+        return ((Number) b.getOrDefault("start_num", 80)).intValue();
     }
 
     private int maxCapacity(byte bagType) {
-        var b = bagCfg.getCfg().bag.stream().filter(x -> ((Number)x.get("bag_id")).intValue() == bagType)
+        var b = bagCfg.getCfg().bag.stream()
+                .filter(x -> ((Number) x.get("bag_id")).intValue() == bagType)
                 .findFirst().orElse(Map.of("max_num", 300));
-        return ((Number)b.getOrDefault("max_num", 300)).intValue();
-    }
-
-    private BagMeta ensureMeta(String roleId, byte bagType) {
-        return metaRepo.findById(new BagMeta.BagMetaId(roleId, bagType))
-                .orElseGet(() -> metaRepo.save(BagMeta.builder()
-                        .id(new BagMeta.BagMetaId(roleId, bagType))
-                        .capacity(defaultStartCapacity(bagType))
-                        .version(0)
-                        .build()));
+        return ((Number) b.getOrDefault("max_num", 300)).intValue();
     }
 
     private static LocalDateTime toLdt(Long epochSec) {
@@ -67,18 +62,50 @@ public class BagService {
         );
     }
 
+    /**
+     * Đảm bảo có dòng meta (id = roleId-bagType) bằng upsertIgnore để tránh Duplicate Key.
+     * Luôn trả về bản ghi hiện tại của meta.
+     */
+    private BagMeta ensureMeta(String roleId, byte bagType) {
+        String id = BagMeta.idOf(roleId, bagType);
+        int startCap = defaultStartCapacity(bagType);
+
+        // Upsert để đảm bảo tồn tại (an toàn cạnh tranh)
+        metaRepo.upsert(id, roleId, bagType, startCap);
+
+        // Đọc lại meta (theo id). Trường hợp hiếm khi replication chậm, fallback theo (roleId, bagType)
+        return metaRepo.findById(id)
+                .or(() -> metaRepo.findByRoleIdAndBagType(roleId, bagType))
+                .orElseGet(() -> metaRepo.save(BagMeta.builder()
+                        .id(id).roleId(roleId).bagType(bagType)
+                        .capacity(startCap).used(0)
+                        .build()));
+    }
+
+    private void refreshUsedAndTouchMeta(BagMeta meta) {
+        long used = slotRepo.countUsed(meta.getRoleId(), meta.getBagType());
+        meta.setUsed((int) used);
+        meta.setUpdatedAt(LocalDateTime.now());
+        metaRepo.save(meta);
+    }
+
     // ====================== internal ======================
 
     @Transactional
     public BagDTOs.AddItemResp addItems(BagDTOs.AddItemReq req) {
-        BagMeta meta = ensureMeta(req.roleId(), req.bagType());
-        List<BagSlot> slots = slotRepo.findByRoleAndBag(req.roleId(), req.bagType());
+        final String roleId = req.getRoleId();
+        final byte bagType  = req.getBagType();
+
+        BagMeta meta = ensureMeta(roleId, bagType);
+
+        // Load tất cả slot hiện có (đã sort theo slotIndex asc)
+        List<BagSlot> slots = slotRepo.findByRoleAndBag(roleId, bagType);
 
         // 1) Validate & reject virtual items
-        Set<Integer> reqIds = req.items().stream().map(BagDTOs.ItemDelta::itemId).collect(Collectors.toSet());
+        Set<Integer> reqIds = req.getItems().stream().map(BagDTOs.ItemDelta::getItemId).collect(Collectors.toSet());
         Map<Integer, ItemMetaService.Meta> metas = itemMeta.getMetas(reqIds);
-        List<Integer> virtualIds = req.items().stream()
-                .map(it -> metas.getOrDefault(it.itemId(), new ItemMetaService.Meta(it.itemId(), 1, false, null)))
+        List<Integer> virtualIds = req.getItems().stream()
+                .map(it -> metas.getOrDefault(it.getItemId(), new ItemMetaService.Meta(it.getItemId(), 1, false, null)))
                 .filter(ItemMetaService.Meta::isVirtual)
                 .map(ItemMetaService.Meta::itemId)
                 .distinct()
@@ -87,15 +114,14 @@ public class BagService {
             throw new IllegalArgumentException("VIRTUAL_ITEM_USE_WALLET:" + virtualIds);
         }
 
-        // 2) Chuẩn hoá id & aggregate số lượng cần thêm
+        // 2) Chuẩn hoá id & aggregate số lượng cần thêm; ghi nhận yêu cầu singleStack theo normalizedId
         Map<Integer, Long> toAdd = new HashMap<>();
-        // NEW: ghi nhận yêu cầu "singleStack" theo normalizedId
         Map<Integer, Boolean> forceSingleByNormId = new HashMap<>();
-        for (var it : req.items()) {
-            ItemMetaService.Meta m = metas.getOrDefault(it.itemId(), new ItemMetaService.Meta(it.itemId(), 1, false, null));
-            int normId = (m.normalizedId() != null) ? m.normalizedId() : it.itemId();
-            toAdd.merge(normId, it.count(), Long::sum);
-            if (Boolean.TRUE.equals(it.singleStack())) {
+        for (var it : req.getItems()) {
+            ItemMetaService.Meta m = metas.getOrDefault(it.getItemId(), new ItemMetaService.Meta(it.getItemId(), 1, false, null));
+            int normId = (m.normalizedId() != null) ? m.normalizedId() : it.getItemId();
+            toAdd.merge(normId, it.getCount(), Long::sum);
+            if (Boolean.TRUE.equals(it.getSingleStack())) {
                 forceSingleByNormId.put(normId, true);
             }
         }
@@ -111,9 +137,13 @@ public class BagService {
                 .thenComparingLong(BagSlot::getCount)));
 
         int capacity = meta.getCapacity();
-        int used = slots.size();
+        int usedSlots = slots.size();
 
-        List<BagSlot> mutated = new ArrayList<>();
+        // Tìm lastIndex để cấp slotIndex mới an toàn, tránh trùng khi có "lỗ"
+        int lastIndex = slots.isEmpty() ? -1 : slots.get(slots.size() - 1).getSlotIndex();
+        int nextIndex = lastIndex + 1;
+
+        List<BagSlot> toPersist = new ArrayList<>();
         Map<Integer, Long> added    = new HashMap<>(); // itemId -> đã thêm
         Map<Integer, Long> overflow = new HashMap<>(); // itemId -> còn dư (không đủ chỗ)
 
@@ -123,9 +153,8 @@ public class BagService {
             long remain = e.getValue();
             int pile = normMetas.getOrDefault(itemId, new ItemMetaService.Meta(itemId, 1, false, null)).pileLimit();
 
-            // NEW: nếu request yêu cầu singleStack -> bỏ qua pileLimit (cho phép dồn hết vào 1 stack)
             if (Boolean.TRUE.equals(forceSingleByNormId.get(itemId))) {
-                pile = Integer.MAX_VALUE; // chỉ hiệu lực trong request này, không hard-code theo item
+                pile = Integer.MAX_VALUE; // singleStack trong request này
             }
 
             // 5.1 Top-up các stack chưa đầy
@@ -137,38 +166,42 @@ public class BagService {
                 long inc = Math.min(can, remain);
                 if (inc <= 0) continue;
                 s.setCount(s.getCount() + inc);
-                mutated.add(s);
+                toPersist.add(s);
                 remain -= inc;
                 added.merge(itemId, inc, Long::sum);
+                // singleStack: chỉ slot đầu tiên sẽ nuốt hết (do pile == MAX)
             }
 
             // 5.2 Tạo stack mới nếu còn sức chứa
             while (remain > 0) {
-                if (used >= capacity) {
+                if (usedSlots >= capacity) {
                     overflow.merge(itemId, remain, Long::sum);
                     break;
                 }
                 long inc = Math.min(remain, pile);
-                int nextIndex = used; // sẽ re-index/sort khi view
                 BagSlot s = BagSlot.builder()
-                        .roleId(req.roleId()).bagType(req.bagType()).slotIndex(nextIndex)
+                        .roleId(roleId).bagType(bagType).slotIndex(nextIndex++)
                         .itemId(itemId).count(inc)
                         .bind(false)
-                        .expireAt(toLdt(null))
+                        .expireAt(null)
                         .extraJson(null)
                         .build();
-                slotRepo.save(s);
-                mutated.add(s);
+                toPersist.add(s);
                 stackMap.computeIfAbsent(itemId, k -> new ArrayList<>()).add(s);
-                used++;
+                usedSlots++;
                 remain -= inc;
                 added.merge(itemId, inc, Long::sum);
 
-                // NEW: nếu singleStack => chỉ cần 1 slot, sau vòng lặp này remain sẽ về 0 ngay lần đầu.
+                // singleStack => lần đầu đã nuốt hết
             }
         }
 
-        if (!mutated.isEmpty()) slotRepo.saveAll(mutated);
+        if (!toPersist.isEmpty()) {
+            slotRepo.saveAll(toPersist);
+        }
+
+        // Cập nhật used vào meta cho đồng bộ
+        refreshUsedAndTouchMeta(meta);
 
         Map<Integer, Long> addedOut = added.isEmpty() ? Map.of() : added;
         Map<Integer, Long> overOut  = overflow.isEmpty() ? null  : overflow;
@@ -178,11 +211,14 @@ public class BagService {
 
     @Transactional
     public BagDTOs.OkResp consume(BagDTOs.ConsumeReq req) {
+        final String roleId = req.getRoleId();
+        final byte bagType  = req.getBagType();
+
         // 1) Validate & reject virtual costs
-        Set<Integer> ids = req.items().stream().map(BagDTOs.ItemDelta::itemId).collect(Collectors.toSet());
+        Set<Integer> ids = req.getItems().stream().map(BagDTOs.ItemDelta::getItemId).collect(Collectors.toSet());
         Map<Integer, ItemMetaService.Meta> metas = itemMeta.getMetas(ids);
-        List<Integer> virtualIds = req.items().stream()
-                .map(it -> metas.getOrDefault(it.itemId(), new ItemMetaService.Meta(it.itemId(), 1, false, null)))
+        List<Integer> virtualIds = req.getItems().stream()
+                .map(it -> metas.getOrDefault(it.getItemId(), new ItemMetaService.Meta(it.getItemId(), 1, false, null)))
                 .filter(ItemMetaService.Meta::isVirtual)
                 .map(ItemMetaService.Meta::itemId)
                 .distinct()
@@ -192,7 +228,7 @@ public class BagService {
         }
 
         // 2) Chuẩn bị index theo itemId
-        List<BagSlot> slots = slotRepo.findByRoleAndBag(req.roleId(), req.bagType());
+        List<BagSlot> slots = slotRepo.findByRoleAndBag(roleId, bagType);
         Map<Integer, List<BagSlot>> byItem = new HashMap<>();
         for (var s : slots) byItem.computeIfAbsent(s.getItemId(), k -> new ArrayList<>()).add(s);
         byItem.values().forEach(list -> list.sort(Comparator
@@ -201,7 +237,7 @@ public class BagService {
 
         // 3) Check đủ số lượng
         Map<Integer, Long> need = new HashMap<>();
-        req.items().forEach(it -> need.merge(it.itemId(), it.count(), Long::sum)); // <<<< dùng count()
+        req.getItems().forEach(it -> need.merge(it.getItemId(), it.getCount(), Long::sum));
         for (var e : need.entrySet()) {
             long have = byItem.getOrDefault(e.getKey(), List.of()).stream().mapToLong(BagSlot::getCount).sum();
             if (have < e.getValue()) {
@@ -214,17 +250,24 @@ public class BagService {
         List<BagSlot> toDelete = new ArrayList<>();
         for (var e : need.entrySet()) {
             long remain = e.getValue();
-            for (BagSlot s : byItem.get(e.getKey())) {
-                if (remain<=0) break;
+            List<BagSlot> stacks = byItem.get(e.getKey());
+            if (stacks == null) continue;
+            for (BagSlot s : stacks) {
+                if (remain <= 0) break;
                 long take = Math.min(s.getCount(), remain);
                 s.setCount(s.getCount() - take);
                 changed.add(s);
                 remain -= take;
-                if (s.getCount()==0) toDelete.add(s);
+                if (s.getCount() == 0) toDelete.add(s);
             }
         }
         if (!toDelete.isEmpty()) slotRepo.deleteAll(toDelete);
-        if (!changed.isEmpty()) slotRepo.saveAll(changed);
+        if (!changed.isEmpty())  slotRepo.saveAll(changed);
+
+        // Cập nhật used meta
+        BagMeta meta = ensureMeta(roleId, bagType);
+        refreshUsedAndTouchMeta(meta);
+
         return BagDTOs.OkResp.OK();
     }
 
@@ -232,10 +275,15 @@ public class BagService {
 
     @Transactional
     public BagDTOs.BagView sortCompact(BagDTOs.SortReq req) {
-        List<BagSlot> slots = slotRepo.findByRoleAndBag(req.roleId(), req.bagType());
+        final String roleId = req.getRoleId();
+        final byte bagType  = req.getBagType();
+
+        List<BagSlot> slots = slotRepo.findByRoleAndBag(roleId, bagType);
         if (slots.isEmpty()) {
-            BagMeta meta = ensureMeta(req.roleId(), req.bagType());
-            return new BagDTOs.BagView(req.roleId(), req.bagType(), meta.getCapacity(), 0, List.of());
+            BagMeta meta = ensureMeta(roleId, bagType);
+            // Đồng bộ used nếu lệch
+            if (meta.getUsed() != 0) { meta.setUsed(0); meta.setUpdatedAt(LocalDateTime.now()); metaRepo.save(meta); }
+            return new BagDTOs.BagView(roleId, bagType, meta.getCapacity(), 0, List.of());
         }
 
         // Group theo itemId -> merge theo pileLimit
@@ -248,16 +296,17 @@ public class BagService {
 
             // Ưu tiên hết hạn sớm
             lst.sort(Comparator.comparing(BagSlot::getExpireAt, Comparator.nullsFirst(Comparator.naturalOrder())));
+
             long total = lst.stream().mapToLong(BagSlot::getCount).sum();
             List<LocalDateTime> expires = lst.stream().map(BagSlot::getExpireAt).filter(Objects::nonNull).sorted().toList();
 
             int expIdx = 0;
             while (total > 0) {
                 long take = Math.min(total, pile);
-                LocalDateTime exp = expIdx < expires.size()? expires.get(expIdx++) : null;
+                LocalDateTime exp = expIdx < expires.size() ? expires.get(expIdx++) : null;
                 merged.add(BagSlot.builder()
-                        .roleId(req.roleId()).bagType(req.bagType())
-                        .slotIndex(0) // sẽ re-index
+                        .roleId(roleId).bagType(bagType)
+                        .slotIndex(0) // sẽ re-index phía dưới
                         .itemId(itemId).count(take)
                         .bind(false).expireAt(exp).extraJson(null)
                         .build());
@@ -270,32 +319,46 @@ public class BagService {
                 .comparing(BagSlot::getItemId)
                 .thenComparing(BagSlot::getExpireAt, Comparator.nullsFirst(Comparator.naturalOrder())));
         slotRepo.deleteAll(slots);
-        for (int i=0;i<merged.size();i++) merged.get(i).setSlotIndex(i);
+        for (int i = 0; i < merged.size(); i++) merged.get(i).setSlotIndex(i);
         slotRepo.saveAll(merged);
 
-        BagMeta meta = ensureMeta(req.roleId(), req.bagType());
+        BagMeta meta = ensureMeta(roleId, bagType);
+        meta.setUsed(merged.size());
+        meta.setUpdatedAt(LocalDateTime.now());
+        metaRepo.save(meta);
+
         List<BagDTOs.BagSlotView> views = merged.stream().map(BagService::toView).toList();
-        return new BagDTOs.BagView(req.roleId(), req.bagType(), meta.getCapacity(), merged.size(), views);
+        return new BagDTOs.BagView(roleId, bagType, meta.getCapacity(), merged.size(), views);
     }
 
-    @Transactional
+    @Transactional()
     public BagDTOs.BagView get(String roleId, byte bagType) {
         BagMeta meta = ensureMeta(roleId, bagType);
         List<BagSlot> slots = slotRepo.findByRoleAndBag(roleId, bagType);
+        int used = slots.size();
+
+        // Đồng bộ used nếu lệch (nhẹ; nếu muốn chỉ cập nhật trong add/consume/sortCompact thì bỏ đoạn này)
+        if (meta.getUsed() != used) {
+            meta.setUsed(used);
+            meta.setUpdatedAt(LocalDateTime.now());
+            metaRepo.save(meta);
+        }
+
         List<BagDTOs.BagSlotView> views = slots.stream()
                 .sorted(Comparator.comparingInt(BagSlot::getSlotIndex))
                 .map(BagService::toView)
                 .toList();
-        return new BagDTOs.BagView(roleId, bagType, meta.getCapacity(), views.size(), views);
+        return new BagDTOs.BagView(roleId, bagType, meta.getCapacity(), used, views);
     }
 
     @Transactional
     public BagDTOs.OkResp expand(BagDTOs.ExpandReq req) {
-        BagMeta meta = ensureMeta(req.roleId(), req.bagType());
-        int newCap = Math.min(meta.getCapacity() + req.slots(), maxCapacity(req.bagType()));
+        BagMeta meta = ensureMeta(req.getRoleId(), req.getBagType());
+        int newCap = Math.min(meta.getCapacity() + req.getSlots(), maxCapacity(req.getBagType()));
         meta.setCapacity(newCap);
+        meta.setUpdatedAt(LocalDateTime.now());
         metaRepo.save(meta);
-        // TODO: charge cost if needed based on config
+        // (Tuỳ chọn) tính phí mở rộng dựa trên config ở đây
         return BagDTOs.OkResp.OK();
     }
 }

@@ -39,4 +39,19 @@ public interface BoxFeign {
 
     @PostMapping("/luck/receive")
     BoxDTOs.OkResp luckReceive(@RequestBody BoxDTOs.LuckReceiveReq req);
+
+
+    @PostMapping("/decompose")
+    BoxDTOs.DecomposeResp decompose(@RequestParam("roleId")  String roleId);
+
+
+    @GetMapping("/setting")
+     BoxDTOs.BoxSettingResp getSetting(@RequestParam("roleId")  String roleId) ;
+
+    @PostMapping("/internal/pending")
+    BoxDTOs.OkResp setPending(@RequestBody BoxDTOs.SetPendingReq req);
+
+    @GetMapping("/equipInfo")
+    BoxDTOs.EquipInfo equipInfo(@RequestParam("roleId") String roleId);
+
 }
