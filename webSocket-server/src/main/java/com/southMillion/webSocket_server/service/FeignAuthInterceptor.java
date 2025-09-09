@@ -13,12 +13,17 @@ public class FeignAuthInterceptor implements RequestInterceptor {
 
     @Override
     public void apply(RequestTemplate template) {
+        if (template.headers().containsKey(HttpHeaders.AUTHORIZATION)) return; // đã có rồi → bỏ qua
         String token = FeignTokenHolder.get();
         if (org.springframework.util.StringUtils.hasText(token)) {
-            template.header(HttpHeaders.AUTHORIZATION, "Bearer " + token);
-            // Chỉ log độ dài + vài ký tự đầu/cuối để tránh lộ token
-            log.debug("[feign] add Authorization (len={}) for {} {}",
-                    token.length(), template.method(), template.url());
+            String auth = token.startsWith("Bearer ") ? token : "Bearer " + token; // <-- tránh double Bearer
+            template.header(HttpHeaders.AUTHORIZATION, auth);
+
+            // log gọn + xác thực có header
+            String url = template.url();
+            if (url.length() > 200) url = url.substring(0, 200) + "...";
+            log.debug("[feign] add Authorization (len={}, startsWithBearer={}) for {} {}",
+                    token.length(), token.startsWith("Bearer "), template.method(), url);
         } else {
             log.debug("[feign] NO token for {} {}", template.method(), template.url());
         }

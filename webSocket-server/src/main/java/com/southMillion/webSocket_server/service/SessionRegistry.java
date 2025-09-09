@@ -2,8 +2,6 @@ package com.southMillion.webSocket_server.service;
 
 import com.southMillion.webSocket_server.dto.PlayerSession;
 import lombok.extern.slf4j.Slf4j;
-import org.SouthMillion.dto.item.ItemMeta;
-import org.SouthMillion.dto.item.ItemType;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -24,7 +22,6 @@ public class SessionRegistry {
     // wsId -> PlayerSession
     private final ConcurrentHashMap<String, PlayerSession> byWs = new ConcurrentHashMap<>();
 
-    private final Map<Integer, ItemMeta> metas = new ConcurrentHashMap<>();
     private final Map<Integer, Integer> normalizedIndex = new ConcurrentHashMap<>();
     private final AtomicBoolean loaded = new AtomicBoolean(false);
 

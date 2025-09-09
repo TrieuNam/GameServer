@@ -1,7 +1,7 @@
 {
   "param_list": {
     "update_package": true,
-    "update_url": "http://localhost:8080/api/config/local.json",
+    "update_url": "http://localhost:8080/config-service/api/config/file?/config/local.json",
     "report_url": "http://localhost:8080/report-service/api/report",
     "report_url2": "http://localhost:8080/report-service/api/report",
     "gm_report_url": "http://localhost:8080/api/client/gm/report",

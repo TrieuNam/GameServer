@@ -15,13 +15,11 @@ import java.util.Map;
 @Configuration
 @RequiredArgsConstructor
 public class WebSocketConfig {
-
     private final WsGatewayHandler wsGatewayHandler;
 
     @Bean
     public HandlerMapping wsMapping() {
         Map<String, WebSocketHandler> map = new HashMap<>();
-        // Gateway stripPrefix=1 -> client đi /ws/game, backend này nhận đúng "/ws/game"
         map.put("/ws/game", wsGatewayHandler);
         var mapping = new SimpleUrlHandlerMapping();
         mapping.setOrder(-1);
@@ -30,7 +28,5 @@ public class WebSocketConfig {
     }
 
     @Bean
-    public WebSocketHandlerAdapter handlerAdapter() {
-        return new WebSocketHandlerAdapter();
-    }
+    public WebSocketHandlerAdapter handlerAdapter() { return new WebSocketHandlerAdapter(); }
 }

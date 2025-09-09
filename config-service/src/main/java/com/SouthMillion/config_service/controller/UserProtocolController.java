@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/c2s")
-@CrossOrigin(origins = "*")
 public class UserProtocolController {
 
     private final UserProtocolService userProtocolService;

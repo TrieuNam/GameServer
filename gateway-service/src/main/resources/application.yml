@@ -4,25 +4,43 @@ server:
 spring:
   application:
     name: gateway-service
+
   cloud:
     gateway:
       server:
         webflux:
+          # === Áp dụng cho mọi route (fix trùng header CORS) ===
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Expose-Headers, RETAIN_FIRST
+
+          # === Route WebSocket ===
+          routes:
+            - id: game-ws
+              uri: lb:ws://websocket-server
+              predicates:
+                - Path=/websocket-server/**
+              filters:
+                - StripPrefix=1
+
+          # === Tự động tạo route theo Eureka ===
           discovery:
             locator:
               enabled: true
               lower-case-service-id: true
 
-          routes:
-            - id: game-ws
-              uri: lb:ws://websocket-server
-              predicates:
-                - Path=/webSocket-server/ws/game
-              filters:
-                - StripPrefix=1
-                - RemoveRequestHeader=Sec-WebSocket-Protocol
+          # === CORS toàn cục tại Gateway ===
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:7456"
+                  - "http://127.0.0.1:7456"
+                allowedMethods: [ GET, POST, PUT, DELETE, OPTIONS ]
+                allowedHeaders: [ "*" ]
+                allowCredentials: true
+                maxAge: 3600
 
-          # tăng WS frame nếu cần
+          # === Netty client (GW -> downstream): tăng frame WS ===
           httpclient:
             websocket:
               max-frame-payload-length: 1048576
@@ -31,8 +49,8 @@ eureka:
   instance:
     prefer-ip-address: true
   client:
-    registerWithEureka: true
-    fetchRegistry: true
+    register-with-eureka: true
+    fetch-registry: true
     service-url:
       defaultZone: http://localhost:8761/eureka/
 
@@ -46,20 +64,13 @@ app:
   auth:
     whitelist:
       - /session-service/api/session/login
-      - /user-service/api/user/register-or-login
-      - /session-service/internal/session/introspect
       - /session-service/api/session/heartbeat
       - /session-service/api/session/timesync
-      - /config-service/config/dev-query-h02.json
-      - /config-service/api/c2s/fetch_privacy_notice
-      - /config-service/config/internal/reload
-      - /config-service/config/dev-query-h02.json/override
-      - /report-service/api/report
-      - /config-service/config/gameworld/logicconfig/roleexp
-      - /config-service/config/gameworld/logicconfig/role_name
-      - /config-service/config/gameworld/logicconfig/bag_cfg
-      - /config-service/config/gameworld/globalconfig/keyconfig
-      - /config-service/config/gameworld/globalconfig/otherconfig
+      - /config-service/api/config/file
+      - /config-service/api/config/file/**
+      - /config-service/internal/reload
+      - /report-service/api/report/**
+      - /websocket-server/**
     sessionServiceId: session-service
     introspectPath: /internal/session/introspect
     introspectMethod: POST

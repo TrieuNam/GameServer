@@ -1,15 +1,14 @@
 package com.southMillion.session_service;
 
-import com.southMillion.session_service.config.JwtProperties;
-import com.southMillion.session_service.config.RateLimitProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @EnableFeignClients
-@EnableConfigurationProperties({JwtProperties.class, RateLimitProperties.class})
+@EnableDiscoveryClient
 public class SessionServiceApplication {
 
 	public static void main(String[] args) {

@@ -1,18 +1,24 @@
 
 services:
   # ===== USER / AUTH =====
-  mysql:
+  userdb:
     image: mysql:8.0
-    container_name: mysql
+    container_name: userdb
     environment:
-      MYSQL_ROOT_PASSWORD: admin-userDB
-      MYSQL_DATABASE: db_user_service
+      MYSQL_ROOT_PASSWORD: admin-userdb
+      MYSQL_DATABASE: userdb
       MYSQL_USER: tpnam
       MYSQL_PASSWORD: 121831
     ports:
       - "3308:3306"
+    command: [ "--default-authentication-plugin=mysql_native_password" ]
+    healthcheck:
+        test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+        interval: 5s
+        timeout: 2s
+        retries: 10
     volumes:
-      - mysql-data:/var/lib/mysql
+      - userdb-data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
  # session_db:
@@ -42,18 +48,18 @@ services:
     volumes:
       - reportdb-data:/var/lib/mysql
 
-  mysql_serverinfo:
-    image: mysql:8.0
-    container_name: mysql_serverinfo
-    environment:
-      MYSQL_ROOT_PASSWORD: admin-serverinfo
-      MYSQL_DATABASE: game_serverInfor
-      MYSQL_USER: tpnam
-      MYSQL_PASSWORD: 121831
-    ports:
-      - "3310:3306"
-    volumes:
-      - serverinfo-data:/var/lib/mysql
+#  mysql_serverinfo:
+#    image: mysql:8.0
+#    container_name: mysql_serverinfo
+#    environment:
+#      MYSQL_ROOT_PASSWORD: admin-serverinfo
+#      MYSQL_DATABASE: game_serverInfor
+#      MYSQL_USER: tpnam
+#      MYSQL_PASSWORD: 121831
+#    ports:
+#      - "3310:3306"
+#    volumes:
+#      - serverinfo-data:/var/lib/mysql
 
   # ===== TASK =====
 #  task_db:
@@ -70,85 +76,85 @@ services:
 #      - task_db-data:/var/lib/mysql
 
   # ===== ITEM / BAG / BOX / EQUIP =====
-  db_item_service_DB:
-    image: mysql:8.0
-    container_name: db_item_service_DB
-    environment:
-      MYSQL_ROOT_PASSWORD: admin-db_item_service
-      MYSQL_DATABASE: db_item_service
-      MYSQL_USER: tpnam
-      MYSQL_PASSWORD: 121831
-    ports:
-      - "3316:3306"
-    volumes:
-      - db_item_service-data:/var/lib/mysql
+#  db_item_service_DB:
+#    image: mysql:8.0
+#    container_name: db_item_service_DB
+#    environment:
+#      MYSQL_ROOT_PASSWORD: admin-db_item_service
+#      MYSQL_DATABASE: db_item_service
+#      MYSQL_USER: tpnam
+#      MYSQL_PASSWORD: 121831
+#    ports:
+#      - "3316:3306"
+#    volumes:
+#      - db_item_service-data:/var/lib/mysql
       
-  db_game_wallet_DB:
-    image: mysql:8.0
-    container_name: db_game_wallet_DB
-    environment:
-      MYSQL_ROOT_PASSWORD: admin-db_game_wallet
-      MYSQL_DATABASE: db_game_wallet
-      MYSQL_USER: tpnam
-      MYSQL_PASSWORD: 121831
-    ports:
-      - "3329:3306"
-    volumes:
-      - db_game_wallet-data:/var/lib/mysql
+#  db_game_wallet_DB:
+#    image: mysql:8.0
+#    container_name: db_game_wallet_DB
+#    environment:
+#      MYSQL_ROOT_PASSWORD: admin-db_game_wallet
+#      MYSQL_DATABASE: db_game_wallet
+#      MYSQL_USER: tpnam
+#      MYSQL_PASSWORD: 121831
+#    ports:
+#      - "3329:3306"
+#    volumes:
+#      - db_game_wallet-data:/var/lib/mysql
         
 
-  db_equip_service:
-    image: mysql:8.0
-    container_name: db_equip_service
-    environment:
-      MYSQL_ROOT_PASSWORD: admin-db_equip_service
-      MYSQL_DATABASE: db_equip_service
-      MYSQL_USER: tpnam
-      MYSQL_PASSWORD: 121831
-    ports:
-      - "3315:3306"
-    volumes:
-      - db_equip_service-data:/var/lib/mysql
+#  db_equip_service:
+#    image: mysql:8.0
+#    container_name: db_equip_service
+#    environment:
+#      MYSQL_ROOT_PASSWORD: admin-db_equip_service
+#      MYSQL_DATABASE: db_equip_service
+#      MYSQL_USER: tpnam
+#      MYSQL_PASSWORD: 121831
+#    ports:
+#      - "3315:3306"
+#    volumes:
+#      - db_equip_service-data:/var/lib/mysql
 
-  bag_db:
-    image: mysql:8.0
-    container_name: bag_db
-    environment:
-      MYSQL_ROOT_PASSWORD: admin-bag_db
-      MYSQL_DATABASE: db_bag_service
-      MYSQL_USER: tpnam
-      MYSQL_PASSWORD: 121831
-    ports:
-      - "3318:3306"
-    volumes:
-      - bag_db-data:/var/lib/mysql
+#  bag_db:
+#    image: mysql:8.0
+#    container_name: bag_db
+#    environment:
+#      MYSQL_ROOT_PASSWORD: admin-bag_db
+#      MYSQL_DATABASE: db_bag_service
+#      MYSQL_USER: tpnam
+#      MYSQL_PASSWORD: 121831
+#    ports:
+#      - "3318:3306"
+#    volumes:
+#      - bag_db-data:/var/lib/mysql
 
-  box_db:
-    image: mysql:8.0
-    container_name: box_db
-    environment:
-      MYSQL_ROOT_PASSWORD: admin-box_db
-      MYSQL_DATABASE: db_box_service
-      MYSQL_USER: tpnam
-      MYSQL_PASSWORD: 121831
-    ports:
-      - "3319:3306"
-    volumes:
-      - box_db-data:/var/lib/mysql
+#  box_db:
+#    image: mysql:8.0
+#    container_name: box_db
+#    environment:
+#      MYSQL_ROOT_PASSWORD: admin-box_db
+#      MYSQL_DATABASE: db_box_service
+#      MYSQL_USER: tpnam
+#      MYSQL_PASSWORD: 121831
+#    ports:
+#      - "3319:3306"
+#    volumes:
+#      - box_db-data:/var/lib/mysql
 
   # ===== SHOP / CFG =====
-  shop_db:
-    image: mysql:8.0
-    container_name: shop_db
-    environment:
-      MYSQL_ROOT_PASSWORD: admin-shop_db
-      MYSQL_DATABASE: game_shop
-      MYSQL_USER: tpnam
-      MYSQL_PASSWORD: 121831
-    ports:
-      - "3320:3306"
-    volumes:
-      - shop_db-data:/var/lib/mysql
+#  shop_db:
+#    image: mysql:8.0
+#    container_name: shop_db
+#    environment:
+#      MYSQL_ROOT_PASSWORD: admin-shop_db
+#      MYSQL_DATABASE: game_shop
+#      MYSQL_USER: tpnam
+#      MYSQL_PASSWORD: 121831
+#    ports:
+#      - "3320:3306"
+#    volumes:
+#      - shop_db-data:/var/lib/mysql
 
  # cfg_db:
   #  image: mysql:8.0
@@ -177,18 +183,18 @@ services:
  #   volumes:
  #     - mail_db-data:/var/lib/mysql
 
-  gift_db:
-    image: mysql:8.0
-    container_name: gift_db
-    environment:
-      MYSQL_ROOT_PASSWORD: admin-gift_db
-      MYSQL_DATABASE: gift_service
-      MYSQL_USER: tpnam
-      MYSQL_PASSWORD: 121831
-    ports:
-      - "3322:3306"
-    volumes:
-      - gift_db-data:/var/lib/mysql
+#  gift_db:
+#    image: mysql:8.0
+#    container_name: gift_db
+#    environment:
+#      MYSQL_ROOT_PASSWORD: admin-gift_db
+#      MYSQL_DATABASE: gift_service
+#      MYSQL_USER: tpnam
+#      MYSQL_PASSWORD: 121831
+#    ports:
+#      - "3322:3306"
+#    volumes:
+#      - gift_db-data:/var/lib/mysql
 
   # ===== ROLE / MAINFB / GAMEWORLD / ARENA =====
   role_db:
@@ -200,9 +206,10 @@ services:
       MYSQL_USER: tpnam
       MYSQL_PASSWORD: 121831
     ports:
-      - "3324:3306"
+      - "3310:3306"
     volumes:
       - role_db-data:/var/lib/mysql
+
 
  # mainfb_db:
  #   image: mysql:8.0
@@ -343,25 +350,25 @@ services:
 
 volumes:
   kafka-data:
-  mysql-data:
+  userdb-data:
   reportdb-data:
-  serverinfo-data:
+ # serverinfo-data:
  # sessiondb-data:
  # task_db-data:
-  db_equip_service-data:
+ # db_equip_service-data:
  # petDB-data:
-  db_item_service-data:
+ # db_item_service-data:
  # globalserver_service_db-data:
  # shizhuangdb-data:
   redis-data:
-  bag_db-data:
-  box_db-data:
-  shop_db-data:
+#  bag_db-data:
+#  box_db-data:
+#  shop_db-data:
  # cfg_db-data:
  # mail_db-data:
-  gift_db-data:
+#  gift_db-data:
   role_db-data:
-  db_game_wallet-data:
+ # db_game_wallet-data:
  # mainfb_db-data:
  # gameworld_db-data:
  # arena_db-data:

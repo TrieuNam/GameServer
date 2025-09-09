@@ -2,52 +2,27 @@ package com.SouthMillion.role_service.service.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name = "config-service")
 public interface ConfigFeign {
 
-    // Dùng property để trỏ tới endpoint (có thể là /config/{name}.json hoặc /config/by-path?p=...)
-    @GetMapping("${role.config.roleexp-path}")
+    @GetMapping("${role.config.roleexp-path-API}")
     ResponseEntity<byte[]> getRoleExp(
-            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch
-    );
+            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch);
 
-    @GetMapping("${role.config.rolename-path}")
+    @GetMapping("${role.config.rolename-path-API}")
     ResponseEntity<byte[]> getRoleName(
-            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch
-    );
+            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch);
 
-    @GetMapping("${role.config.bagcfg-path}")
-    ResponseEntity<byte[]> getBagCfg(
-            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch
-    );
-
-    @GetMapping("${role.config.keyconfig-path}")
-    ResponseEntity<byte[]> getKeyCfg(
-            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch
-    );
-
-    @GetMapping("${role.config.otherconfig-path}")
+    @GetMapping("${role.config.otherconfig-path-API}")
     ResponseEntity<byte[]> getOtherCfg(
-            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch
-    );
+            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch);
 
-    // Generic (có hỗ trợ force)
-    @GetMapping("/config/{name}.json")
-    ResponseEntity<byte[]> getJsonByName(
-            @PathVariable("name") String name,
-            @RequestParam(value = "force", required = false) Integer force,
-            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch
-    );
+    @GetMapping("${role.config.keyconfig-path-API}")
+    ResponseEntity<byte[]> getKeyCfg(
+            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch);
 
-    @GetMapping("/config/by-path")
-    ResponseEntity<byte[]> getByPath(
-            @RequestParam("p") String relPath,
-            @RequestParam(value = "force", required = false) Integer force,
-            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch
-    );
+    @RequestMapping(method = RequestMethod.HEAD, value = "/api/config/file")
+    ResponseEntity<Void> headFile(@RequestParam("path") String path);
 }

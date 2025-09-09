@@ -1,38 +1,31 @@
 server:
-  port: 8102
-
+  port: 8087
 
 spring:
   application:
     name: item-service
-  threads:
-    virtual:
-      enabled: true
-  datasource:
-    url: jdbc:mysql://localhost:3316/db_item_service?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=UTC
-    username: tpnam
-    password: 121831
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-  data:
-    redis:
-      host: localhost
-      port: 6379
-  cloud:
-    discovery:
-      enabled: true
+  main:
+    keep-alive: true
 
+# nếu dùng eureka:
 eureka:
   client:
-    register-with-eureka: true
-    fetch-registry: true
     service-url:
-      defaultZone: http://localhost:8761/eureka/
-  instance:
-    prefer-ip-address: true
+      defaultZone: http://eureka-server:8761/eureka/
 
-logging:
-  level:
-    com.example.item: INFO
+# Cấu hình gọi config-service
+item:
+  config:
+    # base-url có thể là http://config-service:8080 (qua eureka/gateway)
+    base-url: http://config-service:8080
+    # Đường lấy 1 file item theo itemId (bạn chỉnh cho khớp config-service)
+    item-path-template: /api/config/file?path=config/gameworld/item/%d.json
+    cache-ttl-seconds: 300
+    # có thể thêm size limit nếu dùng caffeine
+    cache-max-size: 10000
+
+feign:
+  okhttp:
+    enabled: false
+  httpclient:
+    enabled: true

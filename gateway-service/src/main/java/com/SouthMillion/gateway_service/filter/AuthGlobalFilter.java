@@ -3,6 +3,8 @@ package com.SouthMillion.gateway_service.filter;
 
 import com.SouthMillion.gateway_service.config.AppAuthProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
@@ -25,7 +27,7 @@ import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
-public class AuthGlobalFilter implements WebFilter, Ordered {
+public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     private final AppAuthProperties props;
     private final WebClient webClient;
@@ -36,61 +38,6 @@ public class AuthGlobalFilter implements WebFilter, Ordered {
         // Sau CORS/preflight, trước routing
         return -20;
     }
-
-    @Override
-    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-        var req = exchange.getRequest();
-        var path = req.getURI().getPath();
-
-        // Bỏ qua preflight
-        if (req.getMethod() == HttpMethod.OPTIONS) {
-            return chain.filter(exchange);
-        }
-
-        // Whitelist
-        if (isWhitelisted(path)) {
-            return chain.filter(exchange);
-        }
-
-        boolean isWebSocket = "websocket".equalsIgnoreCase(req.getHeaders().getUpgrade());
-
-        String token = isWebSocket
-                ? tokenFromWs(req.getHeaders(), req.getURI())
-                : tokenFromHttp(req.getHeaders(), req.getURI());
-
-        if (!StringUtils.hasText(token)) {
-            return unauthorized(exchange, "missing-token");
-        }
-
-        return introspect(token)
-                .flatMap(info -> {
-                    boolean active = truthy(info.get("active"))
-                            || truthy(info.get("ok"))
-                            || truthy(info.get("valid"));
-                    if (!active) {
-                        String reason = asStr(info.get("reason"));
-                        return unauthorized(exchange, reason != null ? reason : "invalid-token");
-                    }
-
-                    ServerWebExchange mutated = exchange.mutate()
-                            .request(builder -> {
-                                String userId = asStr(info.get("userId"));
-                                String sessionId = asStr(info.get("sessionId"));
-                                if (StringUtils.hasText(userId)) {
-                                    builder.header("X-User-Id", userId);
-                                    builder.header("X-Route-Key", userId);
-                                }
-                                if (StringUtils.hasText(sessionId)) {
-                                    builder.header("X-Session-Id", sessionId);
-                                }
-                            })
-                            .build();
-
-                    return chain.filter(mutated);
-                })
-                .onErrorResume(ex -> unauthorized(exchange, "auth-error"));
-    }
-
     // ===== helpers =====
 
     private boolean isWhitelisted(String path) {
@@ -219,5 +166,62 @@ public class AuthGlobalFilter implements WebFilter, Ordered {
                     "ok".equalsIgnoreCase(t) || "valid".equalsIgnoreCase(t);
         }
         return false;
+    }
+
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        var req = exchange.getRequest();
+        var path = req.getURI().getPath();
+
+        // Bỏ qua preflight
+        if (req.getMethod() == HttpMethod.OPTIONS) {
+            return chain.filter(exchange);
+        }
+
+        // Whitelist
+        if (isWhitelisted(path)) {
+            return chain.filter(exchange);
+        }
+
+        boolean isWebSocket = "websocket".equalsIgnoreCase(req.getHeaders().getUpgrade());
+
+        String token = isWebSocket
+                ? tokenFromWs(req.getHeaders(), req.getURI())
+                : tokenFromHttp(req.getHeaders(), req.getURI());
+
+        // Debug nhanh
+        // log.info("[AUTH] path={} upgrade={} token.len={}", path, req.getHeaders().getUpgrade(), token==null?0:token.length());
+
+        if (!StringUtils.hasText(token)) {
+            return unauthorized(exchange, "missing-token");
+        }
+
+        return introspect(token)
+                .flatMap(info -> {
+                    boolean active = truthy(info.get("active"))
+                            || truthy(info.get("ok"))
+                            || truthy(info.get("valid"));
+                    if (!active) {
+                        String reason = asStr(info.get("reason"));
+                        return unauthorized(exchange, reason != null ? reason : "invalid-token");
+                    }
+
+                    ServerWebExchange mutated = exchange.mutate()
+                            .request(builder -> {
+                                String userId = asStr(info.get("userId"));
+                                String sessionId = asStr(info.get("sessionId"));
+                                if (StringUtils.hasText(userId)) {
+                                    builder.header("X-User-Id", userId);
+                                    builder.header("X-Route-Key", userId);
+                                }
+                                if (StringUtils.hasText(sessionId)) {
+                                    builder.header("X-Session-Id", sessionId);
+                                }
+                            })
+                            .build();
+
+                    return chain.filter(mutated);
+                })
+                .onErrorResume(ex -> unauthorized(exchange, "auth-error"));
     }
 }

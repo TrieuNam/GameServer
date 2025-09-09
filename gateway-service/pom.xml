@@ -46,6 +46,11 @@
 			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-gateway-server-webflux</artifactId>
+        </dependency>
+
 		<!-- cấu hình binding -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -57,7 +62,24 @@
 			<artifactId>lombok</artifactId>
 			<scope>provided</scope>
 		</dependency>
-	</dependencies>
+        <!-- ② Security -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- ③ (Khuyên dùng) Actuator cho health/info -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- ④ BẮT BUỘC: OAuth2 Resource Server (chứa BearerTokenServerAuthenticationEntryPoint) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+    </dependencies>
 
 	<dependencyManagement>
 		<dependencies>

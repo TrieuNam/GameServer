@@ -1,9 +1,11 @@
 package org.SouthMillion.dto.config;
 
-public record ConfigEnvelope<T>(
-        String key,
-        String revision,
-        long lastModifiedEpoch,
-        String etag,
-        T content
+
+import java.time.Instant;
+
+public record ConfigEnvelope(
+        byte[]  bytes,
+        String  etag,
+        String  contentType,
+        Instant lastModified
 ) {}

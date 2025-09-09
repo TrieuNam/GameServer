@@ -4,6 +4,7 @@ import com.southMillion.webSocket_server.config.HandlerRegistry;
 import com.southMillion.webSocket_server.dto.PlayerSession;
 import com.southMillion.webSocket_server.net.MessageHandler;
 import com.southMillion.webSocket_server.net.PacketCodec;
+import com.southMillion.webSocket_server.service.SessionRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -22,17 +23,21 @@ import java.util.Optional;
 public class WsGatewayHandler implements WebSocketHandler {
 
     private final HandlerRegistry registry;
+    private final SessionRegistry sessionRegistry;
 
-    @Override public Mono<Void> handle(WebSocketSession session) {
+    @Override
+    public Mono<Void> handle(WebSocketSession session) {
         var ps = PlayerSession.builder()
                 .ws(session)
-                .sessionId(null)      // sẽ set sau login
+                .sessionId(null)
                 .outbound(Sinks.many().unicast().onBackpressureBuffer())
                 .build();
 
+        // Đăng ký ngay khi mở WS
+        sessionRegistry.put(session.getId(), ps);
+
         Mono<Void> send = session.send(
-                ps.getOutbound().asFlux()
-                        .map(bytes -> session.binaryMessage(buf -> buf.wrap(bytes)))
+                ps.getOutbound().asFlux().map(bytes -> session.binaryMessage(buf -> buf.wrap(bytes)))
         ).doFinally(sig -> ps.getOutbound().tryEmitComplete());
 
         Mono<Void> recv = session.receive()
@@ -50,18 +55,20 @@ public class WsGatewayHandler implements WebSocketHandler {
                 })
                 .then();
 
-        return Mono.when(send, recv);
+        // Gỡ khỏi registry khi kết thúc (bất kể lý do)
+        return Mono.when(send, recv)
+                .doFinally(sig -> sessionRegistry.remove(session.getId()));
     }
 
     private Mono<Void> dispatch(PlayerSession ps, int msgId, byte[] payload) {
-        Optional<MessageHandler> h = registry.find(msgId);
-        if (h.isEmpty()) {
-            log.warn("Unknown MsgId {}", msgId);
-            return Mono.empty();
-        }
-        return h.get().handle(ps, msgId, payload)
-                .onErrorResume(ex -> {
-                    log.warn("Handler {} error: {}", h.get().getClass().getSimpleName(), ex.toString());
+        return registry.find(msgId)
+                .map(h -> h.handle(ps, msgId, payload)
+                        .onErrorResume(ex -> {
+                            log.warn("Handler {} error: {}", h.getClass().getSimpleName(), ex.toString());
+                            return Mono.empty();
+                        }))
+                .orElseGet(() -> {
+                    log.warn("Unknown MsgId {}", msgId);
                     return Mono.empty();
                 });
     }

@@ -6,13 +6,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
@@ -21,18 +25,24 @@ import java.util.concurrent.atomic.AtomicReference;
 public class RoleConfigCache {
 
     private final ConfigFeign configFeign;
-    private final ObjectMapper om = new ObjectMapper();
+    private final ObjectMapper om;
 
-    private volatile String etagRoleExp;
-    private volatile String etagRoleName;
-    private volatile String etagOtherCfg;
-    private volatile String etagKeyCfg;
+    private volatile String etagRoleExpQuoted;
+    private volatile String etagRoleNameQuoted;
+    private volatile String etagOtherCfgQuoted;
+    private volatile String etagKeyCfgQuoted;
+
+
+    @Value("${role.config.roleexp-path}")   private String roleExpPath;
+    @Value("${role.config.rolename-path}")  private String roleNamePath;
+    @Value("${role.config.otherconfig-path}") private String otherCfgPath;
+    @Value("${role.config.keyconfig-path}")   private String keyCfgPath;
 
     private final AtomicReference<ExpTable> expRef = new AtomicReference<>(new ExpTable());
     private final AtomicReference<List<String>> namePoolRef = new AtomicReference<>(List.of("Player"));
     private final AtomicReference<Defaults> defaultsRef = new AtomicReference<>(new Defaults());
 
-    // ==== Public getters ====
+    // ===== getters =====
     public long needExp(int level) {
         var e = expRef.get();
         return e.needByLevel.getOrDefault(level, Math.max(1, (long) level * 100L));
@@ -50,24 +60,37 @@ public class RoleConfigCache {
         return defaultsRef.get();
     }
 
-    // ==== Refresh ====
+    // ===== refresh (public & scheduled) =====
     public void refreshAllIfNeeded() {
         refreshRoleExpIfNeeded();
         refreshRoleNameIfNeeded();
         refreshOtherOrKeyIfNeeded();
     }
 
+    @Scheduled(fixedDelayString = "${role.config.refresh-interval-ms:60000}")
+    void scheduledRefresh() {
+        refreshAllIfNeeded();
+    }
+
     public void refreshRoleExpIfNeeded() {
         try {
-            ResponseEntity<byte[]> resp = configFeign.getRoleExp(etagRoleExp);
-            if (resp.getStatusCodeValue() == 304) return;
-            if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) return;
-            etagRoleExp = stripQuotes(resp.getHeaders().getETag());
+            // 1) HEAD để lấy ETag mới
+            var head = configFeign.headFile(roleExpPath);
+            var newEtag = head.getHeaders().getETag();
+            if (newEtag != null && newEtag.equals(etagRoleExpQuoted)) {
+                return; // không đổi → khỏi GET
+            }
 
-            Map<String, Object> m = om.readValue(resp.getBody(), new TypeReference<>() {
-            });
-            ExpTable parsed = parseRoleExp(m);
+            // 2) GET không gửi If-None-Match để luôn nhận 200 + body
+            var resp = configFeign.getRoleExp( null);
+            if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) return;
+
+            etagRoleExpQuoted = resp.getHeaders().getETag();
+            Map<String, Object> m = om.readValue(resp.getBody(), new com.fasterxml.jackson.core.type.TypeReference<>(){});
+            var parsed = parseRoleExp(m);
             if (parsed != null) expRef.set(parsed);
+
+            log.info("RoleExp reloaded, etag={}", etagRoleExpQuoted);
         } catch (Exception e) {
             log.warn("refreshRoleExpIfNeeded: {}", e.toString());
         }
@@ -75,52 +98,64 @@ public class RoleConfigCache {
 
     public void refreshRoleNameIfNeeded() {
         try {
-            ResponseEntity<byte[]> resp = configFeign.getRoleName(etagRoleName);
-            if (resp.getStatusCodeValue() == 304) return;
-            if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) return;
-            etagRoleName = stripQuotes(resp.getHeaders().getETag());
+            var head = configFeign.headFile(roleNamePath);
+            var newEtag = head.getHeaders().getETag();
+            if (newEtag != null && newEtag.equals(etagRoleNameQuoted)) return;
 
-            Map<String, Object> m = om.readValue(resp.getBody(), new TypeReference<>() {
-            });
-            List<String> names = parseRoleNamePool(m);
+            var resp = configFeign.getRoleName( null);
+            if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) return;
+
+            etagRoleNameQuoted = resp.getHeaders().getETag();
+            Map<String, Object> m = om.readValue(resp.getBody(), new com.fasterxml.jackson.core.type.TypeReference<>(){});
+            var names = parseRoleNamePool(m);
             if (!names.isEmpty()) namePoolRef.set(names);
+
+            log.info("RoleName pool reloaded, etag={}", etagRoleNameQuoted);
         } catch (Exception e) {
             log.info("refreshRoleNameIfNeeded: {}", e.getMessage());
         }
     }
 
     public void refreshOtherOrKeyIfNeeded() {
-        // đọc default stat nếu có trong otherconfig/keyconfig
+        // thử otherconfig
         try {
-            ResponseEntity<byte[]> resp = configFeign.getOtherCfg(etagOtherCfg);
-            if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
-                etagOtherCfg = stripQuotes(resp.getHeaders().getETag());
-                Map<String, Object> m = om.readValue(resp.getBody(), new TypeReference<>() {
-                });
-                Defaults d = parseDefaults(m);
-                if (d != null) defaultsRef.set(d);
-                return;
-            } else if (resp.getStatusCodeValue() == 304) {
-                return;
+            var head = configFeign.headFile(otherCfgPath);
+            var newEtag = head.getHeaders().getETag();
+            if (newEtag == null || !newEtag.equals(etagOtherCfgQuoted)) {
+                var resp = configFeign.getOtherCfg( null);
+                if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
+                    etagOtherCfgQuoted = resp.getHeaders().getETag();
+                    Map<String, Object> m = om.readValue(resp.getBody(), new com.fasterxml.jackson.core.type.TypeReference<>(){});
+                    var d = parseDefaults(m);
+                    if (d != null) defaultsRef.set(d);
+                    log.info("OtherConfig reloaded, etag={}", etagOtherCfgQuoted);
+                    return;
+                }
+            } else {
+                return; // unchanged
             }
-        } catch (Exception ignore) {
-        }
+        } catch (Exception ignore) { }
 
+        // fallback keyconfig
         try {
-            ResponseEntity<byte[]> resp = configFeign.getKeyCfg(etagKeyCfg);
+            var head = configFeign.headFile(keyCfgPath);
+            var newEtag = head.getHeaders().getETag();
+            if (newEtag != null && newEtag.equals(etagKeyCfgQuoted)) return;
+
+            var resp = configFeign.getKeyCfg( null);
             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
-                etagKeyCfg = stripQuotes(resp.getHeaders().getETag());
-                Map<String, Object> m = om.readValue(resp.getBody(), new TypeReference<>() {
-                });
-                Defaults d = parseDefaults(m);
+                etagKeyCfgQuoted = resp.getHeaders().getETag();
+                Map<String, Object> m = om.readValue(resp.getBody(), new com.fasterxml.jackson.core.type.TypeReference<>(){});
+                var d = parseDefaults(m);
                 if (d != null) defaultsRef.set(d);
+                log.info("KeyConfig reloaded, etag={}", etagKeyCfgQuoted);
             }
         } catch (Exception e) {
             log.info("refreshKeyCfgIfNeeded: {}", e.getMessage());
         }
     }
 
-    // ==== Parsing helpers ====
+    // ===== parsing =====
     private ExpTable parseRoleExp(Map<String, Object> body) {
         Map<Integer, Long> need = new HashMap<>();
         int max = asInt(firstNonNull(body.get("max"), body.get("maxLevel"), body.get("max_level")), 100);
@@ -164,9 +199,6 @@ public class RoleConfigCache {
         return out;
     }
 
-    /**
-     * Parse default stat nếu có (chịu nhiều layout)
-     */
     private Defaults parseDefaults(Map<String, Object> body) {
         Map<String, Object> src = body;
         Object roleDefault = firstNonNull(body.get("role_default"), body.get("roleDefault"), body.get("defaults"));
@@ -185,7 +217,7 @@ public class RoleConfigCache {
         return new Defaults(hp, atk, def, spd, hpPerLv, atkPerLv, defPerLv, spdPerLv);
     }
 
-    // Utils
+    // utils
     private static void pushAll(List<String> dst, Object obj) {
         if (obj instanceof List<?> arr) for (Object o : arr) if (o != null) dst.add(String.valueOf(o));
     }
@@ -196,7 +228,7 @@ public class RoleConfigCache {
     }
 
     private static String stripQuotes(String etag) {
-        if (etag == null) return null;
+        if (!StringUtils.hasText(etag)) return null;
         String t = etag.trim();
         if (t.startsWith("W/\"") && t.endsWith("\"")) return t.substring(3, t.length() - 1);
         if (t.startsWith("\"") && t.endsWith("\"")) return t.substring(1, t.length() - 1);
@@ -221,7 +253,6 @@ public class RoleConfigCache {
         return def;
     }
 
-    // holders
     private record ExpTable(Map<Integer, Long> needByLevel, int maxLevel) {
         private ExpTable() {
             this(new HashMap<>(), 100);
@@ -239,7 +270,8 @@ public class RoleConfigCache {
             this(100, 10, 5, 5, 10, 2, 1, 0);
         }
 
-        public Defaults(long baseHp, long baseAtk, long baseDef, int baseSpd, long hpPerLv, long atkPerLv, long defPerLv, int spdPerLv) {
+        public Defaults(long baseHp, long baseAtk, long baseDef, int baseSpd,
+                        long hpPerLv, long atkPerLv, long defPerLv, int spdPerLv) {
             this.baseHp = baseHp;
             this.baseAtk = baseAtk;
             this.baseDef = baseDef;
@@ -249,5 +281,13 @@ public class RoleConfigCache {
             this.defPerLv = defPerLv;
             this.spdPerLv = spdPerLv;
         }
+    }
+
+    // tiện ích tạo random name từ pool (dùng chung)
+    public String generateRandomNameFromPool() {
+        var pool = namePoolRef.get();
+        String prefix = (pool == null || pool.isEmpty()) ? "Player" : pool.get((int) (System.nanoTime() % pool.size()));
+        String suffix = Integer.toString(ThreadLocalRandom.current().nextInt(1000, 10000));
+        return prefix + "_" + suffix;
     }
 }

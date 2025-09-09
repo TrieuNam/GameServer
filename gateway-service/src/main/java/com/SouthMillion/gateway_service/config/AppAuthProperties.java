@@ -9,7 +9,7 @@ public class AppAuthProperties {
     private List<String> whitelist = List.of();
     private Ws ws = new Ws();
     private String sessionServiceId = "session-service";
-    private String introspectPath = "/internal/session/introspect";
+    private String introspectPath = "/api/session/introspect";
     private String introspectMethod = "POST";
 
     public static class Ws {

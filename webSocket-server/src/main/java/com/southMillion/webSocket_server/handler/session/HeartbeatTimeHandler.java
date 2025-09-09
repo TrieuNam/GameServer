@@ -21,7 +21,7 @@ public class HeartbeatTimeHandler implements MessageHandler {
     @Override
     public Mono<Void> handle(PlayerSession ps, int msgId, byte[] payload) {
         if (msgId == MsgIds.CS_HEARTBEAT_REQ) {
-            Emitters.sendHeartbeat(ps);
+            Emitters.sendHeartbeatResp(ps);
             return Mono.empty();
         }
         if (msgId == MsgIds.CS_TIME_REQ) {

@@ -34,8 +34,8 @@ public class RoleController {
     }
 
     @PostMapping("/exp/add")
-    public void addExp(@RequestBody RoleDTOs.AddExpReq req) {
-        svc.addExp(req.getRoleId(), req.getExp()); // tự bạn hiện thực
+    public RoleDTOs.RoleResp addExp(@RequestBody RoleDTOs.AddExpReq req) {
+        return svc.addExp(req.getRoleId(), req.getExp());
     }
 
     @PostMapping("/{roleId}/rename")
