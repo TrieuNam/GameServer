@@ -54,12 +54,12 @@
         </dependency>
 
         <!-- Redis: nếu service này không dùng, có thể xoá hẳn dependency này -->
-        <!--
+
         <dependency>
           <groupId>org.springframework.boot</groupId>
           <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
-        -->
+
 
         <!-- đổi artifact webflux-ui -> webmvc-ui -->
         <dependency>

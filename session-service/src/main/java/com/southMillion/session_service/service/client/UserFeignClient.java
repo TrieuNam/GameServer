@@ -21,7 +21,7 @@ public interface UserFeignClient {
     )
     VerifyResp verifyPassword(@RequestBody VerifyReq req);
 
-    @GetMapping(value = "/internal/{userId}/active",
+    @GetMapping(value = "/internal/users/{userId}/active",
             produces = MediaType.APPLICATION_JSON_VALUE)
     ActiveResp isActive(@PathVariable("userId") String userId);
 }

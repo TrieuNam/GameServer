@@ -107,18 +107,22 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     @SuppressWarnings("unchecked")
     private Mono<Map<String,Object>> introspect(String token) {
         String serviceId = props.getSessionServiceId();
-        String path = props.getIntrospectPath();
-        String method = props.getIntrospectMethod();
+        String path      = props.getIntrospectPath();
+        String method    = props.getIntrospectMethod();
 
         WebClient.RequestHeadersSpec<?> spec;
         if ("GET".equalsIgnoreCase(method)) {
             spec = webClient.get()
                     .uri(b -> b.scheme("lb").host(serviceId).path(path)
-                            .queryParam("token", token).build());
+                            .queryParam("token", token).build())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                    .accept(MediaType.APPLICATION_JSON);
         } else {
             spec = webClient.post()
                     .uri(b -> b.scheme("lb").host(serviceId).path(path).build())
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                     .contentType(MediaType.TEXT_PLAIN)
+                    .accept(MediaType.APPLICATION_JSON)
                     .bodyValue(token);
         }
 
@@ -126,15 +130,24 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         return spec.exchangeToMono(resp -> {
             int sc = resp.statusCode().value();
+
             if (resp.statusCode().is2xxSuccessful()) {
                 return resp.bodyToMono(MAP)
-                        // nếu body rỗng, coi như hợp lệ
-                        .defaultIfEmpty(Map.<String,Object>of("active", true));
+                        .defaultIfEmpty(Map.of()) // body rỗng vẫn OK
+                        .map(body -> {
+                            Map<String,Object> m = new java.util.HashMap<>(body);
+                            // Nếu service không trả cờ, mặc định active=true khi 2xx
+                            m.putIfAbsent("active", true);
+                            return m;
+                        });
             }
+
             if (sc == 401 || sc == 403 || sc == 404) {
                 return resp.bodyToMono(String.class).defaultIfEmpty("")
                         .map(body -> Map.<String,Object>of("active", false, "reason", "http-" + sc));
             }
+
+            // 5xx và các lỗi khác -> ném exception để onErrorResume xử lý
             return resp.createException().flatMap(Mono::error);
         });
     }
@@ -205,21 +218,17 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                         String reason = asStr(info.get("reason"));
                         return unauthorized(exchange, reason != null ? reason : "invalid-token");
                     }
-
-                    ServerWebExchange mutated = exchange.mutate()
-                            .request(builder -> {
-                                String userId = asStr(info.get("userId"));
-                                String sessionId = asStr(info.get("sessionId"));
-                                if (StringUtils.hasText(userId)) {
-                                    builder.header("X-User-Id", userId);
-                                    builder.header("X-Route-Key", userId);
-                                }
-                                if (StringUtils.hasText(sessionId)) {
-                                    builder.header("X-Session-Id", sessionId);
-                                }
-                            })
-                            .build();
-
+                    ServerWebExchange mutated = exchange.mutate().request(builder -> {
+                        String userId = asStr(info.get("userId"));
+                        String sessionId = asStr(info.get("sessionId"));
+                        if (StringUtils.hasText(userId)) {
+                            builder.header("X-User-Id", userId);
+                            builder.header("X-Route-Key", userId);
+                        }
+                        if (StringUtils.hasText(sessionId)) {
+                            builder.header("X-Session-Id", sessionId);
+                        }
+                    }).build();
                     return chain.filter(mutated);
                 })
                 .onErrorResume(ex -> unauthorized(exchange, "auth-error"));

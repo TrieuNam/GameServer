@@ -7,287 +7,349 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 
+
+import com.fasterxml.jackson.databind.JsonNode;
+
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+
+/**
+ * RoleConfigCache
+ * - Nạp & cache: roleexp.json (exp_config/base_att/other) + rolename.json (nếu có) qua ConfigFeign (ETag-aware).
+ * - Cung cấp:
+ *     + LevelTable: expRequiredFor(level), min/max, increment mỗi level (hp/atk/def/spd).
+ *     + BaseAttrCfg: chỉ số nền từ base_att (hp/gongji/fangyu/speed).
+ *     + OtherCfg: box_id/box_num từ other.
+ *     + randomName(): ưu tiên rolename.json, fallback Player_xxxx.
+ *
+ * Property mẫu:
+ *   role.config.roleexp-path-API: "/api/config/file?path=gameworld/logicconfig/roleexp.json"
+ *   role.config.rolename-path-API: "/api/config/file?path=gameworld/logicconfig/rolename.json"
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class RoleConfigCache {
 
     private final ConfigFeign configFeign;
-    private final ObjectMapper om;
+    private final ObjectMapper om = new ObjectMapper();
 
-    private volatile String etagRoleExpQuoted;
-    private volatile String etagRoleNameQuoted;
-    private volatile String etagOtherCfgQuoted;
-    private volatile String etagKeyCfgQuoted;
+    @Value("${role.config.refresh-interval-ms:60000}")
+    private long refreshIntervalMs;
 
+    // ===== ETags =====
+    private final AtomicReference<String> etagRoleExp  = new AtomicReference<>(null);
+    private final AtomicReference<String> etagRoleName = new AtomicReference<>(null);
 
-    @Value("${role.config.roleexp-path}")   private String roleExpPath;
-    @Value("${role.config.rolename-path}")  private String roleNamePath;
-    @Value("${role.config.otherconfig-path}") private String otherCfgPath;
-    @Value("${role.config.keyconfig-path}")   private String keyCfgPath;
-
-    private final AtomicReference<ExpTable> expRef = new AtomicReference<>(new ExpTable());
+    // ===== Data caches =====
+    private final AtomicReference<LevelTable> levelTableRef = new AtomicReference<>(LevelTable.defaultTable());
+    private final AtomicReference<BaseAttrCfg> baseAttrRef  = new AtomicReference<>(BaseAttrCfg.defaults());
+    private final AtomicReference<OtherCfg> otherRef        = new AtomicReference<>(OtherCfg.defaults());
     private final AtomicReference<List<String>> namePoolRef = new AtomicReference<>(List.of("Player"));
-    private final AtomicReference<Defaults> defaultsRef = new AtomicReference<>(new Defaults());
 
-    // ===== getters =====
-    public long needExp(int level) {
-        var e = expRef.get();
-        return e.needByLevel.getOrDefault(level, Math.max(1, (long) level * 100L));
+    /** Scheduler: nạp lại định kỳ (ETag sẽ giúp 304 Not Modified) */
+    @Scheduled(initialDelay = 3000, fixedDelayString = "${role.config.refresh-interval-ms:60000}")
+    public void refresh() {
+        refreshRoleExp();
+        refreshRoleName();
     }
 
-    public int maxLevel() {
-        return Math.max(1, expRef.get().maxLevel);
-    }
+    // ========================= REFRESHERS =========================
 
-    public List<String> namePool() {
-        return namePoolRef.get();
-    }
-
-    public Defaults defaults() {
-        return defaultsRef.get();
-    }
-
-    // ===== refresh (public & scheduled) =====
-    public void refreshAllIfNeeded() {
-        refreshRoleExpIfNeeded();
-        refreshRoleNameIfNeeded();
-        refreshOtherOrKeyIfNeeded();
-    }
-
-    @Scheduled(fixedDelayString = "${role.config.refresh-interval-ms:60000}")
-    void scheduledRefresh() {
-        refreshAllIfNeeded();
-    }
-
-    public void refreshRoleExpIfNeeded() {
+    /** Nạp roleexp.json (exp_config/base_att/other) */
+    private void refreshRoleExp() {
         try {
-            // 1) HEAD để lấy ETag mới
-            var head = configFeign.headFile(roleExpPath);
-            var newEtag = head.getHeaders().getETag();
-            if (newEtag != null && newEtag.equals(etagRoleExpQuoted)) {
-                return; // không đổi → khỏi GET
+            ResponseEntity<byte[]> res = configFeign.getRoleExp(etagRoleExp.get());
+            if (res.getStatusCode() == HttpStatus.NOT_MODIFIED) return;
+
+            if (res.getStatusCode().is2xxSuccessful() && res.getBody() != null) {
+                String body = new String(res.getBody(), StandardCharsets.UTF_8);
+
+                RoleExpBundle bundle = parseRoleExpBundle(body);
+
+                levelTableRef.set(bundle.table());
+                baseAttrRef.set(bundle.baseAttr());
+                otherRef.set(bundle.other());
+
+                String et = res.getHeaders().getFirst(HttpHeaders.ETAG);
+                if (StringUtils.hasText(et)) etagRoleExp.set(et);
+
+                log.info("[RoleConfigCache] roleexp.json loaded: {} levels, baseAtt(hp={},atk={},def={},spd={}), other(boxId={},boxNum={})",
+                        bundle.table().maxLevel(),
+                        bundle.baseAttr().getHp(), bundle.baseAttr().getAttack(), bundle.baseAttr().getDefend(), bundle.baseAttr().getSpeed(),
+                        bundle.other().getBoxId(), bundle.other().getBoxNum());
             }
-
-            // 2) GET không gửi If-None-Match để luôn nhận 200 + body
-            var resp = configFeign.getRoleExp( null);
-            if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) return;
-
-            etagRoleExpQuoted = resp.getHeaders().getETag();
-            Map<String, Object> m = om.readValue(resp.getBody(), new com.fasterxml.jackson.core.type.TypeReference<>(){});
-            var parsed = parseRoleExp(m);
-            if (parsed != null) expRef.set(parsed);
-
-            log.info("RoleExp reloaded, etag={}", etagRoleExpQuoted);
-        } catch (Exception e) {
-            log.warn("refreshRoleExpIfNeeded: {}", e.toString());
+        } catch (Exception ex) {
+            log.warn("[RoleConfigCache] Cannot refresh roleexp.json, cause={}", ex.toString());
         }
     }
 
-    public void refreshRoleNameIfNeeded() {
+    /** Nạp rolename.json (nếu có) */
+    private void refreshRoleName() {
         try {
-            var head = configFeign.headFile(roleNamePath);
-            var newEtag = head.getHeaders().getETag();
-            if (newEtag != null && newEtag.equals(etagRoleNameQuoted)) return;
+            ResponseEntity<byte[]> res = configFeign.getRoleName(etagRoleName.get());
+            if (res.getStatusCode() == HttpStatus.NOT_MODIFIED) return;
 
-            var resp = configFeign.getRoleName( null);
-            if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) return;
-
-            etagRoleNameQuoted = resp.getHeaders().getETag();
-            Map<String, Object> m = om.readValue(resp.getBody(), new com.fasterxml.jackson.core.type.TypeReference<>(){});
-            var names = parseRoleNamePool(m);
-            if (!names.isEmpty()) namePoolRef.set(names);
-
-            log.info("RoleName pool reloaded, etag={}", etagRoleNameQuoted);
-        } catch (Exception e) {
-            log.info("refreshRoleNameIfNeeded: {}", e.getMessage());
+            if (res.getStatusCode().is2xxSuccessful() && res.getBody() != null) {
+                String body = new String(res.getBody(), StandardCharsets.UTF_8);
+                List<String> names = parseNamePool(body);
+                if (names != null && !names.isEmpty()) {
+                    namePoolRef.set(names);
+                    String et = res.getHeaders().getFirst(HttpHeaders.ETAG);
+                    if (StringUtils.hasText(et)) etagRoleName.set(et);
+                    log.info("[RoleConfigCache] rolename.json loaded: {} names", names.size());
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("[RoleConfigCache] Cannot refresh rolename.json, cause={}", ex.toString());
         }
     }
 
-    public void refreshOtherOrKeyIfNeeded() {
-        // thử otherconfig
+    // ========================= PARSERS =========================
+
+    /** Holder cho 3 phần trong roleexp.json */
+    private record RoleExpBundle(LevelTable table, BaseAttrCfg baseAttr, OtherCfg other) {}
+
+    /** Parse đúng schema: exp_config (array), base_att (array hoặc object), other (array hoặc object). */
+    private RoleExpBundle parseRoleExpBundle(String json) {
         try {
-            var head = configFeign.headFile(otherCfgPath);
-            var newEtag = head.getHeaders().getETag();
-            if (newEtag == null || !newEtag.equals(etagOtherCfgQuoted)) {
-                var resp = configFeign.getOtherCfg( null);
-                if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
-                    etagOtherCfgQuoted = resp.getHeaders().getETag();
-                    Map<String, Object> m = om.readValue(resp.getBody(), new com.fasterxml.jackson.core.type.TypeReference<>(){});
-                    var d = parseDefaults(m);
-                    if (d != null) defaultsRef.set(d);
-                    log.info("OtherConfig reloaded, etag={}", etagOtherCfgQuoted);
-                    return;
+            JsonNode root = om.readTree(json);
+
+            // 1) EXP CONFIG
+            Map<Integer, Long> lvlReq = new HashMap<>();
+            JsonNode expArr = root.get("exp_config");
+            if (expArr != null && expArr.isArray()) {
+                for (JsonNode node : expArr) {
+                    Integer lv = optIntNode(node, "level");
+                    Long exp = optLongNode(node, "exp");
+                    if (lv != null && exp != null) lvlReq.put(lv, exp);
                 }
             } else {
-                return; // unchanged
-            }
-        } catch (Exception ignore) { }
-
-        // fallback keyconfig
-        try {
-            var head = configFeign.headFile(keyCfgPath);
-            var newEtag = head.getHeaders().getETag();
-            if (newEtag != null && newEtag.equals(etagKeyCfgQuoted)) return;
-
-            var resp = configFeign.getKeyCfg( null);
-            if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
-                etagKeyCfgQuoted = resp.getHeaders().getETag();
-                Map<String, Object> m = om.readValue(resp.getBody(), new com.fasterxml.jackson.core.type.TypeReference<>(){});
-                var d = parseDefaults(m);
-                if (d != null) defaultsRef.set(d);
-                log.info("KeyConfig reloaded, etag={}", etagKeyCfgQuoted);
-            }
-        } catch (Exception e) {
-            log.info("refreshKeyCfgIfNeeded: {}", e.getMessage());
-        }
-    }
-
-    // ===== parsing =====
-    private ExpTable parseRoleExp(Map<String, Object> body) {
-        Map<Integer, Long> need = new HashMap<>();
-        int max = asInt(firstNonNull(body.get("max"), body.get("maxLevel"), body.get("max_level")), 100);
-
-        Object needObj = firstNonNull(body.get("need"), body.get("expNeed"), body.get("levelNeed"));
-        if (needObj instanceof Map<?, ?> m) {
-            for (var e : m.entrySet()) {
-                Integer lv = asInt(e.getKey(), null);
-                Long val = asLong(e.getValue(), null);
-                if (lv != null && val != null && lv > 0) need.put(lv, val);
-            }
-        } else {
-            Object levels = firstNonNull(body.get("levels"), body.get("table"), body.get("data"));
-            if (levels instanceof List<?> arr) {
-                for (Object o : arr) {
-                    if (o instanceof Map<?, ?> r) {
-                        Integer lv = asInt(firstNonNull(r.get("level"), r.get("lv")), null);
-                        Long val = asLong(firstNonNull(r.get("need"), r.get("exp"), r.get("needExp")), null);
-                        if (lv != null && val != null && lv > 0) need.put(lv, val);
+                // Fallback: hỗ trợ định dạng cũ "levels" hoặc map {"1":100,...}
+                Map<String, Object> raw = om.readValue(json, new TypeReference<Map<String, Object>>() {});
+                if (raw.containsKey("levels")) {
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> arr = (List<Map<String, Object>>) raw.get("levels");
+                    for (Map<String, Object> obj : arr) {
+                        Integer lv = toInt(obj.get("level"));
+                        Long exp = toLong(obj.get("exp"));
+                        if (lv != null && exp != null) lvlReq.put(lv, exp);
+                    }
+                } else {
+                    for (Map.Entry<String, Object> e : raw.entrySet()) {
+                        Integer lv = tryParseInt(e.getKey());
+                        Long exp = toLong(e.getValue());
+                        if (lv != null && exp != null) lvlReq.put(lv, exp);
                     }
                 }
-            } else {
-                for (var e : body.entrySet()) {
-                    Integer lv = asInt(e.getKey(), null);
-                    Long val = asLong(e.getValue(), null);
-                    if (lv != null && val != null && lv > 0) need.put(lv, val);
+            }
+            if (lvlReq.isEmpty()) {
+                // Trả bảng mặc định an toàn để service không crash
+                return new RoleExpBundle(LevelTable.defaultTable(), BaseAttrCfg.defaults(), OtherCfg.defaults());
+            }
+            int maxLv = lvlReq.keySet().stream().max(Integer::compareTo).orElse(60);
+            LevelTable table = new LevelTable(lvlReq, 1, maxLv);
+
+            // 2) BASE ATTR
+            BaseAttrCfg base = BaseAttrCfg.defaults();
+            JsonNode baseNode = root.get("base_att");
+            if (baseNode != null) {
+                JsonNode obj = baseNode.isArray() && baseNode.size() > 0 ? baseNode.get(0)
+                        : baseNode.isObject() ? baseNode : null;
+                if (obj != null && obj.isObject()) {
+                    int speed  = optIntNode(obj, "speed", 0);
+                    int hp     = optIntNode(obj, "hp", 0);
+                    int gongji = optIntNode(obj, "gongji", 0);
+                    int fangyu = optIntNode(obj, "fangyu", 0);
+                    base = new BaseAttrCfg(speed, hp, gongji, fangyu);
                 }
             }
+
+            // 3) OTHER
+            OtherCfg other = OtherCfg.defaults();
+            JsonNode otherNode = root.get("other");
+            if (otherNode != null) {
+                JsonNode obj = otherNode.isArray() && otherNode.size() > 0 ? otherNode.get(0)
+                        : otherNode.isObject() ? otherNode : null;
+                if (obj != null && obj.isObject()) {
+                    long boxNum = optLongNode(obj, "box_num", 0L);
+                    int  boxId  = optIntNode(obj, "box_id", 0);
+                    other = new OtherCfg(boxNum, boxId);
+                }
+            }
+
+            return new RoleExpBundle(table, base, other);
+
+        } catch (Exception e) {
+            log.warn("[RoleConfigCache] parseRoleExpBundle failed, cause={}", e.toString());
+            return new RoleExpBundle(LevelTable.defaultTable(), BaseAttrCfg.defaults(), OtherCfg.defaults());
         }
-        if (need.isEmpty()) for (int lv = 1; lv <= max; lv++) need.put(lv, lv * 100L);
-        return new ExpTable(need, Math.max(1, max));
     }
 
-    private List<String> parseRoleNamePool(Map<String, Object> body) {
-        List<String> out = new ArrayList<>();
-        pushAll(out, body.get("names"));
-        pushAll(out, body.get("pool"));
-        pushAll(out, body.get("list"));
-        pushAll(out, body.get("prefix"));
-        if (out.isEmpty()) out.add("Player");
-        return out;
-    }
-
-    private Defaults parseDefaults(Map<String, Object> body) {
-        Map<String, Object> src = body;
-        Object roleDefault = firstNonNull(body.get("role_default"), body.get("roleDefault"), body.get("defaults"));
-        if (roleDefault instanceof Map<?, ?> m) src = (Map<String, Object>) m;
-
-        long hp = asLong(firstNonNull(src.get("hp"), src.get("base_hp")), 100L);
-        long atk = asLong(firstNonNull(src.get("attack"), src.get("atk"), src.get("attack_value")), 10L);
-        long def = asLong(firstNonNull(src.get("defense"), src.get("def"), src.get("defense_value")), 5L);
-        int spd = asInt(firstNonNull(src.get("speed"), src.get("spd")), 5);
-
-        long hpPerLv = asLong(firstNonNull(src.get("hp_per_level"), src.get("hpPerLv")), 10L);
-        long atkPerLv = asLong(firstNonNull(src.get("atk_per_level"), src.get("atkPerLv")), 2L);
-        long defPerLv = asLong(firstNonNull(src.get("def_per_level"), src.get("defPerLv")), 1L);
-        int spdPerLv = asInt(firstNonNull(src.get("spd_per_level"), src.get("spdPerLv")), 0);
-
-        return new Defaults(hp, atk, def, spd, hpPerLv, atkPerLv, defPerLv, spdPerLv);
-    }
-
-    // utils
-    private static void pushAll(List<String> dst, Object obj) {
-        if (obj instanceof List<?> arr) for (Object o : arr) if (o != null) dst.add(String.valueOf(o));
-    }
-
-    private static Object firstNonNull(Object... a) {
-        for (Object o : a) if (o != null) return o;
-        return null;
-    }
-
-    private static String stripQuotes(String etag) {
-        if (!StringUtils.hasText(etag)) return null;
-        String t = etag.trim();
-        if (t.startsWith("W/\"") && t.endsWith("\"")) return t.substring(3, t.length() - 1);
-        if (t.startsWith("\"") && t.endsWith("\"")) return t.substring(1, t.length() - 1);
-        return t;
-    }
-
-    private static Integer asInt(Object o, Integer def) {
+    private List<String> parseNamePool(String json) {
         try {
-            if (o instanceof Number n) return n.intValue();
-            if (o != null) return Integer.parseInt(String.valueOf(o).trim());
-        } catch (Exception ignore) {
+            String trimmed = json.trim();
+            if (trimmed.startsWith("[")) {
+                return om.readValue(json, new TypeReference<List<String>>() {});
+            }
+            Map<String, Object> m = om.readValue(json, new TypeReference<Map<String, Object>>() {});
+            Object val = m.getOrDefault("names", m.get("data"));
+            if (val instanceof List<?> list) {
+                List<String> out = new ArrayList<>();
+                for (Object o : list) if (o != null) out.add(o.toString());
+                return out;
+            }
+            return List.of("Player");
+        } catch (Exception e) {
+            log.warn("[RoleConfigCache] parseNamePool failed, cause={}", e.toString());
+            return List.of("Player");
         }
-        return def;
     }
 
-    private static Long asLong(Object o, Long def) {
-        try {
-            if (o instanceof Number n) return n.longValue();
-            if (o != null) return Long.parseLong(String.valueOf(o).trim());
-        } catch (Exception ignore) {
-        }
-        return def;
+    // ========================= PUBLIC API =========================
+
+    public LevelTable levelTable() { return levelTableRef.get(); }
+    public BaseAttrCfg baseAttr()  { return baseAttrRef.get(); }
+    public OtherCfg other()        { return otherRef.get(); }
+
+    /** random name: ưu tiên pool từ rolename.json; thiếu thì "Player_xxxx" */
+    public String randomName() {
+        var pool = namePoolRef.get();
+        String prefix = (pool == null || pool.isEmpty())
+                ? "Player"
+                : pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
+        String suffix = Integer.toString(ThreadLocalRandom.current().nextInt(1000, 10000));
+        return prefix + "_" + suffix;
     }
 
-    private record ExpTable(Map<Integer, Long> needByLevel, int maxLevel) {
-        private ExpTable() {
-            this(new HashMap<>(), 100);
-        }
-    }
+    // ========================= MODELS =========================
 
     @Getter
-    public static class Defaults {
-        private final long baseHp, baseAtk, baseDef;
-        private final int baseSpd;
-        private final long hpPerLv, atkPerLv, defPerLv;
-        private final int spdPerLv;
+    public static class LevelTable {
+        private final Map<Integer, Long> expToNextLevel;
+        private final int minLevel;
+        private final int maxLevel;
+        private final long hpPerLv;
+        private final long atkPerLv;
+        private final long defPerLv;
+        private final int  spdPerLv;
 
-        public Defaults() {
-            this(100, 10, 5, 5, 10, 2, 1, 0);
+        public LevelTable(Map<Integer, Long> expToNextLevel, int minLevel, int maxLevel) {
+            this(expToNextLevel, minLevel, maxLevel, 10L, 2L, 2L, 1);
         }
-
-        public Defaults(long baseHp, long baseAtk, long baseDef, int baseSpd,
-                        long hpPerLv, long atkPerLv, long defPerLv, int spdPerLv) {
-            this.baseHp = baseHp;
-            this.baseAtk = baseAtk;
-            this.baseDef = baseDef;
-            this.baseSpd = baseSpd;
+        public LevelTable(Map<Integer, Long> expToNextLevel, int minLevel, int maxLevel,
+                          long hpPerLv, long atkPerLv, long defPerLv, int spdPerLv) {
+            this.expToNextLevel = Map.copyOf(expToNextLevel);
+            this.minLevel = minLevel;
+            this.maxLevel = maxLevel;
             this.hpPerLv = hpPerLv;
             this.atkPerLv = atkPerLv;
             this.defPerLv = defPerLv;
             this.spdPerLv = spdPerLv;
         }
+
+        /** Không auto-fallback: thiếu exp => trả giá trị rất lớn để chặn lên cấp. */
+        public long expRequiredFor(int level) {
+            Long v = expToNextLevel.get(level);
+            return (v != null) ? v : Long.MAX_VALUE / 4;
+        }
+
+        /** Giữ lại tên method cũ để tương thích với chỗ dùng table.maxLevel(). */
+        public int maxLevel() { return maxLevel; }
+
+        public static LevelTable defaultTable() {
+            Map<Integer, Long> m = new HashMap<>();
+            for (int lv = 1; lv <= 60; lv++) m.put(lv, 100L + 50L * lv);
+            return new LevelTable(m, 1, 60);
+        }
     }
 
-    // tiện ích tạo random name từ pool (dùng chung)
-    public String generateRandomNameFromPool() {
-        var pool = namePoolRef.get();
-        String prefix = (pool == null || pool.isEmpty()) ? "Player" : pool.get((int) (System.nanoTime() % pool.size()));
-        String suffix = Integer.toString(ThreadLocalRandom.current().nextInt(1000, 10000));
-        return prefix + "_" + suffix;
+    @Getter
+    public static class BaseAttrCfg {
+        private final int speed;
+        private final int hp;
+        private final int attack;
+        private final int defend;
+
+        public BaseAttrCfg(int speed, int hp, int attack, int defend) {
+            this.speed = speed;
+            this.hp = hp;
+            this.attack = attack;
+            this.defend = defend;
+        }
+
+        public static BaseAttrCfg defaults() {
+            // default nhẹ để tránh crash nếu thiếu config
+            return new BaseAttrCfg(0, 100, 10, 5);
+        }
+    }
+
+    @Getter
+    public static class OtherCfg {
+        private final long boxNum;
+        private final int boxId;
+
+        public OtherCfg(long boxNum, int boxId) {
+            this.boxNum = boxNum;
+            this.boxId = boxId;
+        }
+
+        public static OtherCfg defaults() { return new OtherCfg(0L, 0); }
+    }
+
+    // ========================= HELPERS =========================
+
+    private Integer toInt(Object o) {
+        if (o == null) return null;
+        if (o instanceof Number n) return n.intValue();
+        try { return Integer.valueOf(o.toString()); } catch (Exception e) { return null; }
+    }
+
+    private Long toLong(Object o) {
+        if (o == null) return null;
+        if (o instanceof Number n) return n.longValue();
+        try { return Long.valueOf(o.toString()); } catch (Exception e) { return null; }
+    }
+
+    private Integer tryParseInt(String s) {
+        try { return Integer.valueOf(s); } catch (Exception e) { return null; }
+    }
+
+    private Integer optIntNode(JsonNode node, String field) {
+        JsonNode n = node.get(field);
+        if (n == null || n.isNull()) return null;
+        if (n.isInt() || n.isLong()) return n.intValue();
+        try { return Integer.valueOf(n.asText()); } catch (Exception ignore) { return null; }
+    }
+
+    private int optIntNode(JsonNode node, String field, int defVal) {
+        Integer v = optIntNode(node, field);
+        return v == null ? defVal : v;
+    }
+
+    private Long optLongNode(JsonNode node, String field) {
+        JsonNode n = node.get(field);
+        if (n == null || n.isNull()) return null;
+        if (n.isNumber()) return n.longValue();
+        try { return Long.valueOf(n.asText()); } catch (Exception ignore) { return null; }
+    }
+
+    private long optLongNode(JsonNode node, String field, long defVal) {
+        Long v = optLongNode(node, field);
+        return v == null ? defVal : v;
     }
 }

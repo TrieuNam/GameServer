@@ -57,7 +57,7 @@ public class WsGatewayHandler implements WebSocketHandler {
 
         // Gỡ khỏi registry khi kết thúc (bất kể lý do)
         return Mono.when(send, recv)
-                .doFinally(sig -> sessionRegistry.remove(session.getId()));
+                .doFinally(sig -> sessionRegistry.remove(ps));
     }
 
     private Mono<Void> dispatch(PlayerSession ps, int msgId, byte[] payload) {

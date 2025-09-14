@@ -1,29 +1,22 @@
--- MySQL 8.0+, InnoDB, UTF8MB4
 CREATE TABLE IF NOT EXISTS `role` (
-                                      `role_id`       VARCHAR(26)     NOT NULL,
-                                      `user_id`       VARCHAR(36)  NOT NULL,
-                                      `name`          VARCHAR(64)  NOT NULL,
-                                      `level`         INT          NOT NULL,
-                                      `exp`           BIGINT       NOT NULL,
-
-                                      `hp`            BIGINT       NOT NULL,
-                                      `attack_value`  BIGINT       NOT NULL,
-                                      `defense_value` BIGINT       NOT NULL,
-                                      `speed`         INT          NOT NULL,
-
-                                      `cap`           BIGINT       NULL,
-                                      `head_pic_id`   INT          NULL,
-                                      `title_id`      INT          NULL,
-                                      `knight_level`  INT          NULL,
-                                      `head_char`     VARCHAR(255) NULL,
-                                      `guild_name`    VARCHAR(64)  NULL,
-
-                                      `created_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-                                      `updated_at`    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-
-                                      PRIMARY KEY (`role_id`),
-                                      UNIQUE KEY `uk_role_user_name` (`user_id`,`name`),
-                                      KEY `idx_role_user` (`user_id`)
-) ENGINE=InnoDB
-  DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_0900_ai_ci;
+                                      `role_id`       VARCHAR(26)    NOT NULL,
+    `user_id`       VARCHAR(64)    NOT NULL,
+    `name`          VARCHAR(64)    NOT NULL,
+    `level`         INT            NOT NULL,
+    `exp`           BIGINT         NOT NULL,
+    `hp`            BIGINT         NOT NULL,
+    `attack_value`  BIGINT         NOT NULL,
+    `defense_value` BIGINT         NOT NULL,
+    `speed`         INT            NOT NULL,
+    `cap`           BIGINT         NULL,
+    `head_pic_id`   INT            NULL,
+    `title_id`      INT            NULL,
+    `knight_level`  INT            NULL,
+    `head_char`     VARCHAR(255)   NULL,
+    `guild_name`    VARCHAR(64)    NULL,
+    `created_at`    DATETIME(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at`    DATETIME(3)    NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+    PRIMARY KEY (`role_id`),
+    UNIQUE KEY `uk_role_user_name` (`user_id`, `name`),
+    KEY `idx_role_user` (`user_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

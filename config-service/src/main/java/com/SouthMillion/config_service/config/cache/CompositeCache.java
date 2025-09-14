@@ -1,12 +1,14 @@
 package com.SouthMillion.config_service.config.cache;
 
 import org.SouthMillion.dto.config.ConfigEnvelope;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
-@Component("compositeCacheL2")
+@Component
+@ConditionalOnMissingBean(L2DiskCache.class)
 public class CompositeCache implements CacheTier {
 
     private final L1CaffeineCache l1;

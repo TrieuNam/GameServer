@@ -49,9 +49,9 @@ eureka:
   instance:
     prefer-ip-address: true
   client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
       defaultZone: http://localhost:8761/eureka/
 
 management:
@@ -63,14 +63,12 @@ management:
 app:
   auth:
     whitelist:
-      - /session-service/api/session/login
-      - /session-service/api/session/heartbeat
+      - /actuator/**
       - /session-service/api/session/timesync
-      - /config-service/api/config/file
+      - /session-service/api/session/login
       - /config-service/api/config/file/**
-      - /config-service/internal/reload
       - /report-service/api/report/**
-      - /websocket-server/**
+      # KHÔNG thêm /websocket-server/** vào whitelist của AuthGlobalFilter
     sessionServiceId: session-service
     introspectPath: /internal/session/introspect
     introspectMethod: POST

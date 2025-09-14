@@ -10,11 +10,9 @@ public record ConfigProps(
         Integer cacheTtlSec,
         Integer cacheMaxSize,
         String  publicCacheControl,
-        L2      l2
+        L2      l2,
+        Redis   redis
 ) {
-    public record L2(
-            Boolean enabled,
-            String  dir,
-            Long    maxBytesPerEntry
-    ) {}
+    public record L2(Boolean enabled, String dir, Long maxBytesPerEntry) {}
+    public record Redis(Boolean enabled) {}
 }

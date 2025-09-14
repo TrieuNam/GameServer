@@ -1,34 +1,58 @@
 server:
   port: 8091
+  compression:
+    enabled: true
+    mime-types: application/json,text/plain,text/xml
+
 spring:
   application:
     name: config-service
   threads:
     virtual:
-      enabled: true   # Java 21 virtual threads cho MVC
+      enabled: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 management:
+  server:
+    port: 8092
   endpoints:
-    web.exposure.include: health,info,env,metrics
+    web:
+      exposure:
+        include: health,info,metrics
 
 app:
+  cors:
+    allowed-origins:
+      - http://localhost:7456
+      - http://127.0.0.1:7456
+
+  internal:
+    enabled: true
+    token: change-me-in-prod
+
   config:
-    mode: classpath                # hoặc filesystem
-    classpath-root: config         # resources/config/...
-    fs-root: /opt/app/config       # nếu dùng filesystem
-    cache-ttl-sec: 300
+    mode: classpath          # classpath | filesystem
+    classpath-root: config   # folder inside resources/
+    fs-root: /opt/game/config
+    cache-ttl-sec: 60
     cache-max-size: 2000
     public-cache-control: max-age=60, public
     l2:
       enabled: true
       dir: /tmp/config-l2-cache
       max-bytes-per-entry: 10485760
+    redis:
+      enabled: true
 
 eureka:
   instance:
     prefer-ip-address: true
   client:
-    registerWithEureka: true
     fetchRegistry: true
-    service-url:
+    registerWithEureka: true
+    serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+

@@ -1,6 +1,8 @@
 package com.SouthMillion.config_service;
 
 import com.SouthMillion.config_service.config.ConfigProps;
+import com.SouthMillion.config_service.config.CorsProps;
+import com.SouthMillion.config_service.config.InternalProps;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,7 +15,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * HOW: Bật @EnableConfigurationProperties để đọc cấu hình 'config.*' từ application.yml.
  */
 @SpringBootApplication
-@EnableConfigurationProperties(ConfigProps.class)
+@EnableConfigurationProperties({ConfigProps.class, CorsProps.class, InternalProps.class})
 public class ConfigServiceApplication {
 
     public static void main(String[] args) {

@@ -16,30 +16,33 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/internal")
 @RequiredArgsConstructor
-@Validated
+@RequestMapping("/internal")
 public class InternalAuthController {
 
     private final AuthService auth;
 
-    @PostMapping(
-            value = "/auth/verify-password",
+    /**
+     * session-service gọi để verify mật khẩu.
+     * Request: { username: "account|username", password: "raw" }
+     * Response: { ok, userId, username, account }
+     */
+    @PostMapping(value = "/auth/verify-password",
             consumes = MediaType.APPLICATION_JSON_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<VerifyResp> verify(@Valid @RequestBody VerifyReq req,
-                                             HttpServletRequest http) {
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<VerifyResp> verifyPassword(@Valid @RequestBody VerifyReq req,
+                                                     HttpServletRequest http) {
         User u = auth.verifyPassword(req.getUsername(), req.getPassword());
         if (u == null) {
-            // 4 tham số: ok, userId, username, account
             return ResponseEntity.ok(new VerifyResp(false, null, null, null));
         }
-        // account = username (vì chưa có cột account trong DB)
         return ResponseEntity.ok(new VerifyResp(true, u.getUserId(), u.getUsername(), u.getAccount()));
     }
 
-    @GetMapping(value = "/{userId}/active", produces = MediaType.APPLICATION_JSON_VALUE)
+    /**
+     * websocket-server/gateway hỏi trạng thái user có ACTIVE không.
+     */
+    @GetMapping(value = "/users/{userId}/active", produces = MediaType.APPLICATION_JSON_VALUE)
     public ActiveResp active(@PathVariable("userId") String userId) {
         return new ActiveResp(auth.isActive(userId));
     }

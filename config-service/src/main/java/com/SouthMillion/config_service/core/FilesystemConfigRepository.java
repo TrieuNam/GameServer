@@ -4,8 +4,6 @@ import com.SouthMillion.config_service.config.ConfigProps;
 import org.SouthMillion.dto.config.ConfigEnvelope;
 import org.apache.tika.Tika;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

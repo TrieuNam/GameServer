@@ -9,12 +9,9 @@ import org.springframework.context.annotation.Configuration;
 public class FlywayRepairOnStart {
     @Bean
     FlywayMigrationStrategy repairThenMigrate() {
-        return new FlywayMigrationStrategy() {
-            @Override
-            public void migrate(Flyway flyway) {
-                flyway.repair();   // xóa bản ghi failed, đồng bộ checksum
-                flyway.migrate();  // chạy migrate
-            }
+        return flyway -> {
+            flyway.repair();
+            flyway.migrate();
         };
     }
 }

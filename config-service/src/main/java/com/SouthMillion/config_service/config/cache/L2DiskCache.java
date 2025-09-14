@@ -5,6 +5,7 @@ import com.SouthMillion.config_service.config.ConfigProps;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.SouthMillion.dto.config.ConfigEnvelope;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.HexFormat;
 import java.util.Optional;
 
 @Component
+@ConditionalOnProperty(prefix = "app.config.l2", name = "enabled", havingValue = "true")
 public class L2DiskCache implements CacheTier {
 
     private final boolean enabled;

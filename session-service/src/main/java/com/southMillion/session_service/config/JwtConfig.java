@@ -1,31 +1,24 @@
 package com.southMillion.session_service.config;
 
 
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.KeyLengthException;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import jakarta.annotation.PostConstruct;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import org.springframework.security.oauth2.jwt.*;
-import org.springframework.security.oauth2.jwt.JwtDecoder; // sync decoder
-import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder; // reactive decoder
-import org.springframework.security.oauth2.jwt.JwtValidators;
-import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
-
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.OctetSequenceKey;
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.proc.SecurityContext;
 
 
 @Configuration
@@ -33,71 +26,75 @@ public class JwtConfig {
 
     private static final Logger log = LoggerFactory.getLogger(JwtConfig.class);
 
-    @Value("${security.jwt.secret}")
-    private String secret;
-
-    @Value("${security.jwt.issuer}")
+    @Value("${jwt.issuer}")
     private String issuer;
 
-    @Value("${security.jwt.access-ttl-sec}")
-    private long accessTtlSec;
+    @Value("${jwt.secret}")
+    private String secret;
 
-    @Value("${security.jwt.refresh-ttl-sec}")
-    private long refreshTtlSec;
+    // ===== Beans dùng chung =====
 
-    @PostConstruct
-    void showConfig() {
-        log.info("JWT issuer = {}", issuer);
-        log.info("JWT accessTtlSec = {}s, refreshTtlSec = {}s", accessTtlSec, refreshTtlSec);
-    }
-
-    /** SecretKey dùng cho HS256. Hỗ trợ cả chuỗi Base64 và plain text. */
-    @Bean
-    public SecretKey jwtSecretKey() {
-        byte[] keyBytes = tryBase64(secret);
-        if (keyBytes == null) {
-            keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+    /** Bytes của secret (hỗ trợ HEX / Base64URL / Base64 / UTF-8) */
+    @Bean("jwtSecretBytes")
+    public byte[] jwtSecretBytes() {
+        byte[] key = resolveSecret(secret);
+        if (key.length < 32) {
+            log.warn("⚠️ JWT secret length < 32 bytes. Nên dùng secret ≥ 32 bytes cho HS256.");
+        } else {
+            log.info("JWT HS256 key length: {} bytes", key.length);
         }
+        return key;
+    }
 
-        if (keyBytes.length < 32) {
-            log.warn("⚠️ JWT secret length < 32 bytes. Nên dùng secret ≥ 32 bytes để HS256 an toàn hơn.");
+    /** Signer cho HS256 */
+    @Bean
+    public MACSigner macSigner(@Qualifier("jwtSecretBytes") byte[] key) throws KeyLengthException {
+        return new MACSigner(key); // ném KeyLengthException nếu < 256-bit
+    }
+
+    /** Verifier cho HS256 */
+    @Bean
+    public MACVerifier macVerifier(@Qualifier("jwtSecretBytes") byte[] key) throws JOSEException {
+        return new MACVerifier(key);
+    }
+
+    /** Issuer dùng để kiểm tra/điền claim iss */
+    @Bean("jwtIssuer")
+    public String jwtIssuer() {
+        return issuer;
+    }
+
+    // ===== Helper: parse secret linh hoạt =====
+
+    private static final Pattern HEX = Pattern.compile("^[0-9a-fA-F]{32,}$"); // >=16 bytes (hex)
+    private static final Pattern B64URL = Pattern.compile("^[A-Za-z0-9_\\-]+$");
+
+    static byte[] resolveSecret(String raw) {
+        if (raw == null) return new byte[0];
+        String s = raw.trim();
+
+        // HEX?
+        if (HEX.matcher(s).matches() && (s.length() % 2 == 0)) {
+            return hexToBytes(s);
         }
-        return new SecretKeySpec(keyBytes, "HmacSHA256");
-    }
-
-    /** ENCODER – ký token với HS256 bằng secret key */
-    @Bean
-    public JwtEncoder jwtEncoder(SecretKey key) {
-        return new NimbusJwtEncoder(new ImmutableSecret<>(key));
-    }
-
-    /** DECODER (reactive) – cho WebFlux Resource Server */
-    @Bean
-    public ReactiveJwtDecoder reactiveJwtDecoder(SecretKey key) {
-        NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder
-                .withSecretKey(key)
-                .macAlgorithm(MacAlgorithm.HS256)
-                .build();
-        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuer));
-        return decoder;
-    }
-
-    /** DECODER (sync) – dùng trong Service */
-    @Bean
-    public JwtDecoder jwtDecoder(SecretKey key) {
-        NimbusJwtDecoder decoder = NimbusJwtDecoder
-                .withSecretKey(key)
-                .macAlgorithm(MacAlgorithm.HS256)
-                .build();
-        decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(issuer));
-        return decoder;
-    }
-
-    private static byte[] tryBase64(String s) {
-        try {
-            return Base64.getDecoder().decode(s);
-        } catch (IllegalArgumentException ignored) {
-            return null;
+        // Base64URL?
+        if (B64URL.matcher(s).matches()) {
+            try { return Base64.getUrlDecoder().decode(s); } catch (IllegalArgumentException ignore) {}
         }
+        // Base64 chuẩn?
+        try { return Base64.getDecoder().decode(s); } catch (IllegalArgumentException ignore) {}
+
+        // Fallback: UTF-8
+        return s.getBytes(StandardCharsets.UTF_8);
+    }
+
+    static byte[] hexToBytes(String hex) {
+        int len = hex.length();
+        byte[] out = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            out[i/2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
+                    +  Character.digit(hex.charAt(i+1), 16));
+        }
+        return out;
     }
 }

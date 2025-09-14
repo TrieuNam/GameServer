@@ -1,12 +1,16 @@
 package com.SouthMillion.role_service.service;
 
+
 import com.SouthMillion.role_service.config.RoleConfigCache;
 import com.SouthMillion.role_service.entity.Role;
+import com.SouthMillion.role_service.mapper.RoleMapper;
 import com.SouthMillion.role_service.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.role.RoleDTOs;
-import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +18,12 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
 
+
+/**
+ * RoleService: khởi tạo chỉ số từ base_att, cộng exp theo LevelTable, giới hạn maxLevel.
+ * Giao diện hàm giữ nguyên như bạn đang dùng để tránh phá flow.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -23,159 +31,152 @@ public class RoleService {
 
     private final RoleRepository repo;
     private final RoleConfigCache cfg;
-    private final CacheManager cacheManager;
 
-    // ===== Query =====
-    @Transactional(readOnly = true)
-    @org.springframework.cache.annotation.Cacheable(cacheNames = "role:listByUser", key = "#userId")
-    public RoleDTOs.ListResp listByUser(String userId) {
-        var items = Optional.ofNullable(
-                        repo.findByUserIdOrderByRoleIdAsc(userId)
-                ).orElseGet(List::of)
-                .stream().map(this::toResp).toList();
-        return RoleDTOs.ListResp.builder().items(items).build();
+    @Cacheable(cacheNames = "roleById", key = "#roleId")
+    public Optional<RoleDTOs.RoleResp> getById(String roleId) {
+        return repo.findById(roleId).map(RoleMapper::toResp);
     }
 
-    @Transactional(readOnly = true)
-    @org.springframework.cache.annotation.Cacheable(cacheNames = "role:detail", key = "#roleId")
-    public RoleDTOs.RoleResp detail(String roleId) {
-        return repo.findById(roleId).map(this::toResp).orElse(null);
+    public List<RoleDTOs.RoleResp> listByUserId(String userId) {
+        return repo.findByUserIdOrderByRoleIdAsc(userId)
+                .stream().map(RoleMapper::toResp).toList();
     }
 
-    // ===== Create =====
     @Transactional
     public RoleDTOs.RoleResp create(RoleDTOs.CreateRoleReq req) {
-        cfg.refreshAllIfNeeded();
+        // Tên: ưu tiên request; nếu trống dùng pool từ rolename.json
+        String nameBase = StringUtils.hasText(req.getName()) ? req.getName().trim() : cfg.randomName();
+        String finalName = ensureUniqueName(req.getUserId(), nameBase);
 
-        String baseName = firstNonBlank(req.getName(), req.getNickname(), req.getRoleName());
-        if (!StringUtils.hasText(baseName)) baseName = cfg.generateRandomNameFromPool();
-
-        String uniqueName = ensureUniqueName(req.getUserId(), baseName);
-        var d = cfg.defaults();
+        // Đọc config
+        RoleConfigCache.LevelTable lv = cfg.levelTable();
+        RoleConfigCache.BaseAttrCfg base = cfg.baseAttr();
 
         Role r = new Role();
         r.setUserId(req.getUserId());
-        r.setName(uniqueName);
-        r.setLevel(1);
-        r.setExp(0L);
+        r.setName(finalName);
 
-        r.setHp(d.getBaseHp());
-        r.setAttack(d.getBaseAtk());
-        r.setDefense(d.getBaseDef());
-        r.setSpeed(d.getBaseSpd());
+        // Level khởi tạo theo minLevel của bảng (robust hơn hardcode 1)
+        r.setLevel(Math.max(1, lv.getMinLevel()));
+        r.setExp(0);
 
-        r.setCap(null);
-        r.setHeadPicId(null);
-        r.setTitleId(null);
-        r.setKnightLevel(null);
-        r.setGuildName(null);
-        r.setHeadChar(null);
+        // Base attributes từ base_att trong roleexp.json
+        r.setHp(safeInt(base.getHp()));
+        r.setAttackValue(safeInt(base.getAttack()));
+        r.setDefenseValue(safeInt(base.getDefend()));
+        r.setSpeed(safeInt(base.getSpeed()));
 
         try {
-            repo.save(r);
+            repo.saveAndFlush(r);
         } catch (DataIntegrityViolationException ex) {
-            for (int i = 0; i < 3; i++) {
-                uniqueName = baseName + "_" + ThreadLocalRandom.current().nextInt(1000, 10000);
-                if (repo.findByUserIdAndName(req.getUserId(), uniqueName).isEmpty()) {
-                    r.setName(uniqueName);
-                    repo.save(r);
-                    evictCachesFor(r);
-                    return toResp(r);
-                }
-            }
-            throw ex;
+            // Va chạm unique name cùng user → thử lại với hậu tố
+            r.setName(ensureUniqueName(req.getUserId(), nameBase));
+            repo.saveAndFlush(r);
         }
-
-        evictCachesFor(r);
-        return toResp(r);
+        return RoleMapper.toResp(r);
     }
 
-    // ===== Mutations =====
     @Transactional
-    public RoleDTOs.RoleResp addExp(String roleId, long addExp) {
-        if (addExp <= 0) return detail(roleId);
-        cfg.refreshRoleExpIfNeeded();
+    @CachePut(cacheNames = "roleById", key = "#roleId")
+    public RoleDTOs.RoleResp addExp(String roleId, long add) {
+        Role r = repo.findById(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+        if (add <= 0) return RoleMapper.toResp(r);
 
-        Role r = repo.findById(roleId).orElse(null);
-        if (r == null) return null;
+        RoleConfigCache.LevelTable lv = cfg.levelTable();
+        long expToAdd = add;
 
-        long exp = Math.addExact(r.getExp(), addExp);
-        int maxLv = cfg.maxLevel();
+        while (r.getLevel() < lv.getMaxLevel() && expToAdd > 0) {
+            long need = lv.expRequiredFor(r.getLevel()); // exp cần để lên level tiếp theo
+            if (need <= 0) break; // guard
 
-        boolean leveled = false;
-        while (r.getLevel() < maxLv) {
-            long need = cfg.needExp(r.getLevel());
-            if (exp >= need) {
-                exp -= need;
+            long cur = r.getExp();
+            if (cur + expToAdd < need) {
+                r.setExp(cur + expToAdd);
+                expToAdd = 0;
+            } else {
+                long used = need - cur;
+                expToAdd -= used;
+                r.setExp(0);
                 r.setLevel(r.getLevel() + 1);
 
-                var d = cfg.defaults();
-                r.setHp(r.getHp() + d.getHpPerLv());
-                r.setAttack(r.getAttack() + d.getAtkPerLv());
-                r.setDefense(r.getDefense() + d.getDefPerLv());
-                r.setSpeed(r.getSpeed() + d.getSpdPerLv());
-                leveled = true;
-            } else break;
+                // Tăng chỉ số mỗi lần lên cấp theo increment của LevelTable
+                r.setHp(safeAdd((int) r.getHp(), lv.getHpPerLv()));
+                r.setAttackValue(safeAdd((int) r.getAttackValue(), lv.getAtkPerLv()));
+                r.setDefenseValue(safeAdd((int) r.getDefenseValue(), lv.getDefPerLv()));
+                r.setSpeed(safeAdd(r.getSpeed(), lv.getSpdPerLv()));
+            }
         }
-        r.setExp(exp);
-        repo.save(r);
 
-        if (leveled) log.debug("role {} -> level {} (exp={})", r.getRoleId(), r.getLevel(), r.getExp());
-        evictCachesFor(r);
-        return toResp(r);
+        // Đã max level thì bỏ qua phần exp dư (parity với C++: không vượt trần)
+        repo.saveAndFlush(r);
+        return RoleMapper.toResp(r);
     }
 
     @Transactional
-    public RoleDTOs.RoleResp rename(String roleId, String newName) {
-        if (!StringUtils.hasText(newName)) return detail(roleId);
-
-        Role r = repo.findById(roleId).orElse(null);
-        if (r == null) return null;
-
-        String unique = ensureUniqueName(r.getUserId(), newName.trim());
-        r.setName(unique);
-        repo.save(r);
-        evictCachesFor(r);
-        return toResp(r);
+    @CachePut(cacheNames = "roleById", key = "#roleId")
+    public RoleDTOs.RoleResp rename(String roleId, String newNameRaw) {
+        if (!StringUtils.hasText(newNameRaw)) {
+            throw new IllegalArgumentException("Tên nhân vật không được trống");
+        }
+        Role r = repo.findById(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+        String base = newNameRaw.trim();
+        String finalName = ensureUniqueName(r.getUserId(), base);
+        r.setName(finalName);
+        try {
+            repo.saveAndFlush(r);
+        } catch (DataIntegrityViolationException ex) {
+            r.setName(ensureUniqueName(r.getUserId(), base));
+            repo.saveAndFlush(r);
+        }
+        return RoleMapper.toResp(r);
     }
 
-    // ===== Helpers =====
-    private void evictCachesFor(Role r) {
-        if (cacheManager.getCache("role:listByUser") != null)
-            cacheManager.getCache("role:listByUser").evict(r.getUserId());
-        if (cacheManager.getCache("role:detail") != null)
-            cacheManager.getCache("role:detail").evict(r.getRoleId());
+    @Transactional
+    @CachePut(cacheNames = "roleById", key = "#roleId")
+    public RoleDTOs.RoleResp setWxInfo(String roleId, String name, String headChar) {
+        Role r = repo.findById(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+        if (StringUtils.hasText(name)) {
+            String finalName = ensureUniqueName(r.getUserId(), name.trim());
+            r.setName(finalName);
+        }
+        if (StringUtils.hasText(headChar)) {
+            r.setHeadChar(headChar.trim());
+        }
+        repo.saveAndFlush(r);
+        return RoleMapper.toResp(r);
     }
 
-    private RoleDTOs.RoleResp toResp(Role r) {
-        return RoleDTOs.RoleResp.builder()
-                .roleId(r.getRoleId())
-                .userId(r.getUserId())
-                .name(r.getName()).nickname(null).roleName(null)
-                .level(r.getLevel()).curExp(r.getExp())
-                .cap(r.getCap()).headPicId(r.getHeadPicId()).titleId(r.getTitleId())
-                .createTimeEpochSec(r.getCreatedAt() == null ? null : r.getCreatedAt().getEpochSecond())
-                .knightLevel(r.getKnightLevel()).headChar(r.getHeadChar()).guildName(r.getGuildName())
-                .hp(r.getHp()).attack(r.getAttack()).defense(r.getDefense()).speed(r.getSpeed())
-                .build();
+    @CacheEvict(cacheNames = "roleById", key = "#roleId")
+    public void evictCache(String roleId) {
+        // no-op
     }
 
-    private static String firstNonBlank(String... vals) {
-        if (vals == null) return null;
-        for (String s : vals) if (StringUtils.hasText(s)) return s.trim();
-        return null;
-    }
+    // ================= helpers =================
 
     private String ensureUniqueName(String userId, String base) {
         String candidate = (base == null ? "" : base.trim());
-        if (candidate.isEmpty()) candidate = "Player_" + ThreadLocalRandom.current().nextInt(1000, 10000);
+        if (candidate.isEmpty()) candidate = cfg.randomName();
 
-        for (int i = 0; i < 5 && repo.findByUserIdAndName(userId, candidate).isPresent(); i++) {
-            candidate = base + "_" + ThreadLocalRandom.current().nextInt(100, 1000);
-        }
+        int tryCount = 0;
         while (repo.findByUserIdAndName(userId, candidate).isPresent()) {
-            candidate = base + "_" + ThreadLocalRandom.current().nextInt(1000, 10000);
+            tryCount++;
+            candidate = base + "_" + java.util.concurrent.ThreadLocalRandom.current()
+                    .nextInt(100, 10000);
+            if (tryCount > 10) break;
         }
         return candidate;
+    }
+
+    private int safeInt(long v) {
+        if (v > Integer.MAX_VALUE) return Integer.MAX_VALUE;
+        if (v < Integer.MIN_VALUE) return Integer.MIN_VALUE;
+        return (int) v;
+    }
+    private int safeAdd(int cur, long inc) {
+        long sum = (long) cur + inc;
+        return safeInt(sum);
     }
 }

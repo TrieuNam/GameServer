@@ -1,6 +1,7 @@
 package com.southMillion.webSocket_server.net;
 
 import com.google.protobuf.ByteString;
+import com.google.protobuf.MessageLite;
 import com.southMillion.webSocket_server.dto.PlayerSession;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,11 @@ public class Emitters {
             log.warn("emit failed: msgId={}, ex={}", msgId, t.toString());
         }
     }
-
+    public static void emit(PlayerSession ps, int msgId, MessageLite pb) {
+        byte[] payload = pb != null ? pb.toByteArray() : new byte[0];
+        byte[] frame = PacketCodec.encode(msgId, payload);
+        ps.sendBinary(frame);
+    }
     // ===== Login
     public void sendLoginAck(PlayerSession ps, int result, int forbidSeconds) {
         var ack = Msglogin.PB_SCLoginToAccount.newBuilder()

@@ -1,40 +1,47 @@
 server:
   port: 8096
+
 spring:
   application:
     name: session-service
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    password: ${REDIS_PASSWORD:}
-    lettuce:
-      pool:
-        max-active: 16
-        max-idle: 8
-        min-idle: 0
-    codec:
-      max-in-memory-size: 10MB   # nếu JSON lớn (bag/equip…)
-
-# Eureka
-eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-  instance:
-    prefer-ip-address: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      # Nếu bạn dùng URL, nó sẽ override host/port/user/pass/database
+      # url: ${REDIS_URL:}
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 0
 
 jwt:
   issuer: "SouthMillion"
   secret: ${JWT_SECRET:xxx}
-  access-ttl-seconds: 900        # 15 phút
-  refresh-ttl-seconds: 604800    # 7 ngày
+  access-ttl-seconds: 900
+  refresh-ttl-seconds: 604800
   rotate-refresh: true
 
 ratelimit:
   enabled: true
   window-seconds: 60
-  login-limit: 10           # mỗi IP+username / 60s
-  refresh-limit: 60         # mỗi user / 60s
-  generic-limit: 300        # mặc định / ip / 60s
+  login-limit: 10
+  refresh-limit: 60
+  generic-limit: 300
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/

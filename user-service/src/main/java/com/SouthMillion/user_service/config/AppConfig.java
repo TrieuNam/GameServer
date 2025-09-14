@@ -17,7 +17,7 @@ public class AppConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Delegating, hỗ trợ {bcrypt}, {pbkdf2}, ... (mặc định sẽ là bcrypt)
+        // BCrypt mặc định (delegating encoder)
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
@@ -29,8 +29,7 @@ public class AppConfig {
         return RedisCacheManager.builder(cf)
                 .cacheDefaults(defaults)
                 // tuỳ biến TTL theo cache name
-                .withCacheConfiguration("userActive",
-                        defaults.entryTtl(Duration.ofSeconds(30)))
+                .withCacheConfiguration("userActive", defaults.entryTtl(Duration.ofSeconds(30)))
                 .build();
     }
 }

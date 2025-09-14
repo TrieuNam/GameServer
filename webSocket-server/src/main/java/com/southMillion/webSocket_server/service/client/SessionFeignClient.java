@@ -32,7 +32,7 @@ public interface SessionFeignClient {
     LoginDTOs.TokenPair refresh(@RequestBody LoginDTOs.RefreshReq req);
 
     /** Gửi trực tiếp header Authorization (Bearer ...) */
-    @PostMapping("/api/session/introspect")
+    @PostMapping("/internal/session/introspect")
     LoginDTOs.IntrospectResp introspectRaw(
             @RequestHeader(HttpHeaders.AUTHORIZATION) String authorization
     );

@@ -9,7 +9,6 @@ public final class IdGen {
 
     private IdGen() {}
 
-    /** ULID 26 chars (Crockford Base32). */
     public static String ulid() {
         long time = System.currentTimeMillis();
         byte[] randomness = new byte[10];

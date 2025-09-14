@@ -93,4 +93,6 @@ public final class RoleDTOs {
     public static class RenameReq {
         @NotBlank private String name;
     }
+
+    public record WxInfoSetReq(String name, String headChar) {}
 }

@@ -9,36 +9,37 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "role",
-        uniqueConstraints = @UniqueConstraint(name = "uk_role_user_name", columnNames = {"user_id","name"}))
-@Getter @Setter
+        uniqueConstraints = @UniqueConstraint(name = "uk_role_user_name", columnNames = {"user_id", "name"}))
+@Getter
+@Setter
 public class Role {
 
     @Id
-    @Column(name = "role_id", columnDefinition = "CHAR(26)", nullable = false)
+    @Column(name = "role_id", nullable = false, length = 26)
     private String roleId;
 
-    @Column(name = "user_id", nullable = false, length = 36)
+    @Column(name = "user_id", nullable = false, length = 64)
     private String userId;
 
-    @Column(nullable = false, length = 64)
+    @Column(name = "name", nullable = false, length = 64)
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "level", nullable = false)
     private int level;
 
-    @Column(nullable = false)
+    @Column(name = "exp", nullable = false)
     private long exp;
 
-    @Column(nullable = false, name = "hp")
+    @Column(name = "hp", nullable = false)
     private long hp;
 
-    @Column(nullable = false, name = "attack_value")
-    private long attack;
+    @Column(name = "attack_value", nullable = false)
+    private long attackValue;
 
-    @Column(nullable = false, name = "defense_value")
-    private long defense;
+    @Column(name = "defense_value", nullable = false)
+    private long defenseValue;
 
-    @Column(nullable = false)
+    @Column(name = "speed", nullable = false)
     private int speed;
 
     @Column(name = "cap")
@@ -59,7 +60,7 @@ public class Role {
     @Column(name = "guild_name", length = 64)
     private String guildName;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
@@ -71,8 +72,11 @@ public class Role {
         createdAt = now;
         updatedAt = now;
         if (roleId == null || roleId.isBlank()) roleId = IdGen.ulid();
+        if (level <= 0) level = 1;
     }
 
     @PreUpdate
-    void onUpdate() { updatedAt = Instant.now(); }
+    void onUpdate() {
+        updatedAt = Instant.now();
+    }
 }

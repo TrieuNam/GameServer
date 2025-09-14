@@ -1,24 +1,23 @@
 package com.southMillion.webSocket_server.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import reactor.core.publisher.Sinks;
 
-@Data
-@Builder
+@Getter @Builder
+@AllArgsConstructor
 public class PlayerSession {
-    private String userId;
-    private String username;
-    private String sessionId;
-    private String roleId;
+    private final WebSocketSession ws;
+    private final Sinks.Many<byte[]> outbound; // encoded frames to send
+    @Setter private String sessionId; // Bearer token from handshake/payload
+    @Setter private String userId;
+    @Setter private String roleId;
+    @Setter private String roleName;
+    @Setter private String username;
 
-    private WebSocketSession ws;
+    @Setter private boolean loggedIn;
 
-    // ✨ Outbound queue (đơn phát cho 1 ws)
-    private Sinks.Many<byte[]> outbound;
-
-    private boolean loggedIn;
-
-    private Integer roleLevel;
+    public void sendBinary(byte[] frame) {
+        outbound.tryEmitNext(frame);
+    }
 }
