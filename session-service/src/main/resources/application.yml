@@ -19,7 +19,7 @@ spring:
 
 jwt:
   issuer: "SouthMillion"
-  secret: ${JWT_SECRET:xxx}
+  secret: ${JWT_SECRET:8fbb4c3b38b9a9b3e05a7d59d1f4c82b1c3b7d29d84f6f6cde1b9a63f4d2e4ab}
   access-ttl-seconds: 900
   refresh-ttl-seconds: 604800
   rotate-refresh: true
