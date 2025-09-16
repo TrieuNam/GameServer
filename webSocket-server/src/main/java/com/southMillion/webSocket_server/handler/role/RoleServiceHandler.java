@@ -4,7 +4,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageLite;
 import com.southMillion.webSocket_server.dto.PlayerSession;
 import com.southMillion.webSocket_server.net.*;
-import com.southMillion.webSocket_server.service.SessionRegistry;
+import com.southMillion.webSocket_server.service.InMemoryPlayerSessionRegistry;
 import com.southMillion.webSocket_server.service.client.RoleFeign;
 import com.southMillion.webSocket_server.utils.FeignCall;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +33,7 @@ import java.util.Objects;
 public class RoleServiceHandler implements MessageHandler {
 
     private final RoleFeign roleFeign;
-    private final SessionRegistry registry;
+    private final InMemoryPlayerSessionRegistry registry;
 
     @Override
     public int[] interests() {

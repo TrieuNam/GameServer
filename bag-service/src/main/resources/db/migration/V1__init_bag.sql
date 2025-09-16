@@ -1,33 +1,16 @@
--- =========================
--- V1: Fresh install schema
--- =========================
-
-CREATE TABLE IF NOT EXISTS bag_meta (
-                                        id          VARCHAR(80)  NOT NULL,
-    role_id     VARCHAR(64)  NOT NULL,
-    bag_type    TINYINT      NOT NULL,
-    capacity    INT          NOT NULL,
-    used        INT          NOT NULL DEFAULT 0,
-    created_at  DATETIME(6)  NOT NULL,
-    updated_at  DATETIME(6)  NOT NULL,
-    version     INT          NOT NULL DEFAULT 0,
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_role_bag (role_id, bag_type)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
-CREATE TABLE IF NOT EXISTS bag_slot (
-                                        id          BIGINT       NOT NULL AUTO_INCREMENT,
-                                        role_id     VARCHAR(64)  NOT NULL,
-    bag_type    TINYINT      NOT NULL,
-    slot_index  INT          NOT NULL,
-    item_id     INT          NOT NULL,
-    count       BIGINT       NOT NULL,
-    bind        TINYINT      NOT NULL DEFAULT 0,
-    expire_at   DATETIME(6)  NULL,
-    extra_json  JSON         NULL,
-    version     INT          NOT NULL DEFAULT 0,
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_role_bag_slot (role_id, bag_type, slot_index),
-    KEY idx_role_bag (role_id, bag_type),
-    KEY idx_role_bag_item (role_id, bag_type, item_id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE IF NOT EXISTS bag_items (
+                                         id         VARCHAR(36)  NOT NULL,
+    role_id    VARCHAR(36)  NOT NULL,
+    user_id    VARCHAR(36)  NOT NULL,
+    item_id    INT          NOT NULL,
+    num        INT          NOT NULL,
+    bind       TINYINT(1)   NOT NULL DEFAULT 0,
+    expire_at  TIMESTAMP NULL DEFAULT NULL,
+    version    BIGINT       NOT NULL DEFAULT 0,
+    created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT pk_bag_items PRIMARY KEY (id),
+    CONSTRAINT uk_role_item_bind_exp UNIQUE (role_id, item_id, bind, expire_at)
+    ) ENGINE=InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_unicode_ci;

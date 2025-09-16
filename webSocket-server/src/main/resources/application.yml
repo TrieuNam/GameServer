@@ -6,6 +6,19 @@ spring:
     name: websocket-server   # rất quan trọng: gateway route dùng lb:ws://websocket-server
   main:
     web-application-type: reactive
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        # DÙNG HEADER ALIAS:
+        spring.json.type.mapping: >
+          bagChanged:org.SouthMillion.dto.event.bag.BagChangedEvent
+    producer:
+      properties:
+        spring.json.add.type.headers: true
 
 eureka:
   instance:
@@ -37,6 +50,10 @@ app:
   server:
     startEpoch: 0        # epoch giây lần đầu mở server (để tính open_days)
     combineEpoch: 0      # epoch giây lần combine server (nếu có)
+  kafka:
+    bag-grant-topic: gameh5.bag.grant
+    bag-changed-topic: gameh5.bag.changed
+    concurrency: 3
 
 logging:
   level:

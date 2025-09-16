@@ -4,7 +4,7 @@ import com.southMillion.webSocket_server.dto.PlayerSession;
 import com.southMillion.webSocket_server.net.Emitters;
 import com.southMillion.webSocket_server.net.MessageHandler;
 import com.southMillion.webSocket_server.net.MsgIds;
-import com.southMillion.webSocket_server.service.SessionRegistry;
+import com.southMillion.webSocket_server.service.InMemoryPlayerSessionRegistry;
 import com.southMillion.webSocket_server.service.client.*;
 import com.southMillion.webSocket_server.utils.FeignCall;
 import lombok.*;
@@ -32,7 +32,7 @@ public class LoginBootstrapHandler implements MessageHandler {
     // ===== Feign / Registry =====
     private final SessionFeignClient sessionFeign; // bạn đã có interface này trong project
     private final RoleFeign roleFeign;
-    private final SessionRegistry registry;
+    private final InMemoryPlayerSessionRegistry registry;
 
     // ===== Guard =====
     private static final Semaphore LOGIN_LIMITER = new Semaphore(128);

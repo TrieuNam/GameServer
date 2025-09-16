@@ -1,5 +1,5 @@
 server:
-  port: 8104
+  port: 8097
 
 spring:
   application:
@@ -7,35 +7,78 @@ spring:
 
   threads:
     virtual:
-      enabled: true
+      enabled: true   # Java 21 Virtual Threads
 
   datasource:
-    url: jdbc:mysql://localhost:3318/db_bag_service
-    username: tpnam
-    password: 121831
+    url: jdbc:mysql://localhost:3311/db_bag
+    username: ${DB_USERNAME:tpnam}
+    password: ${DB_PASSWORD:121831}
 
   jpa:
     hibernate:
-      ddl-auto: none          # 🚫 tắt update để nhường quyền cho Flyway
+      ddl-auto: validate
+    open-in-view: false
     properties:
-      hibernate.jdbc.time_zone: UTC
-      hibernate.format_sql: true
-      hibernate.show_sql: false
+      hibernate:
+        jdbc.time_zone: UTC
+    show-sql: false
 
   flyway:
     enabled: true
     locations: classpath:db/migration
-    baseline-on-migrate: true  # ✅ đánh dấu baseline cho schema đang có
-    baseline-version: 1        # mốc baseline là 1 (mặc định cũng là 1)
-    # table: flyway_schema_history  # (tùy chọn) tên bảng lịch sử, mặc định như này
+
+  cache:
+    type: redis
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: true
+        spring.json.type.mapping: >
+            bagChanged:com.SouthMillion.common.events.BagChangedEvent
+
+    consumer:
+      group-id: ${BAG_CONSUMER_GROUP:bag-service}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"     # hoặc org.SouthMillion.dto.role.event
+        spring.json.value.default.type: org.SouthMillion.dto.role.event.BagGrantEvent
+
+    listener:
+      ack-mode: manual_immediate
+
+management:
+  endpoints:
+    web.exposure.include: health,info,metrics,env,threaddump,loggers
+  endpoint.health.probes.enabled: true
+
+app:
+  kafka:
+    bag-grant-topic: ${BAG_GRANT_TOPIC:gameh5.bag.grant}
+    bag-changed-topic: gameh5.bag.changed
+    consumer:
+      concurrency: ${BAG_CONCURRENCY:2}
+  kafka.idempotent-ttl-sec: 600
 
 eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
 
-logging:
-  level:
-    com.SouthMillion.bag_service: INFO

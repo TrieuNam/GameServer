@@ -40,4 +40,18 @@ public interface MsgIds {
     // ===== Advertisement (giữ theo client: 1663/1662)
     int CS_ADVERTISEMENT_FETCH = 1663; // PB_CSAdvertisementFetch
     int SC_ADVERTISEMENT_INFO  = 1662; // PB_SCAdvertisementInfo
+
+
+    // ===== Bag / Knapsack (theo proto)
+    int CS_KNAPSACK_REQ              = 1500; // PB_CSKnapsackReq
+    int CS_BUY_CMD_REQ               = 1501; // PB_CSBuyCmdReq
+
+    int SC_ITEM_NOT_ENOUGH_NOTICE    = 1504; // PB_SCItemNotEnoughNotice
+    int SC_KNAPSACK_ALL_INFO         = 1505; // PB_SCKnapsackAllInfo
+    int SC_KNAPSACK_SINGLE_INFO      = 1506; // PB_SCKnapsackSingleInfo
+    int SC_GET_ITEM_NOTICE           = 1507; // PB_SCGetItemNotice
+    int SC_GET_ONE_ITEM_NOTICE       = 1508; // PB_SCGetOneItemNotice
+
+    int SC_ALL_SHIZHUANG_INFO        = 1509; // PB_SCAllShiZhuangInfo
+    int SC_SHIZHUANG_INFO            = 1510; // PB_SCShiZhuangInfo
 }

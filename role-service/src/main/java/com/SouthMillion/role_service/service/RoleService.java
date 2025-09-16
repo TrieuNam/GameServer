@@ -31,6 +31,7 @@ public class RoleService {
 
     private final RoleRepository repo;
     private final RoleConfigCache cfg;
+    private final NewbieGiftService NewbieGiftService;
 
     @Cacheable(cacheNames = "roleById", key = "#roleId")
     public Optional<RoleDTOs.RoleResp> getById(String roleId) {
@@ -73,6 +74,7 @@ public class RoleService {
             r.setName(ensureUniqueName(req.getUserId(), nameBase));
             repo.saveAndFlush(r);
         }
+        NewbieGiftService.onFirstLogin(r.getUserId(),r.getRoleId());
         return RoleMapper.toResp(r);
     }
 

@@ -2,9 +2,8 @@ package com.southMillion.webSocket_server.handler;
 
 import com.southMillion.webSocket_server.config.HandlerRegistry;
 import com.southMillion.webSocket_server.dto.PlayerSession;
-import com.southMillion.webSocket_server.net.MessageHandler;
 import com.southMillion.webSocket_server.net.PacketCodec;
-import com.southMillion.webSocket_server.service.SessionRegistry;
+import com.southMillion.webSocket_server.service.InMemoryPlayerSessionRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -23,7 +22,7 @@ import java.util.Optional;
 public class WsGatewayHandler implements WebSocketHandler {
 
     private final HandlerRegistry registry;
-    private final SessionRegistry sessionRegistry;
+    private final InMemoryPlayerSessionRegistry sessionRegistry;
 
     @Override
     public Mono<Void> handle(WebSocketSession session) {
@@ -34,7 +33,7 @@ public class WsGatewayHandler implements WebSocketHandler {
                 .build();
 
         // Đăng ký ngay khi mở WS
-        sessionRegistry.put(session.getId(), ps);
+        sessionRegistry.put(ps);
 
         Mono<Void> send = session.send(
                 ps.getOutbound().asFlux().map(bytes -> session.binaryMessage(buf -> buf.wrap(bytes)))

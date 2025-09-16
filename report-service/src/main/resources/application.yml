@@ -18,7 +18,7 @@ spring:
       hibernate:
         format_sql: true
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: localhost:29092
     consumer:
       group-id: report-service-group
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
