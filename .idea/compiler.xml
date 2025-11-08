@@ -6,8 +6,57 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="config-service" />
+        <module name="pet-service" />
+        <module name="webSocket-server" />
+        <module name="item-service" />
+        <module name="gameworld-service" />
         <module name="common-lib" />
+        <module name="user-service" />
+        <module name="eureka-server" />
+        <module name="globalserver-service" />
+        <module name="bag-service" />
+        <module name="gateway-service" />
+        <module name="dataaccess-service" />
+        <module name="wallet-service" />
+        <module name="session-service" />
+      </profile>
+      <profile name="Annotation profile for battleserver-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar" />
+        </processorPath>
+        <module name="serverInfo-service" />
+        <module name="report-service" />
+        <module name="task-service" />
+        <module name="world-service" />
+        <module name="battleserver-service" />
+        <module name="arena-service" />
       </profile>
     </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="arena-service" options="-parameters" />
+      <module name="bag-service" options="-parameters" />
+      <module name="battleserver-service" options="-parameters" />
+      <module name="config-service" options="-parameters" />
+      <module name="dataaccess-service" options="-parameters" />
+      <module name="eureka-server" options="-parameters" />
+      <module name="gameworld-service" options="-parameters" />
+      <module name="globalserver-service" options="-parameters" />
+      <module name="item-service" options="-parameters" />
+      <module name="pet-service" options="-parameters" />
+      <module name="report-service" options="-parameters" />
+      <module name="serverInfo-service" options="-parameters" />
+      <module name="session-service" options="-parameters" />
+      <module name="task-service" options="-parameters" />
+      <module name="user-service" options="-parameters -parameters" />
+      <module name="wallet-service" options="-parameters" />
+      <module name="webSocket-server" options="-parameters" />
+      <module name="world-service" options="-parameters" />
+    </option>
   </component>
 </project>

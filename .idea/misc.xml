@@ -1,11 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ExternalStorageConfigurationManager" enabled="true" />
-  <component name="KubernetesApiProvider"><![CDATA[{}]]></component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
         <option value="$PROJECT_DIR$/common-lib/pom.xml" />
+        <option value="$PROJECT_DIR$/bag-service/pom.xml" />
+        <option value="$PROJECT_DIR$/pet-service/pom.xml" />
+        <option value="$PROJECT_DIR$/item-service/pom.xml" />
+        <option value="$PROJECT_DIR$/task-service/pom.xml" />
+        <option value="$PROJECT_DIR$/user-service/pom.xml" />
+        <option value="$PROJECT_DIR$/arena-service/pom.xml" />
+        <option value="$PROJECT_DIR$/eureka-server/pom.xml" />
+        <option value="$PROJECT_DIR$/world-service/pom.xml" />
+        <option value="$PROJECT_DIR$/config-service/pom.xml" />
+        <option value="$PROJECT_DIR$/report-service/pom.xml" />
+        <option value="$PROJECT_DIR$/wallet-service/pom.xml" />
+        <option value="$PROJECT_DIR$/gateway-service/pom.xml" />
+        <option value="$PROJECT_DIR$/session-service/pom.xml" />
+        <option value="$PROJECT_DIR$/webSocket-server/pom.xml" />
+        <option value="$PROJECT_DIR$/gameworld-service/pom.xml" />
+        <option value="$PROJECT_DIR$/dataaccess-service/pom.xml" />
+        <option value="$PROJECT_DIR$/serverInfo-service/pom.xml" />
+        <option value="$PROJECT_DIR$/battleserver-service/pom.xml" />
+        <option value="$PROJECT_DIR$/globalserver-service/pom.xml" />
       </list>
     </option>
   </component>
