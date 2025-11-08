@@ -1,0 +1,112 @@
+version: '3.8'
+
+# Minimal infra docker-compose for local Phase P0 testing.
+# This file is a template: tweak images, versions, and ports to match your environment.
+
+services:
+  redis:
+    image: redis:7
+    container_name: gs_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  mysql_user:
+    image: mysql:8.0
+    container_name: gs_mysql_user
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpwd
+      MYSQL_DATABASE: user_db
+      MYSQL_USER: gsuser
+      MYSQL_PASSWORD: gspwd
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-user-data:/var/lib/mysql
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: gs_kafka
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ZOOKEEPER_CONNECT=zk:2181
+      - KAFKA_LISTENERS=PLAINTEXT://:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zk
+
+  zk:
+    image: bitnami/zookeeper:latest
+    container_name: gs_zk
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    container_name: gs_kafdrop
+    environment:
+      KAFKA_BROKERCONNECT: kafka:9092
+    ports:
+      - "9000:9000"
+    depends_on:
+      - kafka
+
+  zipkin:
+    image: openzipkin/zipkin:2.23
+    container_name: gs_zipkin
+    ports:
+      - "9411:9411"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: gs_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: gs_grafana
+    ports:
+      - "3000:3000"
+
+  eureka:
+    image: springcloud/eureka:latest
+    container_name: gs_eureka
+    ports:
+      - "8761:8761"
+
+  config-service:
+    image: springcloud/config:latest
+    container_name: gs_config
+    ports:
+      - "8888:8888"
+    depends_on:
+      - eureka
+
+  gateway-service:
+    image: openjdk:21-jdk-slim
+    container_name: gs_gateway
+    # This is a placeholder image. Build a proper gateway service and reference its image here.
+    ports:
+      - "8080:8080"
+    depends_on:
+      - config-service
+      - eureka
+
+volumes:
+  redis-data:
+  mysql-user-data:
+
+# Notes:
+# - This compose is intentionally minimal and uses readily-available images.
+# - For production-like testing, replace bitnami kafka with a proper KRaft setup or use your cluster.
+# - You should create the Prometheus config file at docs/docker/prometheus/prometheus.yml if you enable Prometheus.
