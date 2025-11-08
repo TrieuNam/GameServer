@@ -1,0 +1,6 @@
+# Ignore build outputs
+/build/
+/.gradle/
+
+# generated sources
+build/generated/

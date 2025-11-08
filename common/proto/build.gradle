@@ -1,0 +1,58 @@
+plugins {
+    id 'java'
+    id 'com.google.protobuf' version '0.9.4'
+}
+
+group = 'com.yourorg.gameserver'
+version = '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.google.protobuf:protobuf-java:3.22.0'
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.22.0"
+    }
+    plugins {
+        grpc {
+            artifact = 'io.grpc:protoc-gen-grpc-java:1.57.0'
+        }
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                java {}
+            }
+            task.plugins {
+                grpc {}
+            }
+            // add the C++ proto source folder (relative to project root)
+            // you can override or add more source dirs in settings if needed
+        }
+    }
+}
+
+sourceSets {
+    main {
+        proto {
+            // use the existing proto files under the C++ tree
+            srcDir file("../../开箱h5/server/server/src/servercommon/proto")
+            // also consider protobuf folder if present
+            srcDir file("../../开箱h5/server/server/src/servercommon/protobuf")
+        }
+    }
+}
+
+// Simple task to show proto files found
+task listProtoFiles {
+    doLast {
+        file("${projectDir}/src/main/java").mkdirs()
+        println 'Proto source dirs:'
+        sourceSets.main.proto.srcDirs.each { println it }
+    }
+}
