@@ -1,0 +1,14 @@
+// syntax = "proto3";                                              //!< proto3 必须添加该行
+
+
+//MsgId:2001
+message PB_CSGMCommand {                                  		//!< 协议  GM命令 2001
+	optional bytes	type= 1;
+	optional bytes	command= 2;
+}
+
+//MsgId:2000
+message PB_SCGMCommand {                                   		 //!< 2000  GM命令回复
+	optional bytes	type= 1;
+	optional bytes	result= 2;
+}

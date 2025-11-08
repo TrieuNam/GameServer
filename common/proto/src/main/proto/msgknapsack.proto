@@ -1,0 +1,64 @@
+// syntax = "proto3"; 
+
+//!<MsgId:1500
+message PB_CSKnapsackReq {//!<背包操作
+	optional int32	req_type = 1;		//!<操作类型
+	repeated int32	param = 2;			//!<参数
+}
+
+message PB_ItemData {//!<物品信息
+	optional int32	item_id = 1;		//!< 物品ID
+	optional int64	num = 2;			//!< 数量
+}
+
+//!<MsgId:1501
+message PB_CSBuyCmdReq {//!<万能卡购买请求
+	optional int32	num = 1;			//!<使用万能卡数量
+	optional int32	buy_money = 2;		//!<订单价值(实际RMB)
+	optional int32	add_pay_gold = 3;	//!<等效充值元宝数(配置的钻石数)
+	optional int32	buy_type = 4;		//!<购买类型
+	optional int32	buy_param_1 = 5;	//!<购买参数
+	optional int32	buy_param_2 = 6;	//!<购买参数
+}
+
+
+//!<MsgId:1504
+message PB_SCItemNotEnoughNotice {//!<物品数量不足
+	optional int32	item_id = 1;		//!< 物品ID
+}
+
+//!<MsgId:1505
+message PB_SCKnapsackAllInfo {//!<背包全部信息
+	repeated PB_ItemData item_list = 1;	//!<物品列表
+}
+
+//!<MsgId:1506
+message PB_SCKnapsackSingleInfo {//!<背包单个信息
+	optional PB_ItemData item = 1;		//!<物品信息
+}
+
+//!<MsgId:1507
+message PB_SCGetItemNotice {//!<获得多个物品弹窗
+	optional int32 get_type = 1;		//!<获得类型
+	repeated PB_ItemData item_list = 2;	//!<物品列表
+}
+
+//!<MsgId:1508
+message PB_SCGetOneItemNotice {//!<获得一个物品弹窗
+	optional PB_ItemData item = 1;		//!<物品信息
+}
+
+message PB_ShiZhuangData {//!<时装信息
+	optional int32	id = 1;				//!< id
+	optional int32	level = 2;			//!< 等级
+}
+
+//!<MsgId:1509
+message PB_SCAllShiZhuangInfo {//!<全部时装 登录下发
+	repeated PB_ShiZhuangData shizhuang_list = 1;
+}
+
+//!<MsgId:1510
+message PB_SCShiZhuangInfo {//!<获得一个物品弹窗
+	optional PB_ShiZhuangData shizhuang = 1;
+}
