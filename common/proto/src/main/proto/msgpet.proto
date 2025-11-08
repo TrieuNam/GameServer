@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgpet";
 
 //!<MsgId:2100
 message PB_CSRolePetReq {//!< 宠物  角色操作

@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgcross";
 
 //MsgId:2800
 message PB_CSCrossStartReq {                        //!< 协议 2800 开始跨服请求

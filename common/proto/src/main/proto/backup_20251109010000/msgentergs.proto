@@ -1,0 +1,18 @@
+// syntax = "proto3";                                              //!< proto3 必须添加该行
+
+//MsgId:1002
+message PB_SCServerBusy {                                   		//!< 协议 1002 服务器忙
+	optional int32 reserve = 1;                                   //!<  备用  \see 
+}
+
+//MsgId:1000
+message PB_SCUserEnterGSAck {                                    //!<  1000 进入场景返回
+    optional int32 result = 1;                                   //!<  结果  \see __EnterGSResult
+    optional int32 is_in_cross = 2;                              //!<  是否在跨服中 0：否  1：是
+}
+
+//MsgId:1051
+message PB_CSUserLogout {                                        //!<  1051 登出请求
+	optional int32 reserve = 1;                                   //!<  备用  \see 
+}
+

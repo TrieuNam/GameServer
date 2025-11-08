@@ -1,6 +1,7 @@
+option java_package = "org.SouthMillion.proto.Msgscene";
 // syntax = "proto3";                                              //!< proto3 必须添加该行
 
-import "msgrole.proto";
+import "cs/msgrole.proto";
 
 //MsgId:1100
 message PB_SCEnterScene {                                  		//!< 协议 进入场景 1100

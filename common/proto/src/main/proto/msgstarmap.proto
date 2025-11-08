@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgstarmap";
 
 //!<MsgId:2150
 message PB_CSStarMapReq {//!<2150 操作

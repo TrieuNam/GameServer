@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgscroll";
 
 //!<MsgId:2170
 message PB_CSScrollReq {//!<2140 操作

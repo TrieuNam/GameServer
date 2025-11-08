@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgangel";
 
 //!<MsgId:2130
 message PB_CSAngelReq {//!<2130 操作

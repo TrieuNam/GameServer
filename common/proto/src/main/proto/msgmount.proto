@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgmount";
 
 //!<MsgId:2140
 message PB_CSMountReq {//!<2140 操作

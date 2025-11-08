@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgsystem";
 // syntax = "proto3";                                              //!< proto3 必须添加该行
 
 message PB_UniqueID {//!<唯一ID

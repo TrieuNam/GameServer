@@ -1,5 +1,7 @@
+option java_package = "org.SouthMillion.proto.Msgother";
+
 // syntax = "proto3";                                              //!< proto3 必须添加该行
-import "msgknapsack.proto";
+import "cs/msgknapsack.proto";
 
 //====市集====================================================================================================
 //!<MsgId:1620

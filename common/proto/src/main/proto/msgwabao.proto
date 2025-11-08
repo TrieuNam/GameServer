@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgwabao";
 
 message PB_WaBaoSet
 {

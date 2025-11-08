@@ -1,5 +1,6 @@
+option java_package = "org.SouthMillion.proto.msgmail";
 
-import "msgknapsack.proto";
+import "cs/msgknapsack.proto";
 
 message PB_MailAckInfo {//!< 邮件操作返回
 	optional int32	mail_type = 1;		//!< 邮件类型

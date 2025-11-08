@@ -1,5 +1,6 @@
+option java_package = "org.SouthMillion.proto.Msgguild";
 
-import "msgrole.proto";
+import "cs/msgrole.proto";
 
 message PB_CSGuildReq {							//!< 9640 请求
 	optional int32 req_type = 1;				//!< 请求类型

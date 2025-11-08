@@ -1,4 +1,5 @@
-// syntax = "proto3"; 
+option java_package = "org.SouthMillion.proto.Msgshenqi";
+// syntax = "proto3";
 
 //!<MsgId:1675
 message PB_CSShenQiReq {//!<神器系统操作

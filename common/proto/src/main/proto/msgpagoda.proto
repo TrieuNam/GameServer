@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgpagoda";
 
 message PB_CSShiLianPagodaReq {//!< 2120 试炼之塔 操作
 	optional int32	type = 1;				//!<操作类型

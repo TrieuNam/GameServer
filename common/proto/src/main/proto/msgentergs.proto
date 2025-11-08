@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgentergs";
 // syntax = "proto3";                                              //!< proto3 必须添加该行
 
 //MsgId:1002

@@ -1,3 +1,5 @@
+option java_package = "org.SouthMillion.proto.Msgopenserveractivity";
+
 //!<MsgId:2160
 message PB_CSSevenDaySignReq {//!<2160 七日签到请求
 	optional int32	opera_type = 1;

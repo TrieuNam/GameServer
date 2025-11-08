@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgmainfb";
 
 //MsgId:2005 主线副本操作
 message PB_CSMainFbReq {

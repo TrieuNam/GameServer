@@ -1,0 +1,37 @@
+// syntax = "proto3";                                              //!< proto3 必须添加该行
+
+message PB_UniqueID {//!<唯一ID
+	repeated uint32 item_unique_id = 1;
+}
+
+//MsgId:700
+message PB_SCNoticeNum {										 //!< 协议 700 系统通知
+	optional uint32 notice_num = 1;								//!< 
+}
+
+//MsgId:701
+message PB_SCSystemMsg {										//!< 701 系统消息
+	optional uint32 send_time = 1;
+	optional int32 limit_level = 2;									// 等于0时代表没有限制	
+	optional int32 msg_length = 3;
+	optional int32 display_pos = 4;
+	optional int32 color = 5;
+	optional int32 msg_type = 6;
+	optional bytes spid_id = 7;
+	optional bytes msg = 8;
+}
+
+//MsgId:702
+message PB_SCZeroHour {											//!< 702   0点通知
+	optional int32 reserve = 1;                                   //!<  备用  \see 
+}
+
+//MsgId:704
+message PB_SCCMDChongZhiRetInfo {                                 //!< 704 玩家充值返回
+		optional int32 role_id = 1;					//角色role_id
+		optional int32 add_gold = 2;				//充值获得元宝数
+		optional bytes order_id = 3;				//订单号
+		optional int32 money = 4;					//实际金额
+		optional bytes money_type = 5;				//货币类型
+}
+

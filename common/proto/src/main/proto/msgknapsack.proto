@@ -1,4 +1,5 @@
-// syntax = "proto3"; 
+option java_package = "org.SouthMillion.proto.Msgknapsack";
+// syntax = "proto3";
 
 //!<MsgId:1500
 message PB_CSKnapsackReq {//!<背包操作

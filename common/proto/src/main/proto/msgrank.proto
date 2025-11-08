@@ -1,4 +1,6 @@
-import "msgrole.proto";
+option java_package = "org.SouthMillion.proto.Msgrank";
+
+import "cs/msgrole.proto";
 
 message PB_SCRankNode
 {

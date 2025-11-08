@@ -1,4 +1,5 @@
-// syntax = "proto3"; 
+option java_package = "org.SouthMillion.proto.Msgequip";
+// syntax = "proto3";
 
 //!<MsgId:1600
 message PB_CSEquipReq {//!<装备系统操作

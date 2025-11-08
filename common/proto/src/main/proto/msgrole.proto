@@ -1,6 +1,7 @@
+option java_package = "org.SouthMillion.proto.Msgrole";
 // syntax = "proto3";                                              //!< proto3 必须添加该行
 
-import "msgequip.proto";
+import "cs/msgequip.proto";
 
 message PB_Appearance
 {

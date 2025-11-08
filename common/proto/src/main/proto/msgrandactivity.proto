@@ -1,4 +1,6 @@
-import "msgrole.proto";
+option java_package = "org.SouthMillion.proto.Msgrandactivity";
+
+import "cs/msgrole.proto";
 
 //!<MsgId:3000
 message PB_CSRandActivityOperaReq {//!<3000 操作

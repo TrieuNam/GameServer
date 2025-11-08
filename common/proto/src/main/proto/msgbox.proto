@@ -1,5 +1,6 @@
+option java_package = "org.SouthMillion.proto.Msgbox";
 
-import "msgequip.proto";
+import "cs/msgequip.proto";
 
 //!<MsgId:1610
 message PB_CSBoxReq {							//!< 1610 宝箱操作

@@ -1,4 +1,6 @@
-import "msgrole.proto";
+option java_package = "org.SouthMillion.proto.Msgterritory";
+
+import "cs/msgrole.proto";
 
 message PB_CSTerritoryReq {//!< 9630 操作
 	optional int32	type = 1;	//操作类型

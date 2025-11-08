@@ -1,3 +1,5 @@
+option java_package = "org.SouthMillion.proto.Msgrune";
+
 message PB_RuneData{
 	optional int32	index = 1;					//!<格子index
 	optional int32	id = 2;						//!<铭文id

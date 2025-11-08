@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msglingzhu";
 
 //MsgId:2008 领主副本 操作
 message PB_CSLingZhuReq {

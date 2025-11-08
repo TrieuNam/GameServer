@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msggm";
 // syntax = "proto3";                                              //!< proto3 必须添加该行
 
 

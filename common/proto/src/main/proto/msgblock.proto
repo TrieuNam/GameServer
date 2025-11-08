@@ -1,3 +1,4 @@
+option java_package = "org.SouthMillion.proto.Msgblock";
 
 message PB_CSBlockReq {								//!< 2180 操作
 	optional int32	op_type = 1;					//!<操作类型
