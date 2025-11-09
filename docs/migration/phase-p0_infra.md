@@ -1,14 +1,170 @@
-## Phase P0 — Nền tảng & Hạ tầng (Infra)
+## Phase P0 — Nền tảng & Hạ tầng (Infra) ✅
+
+**Status**: COMPLETED (2025-11-09)
 
 Mục tiêu chính
 - Chuẩn hoá hạ tầng để các microservice Java có thể chạy song song với cụm C++ hiện có và tiến dần thay thế từng thành phần:
-  - Service discovery + Config (Eureka + Config Server)
-  - API Gateway (Spring Cloud Gateway)
-  - Messaging backbone (Kafka, KRaft preferred)
-  - Cache (Redis) và per-service MySQL databases
-  - Observability (Prometheus / Grafana / Zipkin)
-  - WebSocket / binary gateway để tương thích H5 client
-  - Quy trình quản lý .proto: canonicalize ở `common-lib/src/main/proto` và publish artifact
+  - ✅ Service discovery + Config (Eureka + Config Server)
+  - ✅ API Gateway (Spring Cloud Gateway)
+  - ✅ WebSocket Server (Real-time binary protocol)
+  - ✅ Session Service (Authentication & JWT management)
+  - ⏳ Messaging backbone (Kafka, KRaft preferred) - Infrastructure ready
+  - ⏳ Cache (Redis) - Infrastructure ready
+  - ⏳ MySQL databases - Per-service schemas
+  - ⏳ Observability (Prometheus / Grafana / Zipkin) - Planned
+  - ✅ Quy trình quản lý .proto: canonicalize ở `common-lib/src/main/proto` và publish artifact
+
+## Completed Services
+
+### 1. Service Discovery - Eureka Server ✅
+**Port**: 8761  
+**Status**: Built & Ready  
+**JAR**: `eureka-server-1.0.0.jar`
+
+**Purpose**: Service registration and discovery for microservices
+
+**Features**:
+- Standalone mode configuration
+- Dashboard UI at http://localhost:8761
+- Health monitoring
+- Service registry
+
+**Build Time**: 20.466s
+
+### 2. Configuration Management - Config Service ✅
+**Port**: 8091 (main), 8092 (management)  
+**Status**: Built & Ready  
+**JAR**: `config-service-1.0.0.jar`
+
+**Purpose**: Centralized configuration management for all services
+
+**Features**:
+- Multi-tier caching (Caffeine + Disk + Redis)
+- ETag support for conditional requests
+- Filesystem and Classpath modes
+- 842 configuration files included
+- Hot reload capability
+
+**Build Time**: 25.287s
+
+### 3. API Gateway - Gateway Service ✅
+**Port**: 8080  
+**Status**: Built & Ready  
+**JAR**: `gateway-service-1.0.0.jar`
+
+**Purpose**: Single entry point for all client requests
+
+**Features**:
+- Service discovery integration (Eureka)
+- WebSocket proxy support
+- JWT authentication filter
+- CORS configuration
+- Rate limiting support
+- Auto-routing to registered services
+
+**Routes**:
+- HTTP/REST: `http://localhost:8080/{service-name}/**`
+- WebSocket: `ws://localhost:8080/websocket-server/**`
+
+**Build Time**: 13.065s
+
+### 4. WebSocket Server ✅ (NEWLY DOCUMENTED)
+**Port**: 8090  
+**Status**: Built & Ready  
+**Access**: `ws://localhost:8080/websocket-server/ws/game`
+
+**Purpose**: Real-time binary protocol communication with game clients
+
+**Technology**: Spring WebFlux Reactive WebSocket
+
+**Features**:
+- Binary packet protocol (Big Endian byte order)
+- Protobuf message encoding/decoding
+- Message routing via HandlerRegistry (70+ message types)
+- Session management (PlayerSession)
+- Integration with business services via OpenFeign
+- Kafka event publishing/consuming
+
+**Message Format**:
+```
+[BodyLen(4 bytes)][MsgID(4 bytes)][Payload(N bytes)]
+- BodyLen: int32, Big Endian
+- MsgID: int32, Big Endian  
+- Payload: Protobuf binary
+```
+
+**Key Components**:
+- `PacketCodec`: Binary packet encoding/decoding
+- `MsgIds`: Message ID constants (70+ defined)
+- `WsGatewayHandler`: WebSocket connection handler
+- `PlayerSessionRegistry`: Active session tracking
+- `MessageHandler`: Message processing interface
+
+**Message Categories**:
+- Login & Session (7056, 7000, 7004)
+- Heartbeat (1053, 1003)
+- Time Sync (9050, 9000)
+- Role Info (1400-1403)
+- Inventory (1500-1506)
+- Mail (9551, 9504-9506)
+
+**Client Connection**:
+```typescript
+const ws = new WebSocket('ws://localhost:8080/websocket-server/ws/game?token=${jwt}');
+ws.binaryType = 'arraybuffer';
+```
+
+**See Also**: 
+- [Client Integration Guide](../CLIENT_INTEGRATION_GUIDE.md)
+- [Client-Server Connection](../CLIENT_SERVER_CONNECTION.md)
+
+### 5. Session Service ✅ (NEWLY DOCUMENTED)
+**Port**: 8081  
+**Status**: Built & Ready
+
+**Purpose**: User authentication, JWT token management, session tracking
+
+**Endpoints**:
+- `POST /api/session/login` - User login, returns JWT token
+- `POST /api/session/logout` - Logout and invalidate session
+- `GET /api/session/timesync` - Server time synchronization
+- `POST /internal/session/introspect` - Token validation (internal use)
+
+**Features**:
+- JWT token generation and validation
+- Session lifecycle management
+- Token introspection for Gateway
+- Time synchronization for clients
+
+**Integration**:
+- Gateway calls introspect endpoint for authentication
+- WebSocket Server validates tokens via Session Service
+- All services can verify tokens through Gateway auth filter
+
+**Authentication Flow**:
+```
+1. Client → POST /session-service/api/session/login
+2. Session Service → Validate credentials
+3. Session Service → Generate JWT token
+4. Client ← { token, userId, roleId }
+5. Client → Connect WebSocket with token
+6. Gateway → Validate token via introspect
+7. Client ↔ WebSocket Server (authenticated)
+```
+
+### 6. Common Library ✅
+**Artifact**: `common-lib-1.0.0.jar`  
+**Status**: Published to local Maven repository
+
+**Purpose**: Shared utilities, DTOs, Protobuf definitions
+
+**Contents**:
+- Protobuf definitions (`src/main/proto/`)
+- DTOs for inter-service communication
+- Shared utilities and constants
+- Generated Protobuf Java classes
+
+**Published to**: `~/.m2/repository/org/SouthMillion/common-lib/1.0.0/`
 
 Ngữ cảnh & giả định
 - Code nguồn gốc (C++): D:\\project\\serverGame\\开箱h5 — nhiều binaries: `battleserver`, `globalserver`, `crossserver`, `dataaccess`, `gameworld`, v.v. (entry points: `main.cpp`, cấu hình: `Debug/serverconfig.xml`).

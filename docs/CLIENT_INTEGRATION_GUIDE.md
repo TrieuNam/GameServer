@@ -2,6 +2,38 @@
 
 **For Game Client Developers**
 
+## ⚠️ Implementation Status (Updated: 2025-11-09)
+
+### Fully Implemented & Ready
+These services are built, tested, and ready for integration:
+
+- ✅ **Gateway Service** (8080) - API Gateway & WebSocket proxy
+- ✅ **Eureka Server** (8761) - Service discovery
+- ✅ **Config Service** (8091) - Configuration management
+- ✅ **WebSocket Server** (8090) - Real-time binary protocol
+- ✅ **Session Service** (8081) - Authentication & JWT tokens
+- ✅ **Item Service** (8220) - Item metadata (read-only)
+- ✅ **Wallet Service** (8210) - Currency & transactions
+- ✅ **Bag Service** (8230) - Inventory management
+
+### In Development (May Not Work)
+These services are scaffolded but have build errors:
+
+- ⚠️ **Shop Service** (8260) - Build errors (6), endpoints may not exist
+- ⚠️ **Equip Service** (8240) - Build errors (7), not functional
+- ⚠️ **Drop Service** (8250) - Build errors (4), not functional
+- ⚠️ **Gift Service** (8270) - Build errors (4), not functional
+- ⚠️ **Box Service** (8290) - Build errors (10), not functional
+- ⚠️ **User Service** (8082) - Status unknown, not documented
+
+### Recommendation
+
+**Start with the implemented services** (Gateway, WebSocket, Session, Item, Wallet, Bag) for your initial integration. The remaining services will be completed in future phases.
+
+**See**: [Phase P1 Status Report](migration/phase-p1_COMPLETED.md) for details
+
+---
+
 ## 1. Quick Connection Setup
 
 ### Prerequisites
@@ -629,4 +661,27 @@ export const WS_URL = config[env].wsUrl;
 ---
 
 **For more details, see**: [CLIENT_SERVER_CONNECTION.md](./CLIENT_SERVER_CONNECTION.md)
+
+---
+
+## Related Documentation
+
+### Server Architecture & Migration
+- **[Phase P0 - Infrastructure](migration/phase-p0_infra.md)** - Eureka, Gateway, Config, WebSocket, Session services
+- **[Phase P1 - Economy Services](migration/phase-p1_economy.md)** - Item, Wallet, Bag, Shop services
+- **[Phase P1 Completion Status](migration/phase-p1_COMPLETED.md)** - Which services are ready vs. in development
+
+### Technical Deep Dives
+- **[Client-Server Connection Architecture](CLIENT_SERVER_CONNECTION.md)** - Complete technical specification
+- **[Documentation Analysis](DOCUMENTATION_ANALYSIS.md)** - Cross-reference guide and consistency report
+
+### Quick Links
+- **Project README**: [README.md](../README.md)
+- **Main Docs Index**: [docs/](.)
+
+---
+
+*Last Updated: 2025-11-09*  
+*For questions, see project documentation or contact development team*
+
 

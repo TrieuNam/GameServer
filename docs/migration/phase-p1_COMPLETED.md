@@ -1,11 +1,36 @@
-# Phase P1 - Economy Services - HOÀN THÀNH ✅
+# Phase P1 - Economy Services - PARTIAL COMPLETION ⚠️
 
-**Ngày hoàn thành**: 2025-11-09  
-**Trạng thái**: Build thành công, sẵn sàng deploy
+**Ngày cập nhật**: 2025-11-09  
+**Trạng thái**: 3/8 services built successfully, 5/8 blocked by DTO issues
 
-## Tổng quan
+## Status Overview
 
-Phase P1 đã hoàn thành việc build và cấu hình các economy services cốt lõi:
+### ✅ Successfully Built (Core Economy Services)
+
+**3 services ready for deployment**:
+1. **item-service** - Item metadata management ✅
+2. **wallet-service** - Wallet and transaction management ✅
+3. **bag-service** - Inventory/bag management ✅
+
+**Build Success Rate**: 37.5% (3/8 services)
+
+### ❌ Build Failed (Extended Economy Services)
+
+**5 services with compilation errors** (31 errors total):
+1. **shop-service** - 6 compilation errors
+2. **equip-service** - 7 compilation errors
+3. **drop-service** - 4 compilation errors
+4. **gift-service** - 4 compilation errors
+5. **box-service** - 10 compilation errors
+
+**Blocking Issue**: Missing/incomplete Bag DTOs in common-lib  
+**Error Categories**: Missing nested classes, type mismatches, constructor issues
+
+**See**: [Phase P1 Build Errors Report](phase-p1_BUILD_ERRORS.md) for details
+
+---
+
+## Tổng quan - Core Services (Successfully Built)
 
 1. **item-service** - Item metadata management
 2. **wallet-service** - Wallet and transaction management
@@ -426,7 +451,157 @@ Role Service (stub)
 
 ---
 
+## Remaining Economy Services (Build Failed) ❌
+
+### Services With Compilation Errors
+
+All 5 remaining services have been scaffolded with complete pom.xml and Application classes, but fail compilation due to DTO issues.
+
+#### 1. Shop Service (8260) - 6 Errors ❌
+**Purpose**: Shop catalog and purchases  
+**Status**: Scaffolded, compilation failed
+
+**Errors**:
+- Missing `BagAddItemReq.Item` nested class
+- Missing `BagConsumeReq.Cost` nested class
+- Missing `BagOkResp.error()` method
+- Missing `BagAddItemResp.ok()` and `error()` methods
+
+**Files Created**:
+- ✅ ShopServiceApplication.java
+- ✅ pom.xml (complete)
+- ✅ 13 business logic files exist
+
+#### 2. Equip Service (8240) - 7 Errors ❌
+**Purpose**: Equipment and upgrade logic  
+**Status**: Scaffolded, compilation failed
+
+**Errors**:
+- Type mismatch: int cannot be converted to Long
+- Constructor signature mismatch for ConsumeReq
+- Missing nested DTO classes
+
+**Files Created**:
+- ✅ EquipServiceApplication.java
+- ✅ pom.xml (complete)
+- ✅ 15 business logic files exist
+
+#### 3. Drop Service (8250) - 4 Errors ❌
+**Purpose**: Drop tables and RNG  
+**Status**: Scaffolded, compilation failed
+
+**Errors**:
+- Missing `BagAddItemReq.Item` class
+- Missing convenience methods in response DTOs
+- Lombok dependency added
+
+**Files Created**:
+- ✅ DropServiceApplication.java
+- ✅ pom.xml (with Lombok + Redis)
+- ✅ 9 business logic files exist
+
+#### 4. Gift Service (8270) - 4 Errors ❌
+**Purpose**: Gift code redemption  
+**Status**: Scaffolded, compilation failed
+
+**Errors**:
+- Missing `BagAddItemReq.Item` class
+- Missing `BagConsumeReq.Cost` class
+- Type inference issues
+
+**Files Created**:
+- ✅ GiftServiceApplication.java
+- ✅ pom.xml (with Lombok)
+- ✅ 7 business logic files exist
+
+#### 5. Box Service (8290) - 10 Errors ❌
+**Purpose**: Loot box opening  
+**Status**: Scaffolded, compilation failed
+
+**Errors**:
+- Type mismatches (Long vs int) - 9 errors
+- Constructor signature mismatch - 1 error
+
+**Files Created**:
+- ✅ BoxServiceApplication.java
+- ✅ pom.xml (complete)
+- ✅ 20 business logic files exist
+
+### Root Cause Analysis
+
+**Primary Issue**: Bag DTOs in common-lib don't match service expectations
+
+**What Services Expect**:
+```java
+// Nested classes inside request DTOs
+BagAddItemReq.Item
+BagConsumeReq.Cost
+
+// Convenience methods
+response.ok()
+response.error()
+
+// Type compatibility
+Integer itemId (not Long)
+```
+
+**What We Provided**:
+```java
+// Standalone classes only
+BagAddItemReq (no nested Item class)
+BagConsumeReq (no nested Cost class)
+
+// Limited methods
+BagOkResp.error(String message) // Requires parameter
+// No ok() method in responses
+
+// Different types
+Long itemId (not Integer)
+```
+
+**Solution Required**: 
+1. Add nested classes to Bag DTOs
+2. Add convenience methods to response classes
+3. Adjust types to match service usage
+4. Rebuild common-lib and all 5 services
+
+**Detailed Error Report**: See `docs/migration/phase-p1_BUILD_ERRORS.md`
+
+---
+
+## Phase P1 Summary
+
+### Achievements ✅
+- ✅ 3 core economy services built and ready
+- ✅ Database integration configured (Flyway)
+- ✅ Kafka integration ready
+- ✅ Service discovery enabled
+- ✅ All 8 services scaffolded with proper structure
+
+### Challenges ❌
+- ❌ 5 services blocked by DTO contract mismatch
+- ❌ 31 total compilation errors
+- ❌ Type system inconsistencies (Long vs Integer)
+- ❌ Missing nested classes and helper methods
+
+### Progress Metrics
+- **Services Scaffolded**: 8/8 (100%) ✅
+- **Services Built Successfully**: 3/8 (37.5%) ⚠️
+- **Build Errors Resolved**: 81/112 (72%) from initial attempt
+- **Remaining Errors**: 31 errors across 5 services
+
+### Next Steps
+1. Fix Bag DTOs in common-lib
+2. Rebuild common-lib-1.0.0.jar
+3. Rebuild 5 failed services
+4. Integration testing
+5. Complete Phase P1
+
+---
+
 *Last Updated: 2025-11-09*  
-*Build Status: SUCCESS*  
-*Services Built: 3/9 economy services*
+*Build Status: PARTIAL (3/8 SUCCESS)*  
+*Core Services: READY ✅*  
+*Extended Services: BLOCKED ❌*
+
 

@@ -1016,5 +1016,27 @@ server:
 
 ---
 
+## Related Documentation
+
+### For Client Developers
+- **[Client Integration Quick Start](CLIENT_INTEGRATION_GUIDE.md)** - Step-by-step guide to connect your client
+- **[API Contracts](migration/phase-p1_COMPLETED.md)** - Available endpoints and their status
+
+### For Backend Developers
+- **[Phase P0 - Infrastructure](migration/phase-p0_infra.md)** - Infrastructure services implementation
+- **[Phase P1 - Economy Services](migration/phase-p1_economy.md)** - Business services implementation
+- **[Documentation Analysis](DOCUMENTATION_ANALYSIS.md)** - Consistency report across all docs
+
+### Service Status
+- **[Phase P1 Completion Report](migration/phase-p1_COMPLETED.md)** - Which services are production-ready
+- **[Main Project README](../README.md)** - Overview and quick start
+
+---
+
 **End of Client-Server Connection Architecture**
+
+*Last Updated: 2025-11-09*  
+*Version: 1.0*  
+*Status: Production Documentation*
+
 
