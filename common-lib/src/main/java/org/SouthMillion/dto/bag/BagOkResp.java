@@ -1,6 +1,7 @@
 package org.SouthMillion.dto.bag;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 /**
@@ -8,29 +9,54 @@ import lombok.*;
  */
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class BagOkResp {
-    private Boolean success;
+    @JsonProperty("success")
+    private Boolean succeeded;
+
     private String message;
     private Integer errorCode;
 
+    // No-arg constructor
+    public BagOkResp() {
+    }
+
+    // Static factory methods
     public static BagOkResp ok() {
         return new BagOkResp(true, "Success", null);
     }
 
-    public static BagOkResp error(String message) {
+    public static BagOkResp fail() {
+        return new BagOkResp(false, "Error", -1);
+    }
+
+    public static BagOkResp fail(String message) {
         return new BagOkResp(false, message, -1);
     }
 
-    public Boolean success() {
-        return success;
+    public static BagOkResp fail(String message, Integer errorCode) {
+        return new BagOkResp(false, message, errorCode);
     }
 
-    public String message() {
-        return message;
+    // Instance method to check if successful
+    public boolean ok() {
+        return Boolean.TRUE.equals(succeeded);
+    }
+
+    // Accessor for error message
+    public String error() {
+        return message != null ? message : "Unknown error";
+    }
+
+    // Alias for JSON compatibility
+    public Boolean success() {
+        return succeeded;
+    }
+
+    public void setSuccess(Boolean success) {
+        this.succeeded = success;
     }
 }
 

@@ -27,7 +27,7 @@ public class BagDTOs {
          * Item ID
          */
         @NotNull
-        private Long itemId;
+        private Integer itemId;
 
         /**
          * Amount (positive for add, negative for consume)
@@ -46,13 +46,13 @@ public class BagDTOs {
         private Boolean bound;
 
         // Convenience constructor
-        public ItemDelta(Long itemId, Integer amount) {
+        public ItemDelta(Integer itemId, Integer amount) {
             this.itemId = itemId;
             this.amount = amount;
         }
 
         // Record-style accessors
-        public Long itemId() {
+        public Integer itemId() {
             return itemId;
         }
 

@@ -3,6 +3,8 @@ package org.SouthMillion.dto.bag;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.List;
+
 /**
  * Request to consume items from bag (standalone class for direct import)
  */
@@ -19,13 +21,27 @@ public class BagConsumeReq {
     private Long roleId;
 
     @NotNull
-    private Long itemId;
+    private Integer itemId;
 
     @NotNull
     private Integer amount;
 
     private String source;
 
+    private String idemKey;
+
+    private List<Cost> costs; // For batch consume
+
+    // Convenience constructor for single item
+    public BagConsumeReq(Long userId, Long roleId, Integer itemId, Integer amount, String source) {
+        this.userId = userId;
+        this.roleId = roleId;
+        this.itemId = itemId;
+        this.amount = amount;
+        this.source = source;
+    }
+
+    // Record-style accessors
     public Long userId() {
         return userId;
     }
@@ -34,12 +50,43 @@ public class BagConsumeReq {
         return roleId;
     }
 
-    public Long itemId() {
+    public Integer itemId() {
         return itemId;
     }
 
     public Integer amount() {
         return amount;
+    }
+
+    /**
+     * Nested Cost class for item consumption cost
+     */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Cost {
+        @NotNull
+        private Integer itemId;
+
+        @NotNull
+        private Integer amount;
+
+        // Convenience constructor
+        public Cost(Integer itemId, Integer amount) {
+            this.itemId = itemId;
+            this.amount = amount;
+        }
+
+        // Record-style accessors
+        public Integer itemId() {
+            return itemId;
+        }
+
+        public Integer amount() {
+            return amount;
+        }
     }
 }
 

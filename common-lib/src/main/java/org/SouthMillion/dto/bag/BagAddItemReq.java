@@ -22,11 +22,23 @@ public class BagAddItemReq {
     private Long roleId;
 
     @NotEmpty
-    private List<BagDTOs.ItemDelta> items;
+    private List<Item> items;
 
     private String source;
 
     private String idemKey;
+
+    private Integer reason;
+
+    private Integer reasonType;
+
+    // Convenience constructor for common usage
+    public BagAddItemReq(Long userId, Long roleId, List<Item> items, String source) {
+        this.userId = userId;
+        this.roleId = roleId;
+        this.items = items;
+        this.source = source;
+    }
 
     public Long userId() {
         return userId;
@@ -36,8 +48,43 @@ public class BagAddItemReq {
         return roleId;
     }
 
-    public List<BagDTOs.ItemDelta> items() {
+    public List<Item> items() {
         return items;
+    }
+
+    /**
+     * Nested Item class for item delta
+     */
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class Item {
+        @NotNull
+        private Integer itemId;
+
+        @NotNull
+        private Integer amount;
+
+        private Integer quality;
+
+        private Boolean bound;
+
+        // Convenience constructor
+        public Item(Integer itemId, Integer amount) {
+            this.itemId = itemId;
+            this.amount = amount;
+        }
+
+        // Record-style accessors
+        public Integer itemId() {
+            return itemId;
+        }
+
+        public Integer amount() {
+            return amount;
+        }
     }
 }
 
