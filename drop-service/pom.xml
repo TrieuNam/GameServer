@@ -82,11 +82,24 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
+        <!-- Redis -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
         <!-- Common Library -->
         <dependency>
             <groupId>org.SouthMillion</groupId>
             <artifactId>common-lib</artifactId>
             <version>1.0.0</version>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- Test -->
