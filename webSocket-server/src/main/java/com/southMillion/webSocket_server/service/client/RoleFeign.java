@@ -1,4 +1,4 @@
-package com.southMillion.webSocket_server.service.client;
+package com.SouthMillion.webSocket_server.service.client;
 
 import org.SouthMillion.dto.role.RoleDTOs;
 import org.SouthMillion.dto.role.advertisment.AdvertisementDTOs;
@@ -9,9 +9,9 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
-@FeignClient(name = "role-service")
+@FeignClient(name = "role-service", contextId = "RoleFeign")
 public interface RoleFeign {
     // Role
     @GetMapping("/api/role/by-user/{userId}")
@@ -21,7 +21,7 @@ public interface RoleFeign {
     RoleDTOs.RoleResp create(@RequestBody RoleDTOs.CreateRoleReq req);
 
     @PostMapping("/api/role/{roleId}/wxinfo")
-    RoleDTOs.RoleResp setWxInfo(@PathVariable("roleId") String roleId,
+    RoleDTOs.RoleResp setWxInfo(@PathVariable("roleId") Long roleId,
                                 @RequestBody RoleDTOs.WxInfoSetReq body);
 
     // Settings
@@ -49,4 +49,13 @@ public interface RoleFeign {
     @GetMapping("/api/other-role/{uid}")
     OtherRoleDTOs.OtherRoleInfo getOtherRole(@PathVariable String uid,
                                              @RequestParam(value="roleId", required=false) String roleId);
+
+    // Limit Core / Breakthrough (限界突破)
+    @PostMapping("/api/role/{roleId}/limit-core")
+    Map<String, Object> limitCore(@PathVariable("roleId") String roleId,
+                                  @RequestBody Map<String, Object> body);
+
+    @PostMapping("/api/role/{roleId}/notice-time")
+    Map<String, Object> noticeTime(@PathVariable("roleId") String roleId,
+                                   @RequestBody Map<String, Object> body);
 }

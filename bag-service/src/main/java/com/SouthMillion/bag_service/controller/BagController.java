@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /** REST mapping cho Hành trang */
@@ -20,20 +21,20 @@ public class BagController {
 
     @GetMapping("/{roleId}/items")
     public ResponseEntity<List<BagDTOs.ItemView>> list(@PathVariable String roleId) {
-        return ResponseEntity.ok(svc.list(roleId));
+        return ResponseEntity.ok(svc.list(Long.valueOf(roleId)));
     }
 
     @PostMapping("/{roleId}/items/use")
     public ResponseEntity<Void> use(@PathVariable String roleId,
                                     @Valid @RequestBody BagDTOs.UseItemReq req) {
-        svc.use(roleId, req);
+        svc.use(Long.valueOf(roleId), req);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{roleId}/items/sell")
     public ResponseEntity<BagDTOs.SellResult> sell(@PathVariable String roleId,
                                                    @Valid @RequestBody BagDTOs.SellItemReq req) {
-        return ResponseEntity.ok(svc.sell(roleId, req));
+        return ResponseEntity.ok(svc.sell(Long.valueOf(roleId), req));
     }
 
     /** GM/event/quest có thể gọi trực tiếp để grant */
@@ -45,7 +46,7 @@ public class BagController {
 
         List<BagDTOs.ItemView> out = svc.grant(
                 req.getUserId(),
-                req.getRoleId(),
+                Long.valueOf(req.getRoleId()),
                 req.getItems(),
                 eventId
         );
@@ -54,5 +55,20 @@ public class BagController {
         return ResponseEntity.ok()
                 .header("X-Event-Id", eventId)
                 .body(out);
+    }
+
+    /** Item recycle (物品回收): consume items, award recycle exp, return level+exp */
+    @PostMapping("/{roleId}/recycle")
+    public ResponseEntity<Map<String, Object>> recycle(
+            @PathVariable String roleId,
+            @RequestBody List<Integer> itemIds) {
+        return ResponseEntity.ok(svc.recycleItems(Long.valueOf(roleId), itemIds));
+    }
+
+    @PostMapping("/{roleId}/buy-cmd")
+    public ResponseEntity<BagDTOs.SellResult> buyCmd(
+            @PathVariable String roleId,
+            @Valid @RequestBody BagDTOs.BuyCmdReq req) {
+        return ResponseEntity.ok(svc.buyCmd(Long.valueOf(roleId), req));
     }
 }

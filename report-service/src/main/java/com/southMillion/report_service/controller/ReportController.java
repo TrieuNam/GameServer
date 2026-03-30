@@ -1,7 +1,7 @@
-package com.southMillion.report_service.controller;
+package com.SouthMillion.report_service.controller;
 
-import com.southMillion.report_service.entity.ReportEvent;
-import com.southMillion.report_service.service.ReportEventService;
+import com.SouthMillion.report_service.entity.ReportEvent;
+import com.SouthMillion.report_service.service.ReportEventService;
 import org.SouthMillion.dto.report.ReportEventDTO;
 import org.SouthMillion.dto.report.ReportResultDTO;
 import org.springframework.beans.factory.annotation.Autowired;

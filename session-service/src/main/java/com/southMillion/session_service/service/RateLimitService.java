@@ -1,4 +1,4 @@
-package com.southMillion.session_service.service;
+package com.SouthMillion.session_service.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

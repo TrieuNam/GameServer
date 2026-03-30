@@ -19,7 +19,7 @@ public class ShiZhuangCacheService {
     }
 
     public void putToCache(ShiZhuangEntity entity) {
-        redisTemplate.opsForValue().set(buildKey(entity.getUserId(), entity.getId()), entity);
+        redisTemplate.opsForValue().set(buildKey(String.valueOf(entity.getUserId()), entity.getId()), entity);
     }
 
     public void removeFromCache(String userId, int id) {

@@ -1,4 +1,4 @@
-package com.southMillion.webSocket_server.config;
+package com.SouthMillion.webSocket_server.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;

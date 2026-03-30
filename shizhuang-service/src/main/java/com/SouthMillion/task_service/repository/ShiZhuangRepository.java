@@ -9,7 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface ShiZhuangRepository extends JpaRepository<ShiZhuangEntity, Integer> {
-    Optional<ShiZhuangEntity> findByUserIdAndId(String userId, int id);
+    Optional<ShiZhuangEntity> findByUserIdAndId(Long userId, int id);
 
-    List<ShiZhuangEntity> findByUserId(String userId);
+    List<ShiZhuangEntity> findByUserId(Long userId);
 }

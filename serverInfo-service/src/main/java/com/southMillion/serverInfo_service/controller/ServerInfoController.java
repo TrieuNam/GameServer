@@ -1,6 +1,6 @@
-package com.southMillion.serverInfo_service.controller;
+package com.SouthMillion.serverInfo_service.controller;
 
-import com.southMillion.serverInfo_service.service.ServerInfoService;
+import com.SouthMillion.serverInfo_service.service.ServerInfoService;
 import org.SouthMillion.dto.serverInfor.ServerInfoDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

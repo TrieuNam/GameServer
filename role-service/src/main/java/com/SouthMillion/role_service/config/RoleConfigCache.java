@@ -3,16 +3,20 @@ package com.SouthMillion.role_service.config;
 import com.SouthMillion.role_service.service.client.ConfigFeign;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -20,8 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-
-
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.*;
@@ -48,8 +50,17 @@ public class RoleConfigCache {
     private final ConfigFeign configFeign;
     private final ObjectMapper om = new ObjectMapper();
 
-    @Value("${role.config.refresh-interval-ms:60000}")
-    private long refreshIntervalMs;
+    @Value("${role.config.startup-retry-count:6}")
+    private int startupRetryCount;
+
+    @Value("${role.config.startup-retry-delay-ms:2000}")
+    private long startupRetryDelayMs;
+
+    @Value("${role.config.roleexp-path:${role.config.roleexp-path-API:/api/config/file?path=gameworld/logicconfig/roleexp.json}}")
+    private String roleExpPath;
+
+    @Value("${role.config.rolename-path:${role.config.rolename-path-API:/api/config/file?path=gameworld/logicconfig/role_name.json}}")
+    private String roleNamePath;
 
     // ===== ETags =====
     private final AtomicReference<String> etagRoleExp  = new AtomicReference<>(null);
@@ -61,20 +72,63 @@ public class RoleConfigCache {
     private final AtomicReference<OtherCfg> otherRef        = new AtomicReference<>(OtherCfg.defaults());
     private final AtomicReference<List<String>> namePoolRef = new AtomicReference<>(List.of("Player"));
 
+    // Guard: ContextRefreshedEvent fires multiple times (parent/child contexts, Eureka re-register, etc.)
+    private final java.util.concurrent.atomic.AtomicBoolean warmedUp = new java.util.concurrent.atomic.AtomicBoolean(false);
+
+    /** Nạp ngay khi Spring context sẵn sàng, trước khi xử lý bất kỳ request nào */
+    @EventListener(ContextRefreshedEvent.class)
+    public void onContextReady() {
+        if (warmedUp.compareAndSet(false, true)) {
+            warmupFromConfigService();
+        }
+    }
+
     /** Scheduler: nạp lại định kỳ (ETag sẽ giúp 304 Not Modified) */
-    @Scheduled(initialDelay = 3000, fixedDelayString = "${role.config.refresh-interval-ms:60000}")
+    @Scheduled(initialDelay = 60000, fixedDelayString = "${role.config.refresh-interval-ms:60000}")
     public void refresh() {
         refreshRoleExp();
         refreshRoleName();
     }
 
+    private void warmupFromConfigService() {
+        String normalizedRoleExpPath = normalizeConfigPath(roleExpPath, "gameworld/logicconfig/roleexp.json");
+        String normalizedRoleNamePath = normalizeConfigPath(roleNamePath, "gameworld/logicconfig/role_name.json");
+
+        for (int attempt = 1; attempt <= startupRetryCount; attempt++) {
+            boolean roleExpReady = refreshRoleExp(normalizedRoleExpPath);
+            refreshRoleName(normalizedRoleNamePath);
+
+            if (roleExpReady) {
+                log.info("[RoleConfigCache] Connected to config-service and loaded role configs (attempt={}/{})",
+                        attempt, startupRetryCount);
+                return;
+            }
+
+            if (attempt < startupRetryCount) {
+                log.warn("[RoleConfigCache] config-service not ready (attempt={}/{}), retry in {}ms",
+                        attempt, startupRetryCount, startupRetryDelayMs);
+                sleepQuietly(startupRetryDelayMs);
+            }
+        }
+
+        log.warn("[RoleConfigCache] Startup retries exhausted, continue with cached/default role config until scheduler refresh succeeds");
+    }
+
     // ========================= REFRESHERS =========================
 
-    /** Nạp roleexp.json (exp_config/base_att/other) */
     private void refreshRoleExp() {
+        refreshRoleExp(normalizeConfigPath(roleExpPath, "gameworld/logicconfig/roleexp.json"));
+    }
+
+    private void refreshRoleName() {
+        refreshRoleName(normalizeConfigPath(roleNamePath, "gameworld/logicconfig/role_name.json"));
+    }
+
+    /** Nạp roleexp.json (exp_config/base_att/other) */
+    private boolean refreshRoleExp(String path) {
         try {
-            ResponseEntity<byte[]> res = configFeign.getRoleExp(etagRoleExp.get());
-            if (res.getStatusCode() == HttpStatus.NOT_MODIFIED) return;
+            ResponseEntity<byte[]> res = configFeign.getFile(path, etagRoleExp.get());
+            if (res.getStatusCode() == HttpStatus.NOT_MODIFIED) return true;
 
             if (res.getStatusCode().is2xxSuccessful() && res.getBody() != null) {
                 String body = new String(res.getBody(), StandardCharsets.UTF_8);
@@ -92,17 +146,22 @@ public class RoleConfigCache {
                         bundle.table().maxLevel(),
                         bundle.baseAttr().getHp(), bundle.baseAttr().getAttack(), bundle.baseAttr().getDefend(), bundle.baseAttr().getSpeed(),
                         bundle.other().getBoxId(), bundle.other().getBoxNum());
+                return true;
             }
+        } catch (FeignException ex) {
+            if (ex.status() == 304) return true; // Not Modified — dữ liệu cache vẫn hợp lệ
+            log.warn("[RoleConfigCache] Cannot refresh roleexp.json (path={}), cause={}", path, ex.toString());
         } catch (Exception ex) {
-            log.warn("[RoleConfigCache] Cannot refresh roleexp.json, cause={}", ex.toString());
+            log.warn("[RoleConfigCache] Cannot refresh roleexp.json (path={}), cause={}", path, ex.toString());
         }
+        return false;
     }
 
-    /** Nạp rolename.json (nếu có) */
-    private void refreshRoleName() {
+    /** Nạp role_name.json (nếu có) */
+    private boolean refreshRoleName(String path) {
         try {
-            ResponseEntity<byte[]> res = configFeign.getRoleName(etagRoleName.get());
-            if (res.getStatusCode() == HttpStatus.NOT_MODIFIED) return;
+            ResponseEntity<byte[]> res = configFeign.getFile(path, etagRoleName.get());
+            if (res.getStatusCode() == HttpStatus.NOT_MODIFIED) return true;
 
             if (res.getStatusCode().is2xxSuccessful() && res.getBody() != null) {
                 String body = new String(res.getBody(), StandardCharsets.UTF_8);
@@ -111,12 +170,18 @@ public class RoleConfigCache {
                     namePoolRef.set(names);
                     String et = res.getHeaders().getFirst(HttpHeaders.ETAG);
                     if (StringUtils.hasText(et)) etagRoleName.set(et);
-                    log.info("[RoleConfigCache] rolename.json loaded: {} names", names.size());
+                    log.info("[RoleConfigCache] role_name.json loaded: {} names", names.size());
+                    return true;
                 }
+                return true;
             }
+        } catch (FeignException ex) {
+            if (ex.status() == 304) return true; // Not Modified — dữ liệu cache vẫn hợp lệ
+            log.warn("[RoleConfigCache] Cannot refresh role_name.json (path={}), cause={}", path, ex.toString());
         } catch (Exception ex) {
-            log.warn("[RoleConfigCache] Cannot refresh rolename.json, cause={}", ex.toString());
+            log.warn("[RoleConfigCache] Cannot refresh role_name.json (path={}), cause={}", path, ex.toString());
         }
+        return false;
     }
 
     // ========================= PARSERS =========================
@@ -351,5 +416,35 @@ public class RoleConfigCache {
     private long optLongNode(JsonNode node, String field, long defVal) {
         Long v = optLongNode(node, field);
         return v == null ? defVal : v;
+    }
+
+    private String normalizeConfigPath(String rawPath, String defaultPath) {
+        if (!StringUtils.hasText(rawPath)) {
+            return defaultPath;
+        }
+
+        String trimmed = rawPath.trim();
+        if (!trimmed.contains("?")) {
+            return trimmed;
+        }
+
+        try {
+            String pathParam = UriComponentsBuilder.fromUriString(trimmed)
+                    .build()
+                    .getQueryParams()
+                    .getFirst("path");
+            return StringUtils.hasText(pathParam) ? pathParam : trimmed;
+        } catch (Exception ex) {
+            log.warn("[RoleConfigCache] Invalid config path format '{}', use raw path", rawPath);
+            return trimmed;
+        }
+    }
+
+    private void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

@@ -40,10 +40,10 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     }
     // ===== helpers =====
 
-    private boolean isWhitelisted(String path) {
-        var wl = props.getWhitelist();
-        if (wl == null || wl.isEmpty()) return false;
-        for (String p : wl) if (matcher.match(p, path)) return true;
+    private boolean isSecured(String path) {
+        var sl = props.getSecured();
+        if (sl == null || sl.isEmpty()) return false;
+        for (String p : sl) if (matcher.match(p, path)) return true;
         return false;
     }
 
@@ -191,8 +191,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
-        // Whitelist
-        if (isWhitelisted(path)) {
+        // Nếu path không nằm trong secured list → public, bỏ qua auth
+        if (!isSecured(path)) {
             return chain.filter(exchange);
         }
 

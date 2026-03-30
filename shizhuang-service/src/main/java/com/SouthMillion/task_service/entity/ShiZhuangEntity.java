@@ -17,6 +17,6 @@ public class ShiZhuangEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    private String userId;
+    private Long userId;
     private int level;
 }

@@ -1,28 +1,25 @@
-package com.southMillion.webSocket_server.handler.role;
+package com.SouthMillion.webSocket_server.handler.role;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
-import com.southMillion.webSocket_server.dto.PlayerSession;
-import com.southMillion.webSocket_server.net.*;
-import com.southMillion.webSocket_server.service.InMemoryPlayerSessionRegistry;
-import com.southMillion.webSocket_server.service.client.RoleFeign;
-import com.southMillion.webSocket_server.utils.FeignCall;
+import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.net.*;
+import com.SouthMillion.webSocket_server.service.InMemoryPlayerSessionRegistry;
+import com.SouthMillion.webSocket_server.service.client.RoleFeign;
+import com.SouthMillion.webSocket_server.utils.FeignCall;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.role.RoleDTOs;
-import org.SouthMillion.dto.role.advertisment.AdvertisementDTOs;
-import org.SouthMillion.dto.role.mail.MailDTOs;
 import org.SouthMillion.dto.role.other.OtherRoleDTOs;
 import org.SouthMillion.dto.role.settings.SettingsDTOs;
 import org.SouthMillion.proto.Msgother.Msgother;
 import org.SouthMillion.proto.Msgrole.Msgrole;
-import org.SouthMillion.proto.msgmail.Msgmail;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Map;
 import java.util.List;
 import java.util.Objects;
 
@@ -40,10 +37,66 @@ public class RoleServiceHandler implements MessageHandler {
         return new int[]{
                 MsgIds.CS_ROLE_WXINFO_SET,
                 MsgIds.CS_ROLE_SYSTEM_SET_REQ,
-                MsgIds.CS_MAIL_REQ,
-                MsgIds.CS_ADVERTISEMENT_FETCH,
-                MsgIds.CS_GET_OTHER_ROLE_INFO
+                MsgIds.CS_GET_OTHER_ROLE_INFO,
+                MsgIds.CS_NOTICE_TIME_REQ
         };
+    }
+
+    /** Gọi sau login: đẩy role attributes/stats (1401) về client. */
+    public Mono<Void> pushAll(PlayerSession ps) {
+        if (blank(ps.getUserId()) || ps.getRoleId() == null) return Mono.empty();
+        return FeignCall.withToken(ps.getSessionId(), "role-attr.self",
+                        () -> roleFeign.getOtherRole(ps.getUserId(), String.valueOf(ps.getRoleId())))
+                .doOnNext(info -> emitAttrListFromOtherRoleInfo(ps, info, 0))
+                .onErrorResume(e -> {
+                    log.warn("[role-attr] pushAll error: {}", e.toString());
+                    return Mono.empty();
+                })
+                .then();
+    }
+
+    /**
+     * Push full role state after an external mutation (e.g. box sell gives exp).
+     *
+     * Emits:
+     *  - 1400 PB_SCRoleInfoAck (authoritative snapshot)
+     *  - 1402 PB_SCRoleExpChange (snapshot-style with change_exp=0)
+     *  - 1403 PB_SCRoleLevelChange (snapshot-style)
+     *  - 1401 PB_SCRoleAttrList (via pushAll)
+     */
+    public Mono<Void> pushRoleState(PlayerSession ps) {
+        if (blank(ps.getUserId()) || ps.getRoleId() == null) return Mono.empty();
+
+        Mono<Void> baseInfo = FeignCall.withToken(ps.getSessionId(), "role.by-user.snapshot",
+                        () -> roleFeign.listByUser(ps.getUserId()))
+                .doOnNext(list -> {
+                    RoleDTOs.RoleResp role = selectCurrentRole(list, ps.getRoleId());
+                    if (role == null) return;
+
+                    Emitters.sendRoleInfoAck(ps, role);
+
+                    long curExp = role.getCurExp() != null ? role.getCurExp() : 0L;
+                    int level = role.getLevel() != null ? role.getLevel() : 1;
+
+                    Msgrole.PB_SCRoleExpChange exp = Msgrole.PB_SCRoleExpChange.newBuilder()
+                            .setChangeExp(0L)
+                            .setCurExp(curExp)
+                            .build();
+                    Emitters.emit(ps, MsgIds.SC_ROLE_EXP_CHANGE, exp);
+
+                    Msgrole.PB_SCRoleLevelChange lvl = Msgrole.PB_SCRoleLevelChange.newBuilder()
+                            .setLevel(level)
+                            .setExp(curExp)
+                            .build();
+                    Emitters.emit(ps, MsgIds.SC_ROLE_LEVEL_CHANGE, lvl);
+                })
+                .onErrorResume(e -> {
+                    log.warn("[role-state] snapshot push failed: {}", e.toString());
+                    return Mono.empty();
+                })
+                .then();
+
+        return baseInfo.then(pushAll(ps));
     }
 
     @Override
@@ -52,9 +105,8 @@ public class RoleServiceHandler implements MessageHandler {
             return switch (msgId) {
                 case MsgIds.CS_ROLE_WXINFO_SET      -> onWxInfoSet(ps, payload);
                 case MsgIds.CS_ROLE_SYSTEM_SET_REQ  -> onSystemSet(ps, payload);
-                case MsgIds.CS_MAIL_REQ             -> onMail(ps, payload);
-                case MsgIds.CS_ADVERTISEMENT_FETCH  -> onAdFetch(ps, payload);
                 case MsgIds.CS_GET_OTHER_ROLE_INFO  -> onGetOtherRole(ps, payload);
+                case MsgIds.CS_NOTICE_TIME_REQ      -> onNoticeTimeReq(ps, payload);
                 default -> Mono.empty();
             };
         } catch (Throwable t) {
@@ -77,7 +129,7 @@ public class RoleServiceHandler implements MessageHandler {
 
         // Lấy before để so sánh exp/level (phục vụ 1402/1403)
         Mono<List<RoleDTOs.RoleResp>> beforeMono = FeignCall
-                .withToken(ps.getSessionId(), "role.getById", () -> roleFeign.listByUser(ps.getRoleId()))
+                .withToken(ps.getSessionId(), "role.getById", () -> roleFeign.listByUser(ps.getUserId()))
                 .defaultIfEmpty(null);
 
         return beforeMono.flatMap(before ->
@@ -85,8 +137,8 @@ public class RoleServiceHandler implements MessageHandler {
                                 () -> roleFeign.setWxInfo(ps.getRoleId(), body))
                         .doOnNext(after -> {
                             // bind lại & emit RoleInfo
-                            registry.bindRoleToSession(ps, after.getRoleId(), after.getUserId(), after.getName());
-                            send(ps, MsgIds.SC_ROLE_INFO_ACK, buildRoleInfoAck(after));
+                            registry.bindRoleToSession(ps, after.getRoleId() != null ? Long.parseLong(after.getRoleId()) : null, after.getUserId(), after.getName());
+                            Emitters.emit(ps, MsgIds.SC_ROLE_INFO_ACK, buildRoleInfoAck(after));
                             // emit thay đổi EXP/LEVEL nếu có
                             emitExpChangeIfAny(ps, (RoleDTOs.RoleResp) before, after);
                             emitLevelChangeIfAny(ps, (RoleDTOs.RoleResp) before, after);
@@ -118,80 +170,12 @@ public class RoleServiceHandler implements MessageHandler {
                                 .setSystemSetType(type)
                                 .setSystemSetParam(param));
                     }
-                    send(ps, MsgIds.SC_ROLE_SYSTEM_SET_INFO, b.build());
+                    Emitters.emit(ps, MsgIds.SC_ROLE_SYSTEM_SET_INFO, b.build());
                 })
                 // Lấy attr & capability mới → phát 1401 (notify_reason: CHANGE=1)
                 .then(FeignCall.withToken(ps.getSessionId(), "other-role.self",
-                        () -> roleFeign.getOtherRole(ps.getUserId(), ps.getRoleId())))
+                        () -> roleFeign.getOtherRole(ps.getUserId(), ps.getRoleId() != null ? String.valueOf(ps.getRoleId()) : null)))
                 .doOnNext(info -> emitAttrListFromOtherRoleInfo(ps, info, /*notifyReason=*/1))
-                .then();
-    }
-
-    /* ======================= MAIL ======================= */
-    private Mono<Void> onMail(PlayerSession ps, byte[] payload) {
-        if (blank(ps.getUserId())) return Mono.empty();
-        final Msgmail.PB_CSMailReq req = parse(payload, Msgmail.PB_CSMailReq::parseFrom);
-        if (req == null) return Mono.empty();
-
-        int type = req.hasType() ? req.getType() : 0;
-        String userId = ps.getUserId();
-        String mailId = req.hasP1() ? Integer.toString(req.getP1()) : null;
-
-        return switch (type) {
-            case 0 -> FeignCall.withToken(ps.getSessionId(), "mail.list",
-                            () -> roleFeign.mailList(new MailDTOs.MailListReq(userId)))
-                    .doOnNext(resp -> send(ps, MsgIds.SC_MAIL_LIST_ACK, Msgmail.PB_SCMailListAck.newBuilder().build()))
-                    .then();
-
-            case 1 -> FeignCall.withToken(ps.getSessionId(), "mail.detail",
-                            () -> roleFeign.mailDetail(userId, mailId))
-                    .doOnNext(resp -> send(ps, MsgIds.SC_MAIL_DETAIL, Msgmail.PB_SCMailDetail.newBuilder().build()))
-                    .then();
-
-            case 2 -> FeignCall.withToken(ps.getSessionId(), "mail.delete",
-                            () -> roleFeign.mailDelete(userId, mailId))
-                    .doOnNext(resp -> send(ps, MsgIds.SC_MAIL_DELETE_ACK, Msgmail.PB_SCMailDeleteAck.newBuilder().build()))
-                    .then();
-
-            case 3 -> FeignCall.withToken(ps.getSessionId(), "mail.fetch",
-                            () -> roleFeign.mailFetch(userId, mailId))
-                    .doOnNext(resp -> send(ps, MsgIds.SC_FETCH_MAIL_ACK, Msgmail.PB_SCFetchMailAck.newBuilder().build()))
-                    .then();
-
-            default -> {
-                log.warn("[mail] unknown type={}", type);
-                yield Mono.empty();
-            }
-        };
-    }
-
-    /* ======================= ADS ======================= */
-    private Mono<Void> onAdFetch(PlayerSession ps, byte[] payload) {
-        if (blank(ps.getUserId())) return Mono.empty();
-        final Msgother.PB_CSAdvertisementFetch req = parse(payload, Msgother.PB_CSAdvertisementFetch::parseFrom);
-        if (req == null) return Mono.empty();
-
-        var body = new AdvertisementDTOs.AdFetchReq(
-                ps.getUserId(), ps.getRoleId(),
-                req.hasSeq() ? req.getSeq() : 0,
-                req.hasIsDia() ? req.getIsDia() : 0,
-                req.hasParam() ? req.getParam() : 0
-        );
-
-        return FeignCall.withToken(ps.getSessionId(), "ads.claim",
-                        () -> roleFeign.claimAd(body))
-                .doOnNext(info -> {
-                    Msgother.PB_SCAdvertisement one = Msgother.PB_SCAdvertisement.newBuilder()
-                            .setSeq(body.seq())
-                            .setTodayCount(0)
-                            .setNextFetchTime(0)
-                            .build();
-                    Msgother.PB_SCAdvertisementInfo out = Msgother.PB_SCAdvertisementInfo.newBuilder()
-                            .addAdList(one)
-                            .setIsInit(0)
-                            .build();
-                    send(ps, MsgIds.SC_ADVERTISEMENT_INFO, out);
-                })
                 .then();
     }
 
@@ -210,7 +194,45 @@ public class RoleServiceHandler implements MessageHandler {
                     Msgrole.PB_SCGetOtherRoleRet out = Msgrole.PB_SCGetOtherRoleRet.newBuilder()
                             .setUid(uid)
                             .build();
-                    send(ps, MsgIds.SC_GET_OTHER_ROLE_RET, out);
+                    Emitters.emit(ps, MsgIds.SC_GET_OTHER_ROLE_RET, out);
+                })
+                .then();
+    }
+
+    /* ======================= NOTICE TIME ======================= */
+
+    /**
+     * CS:1464 PB_CSNoticeTimeReq — client hỏi thời điểm hiển thị notice tiếp theo.
+     * SC:1465 PB_SCNoticeTimeRet — trả về danh sách notice_id + thời gian (epoch giây).
+     * Nếu role-service không cung cấp endpoint, trả về list rỗng để client không bị block.
+     */
+    private Mono<Void> onNoticeTimeReq(PlayerSession ps, byte[] payload) {
+        if (ps.getRoleId() == null) return Mono.empty();
+        final Msgother.PB_CSNoticeTimeReq req = parse(payload, Msgother.PB_CSNoticeTimeReq::parseFrom);
+        int type = req != null && req.hasType() ? req.getType() : 0;
+        long param = req != null && req.hasParam() ? req.getParam() : 0L;
+
+        Map<String, Object> body = Map.of("type", type, "param", param);
+
+        return FeignCall.withToken(ps.getSessionId(), "role.noticeTime",
+                        () -> roleFeign.noticeTime(String.valueOf(ps.getRoleId()), body))
+                .doOnNext(resp -> {
+                    long noticeTime = 0L;
+                    if (resp != null && resp.get("noticeTime") instanceof Number n) {
+                        noticeTime = n.longValue();
+                    }
+                    Msgother.PB_SCNoticeTimeRet out = Msgother.PB_SCNoticeTimeRet.newBuilder()
+                            .setNoticeTime(noticeTime)
+                            .build();
+                    Emitters.emit(ps, MsgIds.SC_NOTICE_TIME_RET, out);
+                })
+                .onErrorResume(e -> {
+                    log.warn("[notice-time] role-service call failed: {}", e.toString());
+                    Msgother.PB_SCNoticeTimeRet out = Msgother.PB_SCNoticeTimeRet.newBuilder()
+                            .setNoticeTime(0L)
+                            .build();
+                    Emitters.emit(ps, MsgIds.SC_NOTICE_TIME_RET, out);
+                    return Mono.empty();
                 })
                 .then();
     }
@@ -227,35 +249,63 @@ public class RoleServiceHandler implements MessageHandler {
         // notify_reason
         try { b.setNotifyReason(notifyReason); } catch (Throwable ignore) {}
 
-        // capability: tìm getCapability() hoặc getCap()
+        // capability: try explicit field first, fallback from core attrs if needed
         long cap = 0L;
         try {
-            Object v = callGetter(info, "getCapability");
-            if (v == null) v = callGetter(info, "getCap");
+            Object v = callGetterFirst(info, "getCapability", "getCap", "capability", "cap");
             if (v instanceof Number n) cap = n.longValue();
         } catch (Throwable ignore) {}
-        try { b.setCapability(cap); } catch (Throwable ignore) {}
 
-        // attr list: getRoleAttrList() | getAttrList() | getAttrs() → collection
+        // attr list: support both collection style and record style attributes object
         try {
-            Object rawList = callGetterFirst(info, "getRoleAttrList", "getAttrList", "getAttrs");
+            Object rawList = callGetterFirst(
+                    info,
+                    "getRoleAttrList", "getAttrList", "getAttrs",
+                    "roleAttrList", "attrList", "attrs", "attributes"
+            );
             if (rawList instanceof Collection<?> col) {
                 for (Object elt : col) {
                     Integer t = asInt(callGetterFirst(elt, "getAttrType", "getType", "attrType", "type"));
                     Long    v = asLong(callGetterFirst(elt, "getAttrValue", "getValue", "attrValue", "value"));
                     if (t == null || v == null) continue;
-                    Msgrole.PB_AttrPair pair = Msgrole.PB_AttrPair.newBuilder()
-                            .setAttrType(t)
-                            .setAttrValue(v)
-                            .build();
-                    b.addAttrList(pair);
+                    addAttrPair(b, t, v);
+                }
+            } else if (rawList != null) {
+                // OtherRoleInfo.attributes() is a single object with core fields.
+                Long hp = asLong(callGetterFirst(rawList, "getHp", "hp"));
+                Long atk = asLong(callGetterFirst(rawList, "getAttackValue", "attackValue", "getAtk", "atk"));
+                Long def = asLong(callGetterFirst(rawList, "getDefenseValue", "defenseValue", "getDef", "def"));
+                Long spd = asLong(callGetterFirst(rawList, "getSpeed", "speed"));
+
+                if (hp != null) addAttrPair(b, 1, hp);
+                if (atk != null) addAttrPair(b, 2, atk);
+                if (def != null) addAttrPair(b, 3, def);
+                if (spd != null) addAttrPair(b, 4, spd);
+
+                if (cap <= 0) {
+                    cap = (hp != null ? hp : 0L)
+                            + (atk != null ? atk : 0L)
+                            + (def != null ? def : 0L)
+                            + (spd != null ? spd * 10L : 0L);
                 }
             }
         } catch (Throwable e) {
             log.debug("[attr-list] reflection mapping skipped: {}", e.toString());
         }
 
-        send(ps, MsgIds.SC_ROLE_ATTR_LIST, b.build());
+        try { b.setCapability(cap); } catch (Throwable ignore) {}
+
+        Emitters.emit(ps, MsgIds.SC_ROLE_ATTR_LIST, b.build());
+    }
+
+    private void addAttrPair(Msgrole.PB_SCRoleAttrList.Builder b, int attrType, long attrValue) {
+        try {
+            Msgrole.PB_AttrPair pair = Msgrole.PB_AttrPair.newBuilder()
+                    .setAttrType(attrType)
+                    .setAttrValue(attrValue)
+                    .build();
+            b.addAttrList(pair);
+        } catch (Throwable ignore) {}
     }
 
     /** EXP thay đổi → phát 1402 (change_exp, cur_exp). */
@@ -271,7 +321,7 @@ public class RoleServiceHandler implements MessageHandler {
                 .setCurExp(af)
                 .build();
 
-        send(ps, MsgIds.SC_ROLE_EXP_CHANGE, out);
+        Emitters.emit(ps, MsgIds.SC_ROLE_EXP_CHANGE, out);
     }
 
     /** LEVEL thay đổi → phát 1403 (level, exp). */
@@ -287,7 +337,7 @@ public class RoleServiceHandler implements MessageHandler {
                 .setExp(curExp)
                 .build();
 
-        send(ps, MsgIds.SC_ROLE_LEVEL_CHANGE, out);
+        Emitters.emit(ps, MsgIds.SC_ROLE_LEVEL_CHANGE, out);
     }
 
     /* ======================= helpers ======================= */
@@ -318,11 +368,6 @@ public class RoleServiceHandler implements MessageHandler {
                 .build();
     }
 
-    private void send(PlayerSession ps, int msgId, MessageLite pb) {
-        byte[] payload = pb != null ? pb.toByteArray() : new byte[0];
-        byte[] frame = PacketCodec.encode(msgId, payload);
-        ps.sendBinary(frame);
-    }
 
     private boolean blank(String s) { return s == null || s.isBlank(); }
 
@@ -368,5 +413,16 @@ public class RoleServiceHandler implements MessageHandler {
         if (v == null) return null;
         if (v instanceof Number n) return n.longValue();
         try { return Long.parseLong(String.valueOf(v)); } catch (Exception e) { return null; }
+    }
+
+    private RoleDTOs.RoleResp selectCurrentRole(List<RoleDTOs.RoleResp> list, Long roleId) {
+        if (list == null || list.isEmpty()) return null;
+        String wanted = String.valueOf(roleId);
+        for (RoleDTOs.RoleResp role : list) {
+            if (role != null && Objects.equals(role.getRoleId(), wanted)) {
+                return role;
+            }
+        }
+        return list.get(0);
     }
 }

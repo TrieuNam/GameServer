@@ -6,7 +6,7 @@ import java.util.List;
 
 @ConfigurationProperties(prefix = "app.auth")
 public class AppAuthProperties {
-    private List<String> whitelist = List.of();
+    private List<String> secured = List.of();
     private Ws ws = new Ws();
     private String sessionServiceId = "session-service";
     private String introspectPath = "/api/session/introspect";
@@ -21,8 +21,8 @@ public class AppAuthProperties {
         public void setHeaderTokenKeys(List<String> v) { this.headerTokenKeys = v; }
     }
 
-    public List<String> getWhitelist() { return whitelist; }
-    public void setWhitelist(List<String> whitelist) { this.whitelist = whitelist; }
+    public List<String> getSecured() { return secured; }
+    public void setSecured(List<String> secured) { this.secured = secured; }
     public Ws getWs() { return ws; }
     public void setWs(Ws ws) { this.ws = ws; }
     public String getSessionServiceId() { return sessionServiceId; }

@@ -1,4 +1,4 @@
-package com.southMillion.webSocket_server.service.client;
+package com.SouthMillion.webSocket_server.service.client;
 
 import org.SouthMillion.dto.shop.ResultDTO;
 import org.SouthMillion.dto.shop.ShopDTOs;
@@ -14,10 +14,9 @@ public interface ShopFeign {
     @PostMapping("/buy")
     ResultDTO<ShopDTOs.BuyResp> buy(@RequestBody ShopDTOs.BuyReq req);
 
-    // (tuỳ chọn) nếu cần bootstrap/gỡ rối
-    @GetMapping("/list/common")
-    ResultDTO<ShopDTOs.ShopListResp> listCommon(@RequestParam("level") int level,
-                                                @RequestParam("page") int page);
+    // Controller: POST /api/shop/list/common  @RequestBody ListCommonReq
+    @PostMapping("/list/common")
+    ResultDTO<ShopDTOs.ShopListResp> listCommon(@RequestBody ShopDTOs.ListCommonReq req);
 
     @PostMapping("/list/cloth")
     ResultDTO<ShopDTOs.ShopListResp> listCloth(@RequestBody ShopDTOs.ListClothReq req);

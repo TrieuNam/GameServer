@@ -14,8 +14,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
-
 @Component
 @RequiredArgsConstructor
 public class BagEventConsumer {
@@ -46,7 +44,7 @@ public class BagEventConsumer {
 
         String key = "bag:evt:" + eventId;
         try {
-            if (Boolean.TRUE.equals(redis.hasKey(key))) {
+            if (redis.hasKey(key)) {
                 log.debug("Skip nhanh do Redis có key: {}", key);
                 ack.acknowledge();
                 return;
@@ -56,13 +54,13 @@ public class BagEventConsumer {
                     .map(i -> BagDTOs.GrantItem.builder()
                             .itemId(i.getItemId())
                             .num(i.getNum())
-                            .bind(i.getBind())
-                            .expireAt(i.getExpireAt()) // nếu là epoch giây: Instant.ofEpochSecond(...)
+                            .bind(Boolean.TRUE.equals(i.getBind()) ? 1 : 0)
+                            .expireAt(i.getExpireAt())
                             .build())
                     .toList();
 
             // === 1) Cập nhật DB (grant) – @Transactional bên trong
-            var result = svc.grant(evt.getUserId(), evt.getRoleId(), items, eventId);
+            var result = svc.grant(evt.getUserId(), Long.valueOf(evt.getRoleId()), items, eventId, false);
             boolean processed = (result != null && !result.isEmpty());
 
             if (processed) {

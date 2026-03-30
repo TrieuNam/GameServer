@@ -25,10 +25,10 @@ public class ShopController {
      * - slots: override number of mystery slots (fallback: app.shenmi.default-slots)
      */
     @GetMapping("/info")
-    public ResultDTO<ShopDTOs.InfoResp> info(@RequestParam("roleId") String roleId,
+    public ResultDTO<ShopDTOs.InfoResp> info(@RequestParam("roleId") Long roleId,
                                              @RequestParam(value = "level", required = false) Integer level,
                                              @RequestParam(value = "slots", required = false) Integer slots) {
-        return svc.info(roleId, level, slots);
+        return svc.info(String.valueOf(roleId), level, slots);
     }
 
     @PostMapping("/list/common")

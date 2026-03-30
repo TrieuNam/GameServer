@@ -1,0 +1,119 @@
+// Trial Service gRPC definitions
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.grpc.trial";
+option java_outer_classname = "TrialServiceProto";
+
+package trial;
+
+// Trial Service Definition
+service TrialService {
+  // Get trial record for user
+  rpc GetTrialRecord(GetTrialRecordRequest) returns (TrialRecordResponse);
+  
+  // Get all trial records for user
+  rpc GetAllTrialRecords(GetAllTrialRecordsRequest) returns (AllTrialRecordsResponse);
+  
+  // Start trial
+  rpc StartTrial(StartTrialRequest) returns (TrialRecordResponse);
+  
+  // Complete trial stage
+  rpc CompleteTrial(CompleteTrialRequest) returns (TrialRecordResponse);
+  
+  // Fail trial
+  rpc FailTrial(FailTrialRequest) returns (TrialRecordResponse);
+  
+  // Advance to next stage
+  rpc AdvanceStage(AdvanceStageRequest) returns (TrialRecordResponse);
+  
+  // Claim stage reward
+  rpc ClaimReward(ClaimRewardRequest) returns (ClaimRewardResponse);
+  
+  // Reset daily attempts
+  rpc ResetDailyAttempts(ResetDailyAttemptsRequest) returns (common.ResponseStatus);
+}
+
+// Messages
+
+message GetTrialRecordRequest {
+  int64 user_id = 1;
+  int32 trial_id = 2;
+}
+
+message GetAllTrialRecordsRequest {
+  int64 user_id = 1;
+}
+
+message StartTrialRequest {
+  int64 user_id = 1;
+  int32 trial_id = 2;
+}
+
+message CompleteTrialRequest {
+  int64 user_id = 1;
+  int32 trial_id = 2;
+  int64 score = 3;
+  int32 stars = 4;
+  int32 completion_time = 5; // seconds
+}
+
+message FailTrialRequest {
+  int64 user_id = 1;
+  int32 trial_id = 2;
+}
+
+message AdvanceStageRequest {
+  int64 user_id = 1;
+  int32 trial_id = 2;
+}
+
+message ClaimRewardRequest {
+  int64 user_id = 1;
+  int32 trial_id = 2;
+  int32 stage_id = 3;
+}
+
+message ResetDailyAttemptsRequest {
+  int64 user_id = 1;
+  int32 trial_id = 2; // Optional: if 0, reset all trials
+}
+
+// Response Messages
+
+message TrialRecordResponse {
+  TrialRecord record = 1;
+  common.ResponseStatus status = 2;
+}
+
+message AllTrialRecordsResponse {
+  repeated TrialRecord records = 1;
+  common.ResponseStatus status = 2;
+}
+
+message ClaimRewardResponse {
+  bool success = 1;
+  common.RewardBundle rewards = 2;
+  common.ResponseStatus status = 3;
+}
+
+// Data Models
+
+message TrialRecord {
+  int64 user_id = 1;
+  int32 trial_id = 2;
+  int32 current_stage = 3;
+  int32 best_stage = 4;
+  int64 best_score = 5;
+  int32 total_attempts = 6;
+  int32 daily_attempts = 7;
+  int32 max_daily_attempts = 8;
+  string status = 9;  // LOCKED, NOT_STARTED, IN_PROGRESS, COMPLETED, FAILED
+  int64 last_attempt_time = 10; // Unix timestamp
+  int64 created_at = 11;
+  int64 updated_at = 12;
+  repeated int32 claimed_reward_stages = 13;
+  int32 stars_earned = 14;
+}

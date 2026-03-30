@@ -5,9 +5,9 @@ spring:
   application:
     name: pet-service
   datasource:
-    url: jdbc:mysql://localhost:3306/db_pet_service
-    username: tpnam
-    password: 121831
+    url: ${DB_URL:jdbc:mysql://localhost:33077/game_pet?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:tpnam}
+    password: ${DB_PASSWORD:121831}
   jpa:
     hibernate:
       ddl-auto: none

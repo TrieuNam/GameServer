@@ -16,7 +16,7 @@ import lombok.Setter;
 @Setter
 public class BoxSetting {
     @Id
-    private String roleId;
+    private Long roleId;
 
     private int equipEqality;
     private int openFiveMark;

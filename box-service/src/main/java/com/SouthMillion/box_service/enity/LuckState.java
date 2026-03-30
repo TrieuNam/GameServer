@@ -6,7 +6,7 @@ import lombok.*;
 @Entity @Table(name="luck_state")
 @Getter @Setter @NoArgsConstructor
 public class LuckState {
-    @Id @Column(length=64) private String roleId;
+    @Id private Long roleId;
     private long startEpoch = 0L;
     private long endEpoch   = 0L;
     private long receiveBitmap = 0L;

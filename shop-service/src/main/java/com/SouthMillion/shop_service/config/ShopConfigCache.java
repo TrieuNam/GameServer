@@ -44,7 +44,7 @@ public class ShopConfigCache {
         JsonNode cached = cache.getIfPresent(path);
         String etag = etags.get(path);
 
-        ResponseEntity<byte[]> res = configFeign.byPath(path, null,1);
+        ResponseEntity<byte[]> res = configFeign.getFile(path, etag);
         if (res.getStatusCode().is2xxSuccessful() && res.getBody()!=null) {
             String body = new String(res.getBody(), StandardCharsets.UTF_8);
             JsonNode node = safeTree(body);
@@ -53,11 +53,14 @@ public class ShopConfigCache {
             if (newTag != null) etags.put(path, newTag);
             return node;
         }
-        // 304 Not Modified
+        if (res.getStatusCode().value() == 304 && cached != null) return cached;
         if (cached != null) return cached;
 
-        // fallback: nếu 304 nhưng cache null (lần đầu), gọi lại không header
-        ResponseEntity<byte[]> res2 = configFeign.byPath(path, null,1);
+        // fallback: nếu lần đầu cache rỗng thì gọi lại không ETag
+        ResponseEntity<byte[]> res2 = configFeign.getFile(path, null);
+        if (!res2.getStatusCode().is2xxSuccessful() || res2.getBody() == null) {
+            throw new RuntimeException("Cannot load config path=" + path + " status=" + res2.getStatusCode());
+        }
         String body = new String(res2.getBody(), StandardCharsets.UTF_8);
         JsonNode node = safeTree(body);
         cache.put(path, node);

@@ -1,0 +1,215 @@
+package com.SouthMillion.webSocket_server.handler.pagoda;
+
+import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.net.Emitters;
+import com.SouthMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
+import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
+import com.SouthMillion.webSocket_server.service.client.PagodaFeign;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.SouthMillion.proto.Msgpagoda.Msgpagoda;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
+
+/**
+ * Handles tower/pagoda dungeon operations.
+ *
+ * Two separate tower systems:
+ *   2120 PB_CSShiLianPagodaReq  → 试炼之塔 (Trial Tower)      → 2121 PB_SCShiLianPagodaInfo
+ *   2122 PB_CSGuMoPagodaReq     → 锢魔之塔 (Demon-Lock Tower) → 2123 PB_SCGuMoPagodaListInfo
+ *
+ * type field in request: 1=GET_INFO, 2=CHALLENGE, 3=CLAIM_REWARD
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class PagodaHandler implements MessageHandler {
+
+    private final PagodaFeign pagodaFeign;
+    private final TaskProgressPublisher taskProgressPublisher;
+    private final TaskActionConditionMapping taskActionConditionMapping;
+
+    private static final int OP_GET_INFO    = 1;
+    private static final int OP_CHALLENGE   = 2;
+    private static final int OP_CLAIM       = 3;
+
+    @Override
+    public int[] interests() {
+        return new int[]{2120, 2122};
+    }
+
+    /** Goi sau login: day thong tin toa thap (2121, 2123) ve client. */
+    public Mono<Void> pushAll(PlayerSession session) {
+        Long roleIdStr = session.getRoleId();
+        if (roleIdStr == null) return Mono.empty();
+        return Mono.fromRunnable(() -> {
+            try {
+                Long roleId = roleIdStr;
+                handleShiLian(session, roleId, new byte[0]);
+                handleGuMo(session, roleId, new byte[0]);
+            } catch (NumberFormatException e) {
+                log.warn("[Pagoda] pushAll: roleId khong hop le={}", roleIdStr);
+            }
+        });
+    }
+
+    @Override
+    public Mono<Void> handle(PlayerSession session, int msgId, byte[] payload) {
+        return Mono.fromRunnable(() -> {
+            try {
+                Long roleId = session.getRoleId();
+                if (msgId == 2120) {
+                    handleShiLian(session, roleId, payload);
+                } else {
+                    handleGuMo(session, roleId, payload);
+                }
+            } catch (Exception e) {
+                log.error("[Pagoda] Error for msgId={}, roleId={}", msgId, session.getRoleId(), e);
+            }
+        });
+    }
+
+    // 2120: Trial Tower (试炼之塔) → 2121 PB_SCShiLianPagodaInfo
+    private void handleShiLian(PlayerSession session, Long roleId, byte[] payload) {
+        try {
+            Msgpagoda.PB_CSShiLianPagodaReq req = Msgpagoda.PB_CSShiLianPagodaReq.parseFrom(payload);
+            int type = req.hasType() ? req.getType() : OP_GET_INFO;
+            int p1   = req.hasP1()   ? req.getP1()   : 0;
+
+            log.debug("[Pagoda/ShiLian] type={}, p1={}, roleId={}", type, p1, roleId);
+
+            switch (type) {
+                case OP_CHALLENGE -> {
+                    Map<String, Object> challenge = pagodaFeign.challengeShiLian(String.valueOf(roleId), p1);
+                    if (isShiLianChallengeSuccess(challenge, p1)) {
+                        publishTaskProgress(roleId, taskActionConditionMapping.pagodaShilianChallengeTaskKey(), "websocket-pagoda-shilian-challenge");
+                    }
+                }
+                case OP_CLAIM -> {
+                    Boolean claimed = pagodaFeign.claimShiLian(String.valueOf(roleId), p1);
+                    if (Boolean.TRUE.equals(claimed)) {
+                        publishTaskProgress(roleId, taskActionConditionMapping.pagodaShilianClaimTaskKey(), "websocket-pagoda-shilian-claim");
+                    }
+                }
+                default           -> {} // GET_INFO — just fetch below
+            }
+
+            Map<String, Object> data = pagodaFeign.getShiLian(String.valueOf(roleId));
+            Msgpagoda.PB_SCShiLianPagodaInfo.Builder builder = Msgpagoda.PB_SCShiLianPagodaInfo.newBuilder();
+            if (data != null) {
+                if (data.get("passLevel") instanceof Number n)     builder.setPassLevel(n.intValue());
+                if (data.get("bestLevel") instanceof Number n)     builder.setBestLeve(n.intValue());
+                if (data.get("useItem") instanceof Number n)       builder.addUseItem(n.intValue());
+                if (data.get("randomId") instanceof Number n)      builder.addRandomId(n.intValue());
+                if (data.get("seasonEndTime") instanceof Number n) builder.setSeasonEndTime(n.intValue());
+            }
+            Emitters.emit(session, 2121, builder.build().toByteArray());
+        } catch (Exception e) {
+            log.error("[Pagoda/ShiLian] Error for roleId={}", roleId, e);
+            try {
+                Emitters.emit(session, 2121, Msgpagoda.PB_SCShiLianPagodaInfo.newBuilder().build().toByteArray());
+            } catch (Exception ignored) {}
+        }
+    }
+
+    // 2122: Demon-Lock Tower (锢魔之塔) → 2123 PB_SCGuMoPagodaListInfo
+    private void handleGuMo(PlayerSession session, Long roleId, byte[] payload) {
+        try {
+            Msgpagoda.PB_CSGuMoPagodaReq req = Msgpagoda.PB_CSGuMoPagodaReq.parseFrom(payload);
+            int type = req.hasType() ? req.getType() : OP_GET_INFO;
+            int p1   = req.hasP1()   ? req.getP1()   : 0;
+
+            log.debug("[Pagoda/GuMo] type={}, p1={}, roleId={}", type, p1, roleId);
+
+            switch (type) {
+                case OP_CHALLENGE -> {
+                    Map<String, Object> challenge = pagodaFeign.challengeGuMo(String.valueOf(roleId), p1);
+                    if (isGuMoChallengeSuccess(challenge, p1)) {
+                        publishTaskProgress(roleId, taskActionConditionMapping.pagodaGumoChallengeTaskKey(), "websocket-pagoda-gumo-challenge");
+                    }
+                }
+                case OP_CLAIM -> {
+                    Boolean claimed = pagodaFeign.claimGuMo(String.valueOf(roleId), p1);
+                    if (Boolean.TRUE.equals(claimed)) {
+                        publishTaskProgress(roleId, taskActionConditionMapping.pagodaGumoClaimTaskKey(), "websocket-pagoda-gumo-claim");
+                    }
+                }
+                default           -> {}
+            }
+
+            Map<String, Object> data = pagodaFeign.getGuMo(String.valueOf(roleId));
+            Msgpagoda.PB_SCGuMoPagodaListInfo.Builder builder = Msgpagoda.PB_SCGuMoPagodaListInfo.newBuilder();
+            if (data != null) {
+                if (data.get("dayReward") instanceof Number n)    builder.setDayReward(n.intValue());
+                if (data.get("lastdayLevel") instanceof Number n) builder.setLastdayLevel(n.intValue());
+            }
+            Emitters.emit(session, 2123, builder.build().toByteArray());
+        } catch (Exception e) {
+            log.error("[Pagoda/GuMo] Error for roleId={}", roleId, e);
+            try {
+                Emitters.emit(session, 2123, Msgpagoda.PB_SCGuMoPagodaListInfo.newBuilder().build().toByteArray());
+            } catch (Exception ignored) {}
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private boolean isGuMoChallengeSuccess(Map<String, Object> challengeResult, int layerId) {
+        if (layerId <= 0 || challengeResult == null) {
+            return false;
+        }
+        Object layersRaw = challengeResult.get("layers");
+        if (!(layersRaw instanceof java.util.List<?> layers)) {
+            return false;
+        }
+        for (Object layerObj : layers) {
+            if (!(layerObj instanceof Map<?, ?> raw)) {
+                continue;
+            }
+            Map<String, Object> layer = (Map<String, Object>) raw;
+            Integer currentLayer = getInt(layer, "layerId", "layer_id");
+            Integer starFlag = getInt(layer, "starFlag", "star_flag");
+            if (currentLayer != null && currentLayer == layerId && starFlag != null && starFlag > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isShiLianChallengeSuccess(Map<String, Object> challengeResult, int level) {
+        if (level <= 0 || challengeResult == null) {
+            return false;
+        }
+        Integer passLevel = getInt(challengeResult, "passLevel", "pass_level");
+        return passLevel != null && passLevel >= level;
+    }
+
+    private Integer getInt(Map<String, Object> map, String... keys) {
+        if (map == null || keys == null) {
+            return null;
+        }
+        for (String key : keys) {
+            Object value = map.get(key);
+            if (value instanceof Number n) {
+                return n.intValue();
+            }
+            if (value != null) {
+                try {
+                    return Integer.parseInt(String.valueOf(value));
+                } catch (Exception ignored) {
+                    // ignore parse errors and continue checking other keys
+                }
+            }
+        }
+        return null;
+    }
+
+    private void publishTaskProgress(Long roleId, String taskKey, String source) {
+        if (taskKey == null || taskKey.isBlank()) {
+            return;
+        }
+        taskProgressPublisher.publish(roleId, taskKey, 1, source);
+    }
+}

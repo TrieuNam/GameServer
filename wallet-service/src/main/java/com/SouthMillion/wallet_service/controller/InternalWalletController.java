@@ -34,7 +34,7 @@ public class InternalWalletController {
     public ResultDTO<WalletDTOs.BalancesResp> get(
             @PathVariable("roleId") String roleId,
             @RequestParam("itemIds") List<Long> itemIds) {
-        return ResultDTO.ok(svc.get(roleId, itemIds));
+        return ResultDTO.ok(svc.get(Long.valueOf(roleId), itemIds));
     }
 
     @GetMapping("/info")
@@ -42,6 +42,6 @@ public class InternalWalletController {
         if (!StringUtils.hasText(roleId)) {
             throw new IllegalArgumentException("roleId is required");
         }
-        return svc.info(roleId.trim());
+        return svc.info(Long.valueOf(roleId.trim()));
     }
 }

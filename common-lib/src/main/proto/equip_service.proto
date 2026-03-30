@@ -1,0 +1,135 @@
+// Equipment Service gRPC definitions
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.grpc.equip";
+option java_outer_classname = "EquipServiceProto";
+
+package equip;
+
+// Equipment Service Definition
+service EquipmentService {
+  // Get all equipped items
+  rpc GetEquipment(GetEquipmentRequest) returns (EquipmentResponse);
+  
+  // Equip item
+  rpc EquipItem(EquipItemRequest) returns (EquipItemResponse);
+  
+  // Unequip item
+  rpc UnequipItem(UnequipItemRequest) returns (UnequipItemResponse);
+  
+  // Upgrade equipment
+  rpc UpgradeEquipment(UpgradeEquipmentRequest) returns (UpgradeEquipmentResponse);
+  
+  // Get equipment stats
+  rpc GetEquipmentStats(GetEquipmentStatsRequest) returns (EquipmentStatsResponse);
+  
+  // Batch get equipment (for combat)
+  rpc BatchGetEquipment(BatchGetEquipmentRequest) returns (BatchGetEquipmentResponse);
+}
+
+// Messages
+message GetEquipmentRequest {
+  int64 role_id = 1;
+  bool include_stats = 2;
+}
+
+message EquipmentResponse {
+  int64 role_id = 1;
+  repeated EquippedItem items = 2;
+  TotalStats total_stats = 3;
+  common.ResponseStatus status = 4;
+}
+
+message EquippedItem {
+  int32 slot_id = 1;  // 1=WEAPON, 2=ARMOR, 3=HELMET, 4=GLOVES, 5=BOOTS, etc.
+  int32 item_id = 2;
+  int32 level = 3;
+  int32 quality = 4;  // 1=WHITE, 2=GREEN, 3=BLUE, 4=PURPLE, 5=ORANGE
+  repeated Attribute attributes = 5;
+  repeated int32 gem_ids = 6;
+}
+
+message Attribute {
+  string attr_type = 1;  // HP, ATTACK, DEFENSE, SPEED, CRIT_RATE, etc.
+  int32 value = 2;
+}
+
+message TotalStats {
+  int32 hp_bonus = 1;
+  int32 attack_bonus = 2;
+  int32 defense_bonus = 3;
+  int32 speed_bonus = 4;
+  int32 crit_rate_bonus = 5;
+  int32 crit_damage_bonus = 6;
+  int32 fight_power_bonus = 7;
+}
+
+message EquipItemRequest {
+  int64 role_id = 1;
+  int32 item_id = 2;
+  int32 slot_id = 3;
+  bool auto_unequip_old = 4;
+}
+
+message EquipItemResponse {
+  bool success = 1;
+  EquippedItem equipped_item = 2;
+  EquippedItem unequipped_item = 3;  // If replaced
+  TotalStats new_stats = 4;
+  int32 new_fight_power = 5;
+  common.ResponseStatus status = 6;
+}
+
+message UnequipItemRequest {
+  int64 role_id = 1;
+  int32 slot_id = 2;
+}
+
+message UnequipItemResponse {
+  bool success = 1;
+  EquippedItem unequipped_item = 2;
+  TotalStats new_stats = 3;
+  int32 new_fight_power = 4;
+  common.ResponseStatus status = 5;
+}
+
+message UpgradeEquipmentRequest {
+  int64 role_id = 1;
+  int32 slot_id = 2;
+  int32 item_id = 3;
+  repeated common.ItemStack materials = 4;
+}
+
+message UpgradeEquipmentResponse {
+  bool success = 1;
+  EquippedItem upgraded_item = 2;
+  int32 old_level = 3;
+  int32 new_level = 4;
+  TotalStats new_stats = 5;
+  common.ResponseStatus status = 6;
+}
+
+message GetEquipmentStatsRequest {
+  int64 role_id = 1;
+}
+
+message EquipmentStatsResponse {
+  TotalStats total_stats = 1;
+  int32 equipment_count = 2;
+  int32 average_level = 3;
+  int32 average_quality = 4;
+  common.ResponseStatus status = 5;
+}
+
+message BatchGetEquipmentRequest {
+  repeated int64 role_ids = 1;
+  bool include_stats = 2;
+}
+
+message BatchGetEquipmentResponse {
+  repeated EquipmentResponse equipments = 1;
+  common.ResponseStatus status = 2;
+}

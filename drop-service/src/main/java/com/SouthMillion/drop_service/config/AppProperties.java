@@ -19,6 +19,8 @@ public class AppProperties {
     @Data public static class Config {
         String serviceName = "config-service";
         int managerReloadSeconds = 60;
+        String dropPathTemplate = "gameworld/drop/%s.xml";
+        List<Integer> knownDropIds = new ArrayList<>();
     }
     @Data public static class Cache {
         int compiledTtlMinutes = 10;

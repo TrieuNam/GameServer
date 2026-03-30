@@ -2,6 +2,8 @@ package com.SouthMillion.task_service.controller;
 
 import com.SouthMillion.task_service.service.ShiZhuangService;
 import lombok.RequiredArgsConstructor;
+import org.SouthMillion.dto.ShiZhuang.PlayerClothesDTO;
+import org.SouthMillion.dto.ShiZhuang.ShiZhuangDto;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

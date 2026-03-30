@@ -1,13 +1,13 @@
-package com.southMillion.equip_service.service;
+package com.SouthMillion.equip_service.service;
 
-import com.southMillion.equip_service.config.EquipProperties;
-import com.southMillion.equip_service.entity.EquipFumoEntity;
-import com.southMillion.equip_service.repository.EquipFumoRepository;
-import com.southMillion.equip_service.service.client.BagInternalFeign;
+import com.SouthMillion.equip_service.config.EquipProperties;
+import com.SouthMillion.equip_service.entity.EquipFumoEntity;
+import com.SouthMillion.equip_service.repository.EquipFumoRepository;
+import com.SouthMillion.equip_service.service.client.BagInternalFeign;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.SouthMillion.dto.bag.BagDTOs;
+import org.SouthMillion.dto.bag.BagConsumeReq;
 import org.SouthMillion.dto.equip.EquipFumoDTOs;
 import org.springframework.stereotype.Service;
 
@@ -23,14 +23,14 @@ public class EquipFumoService {
     private final BagInternalFeign bagFeign;
     private final EquipProperties props;
 
-    public EquipFumoDTOs.FumoListResp list(String roleId) {
+    public EquipFumoDTOs.FumoListResp list(Long roleId) {
         var es = repo.findByRoleId(roleId);
         var out = new ArrayList<EquipFumoDTOs.FumoData>(es.size());
         for (var e : es) out.add(toDto(e));
         return new EquipFumoDTOs.FumoListResp(out);
     }
 
-    public EquipFumoDTOs.FumoOneResp one(String roleId, int equipType) {
+    public EquipFumoDTOs.FumoOneResp one(Long roleId, int equipType) {
         var e = repo.findByRoleIdAndEquipType(roleId, equipType).orElse(null);
         return new EquipFumoDTOs.FumoOneResp(equipType, toDto(e));
     }
@@ -38,19 +38,17 @@ public class EquipFumoService {
     @Transactional
     public EquipFumoDTOs.FumoOneResp addExp(EquipFumoDTOs.AddExpReq req) {
         if (req.costItems() != null && !req.costItems().isEmpty()) {
-            var deltas = req.costItems().entrySet().stream()
-                    .map(e -> new BagDTOs.ItemDelta(e.getKey(), e.getValue(), false, "fumo_add_exp"))
-                    .toList();
-            var consume = new BagDTOs.ConsumeReq(req.roleId(), (byte)0, deltas, 1603, 1);
-            var ok = bagFeign.consume(consume);
-            if (ok == null || !ok.ok()) {
+            var consume = createBatchConsumeReq(req.roleId(), req.costItems(), "fumo_add_exp");
+            var resp = bagFeign.consume(consume);
+            if (resp == null || !resp.getStatusCode().is2xxSuccessful()) {
                 return new EquipFumoDTOs.FumoOneResp(req.equipType(), null);
             }
         }
 
-        var e = repo.findByRoleIdAndEquipType(req.roleId(), req.equipType())
+        Long roleIdLong = Long.parseLong(req.roleId());
+        var e = repo.findByRoleIdAndEquipType(roleIdLong, req.equipType())
                 .orElseGet(() -> EquipFumoEntity.builder()
-                        .roleId(req.roleId())
+                        .roleId(roleIdLong)
                         .equipType(req.equipType())
                         .level(0).exp(0).endTime(0)
                         .build());
@@ -72,9 +70,10 @@ public class EquipFumoService {
 
     @Transactional
     public EquipFumoDTOs.FumoOneResp activate(EquipFumoDTOs.ActivateReq req) {
-        var e = repo.findByRoleIdAndEquipType(req.roleId(), req.equipType())
+        Long roleIdLong = Long.parseLong(req.roleId());
+        var e = repo.findByRoleIdAndEquipType(roleIdLong, req.equipType())
                 .orElseGet(() -> EquipFumoEntity.builder()
-                        .roleId(req.roleId())
+                        .roleId(roleIdLong)
                         .equipType(req.equipType())
                         .level(0).exp(0).endTime(0)
                         .build());
@@ -86,7 +85,8 @@ public class EquipFumoService {
     @Transactional
     public EquipFumoDTOs.OkResp reset(EquipFumoDTOs.ResetReq req) {
         consumeIfNeeded(req.roleId(), req.costItems(), "fumo_reset");
-        var e = repo.findByRoleIdAndEquipType(req.roleId(), req.equipType()).orElse(null);
+        Long roleIdLong = Long.parseLong(req.roleId());
+        var e = repo.findByRoleIdAndEquipType(roleIdLong, req.equipType()).orElse(null);
         if (e == null) return EquipFumoDTOs.OkResp.OK();
         e.setLevel(0); e.setExp(0); e.setEndTime(0);
         repo.save(e);
@@ -96,11 +96,11 @@ public class EquipFumoService {
     // helpers
     private void consumeIfNeeded(String roleId, Map<Integer,Long> items, String reason) {
         if (items == null || items.isEmpty()) return;
-        var deltas = items.entrySet().stream()
-                .map(e -> new BagDTOs.ItemDelta(e.getKey(), e.getValue(), false, reason))
-                .toList();
-        var ok = bagFeign.consume(new BagDTOs.ConsumeReq(roleId, (byte)0, deltas, 1603, 2));
-        if (ok == null || !ok.ok()) throw new IllegalStateException("COST_ITEM_NOT_ENOUGH");
+        var consume = createBatchConsumeReq(roleId, items, reason);
+        var resp = bagFeign.consume(consume);
+        if (resp == null || !resp.getStatusCode().is2xxSuccessful()) {
+            throw new IllegalStateException("COST_ITEM_NOT_ENOUGH");
+        }
     }
 
     private int expNeedForLevel(int targetLevel) {
@@ -113,5 +113,25 @@ public class EquipFumoService {
     private EquipFumoDTOs.FumoData toDto(EquipFumoEntity e) {
         if (e == null) return null;
         return new EquipFumoDTOs.FumoData(e.getLevel(), e.getExp(), e.getEndTime());
+    }
+
+    /**
+     * Helper to consume items from bag - handles batch consume
+     */
+    private BagConsumeReq createBatchConsumeReq(String roleId, Map<Integer, Long> items, String source) {
+        if (items == null || items.isEmpty()) {
+            return null;
+        }
+        var costs = items.entrySet().stream()
+                .map(e -> new BagConsumeReq.Cost(e.getKey(), e.getValue().intValue()))
+                .toList();
+        return BagConsumeReq.builder()
+                .userId(1L) // audit field
+                .roleId(Long.parseLong(roleId))
+                .itemId(0) // Not used for batch
+                .amount(0) // Not used for batch
+                .costs(costs)
+                .source(source)
+                .build();
     }
 }

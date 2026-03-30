@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
-public interface RoleRepository extends JpaRepository<Role, String> {
+public interface RoleRepository extends JpaRepository<Role, Long> {
     List<Role> findByUserIdOrderByRoleIdAsc(String userId);
     Optional<Role> findByUserIdAndName(String userId, String name);
     Optional<Role> findFirstByUserIdOrderByCreatedAtAsc(String userId);

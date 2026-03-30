@@ -17,7 +17,7 @@ public class BoxEquipService implements BoxInfoServiceImpl {
      * Lấy EquipInfo (đơn trị) từ trạng thái hiện tại.
      * Ưu tiên bóc từ "pending" của /info; nếu không có thì trả về object rỗng (isNew=0).
      */
-    public BoxDTOs.EquipInfo getEquipInfo(String roleId) {
+    public BoxDTOs.EquipInfo getEquipInfo(Long roleId) {
         BoxDTOs.InfoResp info = null;
         try {
             info = svc.info(roleId);
@@ -25,20 +25,21 @@ public class BoxEquipService implements BoxInfoServiceImpl {
             log.warn("[box] getEquipInfo: getInfo error rid={} ex={}", roleId, e.toString());
         }
 
-        Map<String, Object> pending = (info != null) ? info.getPending() : null;
-
-        // cố gắng đọc cờ "isNew" từ pending nếu có; mặc định = 0 (sau wear như bản C++)
-        Integer isNew = extractIsNew(pending);
-        if (isNew == null) isNew = 0;
-
-        BoxDTOs.EquipInfo equipInfo = BoxDTOs.equipInfoFromPending(pending, isNew);
+        BoxDTOs.BoxCompareStateResp compareState = info != null ? info.getCompareState() : null;
+        BoxDTOs.EquipInfo equipInfo = BoxDTOs.equipInfoFromCompareState(compareState, 0);
+        if (equipInfo == null) {
+            Map<String, Object> pending = (info != null) ? info.getPending() : null;
+            Integer isNew = extractIsNew(pending);
+            if (isNew == null) isNew = 0;
+            equipInfo = BoxDTOs.equipInfoFromPending(pending, isNew);
+        }
         if (equipInfo != null) {
             return equipInfo;
         }
 
         // fallback: trả object rỗng (để client vẫn emit được SC_BOX_EQUIP_INFO với 0-values)
         return BoxDTOs.EquipInfo.builder()
-                .isNew(isNew)
+            .isNew(0)
                 .equipInfo(BoxDTOs.EquipRolled.builder().build())
                 .build();
     }

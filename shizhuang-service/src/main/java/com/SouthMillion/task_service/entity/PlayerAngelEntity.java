@@ -6,8 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "player_angel")
+// Angel entity disabled in shizhuang-service (belongs to angel-service)
+// @Entity
+// @Table(name = "player_angel")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

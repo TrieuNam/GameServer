@@ -1,6 +1,6 @@
-package com.southMillion.report_service.repository;
+package com.SouthMillion.report_service.repository;
 
-import com.southMillion.report_service.entity.BossKillEntity;
+import com.SouthMillion.report_service.entity.BossKillEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

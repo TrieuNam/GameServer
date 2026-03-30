@@ -1,4 +1,4 @@
-package com.southMillion.equip_service.config;
+package com.SouthMillion.equip_service.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

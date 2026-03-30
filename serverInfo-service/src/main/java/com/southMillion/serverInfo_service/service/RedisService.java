@@ -1,4 +1,4 @@
-package com.southMillion.serverInfo_service.service;
+package com.SouthMillion.serverInfo_service.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.SouthMillion.dto.serverInfor.ServerInfoDto;

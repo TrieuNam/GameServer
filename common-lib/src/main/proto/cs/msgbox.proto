@@ -35,6 +35,14 @@ message PB_SCBoxEquipInfo {						//!< 1615 宝箱开出装备信息
 	optional PB_EquipData equip_info = 2;		//!<装备信息
 }
 
+//!<MsgId:1619
+message PB_SCBoxEquipCompareInfo {				//!< 1619 宝箱对比信息
+	optional int32 compare_state = 1;			//!<0:空 1:待处理(开箱后) 2:已穿戴 3:已出售 4:已分解
+	optional PB_EquipData candidate_equip = 2;	//!<新开出的候选装备
+	optional PB_EquipData equipped_before = 3;	//!<开箱前该部位已穿戴装备
+	optional string state_version = 4;			//!<compare-state版本(用于乱序去重)
+}
+
 //!<MsgId:1616
 message PB_SCBoxInfo {							//!< 1616 宝箱信息
 	optional int32 box_level = 1;				//!<宝箱等级

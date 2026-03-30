@@ -1,4 +1,4 @@
-package com.southMillion.webSocket_server.service.client;
+package com.SouthMillion.webSocket_server.service.client;
 
 import org.SouthMillion.dto.wallet.ResultDTO;
 import org.SouthMillion.dto.wallet.WalletDTOs;

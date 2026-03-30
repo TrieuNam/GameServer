@@ -54,9 +54,10 @@ public class GiftService {
     }
 
     public GiftDTOs.OpenResp open(GiftDTOs.OpenReq req) {
-        final int bagType = (req.getBagType() > 0)
-                ? req.getBagType()
-                : defaultBagType;
+        final Integer requestedBagType = req.getBagType() > 0 ? req.getBagType() : null;
+        final int bagType = (requestedBagType != null)
+            ? requestedBagType
+            : defaultBagType;
 
         var compiled = cfg.compile();
         var box = compiled.get(req.getGiftItemId());
@@ -112,18 +113,29 @@ public class GiftService {
             if (isVirtual == 1) {
                 walletAdds.add(WalletDTOs.Change.builder().itemId(id).amount(cnt).build());
             } else {
-                bagAdds.add(new BagAddItemReq.Item(id, cnt));
+                int itemBagType = requestedBagType != null
+                        ? requestedBagType
+                        : resolveBagType(m, bagType);
+                bagAdds.add(BagAddItemReq.Item.builder()
+                        .itemId((int) id)
+                        .amount((int) cnt)
+                        .quality(resolveQuality(m))
+                        .bagType(itemBagType)
+                        .build());
             }
         }
 
         // ===== 3) Tiêu thụ hộp trong bag =====
-        var consume = new BagConsumeReq(
-                req.getRoleId(), bagType,
-                List.of(new BagConsumeReq.Cost(req.getGiftItemId(), req.getCount()))
-        );
+        BagConsumeReq consume = BagConsumeReq.builder()
+                .userId(1L) // audit field - roleId used for bag operations
+                .roleId(Long.parseLong(req.getRoleId()))
+                .itemId((int) req.getGiftItemId())
+                .amount(req.getCount())
+                .source("GIFT_OPEN")
+                .build();
         var cResp = bagFeign.consume(consume);
-        if (cResp == null || !cResp.ok()) {
-            String err = (cResp == null) ? "BAG_CONSUME_FAIL" : cResp.error();
+        if (cResp == null || !cResp.isOk()) {
+            String err = (cResp == null) ? "BAG_CONSUME_FAIL" : cResp.getMessage();
             return GiftDTOs.OpenResp.builder().ok(false).error(err).consumed(0).build();
         }
 
@@ -147,17 +159,22 @@ public class GiftService {
 
         // ===== 5) Cộng túi (nếu có) =====
         if (!bagAdds.isEmpty()) {
-            var aReq = new BagAddItemReq(req.getRoleId(), bagType, bagAdds);
+            BagAddItemReq aReq = BagAddItemReq.builder()
+                    .userId(1L) // audit field - roleId used for bag operations
+                    .roleId(Long.parseLong(req.getRoleId()))
+                    .items(bagAdds)
+                    .source("GIFT_REWARD")
+                    .build();
             var aResp = bagFeign.add(aReq);
-            if (aResp == null || !aResp.ok()) {
-                String err = (aResp == null) ? "BAG_ADD_FAIL" : aResp.error();
+            if (aResp == null || !aResp.isSuccess()) {
+                String err = (aResp == null) ? "BAG_ADD_FAIL" : aResp.getMessage();
                 return GiftDTOs.OpenResp.builder().ok(false).error(err).consumed(0).build();
             }
         }
 
         // ===== 6) Build response =====
         List<GiftDTOs.RollItem> bagItems = bagAdds.stream()
-                .map(it -> new GiftDTOs.RollItem(it.itemId(), it.count()))
+                .map(it -> new GiftDTOs.RollItem(it.itemId(), it.amount()))
                 .collect(Collectors.toList());
 
         return GiftDTOs.OpenResp.builder()
@@ -167,5 +184,27 @@ public class GiftService {
                 .bagItems(bagItems)
                 .walletAdds(walletChanged)
                 .build();
+    }
+
+    private int resolveQuality(Map<String, Object> meta) {
+        return Math.max(1, readInt(meta, 1, "quality", "color", "q"));
+    }
+
+    private int resolveBagType(Map<String, Object> meta, int defaultValue) {
+        return Math.max(0, readInt(meta, defaultValue, "bagType", "bag_type"));
+    }
+
+    private int readInt(Map<String, Object> meta, int defaultValue, String... keys) {
+        if (meta == null) return defaultValue;
+        for (String key : keys) {
+            Object value = meta.get(key);
+            if (value instanceof Number num) return num.intValue();
+            if (value != null) {
+                try {
+                    return Integer.parseInt(String.valueOf(value));
+                } catch (Exception ignore) {}
+            }
+        }
+        return defaultValue;
     }
 }

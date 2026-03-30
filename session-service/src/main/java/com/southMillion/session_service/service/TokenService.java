@@ -1,4 +1,4 @@
-package com.southMillion.session_service.service;
+package com.SouthMillion.session_service.service;
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;

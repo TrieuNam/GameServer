@@ -1,6 +1,6 @@
-package com.southMillion.webSocket_server.net;
+package com.SouthMillion.webSocket_server.net;
 
-import com.southMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import reactor.core.publisher.Mono;
 
 public interface MessageHandler {

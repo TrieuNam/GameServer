@@ -1,13 +1,15 @@
-package com.southMillion.report_service;
+package com.SouthMillion.report_service;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.SouthMillion")
+@EnableAsync
+@EnableScheduling
 public class ReportServiceApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(ReportServiceApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(ReportServiceApplication.class, args);
+    }
 }

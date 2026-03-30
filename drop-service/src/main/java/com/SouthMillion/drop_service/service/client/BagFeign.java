@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 
-@FeignClient(name="bag-service", path="/internal/bag")
+@FeignClient(name="bag-service", path="/api/bag/internal")
 public interface BagFeign {
 
     @PostMapping("/add")

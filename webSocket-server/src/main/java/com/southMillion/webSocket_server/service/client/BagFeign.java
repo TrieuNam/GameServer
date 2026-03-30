@@ -1,4 +1,4 @@
-package com.southMillion.webSocket_server.service.client;
+package com.SouthMillion.webSocket_server.service.client;
 
 import org.SouthMillion.dto.bag.BagDTOs;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.Map;
 
 /** Khớp controller ở bag-service */
 @FeignClient(name = "bag-service", path = "/api/bag")
@@ -26,4 +27,13 @@ public interface BagFeign {
 
     @PostMapping("/grant")
     List<BagDTOs.ItemView> grant(@RequestBody BagDTOs.GrantReq req);
+
+    /** Item recycle (物品回收) — consume items, return {level, exp} */
+    @PostMapping("/{roleId}/recycle")
+    Map<String, Object> recycleItems(@PathVariable("roleId") String roleId,
+                                     @RequestBody List<Integer> itemIds);
+
+    @PostMapping("/{roleId}/buy-cmd")
+    BagDTOs.SellResult buyCmd(@PathVariable("roleId") String roleId,
+                              @RequestBody BagDTOs.BuyCmdReq req);
 }

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 
 // BoxProperties.java
+@Component
 @ConfigurationProperties(prefix = "box")
 @Data
 public class BoxProperties {

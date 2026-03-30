@@ -7,6 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PlayerClothesRepository extends JpaRepository<PlayerClothesEntity, Long> {
-    List<PlayerClothesEntity> findByPlayerId(String playerId);
-    Optional<PlayerClothesEntity> findByPlayerIdAndClothesId(String playerId, Integer clothesId);
+    List<PlayerClothesEntity> findByPlayerId(Long playerId);
+    Optional<PlayerClothesEntity> findByPlayerIdAndClothesId(Long playerId, Integer clothesId);
 }

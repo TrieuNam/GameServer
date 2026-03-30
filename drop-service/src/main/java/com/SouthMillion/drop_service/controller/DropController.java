@@ -30,7 +30,7 @@ public class DropController {
     }
 
     // QA: mô phỏng tần suất
-    @GetMapping("/simulate")
+    @PostMapping("/simulate")
     public ResponseEntity<?> simulate(@RequestParam int dropId, @RequestParam(defaultValue = "100000") int n) {
         var compiled = repo.getCompiled(dropId);
         var rnd = new java.util.Random(12345L);

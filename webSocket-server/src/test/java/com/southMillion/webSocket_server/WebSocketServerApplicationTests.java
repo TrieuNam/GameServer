@@ -1,4 +1,4 @@
-package com.southMillion.webSocket_server;
+package com.SouthMillion.webSocket_server;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

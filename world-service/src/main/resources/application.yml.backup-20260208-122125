@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: world-service
+  threads:
+    virtual:
+      enabled: true   # Java 21 Virtual Threads
+
+  # Database configuration
+  datasource:
+    $133078/game_world?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: tpnam
+    password: 121831
+  
+  jpa:
+    hibernate:
+      ddl-auto: none   # Let Flyway manage schema
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # Flyway migration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  # Redis configuration for scene management
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 5
+      timeout: 2000ms
+
+server:
+  port: 8084
+
+config-service:
+  url: http://localhost:8080
+
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

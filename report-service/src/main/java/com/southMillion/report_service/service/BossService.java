@@ -1,7 +1,7 @@
-package com.southMillion.report_service.service;
+package com.SouthMillion.report_service.service;
 
-import com.southMillion.report_service.entity.BossKillEntity;
-import com.southMillion.report_service.repository.BossKillRepository;
+import com.SouthMillion.report_service.entity.BossKillEntity;
+import com.SouthMillion.report_service.repository.BossKillRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

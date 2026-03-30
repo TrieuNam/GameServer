@@ -1,0 +1,85 @@
+server:
+  port: 9093
+
+spring:
+  profiles:
+    active: local  # Default to local profile
+  application:
+    name: gm-service
+  threads:
+    virtual:
+      enabled: true   # Java 21 Virtual Threads
+
+  # Database configuration
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:33089}/${DB_NAME:game_gm}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: ${DB_USERNAME:tpnam}
+    password: ${DB_PASSWORD:121831}
+  
+  jpa:
+    hibernate:
+      ddl-auto: none   # Let Flyway manage schema
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # Flyway migration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  # Redis cache
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+  
+  cache:
+    type: redis
+    redis:
+      time-to-live: 300000 # 5 minutes
+
+  # Security configuration
+  security:
+    user:
+      name: ${GM_USER:gm}
+      password: ${GM_PASSWORD:gm123}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    health-check-url-path: /actuator/health
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+# Feign configuration
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: basic
+
+logging:
+  level:
+    root: INFO
+    com.southMillion.gm: DEBUG
+    org.springframework.cloud.openfeign: DEBUG

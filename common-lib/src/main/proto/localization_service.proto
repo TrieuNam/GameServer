@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package localization;
+
+option java_package = "org.SouthMillion.proto.localization";
+option java_outer_classname = "LocalizationProto";
+
+import "common.proto";
+
+service LocalizationService {
+  rpc Translate(TranslateRequest) returns (TranslateResponse);
+  rpc GetAllTranslations(GetAllTranslationsRequest) returns (AllTranslationsResponse);
+}
+
+message TranslateRequest {
+  string key = 1;
+  string language = 2; // en, vi, zh, ko
+}
+
+message TranslateResponse {
+  string key = 1;
+  string language = 2;
+  string value = 3;
+}
+
+message GetAllTranslationsRequest {
+  string language = 1;
+}
+
+message AllTranslationsResponse {
+  string language = 1;
+  map<string, string> translations = 2;
+}

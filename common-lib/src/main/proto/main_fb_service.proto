@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.proto.mainfb";
+option java_outer_classname = "MainFbServiceProto";
+
+package mainfb;
+
+// Main dungeon/instance service for PvE content
+service MainFbService {
+  // Get player's current task progress
+  rpc GetCurrentTask(GetCurrentTaskRequest) returns (GetCurrentTaskResponse);
+  
+  // Get player's stage progress
+  rpc GetProgress(GetProgressRequest) returns (GetProgressResponse);
+  
+  // Enter a stage/level
+  rpc EnterStage(EnterStageRequest) returns (EnterStageResponse);
+  
+  // Finish a stage/level and receive rewards
+  rpc FinishStage(FinishStageRequest) returns (FinishStageResponse);
+  
+  // Sweep (quick clear) a previously completed stage
+  rpc SweepStage(SweepStageRequest) returns (SweepStageResponse);
+  
+  // Claim chapter completion rewards
+  rpc ClaimChapterReward(ClaimChapterRewardRequest) returns (ClaimChapterRewardResponse);
+}
+
+// ========== Request/Response Messages ==========
+
+message GetCurrentTaskRequest {
+  string player_id = 1;
+}
+
+message GetCurrentTaskResponse {
+  bool all_done = 1;
+  int32 index = 2;
+  string title = 3;
+  string desc = 4;
+  int32 stage = 5;
+  int32 level = 6;
+  int32 require_score = 7;
+  repeated RewardItem rewards = 8;
+}
+
+message GetProgressRequest {
+  string player_id = 1;
+}
+
+message GetProgressResponse {
+  repeated StageProgress progresses = 1;
+}
+
+message StageProgress {
+  int32 stage = 1;
+  int32 level = 2;
+  int32 best_score = 3;
+  int32 clear_count = 4;
+}
+
+message EnterStageRequest {
+  string player_id = 1;
+  int32 stage = 2;
+  int32 level = 3;
+}
+
+message EnterStageResponse {
+  string battle_id = 1;
+  int64 seed = 2;
+  int64 expire_at = 3;
+  int32 cost = 4;
+}
+
+message FinishStageRequest {
+  string player_id = 1;
+  string battle_id = 2;
+  int32 stage = 3;
+  int32 level = 4;
+  int32 score = 5;
+}
+
+message FinishStageResponse {
+  repeated ItemStack rewards = 1;
+}
+
+message SweepStageRequest {
+  string player_id = 1;
+  int32 stage = 2;
+  int32 level = 3;
+  int32 times = 4;
+}
+
+message SweepStageResponse {
+  repeated RewardItem rewards = 1;
+}
+
+message ClaimChapterRewardRequest {
+  string player_id = 1;
+  int32 stage = 2;
+  string chapter_label = 3;
+}
+
+message ClaimChapterRewardResponse {
+  repeated ItemStack rewards = 1;
+}
+
+// ========== Common Messages ==========
+
+message ItemStack {
+  int64 item_id = 1;
+  int32 count = 2;
+}
+
+message RewardItem {
+  int64 item_id = 1;
+  int32 count = 2;
+}

@@ -2,10 +2,13 @@ package com.SouthMillion.task_service.controller;
 
 import com.SouthMillion.task_service.service.AngelService;
 import lombok.RequiredArgsConstructor;
+import org.SouthMillion.dto.ShiZhuang.AngelConfigDTO;
+import org.SouthMillion.dto.ShiZhuang.PlayerAngelDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
+// AngelController disabled in shizhuang-service (belongs to angel-service)
+// @RestController
 @RequestMapping("/api/angel")
 @RequiredArgsConstructor
 public class AngelController {

@@ -6,13 +6,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "config-service", path="/config")
+@FeignClient(name = "config-service")
 public interface ConfigFeign {
-    // Ưu tiên by-path để bám đúng key thực tế trong store
-    @GetMapping("/by-path")
-    ResponseEntity<byte[]> byPath(
-            @RequestParam("p") String rel,
-            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch,
-            @RequestParam(value = "force", required = false, defaultValue = "0") int force
+    @GetMapping("/api/config/file")
+    ResponseEntity<byte[]> getFile(
+            @RequestParam("path") String path,
+            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch
     );
 }

@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface WalletAccountRepository extends JpaRepository<WalletAccount, Long> {
-    Optional<WalletAccount> findByRoleIdAndItemId(String roleId, Long itemId);
-    List<WalletAccount> findByRoleIdAndItemIdIn(String roleId, Collection<Long> itemIds);
-    List<WalletAccount> findByRoleId(String roleId); // <— dùng cho /info
+    Optional<WalletAccount> findByRoleIdAndItemId(Long roleId, Long itemId);
+    List<WalletAccount> findByRoleIdAndItemIdIn(Long roleId, Collection<Long> itemIds);
+    List<WalletAccount> findByRoleId(Long roleId); // <— dùng cho /info
     @Modifying
     @Query("""
       update WalletAccount a

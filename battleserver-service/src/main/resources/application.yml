@@ -1,5 +1,9 @@
-server:
+﻿server:
   port: 8082
+
+grpc:
+  server:
+    port: 9082  # gRPC port — webSocket-server connects here via BattleServerGrpcClient / CombatGrpcClient
 
 eureka:
   instance:
@@ -14,9 +18,9 @@ spring:
   application:
     name: battle-service
   datasource:
-    url: jdbc:mysql://localhost:3328/db_bag_service?useUnicode=true&characterEncoding=UTF-8
-    username: tpnam
-    password: 121831
+    url: ${DB_URL:jdbc:mysql://localhost:3328/game_battle?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:tpnam}
+    password: ${DB_PASSWORD:121831}
   jpa:
     hibernate:
       ddl-auto: update

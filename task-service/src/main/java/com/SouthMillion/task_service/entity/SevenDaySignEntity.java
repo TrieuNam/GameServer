@@ -17,8 +17,8 @@ public class SevenDaySignEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "player_id", unique = true, nullable = false, length = 64)
-    private String playerId;
+    @Column(name = "player_id", unique = true, nullable = false)
+    private Long playerId;
 
     @Column(name = "start_epoch", nullable = false)
     private Long startEpoch;

@@ -26,8 +26,7 @@ public class Mail {
     @Column(name = "title", nullable = false, length = 128)
     private String title;
 
-    @Lob
-    @Column(name = "content")
+    @Column(name = "content", columnDefinition = "text")
     private String content;
 
     @Convert(converter = MailItemsConverter.class)

@@ -6,7 +6,7 @@ import lombok.*;
 @Entity @Table(name="box_state")
 @Getter @Setter @NoArgsConstructor
 public class BoxState {
-    @Id @Column(length=64) private String roleId;
+    @Id private Long roleId;
 
     private int boxLevel = 1;
     private int boxBuyTimes = 0;

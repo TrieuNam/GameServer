@@ -6,6 +6,7 @@ import com.SouthMillion.wallet_service.repository.WalletAccountRepository;
 import com.SouthMillion.wallet_service.repository.WalletLedgerRepository;
 import com.SouthMillion.wallet_service.service.client.ItemMetaFeign;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class WalletService {
 
@@ -25,11 +27,12 @@ public class WalletService {
     @Transactional
     public WalletDTOs.MutateResp batchAdd(WalletDTOs.BatchReq req) {
         long now = Instant.now().getEpochSecond();
+        Long roleIdLong = Long.parseLong(req.roleId());
 
         // idempotency (nếu đã xử lý cùng idemKey thì trả về balances hiện tại)
         if (req.idemKey()!=null && !req.idemKey().isBlank()) {
             if (ledRepo.findByIdemKey(req.idemKey()).isPresent()) {
-                Map<Long, Long> balances = getBalancesMap(req.roleId(),
+                Map<Long, Long> balances = getBalancesMap(roleIdLong,
                         req.changes().stream().map(WalletDTOs.Change::itemId).toList());
                 return new WalletDTOs.MutateResp(true, null, balances, now);
             }
@@ -48,10 +51,10 @@ public class WalletService {
 
         Map<Long, Long> newBalances = new HashMap<>();
         for (var c : req.changes()) {
-            WalletAccount acc = accRepo.findByRoleIdAndItemId(req.roleId(), c.itemId())
+            WalletAccount acc = accRepo.findByRoleIdAndItemId(roleIdLong, c.itemId())
                     .orElseGet(() -> {
                         WalletAccount a = new WalletAccount();
-                        a.setRoleId(req.roleId());
+                        a.setRoleId(roleIdLong);
                         a.setItemId(c.itemId());
                         a.setBalance(0L);
                         a.setUpdatedAtEpochSec(now);
@@ -69,7 +72,7 @@ public class WalletService {
             newBalances.put(c.itemId(), cur);
 
             WalletLedger led = new WalletLedger();
-            led.setRoleId(req.roleId());
+            led.setRoleId(roleIdLong);
             led.setItemId(c.itemId());
             led.setDelta(+c.amount());
             led.setReason(req.reason());
@@ -85,10 +88,11 @@ public class WalletService {
     @Transactional
     public WalletDTOs.MutateResp batchCost(WalletDTOs.BatchReq req) {
         long now = Instant.now().getEpochSecond();
+        Long roleIdLong = Long.parseLong(req.roleId());
 
         if (req.idemKey()!=null && !req.idemKey().isBlank()) {
             if (ledRepo.findByIdemKey(req.idemKey()).isPresent()) {
-                Map<Long, Long> balances = getBalancesMap(req.roleId(),
+                Map<Long, Long> balances = getBalancesMap(roleIdLong,
                         req.changes().stream().map(WalletDTOs.Change::itemId).toList());
                 return new WalletDTOs.MutateResp(true, null, balances, now);
             }
@@ -104,15 +108,14 @@ public class WalletService {
             }
         }
 
-        // trừ tiền atomically trong 1 TX: nếu thiếu ở bất kỳ dòng nào => rollback
         Map<Long, Long> newBalances = new HashMap<>();
         List<WalletAccount> touched = new ArrayList<>();
 
         for (var c : req.changes()) {
-            WalletAccount acc = accRepo.findByRoleIdAndItemId(req.roleId(), c.itemId())
+            WalletAccount acc = accRepo.findByRoleIdAndItemId(roleIdLong, c.itemId())
                     .orElseGet(() -> {
                         WalletAccount a = new WalletAccount();
-                        a.setRoleId(req.roleId());
+                        a.setRoleId(roleIdLong);
                         a.setItemId(c.itemId());
                         a.setBalance(0L);
                         a.setUpdatedAtEpochSec(now);
@@ -126,10 +129,9 @@ public class WalletService {
             touched.add(acc);
         }
 
-        // ghi ledger & đọc số dư
         for (var c : req.changes()) {
             WalletLedger led = new WalletLedger();
-            led.setRoleId(req.roleId());
+            led.setRoleId(roleIdLong);
             led.setItemId(c.itemId());
             led.setDelta(-c.amount());
             led.setReason(req.reason());
@@ -138,20 +140,20 @@ public class WalletService {
             led.setCreatedAtEpochSec(now);
             ledRepo.save(led);
 
-            WalletAccount cur = accRepo.findByRoleIdAndItemId(req.roleId(), c.itemId()).orElseThrow();
+            WalletAccount cur = accRepo.findByRoleIdAndItemId(roleIdLong, c.itemId()).orElseThrow();
             newBalances.put(c.itemId(), cur.getBalance());
         }
 
         return new WalletDTOs.MutateResp(true, null, newBalances, now);
     }
 
-    public WalletDTOs.BalancesResp get(String roleId, List<Long> itemIds) {
+    public WalletDTOs.BalancesResp get(Long roleId, List<Long> itemIds) {
         long now = Instant.now().getEpochSecond();
         Map<Long, Long> map = getBalancesMap(roleId, itemIds);
-        return new WalletDTOs.BalancesResp(roleId, map, now);
+        return new WalletDTOs.BalancesResp(String.valueOf(roleId), map, now);
     }
 
-    private Map<Long, Long> getBalancesMap(String roleId, List<Long> itemIds) {
+    private Map<Long, Long> getBalancesMap(Long roleId, List<Long> itemIds) {
         if (itemIds==null || itemIds.isEmpty()) return Map.of();
         var rows = accRepo.findByRoleIdAndItemIdIn(roleId, itemIds);
         Map<Long, Long> ret = new HashMap<>();
@@ -160,40 +162,27 @@ public class WalletService {
         return ret;
     }
 
-    @Transactional()
-    public WalletDTOs.BalancesResp info(String roleId) {
+    @Transactional
+    public WalletDTOs.BalancesResp info(Long roleId) {
         long now = Instant.now().getEpochSecond();
-
-        // Lấy tất cả account ví của roleId
-        var accounts = accRepo.findByRoleId(roleId); // cần method này trong repository
-
+        var accounts = accRepo.findByRoleId(roleId);
         if (accounts == null || accounts.isEmpty()) {
             return WalletDTOs.BalancesResp.builder()
-                    .roleId(roleId)
+                    .roleId(String.valueOf(roleId))
                     .balances(Collections.emptyMap())
                     .atEpochSec(now)
                     .build();
         }
-
-        // Lọc chỉ các item là virtual (không hard-code danh sách tiền tệ)
-        List<Long> ids = accounts.stream()
-                .map(WalletAccount::getItemId)
-                .distinct()
-                .collect(Collectors.toList());
-
+        List<Long> ids = accounts.stream().map(WalletAccount::getItemId).distinct().collect(Collectors.toList());
         Map<Long, Boolean> virtualMap = ensureVirtual(ids);
-
         Map<Long, Long> balances = new LinkedHashMap<>();
-        accounts.stream()
-                .sorted(Comparator.comparingLong(WalletAccount::getItemId))
-                .forEach(acc -> {
-                    if (virtualMap.getOrDefault(acc.getItemId(), false)) {
-                        balances.put(acc.getItemId(), acc.getBalance() == null ? 0L : acc.getBalance());
-                    }
-                });
-
+        accounts.stream().sorted(Comparator.comparingLong(WalletAccount::getItemId)).forEach(acc -> {
+            if (virtualMap.getOrDefault(acc.getItemId(), false)) {
+                balances.put(acc.getItemId(), acc.getBalance() == null ? 0L : acc.getBalance());
+            }
+        });
         return WalletDTOs.BalancesResp.builder()
-                .roleId(roleId)
+                .roleId(String.valueOf(roleId))
                 .balances(balances)
                 .atEpochSec(now)
                 .build();
@@ -202,14 +191,21 @@ public class WalletService {
     // ===== đã có sẵn trong code bạn đưa (nhắc lại ở đây để liền mạch) =====
     private Map<Long, Boolean> ensureVirtual(Collection<Long> ids) {
         if (ids.isEmpty()) return Map.of();
-        String csv = ids.stream().distinct().map(String::valueOf).collect(Collectors.joining(","));
-        Map<String, Map<String,Object>> metas = itemMeta.batchMeta(csv);
+        List<Integer> itemIds = ids.stream()
+                .filter(Objects::nonNull)
+                .map(Math::toIntExact)
+                .distinct()
+                .toList();
+        log.debug("[wallet.virtual] checking itemIds={}", itemIds);
+
+        Map<Integer, Map<String, Object>> metas = itemMeta.batchMeta(itemIds);
         Map<Long, Boolean> out = new HashMap<>();
         for (Long id : ids) {
-            Map<String,Object> v = metas.getOrDefault(String.valueOf(id), Map.of());
-            boolean virt = ((Number)v.getOrDefault("isVirtual", 0)).intValue() == 1;
+            Map<String, Object> v = metas == null ? Map.of() : metas.getOrDefault(Math.toIntExact(id), Map.of());
+            boolean virt = ((Number) v.getOrDefault("isVirtual", 0)).intValue() == 1;
             out.put(id, virt);
         }
+        log.debug("[wallet.virtual] result={}", out);
         return out;
     }
 }

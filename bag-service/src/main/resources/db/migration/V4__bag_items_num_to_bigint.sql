@@ -1,2 +1,0 @@
-ALTER TABLE bag_items
-    MODIFY num BIGINT NOT NULL;

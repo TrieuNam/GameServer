@@ -1,7 +1,7 @@
-package com.southMillion.equip_service.controller;
+package com.SouthMillion.equip_service.controller;
 
-import com.southMillion.equip_service.service.EquipFumoService;
-import com.southMillion.equip_service.service.EquipService;
+import com.SouthMillion.equip_service.service.EquipFumoService;
+import com.SouthMillion.equip_service.service.EquipService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.equip.EquipDTOs;
@@ -21,8 +21,27 @@ public class InternalEquipController {
     // ====== BASIC (để service khác có thể dùng) ======
 
     @GetMapping("/{roleId}")
-    public EquipDTOs.ListResp list(@PathVariable("roleId") String roleId) {
+    public EquipDTOs.ListResp list(@PathVariable("roleId") Long roleId) {
         return equipService.list(roleId);
+    }
+
+    @GetMapping("/snapshot/{roleId}/{equipType}")
+    public EquipDTOs.EquipItem snapshot(@PathVariable("roleId") Long roleId,
+                                        @PathVariable("equipType") int equipType) {
+        return equipService.snapshot(roleId, equipType);
+    }
+
+    @DeleteMapping("/snapshot/{roleId}/{equipType}")
+    public Map<String, Object> evictSnapshot(@PathVariable("roleId") Long roleId,
+                                             @PathVariable("equipType") int equipType) {
+        boolean ok = equipService.evictSnapshot(roleId, equipType);
+        return Map.of("ok", ok, "roleId", roleId, "equipType", equipType);
+    }
+
+    @DeleteMapping("/snapshot/{roleId}")
+    public Map<String, Object> evictSnapshotsByRole(@PathVariable("roleId") Long roleId) {
+        int removed = equipService.evictSnapshotsByRole(roleId);
+        return Map.of("ok", true, "roleId", roleId, "removed", removed);
     }
 
     @PostMapping(value = "/equip", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -39,8 +58,7 @@ public class InternalEquipController {
 
     /** BoxService gọi để mặc món pending; trả về món cũ (replaced) nếu có. */
     @PostMapping(value = "/wear-from-box", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public Map<String, Object> wearFromBox(@RequestBody Map<String, Object> req) {
-        // req: { roleId: string, item: { ...pendingSpec... } }
+    public EquipDTOs.WearFromBoxResp wearFromBox(@RequestBody EquipDTOs.WearFromBoxReq req) {
         return equipService.wearFromBox(req);
     }
 

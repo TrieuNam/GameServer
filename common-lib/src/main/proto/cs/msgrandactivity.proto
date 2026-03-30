@@ -352,3 +352,48 @@ message PB_ExclusiveGiftData {
 message PB_SCRaExclusiveGift { //!< 3042 专属礼包个人信息
 	repeated PB_ExclusiveGiftData gifts = 1;			//!< 礼包列表 （需自行排序）
 }
+
+message PB_SCRaFishGameInfo { //!< 3043 钓鱼小游戏
+	optional int32 fish_count = 1;						//!< 累计钓鱼数量
+	optional int32 daily_attempts = 2;					//!< 今日已钓次数
+	optional int32 max_daily = 3;						//!< 每日上限
+	optional int32 total_fish_caught = 4;				//!< 历史总钓鱼量
+	optional int64 fetch_flag = 5;						//!< 奖励领取标记 (bitmask)
+}
+
+message PB_SCRaLoopMineInfo { //!< 3044 循环矿坑
+	optional int32 mine_level = 1;						//!< 矿坑等级
+	optional int32 ore_count = 2;						//!< 当前矿石数
+	optional int32 cycle_count = 3;						//!< 完成循环次数
+	optional int32 daily_attempts = 4;					//!< 今日已挖次数
+	optional int32 max_daily = 5;						//!< 每日上限
+	optional int32 ore_to_complete = 6;					//!< 完成一次循环所需矿石
+	optional int64 fetch_flag = 7;						//!< 奖励领取标记 (bitmask)
+}
+
+message PB_SCRaCoreCrisisInfo { //!< 3045 核心危机
+	optional int32 stage = 1;							//!< 当前关卡
+	optional int64 total_damage = 2;					//!< 累计伤害
+	optional int32 daily_attempts = 3;					//!< 今日挑战次数
+	optional int32 max_daily = 4;						//!< 每日上限
+	optional int64 fetch_flag = 5;						//!< 奖励领取标记 (bitmask)
+	optional uint32 end_timestamp = 6;					//!< 活动结束时间
+	optional int32 is_buy = 7;							//!< 是否已购买加强
+}
+
+message PB_SCRaFillBlankInfo { //!< 3046 填字谜
+	optional int32 puzzle_index = 1;					//!< 当前谜题索引
+	optional int64 filled_mask = 2;						//!< 已填空位掩码 (bitmask)
+	optional int32 completed_count = 3;					//!< 完成谜题总数
+	optional int64 fetch_flag = 4;						//!< 奖励领取标记 (bitmask)
+	optional int32 hint_count = 5;						//!< 剩余提示次数
+}
+
+message PB_SCRaMingXiangInfo { //!< 3047 命相/星象
+	optional int32 sign_index = 1;						//!< 命相星座索引 (1-12)
+	optional int32 fortune_level = 2;					//!< 解锁福运等级
+	optional int32 divination_count = 3;				//!< 总占卜次数
+	optional int64 fetch_flag = 4;						//!< 奖励领取标记 (bitmask)
+	optional uint32 last_divination_time = 5;			//!< 上次占卜时间戳
+	optional uint32 next_divination_time = 6;			//!< 下次可占卜时间戳
+}

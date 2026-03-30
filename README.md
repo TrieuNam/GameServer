@@ -1,426 +1,352 @@
-# Game Server - Infrastructure Services
+# GameServer — Microservices Architecture
 
-## Tổng quan hệ thống
+**Version**: 1.1.0 | **Java**: 21 | **Spring Boot**: 3.5.3 | **Spring Cloud**: 2025.0.0  
+**Services**: 57 | **Phases**: P0 → P5 + Special | **Last Updated**: 2026-03-16
 
-Dự án Game Server được xây dựng theo kiến trúc microservices với Spring Boot và Spring Cloud.
+---
 
 ## 📚 Documentation
 
-### For Developers
-- **[Client Integration Guide](docs/CLIENT_INTEGRATION_GUIDE.md)** - Quick start guide cho client developers
-- **[Client-Server Connection](docs/CLIENT_SERVER_CONNECTION.md)** - Chi tiết về WebSocket và REST API architecture
-- **[Phase P0 Summary](PHASE_P0_SUMMARY.md)** - Infrastructure services completion report
-- **[Phase P1 Summary](docs/migration/phase-p1_COMPLETED.md)** - Economy services status
-
-### Migration Guides
-- **[Migration Overview](docs/migration/README.md)** - Tổng quan migration từ C++ sang Java
-- **[Phase P0 - Infrastructure](docs/migration/phase-p0_infra.md)** - Eureka, Gateway, Config
-- **[Phase P1 - Economy](docs/migration/phase-p1_economy.md)** - Item, Bag, Wallet, Shop services
-- **[Phase P2 - Combat](docs/migration/phase-p2_combat.md)** - Battle, Arena services
-- **[Phase P3 - Progress & Social](docs/migration/phase-p3_progress_social.md)** - Quest, Mail, Friend
-- **[Phase P4 - Other](docs/migration/phase-p4_other.md)** - Remaining services
+| Tài liệu | Mô tả |
+|----------|-------|
+| **[SERVICES_SUMMARY.md](SERVICES_SUMMARY.md)** | Tổng quan đầy đủ tất cả 57 services |
+| **[common-lib/README.md](common-lib/README.md)** | Shared library (DTOs, gRPC stubs) |
+| **[docs/CLIENT_INTEGRATION_GUIDE.md](docs/CLIENT_INTEGRATION_GUIDE.md)** | Quick start cho client developers |
+| **[docs/CLIENT_SERVER_CONNECTION.md](docs/CLIENT_SERVER_CONNECTION.md)** | WebSocket + REST API architecture |
+| **[docs/migration/README.md](docs/migration/README.md)** | Migration từ C++ sang Java — tổng quan |
 
 ---
 
 ## 🏗️ Architecture Overview
 
-### Infrastructure Services (Phase P0) ✅
+```
+Client (Mobile/Web)
+       │
+       ▼
+[Gateway :8080]  ←  JWT Auth + Route + CORS
+       │
+       ├── REST ──► All microservices via Eureka LB
+       │
+       └── WebSocket proxy ──► [webSocket-server :8094]
+                                      │  Protobuf binary
+                                      ├──► (Feign) role/bag/equip/shop/... 
+                                      └──► (gRPC)  role(9410)/bag(9230)/...
 
-1. **Eureka Server** (Port 8761) - Service Discovery
-2. **Config Service** (Port 8091) - Configuration Management  
-3. **Gateway Service** (Port 8080) - API Gateway + WebSocket Proxy
-
-### Economy Services (Phase P1) ✅
-
-1. **Item Service** (Port 8220) - Item metadata management
-2. **Wallet Service** (Port 8210) - Wallet and transaction management
-3. **Bag Service** (Port 8230) - Inventory/bag management
-
-### Communication Services
-
-1. **WebSocket Server** (Port 8090) - Real-time binary protocol (Protobuf)
-2. **Session Service** (Port 8081) - Authentication and session management
-
-### Business Services (Đang phát triển)
-
-- User Service
-- Shop Service (Port 8260)
-- Equip Service (Port 8240)
-- Drop Service (Port 8250)
-- Gift Service (Port 8270)
-- Box Service (Port 8290)
-- World Service
-- Arena Service
+[Eureka :8761] ← tất cả services register
+[Config :8888] ← centralized configuration
+[Kafka]        ← async events (BagChanged, Arena, Combat, v.v.)
+[Redis]        ← session cache, leaderboard, scheduler, localization
+[MySQL]        ← 42 databases (mỗi service một DB riêng)
+```
 
 ---
 
-## Yêu cầu hệ thống
+## 📊 Service Summary
 
-- **Java**: 21 hoặc cao hơn
+| Phase | Services | Mô tả |
+|-------|----------|-------|
+| P0 — Core Infra | eureka, config, gateway, webSocket-server | Infrastructure bắt buộc |
+| P1 — Core Gameplay | user, session, role, wallet, bag, equip, shop, drop, gift, box, crafting, serverInfo, report, iap-verify | Economy & Core |
+| P2 — Combat & Social | arena, trial, task, battleserver, globalserver, gameworld, starmap, territory, escort, world, chat, guild | Combat & World |
+| P3 — Enhancement | friend, mail, leaderboard, pet, mount, rune, item, angel, artifact, analytics, notification, moderation, file, scheduler, localization | Support |
+| P4 — Optional | main-fb, anti-cheat | Advanced features |
+| P5 — New Systems | lingzhu, knights, pagoda, scroll, gem, activity, shizhuang | Latest gameplay |
+| Special | admin, gm | Administration |
+
+---
+
+## 📌 Ports & Databases
+
+> `*` = Port cấu hình trong `application-local.yml` / `application-prod.yml`
+
+| Service | Port | gRPC | Database |
+|---------|------|------|----------|
+| **eureka-server** | 8761 | — | — |
+| **config-service** | 8888 | — | — |
+| **gateway-service** | 8080 | — | — |
+| **webSocket-server** | 8094 | — | — (Redis) |
+| **user-service** | 8110 | — | user_db |
+| **session-service** | 8096 | — | — (Redis) |
+| **serverInfo-service** | 8095 | — | serverinfo_db |
+| **role-service** | 8410 | 9410 | db_role |
+| **wallet-service** | 8210 | — | wallet_db |
+| **bag-service** | 8230 | 9230 | bag_db |
+| **equip-service** | 8240 | 9240 | equip_db |
+| **drop-service** | 8250 | — | — (Stateless) |
+| **shop-service** | 8260 | 9260 | shop_db |
+| **gift-service** | 8270 | — | — (Stateless) |
+| **box-service** | 8290 | — | box_db |
+| **crafting-service** | 8280 | 9280 | crafting_db |
+| **report-service** | 8098 | — | report_db |
+| **iap-verify-service** | 8580 | — | iap_verify_db |
+| **arena-service** | 8084 | — | game_arena |
+| **trial-service** | 8300 | 9300 | game_trial |
+| **task-service** | 8097 | — | game_task |
+| **battleserver-service** | 8082 | 9082 | db_battle_service |
+| **globalserver-service** | 8100 | — | globalserver_service_db |
+| **gameworld-service** | 8105 | 9105 | gameworld_db |
+| **starmap-service** | 8092 | 9092 | game_starmap |
+| **territory-service** | 8360 | 9086 | game_territory |
+| **escort-service** | 8340 | — | game_escort |
+| **world-service** | 8370 | — | game_world |
+| **chat-service** | 8460 | — | chat_db |
+| **guild-service** | 8440 | — | guild_db |
+| **friend-service** | 8450 | — | friend_db |
+| **mail-service** | 8470 | — | mail_db |
+| **leaderboard-service** | 8480 | 9088 | leaderboard_db |
+| **pet-service** | 8112 | — | game_pet |
+| **mount-service** | 8089 | — | game_mount |
+| **rune-service** | 8093 | 9093 | game_rune |
+| **item-service** | 8220 | — | — (Stateless) |
+| **angel-service** | 8090 | 9090 | game_angel |
+| **artifact-service** | 8091 | 9087 | game_artifact |
+| **analytics-service** | 8510 | — | game_analytics |
+| **notification-service** | 8520 | — | game_notification |
+| **moderation-service** | 8570 | — | game_moderation |
+| **file-service** | 8540 | — | — (Stateless) |
+| **scheduler-service** | 8550 | — | — (Redis db:5) |
+| **localization-service** | 8560 | 9560 | — (Redis db:6) |
+| **main-fb-service** | 8128 | 9128 | game_mainfb |
+| **anti-cheat-service** | 8590 | — | game_anticheat |
+| **lingzhu-service** | 8380* | — | lingzhudb |
+| **knights-service** | 8310* | — | knightsdb |
+| **pagoda-service** | 8320* | — | pagodadb |
+| **scroll-service** | 8330* | — | scrolldb |
+| **gem-service** | 8381* | — | gemdb |
+| **activity-service** | 8382* | — | activitydb |
+| **shizhuang-service** | 8350* | — | game_shizhuang |
+| **admin-service** | 9091 | — | game_admin |
+| **gm-service** | 9093 | — | game_gm |
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Language | Java 21 (Virtual Threads) |
+| Framework | Spring Boot 3.5.3 |
+| Cloud | Spring Cloud 2025.0.0 |
+| Service Discovery | Netflix Eureka |
+| API Gateway | Spring Cloud Gateway |
+| Inter-service REST | OpenFeign |
+| Inter-service RPC | gRPC (net.devh:grpc-spring-boot-starter 3.1.0) |
+| Message Queue | Apache Kafka |
+| Cache | Redis (Lettuce) |
+| Database | MySQL 8.x |
+| Migration | Flyway |
+| Serialization | Protobuf 3.25.5 |
+| Resilience | Resilience4j CircuitBreaker |
+| Build | Maven 3.6+ |
+| Container | Docker / Docker Compose |
+
+---
+
+## 🔧 Yêu Cầu Hệ Thống
+
+- **Java**: 21+
 - **Maven**: 3.6+
-- **Redis**: 6.0+ (optional cho caching)
-- **Docker**: 20.10+ (optional cho containerization)
+- **MySQL**: 8.x
+- **Redis**: 6.0+
+- **Kafka**: 3.x (Zookeeper hoặc KRaft)
+- **Docker**: 20.10+ (tuỳ chọn)
 
-## Build tất cả services
+---
 
-### Build infrastructure services
+## 🚀 Thứ Tự Khởi Động
 
+### 1. Infrastructure (bắt buộc trước)
 ```bash
-# Build Eureka Server
-cd eureka-server
-mvn clean install -DskipTests
+# 1a. Eureka Server (service discovery)
+cd eureka-server && mvn spring-boot:run
+# → http://localhost:8761
 
-# Build Config Service  
-cd ../config-service
-mvn clean install -DskipTests
+# 1b. Config Service (configuration management)
+cd config-service && mvn spring-boot:run
+# → http://localhost:8888/actuator/health
 
-# Build Gateway Service
-### Build economy services
-
-```bash
-# Build Item Service
-cd item-service
-mvn clean install -DskipTests
-
-# Build Wallet Service
-cd ../wallet-service
-mvn clean install -DskipTests
-
-# Build Bag Service
-cd ../bag-service
-mvn clean install -DskipTests
+# 1c. Gateway Service (API gateway)
+cd gateway-service && mvn spring-boot:run
+# → http://localhost:8080/actuator/health
 ```
 
-cd ../gateway-service
-mvn clean install -DskipTests
-
-# Build Common Library (cần thiết cho các service khác)
-cd ../common-lib
-mvn clean install -DskipTests
-```
-
-### Sử dụng build scripts
-
-```cmd
-REM Build infrastructure services
-build-infrastructure.cmd
-
-REM Build economy services  
-build-economy.cmd
-```
-
-### Build business services
-
+### 2. Core Services
 ```bash
-# Ví dụ: build session-service
-cd session-service
-mvn clean install -DskipTests
+cd user-service    && mvn spring-boot:run  # :8110
+cd session-service && mvn spring-boot:run  # :8096
+cd role-service    && mvn spring-boot:run  # :8410, gRPC :9410
+cd serverInfo-service && mvn spring-boot:run # :8095
 ```
 
-## Khởi động services
-
-### Thứ tự khởi động khuyến nghị
-
-1. **Khởi động Eureka Server trước** (port 8761)
+### 3. Economy Services
 ```bash
-java -jar eureka-server/target/eureka-server-1.0.0.jar
+cd wallet-service  && mvn spring-boot:run  # :8210
+cd item-service    && mvn spring-boot:run  # :8220
+cd bag-service     && mvn spring-boot:run  # :8230, gRPC :9230
+cd equip-service   && mvn spring-boot:run  # :8240, gRPC :9240
+cd drop-service    && mvn spring-boot:run  # :8250
+cd shop-service    && mvn spring-boot:run  # :8260, gRPC :9260
 ```
 
-Truy cập dashboard: http://localhost:8761
-
-2. **Khởi động Config Service** (port 8091)
+### 4. WebSocket Server (sau khi tất cả services sẵn sàng)
 ```bash
-java -jar config-service/target/config-service-1.0.0.jar
+cd webSocket-server && mvn spring-boot:run # :8094
+# WebSocket URL: ws://localhost:8080/websocket-server/ws/game?token={jwt}
 ```
 
-Verify: http://localhost:8091/actuator/health
-
-3. **Khởi động Gateway Service** (port 8080)
+### 5. Business Services (thứ tự tùy ý)
 ```bash
-java -jar gateway-service/target/gateway-service-1.0.0.jar
+# Tất cả P2, P3, P4, P5 services
 ```
 
-Verify: http://localhost:8080/actuator/health
-
-4. **Khởi động các business services**
-
-Các service sẽ tự động register với Eureka và có thể được route qua Gateway.
-
-### Sử dụng Docker Compose (Khuyến nghị)
-
+### Docker Compose (khuyến nghị cho dev)
 ```bash
-# Khởi động infrastructure
 cd docker
 docker-compose -f docker-compose.merged.yml up -d
-
-# Xem logs
 docker-compose -f docker-compose.merged.yml logs -f
-
-# Dừng services
-docker-compose -f docker-compose.merged.yml down
-### Economy Services (Phase P1)
-
-| Service | Port | Access via Gateway | Purpose |
-|---------|------|--------------------| --------|
-| Wallet Service | 8210 | http://localhost:8080/wallet-service/** | Wallet & transactions |
-| Item Service | 8220 | http://localhost:8080/item-service/** | Item metadata |
-| Bag Service | 8230 | http://localhost:8080/bag-service/** | Inventory management |
-
 ```
 
-## Cấu trúc thư mục
+---
 
-```
-GameServer/
-├── common-lib/              # Shared libraries, DTOs, utilities
-├── config-service/          # Configuration management service
-├── eureka-server/           # Service discovery server
-├── gateway-service/         # API Gateway
-├── session-service/         # Session & authentication
-├── user-service/            # User management
-├── item-service/            # Item management
-├── bag-service/             # Inventory management
-├── wallet-service/          # Currency/wallet management
-├── shop-service/            # Shop functionality
-├── world-service/           # Game world service
-├── arena-service/           # Arena/PvP service
-├── webSocket-server/        # WebSocket server
-├── docker/                  # Docker compose files
-└── docs/                    # Documentation
-    └── migration/           # Migration guides
+## 🏗️ Build
+
+### Build common-lib trước (bắt buộc)
+```bash
+cd common-lib
+mvn clean install -DskipTests
 ```
 
-## Ports và Endpoints
-
-### Infrastructure Services
-
-| Service | Port | Dashboard/UI | Health Check |
-|---------|------|--------------|--------------|
-| Eureka Server | 8761 | http://localhost:8761 | http://localhost:8761/actuator/health |
-| Config Service | 8091 | - | http://localhost:8091/actuator/health |
-| Gateway | 8080 | - | http://localhost:8080/actuator/health |
-
-### Communication Services
-
-| Service | Port | Protocol | Description |
-|---------|------|----------|-------------|
-| WebSocket Server | 8090 | WS/Binary | Real-time game communication |
-| Session Service | 8081 | HTTP/REST | Authentication & session |
-
-**WebSocket Connection**:
-```
-ws://localhost:8080/websocket-server/ws/game?token={jwt-token}
+### Build một service
+```bash
+cd {service-name}
+mvn clean install -DskipTests
 ```
 
-### Economy Services (Phase P1)
+### Build tất cả
+```bash
+# Dùng script có sẵn
+.\build_all.ps1
+```
 
-| Service | Port | Access via Gateway | Purpose |
-|---------|------|--------------------| --------|
-| Wallet Service | 8210 | http://localhost:8080/wallet-service/** | Wallet & transactions |
-| Item Service | 8220 | http://localhost:8080/item-service/** | Item metadata |
-| Bag Service | 8230 | http://localhost:8080/bag-service/** | Inventory management |
+---
 
-## API Documentation
-
-Các service có tích hợp Springdoc OpenAPI:
-
-- Config Service: http://localhost:8091/swagger-ui.html
-- Gateway Service: http://localhost:8080/swagger-ui.html (nếu enabled)
-
-## Configuration
+## ⚙️ Configuration
 
 ### Config Service
-
-Config files được lưu trong `config-service/src/main/resources/config/`:
-
+Config files tại `config-service/src/main/resources/config/`:
 ```
 config/
 ├── gameworld/
-│   ├── globalconfig/
-│   ├── monster/
-│   ├── skill/
-│   └── drop/
-└── serverconfig/
+│   ├── monster/   - monster.json
+│   ├── skill/     - skill.json
+│   └── drop/      - drop.json
+└── serverconfig/  - server settings
 ```
 
-Truy cập config file:
+Truy cập:
 ```
-GET http://localhost:8091/api/config/file/{path}
-```
-
-Ví dụ:
-```
-GET http://localhost:8091/api/config/file/gameworld/monster/monster.json
+GET http://localhost:8888/api/config/file/{path}
+GET http://localhost:8888/api/config/file/gameworld/monster/monster.json
 ```
 
-### Gateway Service
-
-CORS configuration trong `gateway-service/src/main/resources/application.yml`:
-
-```yaml
-spring:
-  cloud:
-    gateway:
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOrigins:
-              - "http://localhost:7456"
+### Gateway Auth Whitelist (không cần JWT)
+```
+/actuator/**
+/session-service/api/session/login
+/session-service/api/session/timesync
+/config-service/api/config/**
 ```
 
-Auth whitelist (không cần authentication):
-- /actuator/**
-- /session-service/api/session/timesync
-- /session-service/api/session/login
-- /config-service/api/config/file/**
-
-## Troubleshooting
-
-### Service không register với Eureka
-
-1. Kiểm tra Eureka Server đang chạy
-2. Kiểm tra `eureka.client.serviceUrl.defaultZone` trong application.yml
-3. Xem logs để tìm connection errors
-
-### Gateway không route được
-
-1. Verify service đã register với Eureka
-2. Check Gateway logs
-3. Test trực tiếp service endpoint trước khi test qua Gateway
-4. Kiểm tra CORS configuration
-
-### Config Service không load được file
-
-1. Kiểm tra mode: classpath vs filesystem
-2. Verify file path
-3. Check permissions (nếu dùng filesystem mode)
-4. Xem logs để tìm errors
-
-### Redis connection issues
-
-1. Start Redis server: `redis-server`
-2. Verify connection: `redis-cli ping`
-3. Check port 6379
-4. Update `spring.data.redis.host` nếu cần
-
-## Development
-
-### Thêm service mới
-
-1. Tạo Spring Boot project với dependencies:
-   - Spring Web (hoặc WebFlux)
-   - Eureka Discovery Client
-   - Actuator
-   - Common Lib (internal)
-
-2. Thêm configuration trong application.yml:
-```yaml
-spring:
-  application:
-    name: your-service-name
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+### WebSocket Connection
 ```
-
-3. Build và start service
-4. Verify trong Eureka Dashboard
-
-### Hot reload configuration
-
-Config Service hỗ trợ reload configuration mà không cần restart:
-- Files được cache với TTL 60 seconds
-- ETag support cho caching hiệu quả
-- Clear cache thông qua internal API (với token)
-
-## Testing
-
-### Integration Test với Eureka
-
-```java
-@SpringBootTest
-@TestPropertySource(properties = {
-    "eureka.client.enabled=false"
-})
-class ServiceTest {
-    // Test without Eureka
-}
+ws://localhost:8080/websocket-server/ws/game?token={jwt-token}
 ```
-
-### Test Gateway Routes
-
-```bash
-# Via Gateway
-curl http://localhost:8080/config-service/api/config/file/test.json
-
-# Direct access
-curl http://localhost:8091/api/config/file/test.json
-```
-
-## Monitoring
-
-### Actuator Endpoints
-
-Enabled endpoints:
-- `/actuator/health` - Health status
-- `/actuator/info` - Service info
-- `/actuator/metrics` - Metrics
-- `/actuator/gateway` - Gateway routes (Gateway only)
-
-### Eureka Dashboard
-
-Truy cập http://localhost:8761 để xem:
-- Registered services
-- Instance status
-- Health information
-- Metadata
-
-## Security Notes
-
-### Production Checklist
-
-- [ ] Thay đổi internal token trong Config Service
-- [ ] Configure proper CORS origins
-- [ ] Enable HTTPS/TLS
-- [ ] Setup proper Redis authentication
-- [ ] Update dependency versions (check for CVEs)
-- [ ] Configure firewall rules
-- [ ] Setup monitoring alerts
-- [ ] Enable distributed tracing
-
-### Current Security Warnings
-
-Một số dependencies có security vulnerabilities:
-- logback-core CVE-2025-11226
-- spring-beans CVE-2025-41242
-- xstream CVE-2024-47072
-- protobuf-java CVE-2024-7254
-
-**Action**: Monitor và upgrade khi có patches
-
-## Additional Resources
-
-- [Phase P0 Completion Report](docs/migration/phase-p0_COMPLETED.md)
-- [Migration Guide](docs/migration/README.md)
-- [Docker Setup](docs/docker/)
-- [Proto Files Documentation](docs/proto-index.csv)
-
-## Support
-
-Để báo cáo issues hoặc đóng góp, vui lòng:
-1. Check existing documentation
-2. Review logs
-3. Create detailed issue report với:
-   - Service version
-   - Error logs
-   - Steps to reproduce
-   - Expected vs actual behavior
+Protocol: Binary Protobuf — xem [docs/CLIENT_INTEGRATION_GUIDE.md](docs/CLIENT_INTEGRATION_GUIDE.md)
 
 ---
 
-**Last Updated**: 2025-11-09  
-**Version**: 1.0.0  
-**Status**: Infrastructure Phase Complete ✅
+## 🔌 Service Dependencies
 
+```
+webSocket-server ──► Feign ──► role, bag, shop, equip, wallet, arena, trial,
+                               task, mail, friend, guild, chat, leaderboard,
+                               pet, mount, rune, angel, artifact, item,
+                               escort, starmap, territory, world, crafting,
+                               gem, lingzhu, knights, pagoda, scroll,
+                               shizhuang, activity, analytics, notification,
+                               localization, gm, main-fb
+
+                 ──► gRPC ──► role(9410), bag(9230), equip(9240), shop(9260),
+                              crafting(9280), trial(9300), starmap(9092),
+                              territory(9086), angel(9090), artifact(9087),
+                              rune(9093), leaderboard(9088), gameworld(9105),
+                              main-fb(9128), localization(9560),
+                              battleserver(9082)
+
+session-service  ──► user-service
+shop-service     ──► bag, wallet, item, role, config
+bag-service      ──► wallet-service
+task-service     ──► bag, wallet, leaderboard
+scheduler-service──► gift, guild, leaderboard, shop, task
+```
+
+---
+
+## 🐞 Troubleshooting
+
+| Vấn đề | Giải pháp |
+|--------|----------|
+| Service không register Eureka | Kiểm tra `eureka.client.serviceUrl.defaultZone` và Eureka đang chạy |
+| Gateway không route | Verify service đã register Eureka, check CORS config |
+| Config không load | Kiểm tra mode classpath/filesystem, verify file path |
+| Redis lỗi | `redis-cli ping`, check port 6379, `spring.data.redis.host` |
+| gRPC lỗi | Check `grpc.server.port` config và `@GrpcService` annotation |
+| Build lỗi | Build `common-lib` trước, check Java 21 và Maven 3.6+ |
+
+---
+
+## 🧪 Testing
+
+```java
+// Disable Eureka trong unit tests
+@SpringBootTest
+@TestPropertySource(properties = {"eureka.client.enabled=false"})
+class ServiceTest { ... }
+```
+
+```bash
+# Test qua Gateway
+curl http://localhost:8080/config-service/api/config/file/test.json
+
+# Test trực tiếp service
+curl http://localhost:8888/api/config/file/test.json
+
+# Test WebSocket
+wscat -c "ws://localhost:8080/websocket-server/ws/game?token={jwt}"
+```
+
+---
+
+## 📡 Monitoring
+
+- **Eureka Dashboard**: http://localhost:8761
+- **Actuator Health**: http://localhost:{port}/actuator/health
+- **Actuator Metrics**: http://localhost:{port}/actuator/metrics
+
+---
+
+## 🔒 Security Checklist (Production)
+
+- [ ] Đổi internal token trong Config Service
+- [ ] Cấu hình CORS origins đúng
+- [ ] Enable HTTPS/TLS
+- [ ] Bật Redis authentication
+- [ ] Cập nhật dependencies (kiểm tra CVE)
+- [ ] Cấu hình firewall rules
+- [ ] Bật distributed tracing (Zipkin/Jaeger)
+- [ ] Setup monitoring alerts
+
+---
+
+**Status**: ✅ 57/57 services implemented  
+**Last Updated**: 2026-03-16

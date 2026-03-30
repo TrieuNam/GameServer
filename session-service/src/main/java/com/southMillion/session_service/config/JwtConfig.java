@@ -1,4 +1,4 @@
-package com.southMillion.session_service.config;
+package com.SouthMillion.session_service.config;
 
 
 import com.nimbusds.jose.JOSEException;

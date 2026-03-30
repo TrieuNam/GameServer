@@ -1,4 +1,4 @@
-package com.southMillion.webSocket_server.config;
+package com.SouthMillion.webSocket_server.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

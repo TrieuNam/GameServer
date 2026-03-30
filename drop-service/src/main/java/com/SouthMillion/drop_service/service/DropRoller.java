@@ -103,18 +103,34 @@ public class DropRoller {
     private RollResult.ApplyBag applyToBag(String roleId, Integer bagTypeOpt, List<RollResult.Item> items) {
         try {
             int bagType = (bagTypeOpt != null) ? bagTypeOpt : props.getBag().getDefaultBagType();
+            Map<String, Map<String, Object>> metas = loadItemMetas(items);
 
             // Map qua DTO request (record)
             List<BagAddItemReq.Item> reqItems =
                     (items == null ? List.<RollResult.Item>of() : items).stream()
-                            .map(it -> new BagAddItemReq.Item(it.getItemId(), it.getNum()))
+                            .map(it -> {
+                                Map<String, Object> meta = metas.get(String.valueOf(it.getItemId()));
+                                int itemBagType = bagTypeOpt != null ? bagType : resolveBagType(meta, bagType);
+                                return BagAddItemReq.Item.builder()
+                                        .itemId(it.getItemId())
+                                        .amount(it.getNum())
+                                        .quality(resolveQuality(meta))
+                                        .bagType(itemBagType)
+                                        .bound(it.getBind() == 1)
+                                        .build();
+                            })
                             .toList();
 
-            BagAddItemReq req = new BagAddItemReq(roleId, bagType, reqItems);
+            BagAddItemReq req = BagAddItemReq.builder()
+                    .userId(1L) // audit field - roleId used for bag operations
+                    .roleId(Long.parseLong(roleId))
+                    .items(reqItems)
+                    .source("DROP_ROLL")
+                    .build();
 
             BagAddItemResp resp = bagFeign.get().add(req);
 
-            boolean ok = resp != null && resp.ok();
+            boolean ok = resp != null && resp.isSuccess();
 
             Map<String, Object> raw = new LinkedHashMap<>();
             raw.put("ok", ok);
@@ -127,6 +143,46 @@ public class DropRoller {
         } catch (Exception e) {
             return new RollResult.ApplyBag(true, false, Map.of("error", e.getMessage()));
         }
+    }
+
+    private Map<String, Map<String, Object>> loadItemMetas(List<RollResult.Item> items) {
+        if (items == null || items.isEmpty() || itemMeta.isEmpty()) return Map.of();
+
+        String idsCsv = items.stream()
+                .map(it -> Integer.toString(it.getItemId()))
+                .distinct()
+                .reduce((left, right) -> left + "," + right)
+                .orElse("");
+        if (idsCsv.isBlank()) return Map.of();
+
+        try {
+            Map<String, Map<String, Object>> metas = itemMeta.get().batchMeta(idsCsv);
+            return metas == null ? Map.of() : metas;
+        } catch (Exception ignore) {
+            return Map.of();
+        }
+    }
+
+    private int resolveQuality(Map<String, Object> meta) {
+        return Math.max(1, readInt(meta, 1, "quality", "color", "q"));
+    }
+
+    private int resolveBagType(Map<String, Object> meta, int defaultValue) {
+        return Math.max(0, readInt(meta, defaultValue, "bagType", "bag_type"));
+    }
+
+    private int readInt(Map<String, Object> meta, int defaultValue, String... keys) {
+        if (meta == null) return defaultValue;
+        for (String key : keys) {
+            Object value = meta.get(key);
+            if (value instanceof Number num) return num.intValue();
+            if (value != null) {
+                try {
+                    return Integer.parseInt(String.valueOf(value));
+                } catch (Exception ignore) {}
+            }
+        }
+        return defaultValue;
     }
 
 }

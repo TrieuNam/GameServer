@@ -1,0 +1,62 @@
+server:
+  port: 8260
+
+grpc:
+  server:
+    port: 9089
+    address: 0.0.0.0
+    max-inbound-message-size: 4MB
+    keep-alive-time: 5m
+    keep-alive-timeout: 20s
+    permit-keep-alive-without-calls: true
+
+spring:
+  application:
+    name: shop-service
+  threads:
+    virtual:
+      enabled: true   # Java 21 Virtual Threads
+
+  datasource:
+    $133069/shop_db?serverTimezone=UTC
+    username: tpnam
+    password: 121831
+
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Use Flyway for schema management
+    show-sql: true
+    open-in-view: false  # Disable to prevent lazy loading in views
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc.time_zone: UTC
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+# Application-specific configuration
+app:
+  config:
+    cloth: gameworld/logicconfig/cloth_shop.json
+    common: gameworld/logicconfig/shop_cfg.json
+    shenmi: gameworld/logicconfig/shop_shenmi.json
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    metadata-map:
+      grpc.port: 9089
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+logging:
+  level:
+    com.SouthMillion.shop_service: DEBUG
+    org.springframework.web: INFO
+

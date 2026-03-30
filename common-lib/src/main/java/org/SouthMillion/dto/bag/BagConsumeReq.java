@@ -1,5 +1,6 @@
 package org.SouthMillion.dto.bag;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -24,6 +25,7 @@ public class BagConsumeReq {
     private Integer itemId;
 
     @NotNull
+    @JsonAlias("quantity")
     private Integer amount;
 
     private String source;
@@ -71,13 +73,8 @@ public class BagConsumeReq {
         private Integer itemId;
 
         @NotNull
+        @JsonAlias("quantity")
         private Integer amount;
-
-        // Convenience constructor
-        public Cost(Integer itemId, Integer amount) {
-            this.itemId = itemId;
-            this.amount = amount;
-        }
 
         // Record-style accessors
         public Integer itemId() {

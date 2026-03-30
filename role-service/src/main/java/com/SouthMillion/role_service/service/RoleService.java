@@ -8,15 +8,19 @@ import com.SouthMillion.role_service.repository.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.role.RoleDTOs;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 
@@ -33,8 +37,13 @@ public class RoleService {
     private final RoleConfigCache cfg;
     private final NewbieGiftService NewbieGiftService;
 
+    /** Optional: injected lazily so the service still starts if Kafka is misconfigured */
+    @Autowired(required = false)
+    @Qualifier("objectKafkaTemplate")
+    private KafkaTemplate<String, Object> objectKafkaTemplate;
+
     @Cacheable(cacheNames = "roleById", key = "#roleId")
-    public Optional<RoleDTOs.RoleResp> getById(String roleId) {
+    public Optional<RoleDTOs.RoleResp> getById(Long roleId) {
         return repo.findById(roleId).map(RoleMapper::toResp);
     }
 
@@ -74,19 +83,20 @@ public class RoleService {
             r.setName(ensureUniqueName(req.getUserId(), nameBase));
             repo.saveAndFlush(r);
         }
-        NewbieGiftService.onFirstLogin(r.getUserId(),r.getRoleId());
+        NewbieGiftService.onFirstLogin(r.getUserId(), String.valueOf(r.getRoleId()));
         return RoleMapper.toResp(r);
     }
 
     @Transactional
     @CachePut(cacheNames = "roleById", key = "#roleId")
-    public RoleDTOs.RoleResp addExp(String roleId, long add) {
+    public RoleDTOs.RoleResp addExp(Long roleId, long add) {
         Role r = repo.findById(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
         if (add <= 0) return RoleMapper.toResp(r);
 
         RoleConfigCache.LevelTable lv = cfg.levelTable();
         long expToAdd = add;
+        int levelsGained = 0;
 
         while (r.getLevel() < lv.getMaxLevel() && expToAdd > 0) {
             long need = lv.expRequiredFor(r.getLevel()); // exp cần để lên level tiếp theo
@@ -101,6 +111,7 @@ public class RoleService {
                 expToAdd -= used;
                 r.setExp(0);
                 r.setLevel(r.getLevel() + 1);
+                levelsGained++;
 
                 // Tăng chỉ số mỗi lần lên cấp theo increment của LevelTable
                 r.setHp(safeAdd((int) r.getHp(), lv.getHpPerLv()));
@@ -112,12 +123,22 @@ public class RoleService {
 
         // Đã max level thì bỏ qua phần exp dư (parity với C++: không vượt trần)
         repo.saveAndFlush(r);
+
+        if (levelsGained > 0 && objectKafkaTemplate != null) {
+            try {
+                objectKafkaTemplate.send("role.level.up",
+                        Map.of("roleId", roleId, "levelsGained", levelsGained, "newLevel", r.getLevel()));
+            } catch (Exception e) {
+                log.warn("[RoleService] Failed to publish role.level.up for roleId={}: {}", roleId, e.getMessage());
+            }
+        }
+
         return RoleMapper.toResp(r);
     }
 
     @Transactional
     @CachePut(cacheNames = "roleById", key = "#roleId")
-    public RoleDTOs.RoleResp rename(String roleId, String newNameRaw) {
+    public RoleDTOs.RoleResp rename(Long roleId, String newNameRaw) {
         if (!StringUtils.hasText(newNameRaw)) {
             throw new IllegalArgumentException("Tên nhân vật không được trống");
         }
@@ -137,7 +158,7 @@ public class RoleService {
 
     @Transactional
     @CachePut(cacheNames = "roleById", key = "#roleId")
-    public RoleDTOs.RoleResp setWxInfo(String roleId, String name, String headChar) {
+    public RoleDTOs.RoleResp setWxInfo(Long roleId, String name, String headChar) {
         Role r = repo.findById(roleId)
                 .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
         if (StringUtils.hasText(name)) {
@@ -151,8 +172,23 @@ public class RoleService {
         return RoleMapper.toResp(r);
     }
 
+    @Transactional
+    @CachePut(cacheNames = "roleById", key = "#roleId")
+    public RoleDTOs.RoleResp applyStatDelta(Long roleId, long hpDelta, long attackDelta, long defenseDelta, int speedDelta) {
+        Role r = repo.findById(roleId)
+                .orElseThrow(() -> new IllegalArgumentException("Role not found: " + roleId));
+
+        r.setHp(Math.max(0, r.getHp() + hpDelta));
+        r.setAttackValue(Math.max(0, r.getAttackValue() + attackDelta));
+        r.setDefenseValue(Math.max(0, r.getDefenseValue() + defenseDelta));
+        r.setSpeed(Math.max(0, safeAdd(r.getSpeed(), speedDelta)));
+
+        repo.saveAndFlush(r);
+        return RoleMapper.toResp(r);
+    }
+
     @CacheEvict(cacheNames = "roleById", key = "#roleId")
-    public void evictCache(String roleId) {
+    public void evictCache(Long roleId) {
         // no-op
     }
 
@@ -180,5 +216,47 @@ public class RoleService {
     private int safeAdd(int cur, long inc) {
         long sum = (long) cur + inc;
         return safeInt(sum);
+    }
+
+    /**
+     * Combat power for battle simulation.
+     * Formula (simplified until equip/gear stats are wired):
+     *   fightPower = level * 150 + level * level * 2
+     *   hp  = level * 500
+     *   atk = level * 80
+     *   def = level * 40
+     *   spd = level * 20 + 100
+     */
+    public java.util.Map<String, Object> getCombatPower(Long roleId) {
+        var role = repo.findById(roleId).orElse(null);
+        int level = (role != null && role.getLevel() > 0) ? role.getLevel() : 1;
+        long fp  = (long) level * 150 + (long) level * level * 2;
+        long hp  = (long) level * 500;
+        long atk = (long) level * 80;
+        long def = (long) level * 40;
+        long spd = (long) level * 20 + 100;
+        return java.util.Map.of(
+                "fightPower", fp,
+                "hp", hp, "atk", atk, "def", def, "spd", spd,
+                "level", level
+        );
+    }
+
+    /**
+     * Legacy notice-time parity for Msg 1464/1465.
+     * type=0: query current value; type=1: set notice_time using param.
+     */
+    @Transactional
+    public long noticeTime(Long roleId, int type, long param) {
+        if (roleId == null || roleId <= 0) return 0L;
+        Role role = repo.findById(roleId).orElse(null);
+        if (role == null) return 0L;
+        if (type == 1) {
+            long v = Math.max(0L, param);
+            role.setNoticeTime(v);
+            repo.saveAndFlush(role);
+            return v;
+        }
+        return role.getNoticeTime() != null ? role.getNoticeTime() : 0L;
     }
 }

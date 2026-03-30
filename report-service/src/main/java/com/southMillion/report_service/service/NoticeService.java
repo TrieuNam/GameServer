@@ -1,7 +1,7 @@
-package com.southMillion.report_service.service;
+package com.SouthMillion.report_service.service;
 
-import com.southMillion.report_service.entity.NoticeEntity;
-import com.southMillion.report_service.repository.NoticeRepository;
+import com.SouthMillion.report_service.entity.NoticeEntity;
+import com.SouthMillion.report_service.repository.NoticeRepository;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.report.NoticeDTO;
 import org.springframework.stereotype.Service;

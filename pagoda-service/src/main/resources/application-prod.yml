@@ -1,0 +1,16 @@
+﻿server:
+  port: 8320
+
+spring:
+  datasource:
+    url: jdbc:mysql://pagodadb:3306/game_pagoda?useSSL=false&allowPublicKeyRetrieval=true
+    username: tpnam
+    password: 121831
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect

@@ -1,0 +1,153 @@
+syntax = "proto3";
+
+package com.southMillion.proto.starmap;
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.proto.starmap";
+option java_outer_classname = "StarmapServiceProto";
+
+// Starmap Service gRPC definition
+service StarmapGrpcService {
+  // Star operations
+  rpc GetAllStars(GetAllStarsRequest) returns (GetAllStarsResponse);
+  rpc GetStar(GetStarRequest) returns (GetStarResponse);
+  rpc ActivateStar(ActivateStarRequest) returns (ActivateStarResponse);
+  rpc LevelUpStar(LevelUpStarRequest) returns (LevelUpStarResponse);
+  
+  // Constellation operations
+  rpc GetAllConstellations(GetAllConstellationsRequest) returns (GetAllConstellationsResponse);
+  rpc GetConstellation(GetConstellationRequest) returns (GetConstellationResponse);
+  rpc UnlockConstellation(UnlockConstellationRequest) returns (UnlockConstellationResponse);
+  rpc LevelUpConstellation(LevelUpConstellationRequest) returns (LevelUpConstellationResponse);
+  
+  // Power calculation
+  rpc GetTotalStarmapPower(GetTotalStarmapPowerRequest) returns (GetTotalStarmapPowerResponse);
+}
+
+// Star data message
+message StarData {
+  int64 id = 1;
+  int64 user_id = 2;
+  int32 star_id = 3;
+  int32 level = 4;
+  bool is_active = 5;
+  int64 energy = 6;
+  int64 created_at = 7;
+  int64 updated_at = 8;
+}
+
+// Constellation data message
+message ConstellationData {
+  int64 id = 1;
+  int64 user_id = 2;
+  int32 constellation_id = 3;
+  int32 level = 4;
+  bool is_unlocked = 5;
+  bool is_completed = 6;
+  int32 stars_activated = 7;
+  int32 total_stars = 8;
+  int64 power = 9;
+  int64 created_at = 10;
+  int64 updated_at = 11;
+}
+
+// Get all stars
+message GetAllStarsRequest {
+  int64 user_id = 1;
+}
+
+message GetAllStarsResponse {
+  common.ResponseStatus status = 1;
+  repeated StarData stars = 2;
+}
+
+// Get star
+message GetStarRequest {
+  int64 user_id = 1;
+  int32 star_id = 2;
+}
+
+message GetStarResponse {
+  common.ResponseStatus status = 1;
+  StarData star = 2;
+}
+
+// Activate star
+message ActivateStarRequest {
+  int64 user_id = 1;
+  int32 star_id = 2;
+}
+
+message ActivateStarResponse {
+  common.ResponseStatus status = 1;
+  StarData star = 2;
+}
+
+// Level up star
+message LevelUpStarRequest {
+  int64 user_id = 1;
+  int32 star_id = 2;
+}
+
+message LevelUpStarResponse {
+  common.ResponseStatus status = 1;
+  StarData star = 2;
+  int64 energy_cost = 3;
+}
+
+// Get all constellations
+message GetAllConstellationsRequest {
+  int64 user_id = 1;
+}
+
+message GetAllConstellationsResponse {
+  common.ResponseStatus status = 1;
+  repeated ConstellationData constellations = 2;
+}
+
+// Get constellation
+message GetConstellationRequest {
+  int64 user_id = 1;
+  int32 constellation_id = 2;
+}
+
+message GetConstellationResponse {
+  common.ResponseStatus status = 1;
+  ConstellationData constellation = 2;
+}
+
+// Unlock constellation
+message UnlockConstellationRequest {
+  int64 user_id = 1;
+  int32 constellation_id = 2;
+}
+
+message UnlockConstellationResponse {
+  common.ResponseStatus status = 1;
+  ConstellationData constellation = 2;
+}
+
+// Level up constellation
+message LevelUpConstellationRequest {
+  int64 user_id = 1;
+  int32 constellation_id = 2;
+}
+
+message LevelUpConstellationResponse {
+  common.ResponseStatus status = 1;
+  ConstellationData constellation = 2;
+}
+
+// Get total starmap power
+message GetTotalStarmapPowerRequest {
+  int64 user_id = 1;
+}
+
+message GetTotalStarmapPowerResponse {
+  common.ResponseStatus status = 1;
+  int64 total_power = 2;
+  int32 total_stars_activated = 3;
+  int32 total_constellations_completed = 4;
+}

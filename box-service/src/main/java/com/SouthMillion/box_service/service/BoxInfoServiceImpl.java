@@ -6,5 +6,5 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface BoxInfoServiceImpl {
-    BoxDTOs.EquipInfo getEquipInfo(String roleId);
+    BoxDTOs.EquipInfo getEquipInfo(Long roleId);
 }

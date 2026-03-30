@@ -21,8 +21,8 @@ public class TaskProgressEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="player_id", nullable = false, length = 64)
-    private String playerId;
+    @Column(name="player_id", nullable = false)
+    private Long playerId;
 
     @Column(name="task_key", nullable = false, length = 64)
     private String taskKey;

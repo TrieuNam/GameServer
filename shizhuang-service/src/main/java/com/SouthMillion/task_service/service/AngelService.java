@@ -7,14 +7,16 @@ import com.SouthMillion.task_service.repository.PlayerAngelEquipRepository;
 import com.SouthMillion.task_service.repository.PlayerAngelRepository;
 import com.SouthMillion.task_service.repository.PlayerAngelSkinRepository;
 import com.SouthMillion.task_service.service.client.ItemFeignClient;
+import org.SouthMillion.dto.ShiZhuang.AngelConfigDTO;
+import org.SouthMillion.dto.ShiZhuang.PlayerAngelDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
-@Service
-
+// AngelService disabled in shizhuang-service (belongs to angel-service)
+// @Service
 public class AngelService {
 
     @Autowired

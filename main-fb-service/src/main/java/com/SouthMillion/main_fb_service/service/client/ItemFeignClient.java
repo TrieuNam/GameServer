@@ -1,5 +1,7 @@
 package com.SouthMillion.main_fb_service.service.client;
 
+import org.SouthMillion.dto.item.ChangeItemRequestDTO;
+import org.SouthMillion.dto.wallet.ResultDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;

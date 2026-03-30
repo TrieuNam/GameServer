@@ -1,6 +1,6 @@
-package com.southMillion.webSocket_server.service;
+package com.SouthMillion.webSocket_server.service;
 
-import com.southMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -18,14 +18,13 @@ public class InMemoryPlayerSessionRegistry implements PlayerSessionRegistry {
     private final Map<String, Set<String>> byUser = new ConcurrentHashMap<>();
 
     // roleId -> set(wsId)  (hỗ trợ nhiều phiên cùng 1 role)
-    private final Map<String, Set<String>> byRole = new ConcurrentHashMap<>();
+    private final Map<Long, Set<String>> byRole = new ConcurrentHashMap<>();
 
     @Override
     public void put(PlayerSession ps) {
         String wsId = ps.getWs().getId();
         byWs.put(wsId, ps);
 
-        // nếu session đã có sẵn user/role (trong trường hợp rebind sớm) thì gắn luôn
         if (ps.getUserId() != null) {
             byUser.computeIfAbsent(ps.getUserId(), k -> ConcurrentHashMap.newKeySet()).add(wsId);
         }
@@ -58,11 +57,11 @@ public class InMemoryPlayerSessionRegistry implements PlayerSessionRegistry {
     }
 
     @Override
-    public void bindRoleToSession(PlayerSession ps, String roleId, String userId, String roleName) {
+    public void bindRoleToSession(PlayerSession ps, Long roleId, String userId, String roleName) {
         String wsId = ps.getWs().getId();
 
         // gỡ ánh xạ role cũ (nếu có)
-        String oldRole = ps.getRoleId();
+        Long oldRole = ps.getRoleId();
         if (oldRole != null && !oldRole.equals(roleId)) {
             var setOld = byRole.get(oldRole);
             if (setOld != null) {
@@ -89,7 +88,7 @@ public class InMemoryPlayerSessionRegistry implements PlayerSessionRegistry {
     }
 
     @Override
-    public Optional<PlayerSession> getByRoleId(String roleId) {
+    public Optional<PlayerSession> getByRoleId(Long roleId) {
         var ids = byRole.getOrDefault(roleId, Set.of());
         for (String wsId : ids) {
             PlayerSession ps = byWs.get(wsId);
@@ -99,7 +98,7 @@ public class InMemoryPlayerSessionRegistry implements PlayerSessionRegistry {
     }
 
     @Override
-    public List<PlayerSession> sessionsOfRole(String roleId) {
+    public List<PlayerSession> sessionsOfRole(Long roleId) {
         var ids = byRole.getOrDefault(roleId, Set.of());
         List<PlayerSession> out = new ArrayList<>(ids.size());
         for (String wsId : ids) {

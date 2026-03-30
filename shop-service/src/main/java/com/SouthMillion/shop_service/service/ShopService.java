@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.Nullable;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagAddItemReq;
 import org.SouthMillion.dto.bag.BagConsumeReq;
 import org.SouthMillion.dto.bag.BagOkResp;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ShopService {
@@ -73,6 +75,11 @@ public class ShopService {
         return (x == null || x.isNull()) ? def : x.asText();
     }
 
+    private static int asInt(Object value, int def) {
+        if (value instanceof Number num) return num.intValue();
+        try { return value == null ? def : Integer.parseInt(String.valueOf(value)); } catch (Exception e) { return def; }
+    }
+
     private static long ceilMul(long base, double discount) {
         double d = discount;
         if (d > 1.0 && d <= 100.0) d = d / 100.0; // hỗ trợ 80 -> 0.8
@@ -91,7 +98,7 @@ public class ShopService {
         if (levelMaybe != null && levelMaybe > 0) return levelMaybe;
         try {
             if (roleFeign != null) {
-                RoleDTOs.RoleResp resp = roleFeign.detail(roleId);
+                RoleDTOs.RoleResp resp = roleFeign.detail(Long.parseLong(roleId)).orElse(null);
                 int lv = extractLevel(resp);
                 if (lv > 0) return lv;
             }
@@ -115,14 +122,24 @@ public class ShopService {
         return 0;
     }
 
+    private Map<String, Object> getItemMeta(long itemId) {
+        if (itemId <= 0) return null;
+        Map<String, Map<String, Object>> metas = itemMeta.batchMeta(String.valueOf(itemId));
+        return metas == null ? null : metas.get(String.valueOf(itemId));
+    }
+
     private boolean isVirtual(long itemId) {
         if (itemId <= 0) return false;
-        Map<String, Map<String, Object>> metas = itemMeta.batchMeta(String.valueOf(itemId));
-        Map<String, Object> m = metas.get(String.valueOf(itemId));
+        Map<String, Object> m = getItemMeta(itemId);
         if (m == null) return false;
         Object v = m.get("isVirtual");
         if (v instanceof Number num) return num.intValue() == 1;
         try { return Integer.parseInt(String.valueOf(v)) == 1; } catch (Exception ignore) { return false; }
+    }
+
+    private int resolveItemQuality(Map<String, Object> meta) {
+        if (meta == null) return 1;
+        return Math.max(1, asInt(meta.getOrDefault("quality", meta.getOrDefault("color", meta.get("q"))), 1));
     }
 
     // ===================== INFO (bootstrap) =====================
@@ -250,6 +267,44 @@ public class ShopService {
         return ResultDTO.ok(new ShopDTOs.ShopListResp(items));
     }
 
+    // ===================== REFRESH MYSTERY (SHENMI) =====================
+    public ResultDTO<ShopDTOs.ShopListResp> refreshMystery(String roleId, int shardId, int slot) {
+        // Resolve player level
+        int level = resolveLevel(roleId, null);
+        
+        JsonNode root = cfg.shenmi();
+        JsonNode arr = root.isArray() ? root : root.withArray("shop");
+
+        List<JsonNode> candidates = new ArrayList<>();
+        for (JsonNode n : arr) {
+            int lvMin = asInt(n, "level_min", 0);
+            int lvMax = asInt(n, "level_max", 9999);
+            if (level >= lvMin && level <= lvMax) candidates.add(n);
+        }
+
+        Collections.shuffle(candidates, new SecureRandom());
+        List<JsonNode> pick = candidates.stream().limit(1).toList();
+
+        List<ShopDTOs.ShopItem> items = pick.stream().map(n -> {
+            int index = asInt(n, "index", asInt(n, "id", -1));
+            long priceItemId = asLong(n, "buy_item", asLong(n, "exchange_item_id", 0));
+            long priceNum = asLong(n, "buy_item_num", asLong(n, "exchange_item_num", 0));
+            long rewardItemId = asLong(n, "item_id", 0);
+            long rewardNum = asLong(n, "num", 1);
+            String name = asText(n, "name", "mystery-" + rewardItemId);
+            int lvMin = asInt(n, "level_min", 0);
+            int lvMax = asInt(n, "level_max", 9999);
+            return new ShopDTOs.ShopItem(
+                    String.valueOf(index), name,
+                    priceItemId, priceNum,
+                    rewardItemId, rewardNum,
+                    lvMin, lvMax
+            );
+        }).toList();
+
+        return ResultDTO.ok(new ShopDTOs.ShopListResp(items));
+    }
+
     // ===================== BUY =====================
     @Transactional
     public ResultDTO<ShopDTOs.BuyResp> buy(ShopDTOs.BuyReq req) {
@@ -267,7 +322,7 @@ public class ShopService {
             String period = (quotaType == 1) ? "DAILY" : "FOREVER";
 
             ShopLimit lim = limitRepo.findByRoleIdAndKindAndEntryIndexAndPeriodAndDayStr(
-                    req.roleId(), req.kind().name(), req.indexOrSeq(), period, dayStr
+                    Long.parseLong(req.roleId()), req.kind().name(), req.indexOrSeq(), period, dayStr
             ).orElse(null);
 
             long already = (lim == null) ? 0 : lim.getCount();
@@ -297,13 +352,15 @@ public class ShopService {
                     return ResultDTO.fail(err != null ? err : "WALLET_COST_FAIL");
                 }
             } else {
-                BagConsumeReq consumeReq = new BagConsumeReq(
-                        req.roleId(),
-                        req.walletBagType(),
-                        List.of(new BagConsumeReq.Cost(costItemId, costNum))
-                );
+                BagConsumeReq consumeReq = BagConsumeReq.builder()
+                        .userId(1L) // audit field - roleId used for bag operations
+                        .roleId(Long.parseLong(req.roleId()))
+                        .itemId((int) costItemId)
+                        .amount((int) costNum)
+                        .source("SHOP_BUY")
+                        .build();
                 BagOkResp c = bagFeign.consume(consumeReq);
-                if (c == null || !c.ok()) return ResultDTO.fail(c == null ? "CONSUME_FAIL" : c.error());
+                if (c == null || !c.isOk()) return ResultDTO.fail(c == null ? "CONSUME_FAIL" : c.getMessage());
             }
         }
 
@@ -328,13 +385,22 @@ public class ShopService {
                     return ResultDTO.fail(err != null ? err : "WALLET_ADD_FAIL");
                 }
             } else {
-                BagAddItemReq addReq = new BagAddItemReq(
-                        req.roleId(),
-                        req.receiveBagType(),
-                        List.of(new BagAddItemReq.Item(rewardItemId, rewardNum))
-                );
+                Map<String, Object> rewardMeta = getItemMeta(rewardItemId);
+                var item = BagAddItemReq.Item.builder()
+                        .itemId((int) rewardItemId)
+                        .amount((int) rewardNum)
+                    .quality(resolveItemQuality(rewardMeta))
+                    .bagType(req.receiveBagType())
+                        .bound(false)
+                        .build();
+                BagAddItemReq addReq = BagAddItemReq.builder()
+                        .userId(1L) // audit field - roleId used for bag operations
+                        .roleId(Long.parseLong(req.roleId()))
+                        .items(List.of(item))
+                        .source("SHOP_REWARD")
+                        .build();
                 var a = bagFeign.add(addReq);
-                if (a == null || !a.ok()) return ResultDTO.fail(a == null ? "ADD_FAIL" : a.error());
+                if (a == null || !a.isSuccess()) return ResultDTO.fail(a == null ? "ADD_FAIL" : a.getMessage());
             }
         }
 
@@ -346,11 +412,11 @@ public class ShopService {
             String period = (quotaType == 1) ? "DAILY" : "FOREVER";
 
             ShopLimit lim = limitRepo.findByRoleIdAndKindAndEntryIndexAndPeriodAndDayStr(
-                    req.roleId(), req.kind().name(), req.indexOrSeq(), period, dayStr
+                    Long.parseLong(req.roleId()), req.kind().name(), req.indexOrSeq(), period, dayStr
             ).orElse(null);
             if (lim == null) {
                 lim = new ShopLimit();
-                lim.setRoleId(req.roleId());
+                lim.setRoleId(Long.parseLong(req.roleId()));
                 lim.setKind(req.kind().name());
                 lim.setEntryIndex(req.indexOrSeq());
                 lim.setPeriod(period);
@@ -361,7 +427,36 @@ public class ShopService {
             limitRepo.save(lim);
         }
 
-        return ResultDTO.ok(new ShopDTOs.BuyResp(true, null));
+        // Build success response with cost and reward info
+        // Query remaining balance for the currency used to pay (virtual items only)
+        long remaining = 0;
+        if (costItemId > 0 && isVirtual(costItemId)) {
+            try {
+                var balResp = walletFeign.get(req.roleId(), java.util.List.of(costItemId));
+                if (balResp != null && balResp.getCode() == 0 && balResp.getData() != null
+                        && balResp.getData().balances() != null) {
+                    Long bal = balResp.getData().balances().get(costItemId);
+                    if (bal != null) remaining = bal;
+                }
+            } catch (Exception ignored) {
+                log.warn("Failed to query remaining balance for roleId={} itemId={}", req.roleId(), costItemId);
+            }
+        }
+        ShopDTOs.ShopItem rewardItem = new ShopDTOs.ShopItem(
+            String.valueOf(rec.rewardItemId),
+            "", // name not needed in response
+            rec.priceItemId,
+            rec.priceNum,
+            rec.rewardItemId,
+            rec.rewardNum * req.num(),
+            0, 0 // level range not needed
+        );
+        return ResultDTO.ok(ShopDTOs.BuyResp.builder()
+                .ok(true)
+                .cost(costNum)
+                .remainingBalance(remaining)
+                .items(List.of(rewardItem))
+                .build());
     }
 
     // ===================== Config lookup =====================

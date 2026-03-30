@@ -3,7 +3,9 @@ package com.SouthMillion.bag_service.enity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -26,8 +28,8 @@ public class BagItem extends Auditable  implements org.springframework.data.doma
     @Column(name = "user_id", nullable = false, length = 36)
     private String userId;
 
-    @Column(name = "role_id", nullable = false, length = 36)
-    private String roleId;
+    @Column(name = "role_id", nullable = false)
+    private Long roleId;
 
     @Column(name = "item_id", nullable = false)
     private Integer itemId;
@@ -37,6 +39,13 @@ public class BagItem extends Auditable  implements org.springframework.data.doma
 
     @Column(name = "bind", nullable = false)
     private Boolean bind;
+
+    @Column(name = "quality", nullable = false)
+    private Integer quality;
+
+        @JdbcTypeCode(SqlTypes.TINYINT)
+        @Column(name = "bag_type", nullable = false, columnDefinition = "TINYINT")
+    private Integer bagType;
 
     // Cho phép null nếu item không có hạn
     @Column(name = "expire_at")

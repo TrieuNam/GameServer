@@ -25,13 +25,15 @@ public class LuckUnpackConfigCache {
 
     public void ensureLoaded() {
         String cur = etag.get();
-        ResponseEntity<byte[]> resp = cfg.byPath(props.getConfig().getKaixiangPath(), null , 1);
+        ResponseEntity<byte[]> resp = cfg.getFile(props.getConfig().getKaixiangPath(), cur);
         if (resp.getStatusCode().is2xxSuccessful() && resp.getBody()!=null) {
             try {
                 String json = new String(resp.getBody(), StandardCharsets.UTF_8);
                 raw = om.readValue(json, new TypeReference<>() {});
             } catch (Exception ignore) {}
             if (resp.getHeaders().getETag()!=null) etag.set(resp.getHeaders().getETag());
+        } else if (resp.getStatusCode().value() == 304) {
+            return;
         }
     }
 

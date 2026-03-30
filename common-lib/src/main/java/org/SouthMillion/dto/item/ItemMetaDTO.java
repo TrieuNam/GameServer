@@ -11,5 +11,6 @@ public record ItemMetaDTO(
         Long sellPrice,
         Integer pileLimit,
         Long invalidTime,
-        Boolean isSpecial
+        Boolean isSpecial,
+        Boolean isVirtual   // true = virtual/currency item (go to wallet, not bag)
 ) {}

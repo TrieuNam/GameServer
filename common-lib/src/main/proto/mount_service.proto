@@ -1,0 +1,124 @@
+syntax = "proto3";
+
+package mount;
+
+option java_package = "org.SouthMillion.proto.mount";
+option java_outer_classname = "MountServiceProto";
+option java_multiple_files = true;
+
+import "common.proto";
+
+// Mount gRPC Service Definition
+service MountService {
+  // Get all mounts for a user
+  rpc GetUserMounts(GetUserMountsRequest) returns (GetUserMountsResponse);
+  
+  // Get specific mount by index
+  rpc GetMount(GetMountRequest) returns (MountResponse);
+  
+  // Unlock/activate a new mount
+  rpc UnlockMount(UnlockMountRequest) returns (MountResponse);
+  
+  // Level up mount
+  rpc LevelUpMount(LevelUpMountRequest) returns (MountResponse);
+  
+  // Grade up mount (quality upgrade)
+  rpc GradeUpMount(GradeUpMountRequest) returns (MountResponse);
+  
+  // Equip/ride mount
+  rpc EquipMount(EquipMountRequest) returns (common.ResponseStatus);
+  
+  // Unequip current mount
+  rpc UnequipMount(UnequipMountRequest) returns (common.ResponseStatus);
+  
+  // Upgrade star level
+  rpc UpgradeStarLevel(UpgradeStarLevelRequest) returns (MountResponse);
+}
+
+// Request Messages
+
+message GetUserMountsRequest {
+  int64 user_id = 1;
+}
+
+message GetMountRequest {
+  int64 user_id = 1;
+  int32 mount_index = 2;
+}
+
+message UnlockMountRequest {
+  int64 user_id = 1;
+  int32 mount_id = 2;
+}
+
+message LevelUpMountRequest {
+  int64 user_id = 1;
+  int32 mount_index = 2;
+  repeated int64 material_ids = 3;  // Items consumed for level up
+}
+
+message GradeUpMountRequest {
+  int64 user_id = 1;
+  int32 mount_index = 2;
+}
+
+message EquipMountRequest {
+  int64 user_id = 1;
+  int32 mount_index = 2;
+}
+
+message UnequipMountRequest {
+  int64 user_id = 1;
+}
+
+message UpgradeStarLevelRequest {
+  int64 user_id = 1;
+  int32 mount_index = 2;
+}
+
+// Response Messages
+
+message GetUserMountsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated MountData mounts = 3;
+}
+
+message MountResponse {
+  bool success = 1;
+  string message = 2;
+  MountData mount = 3;
+  
+  // Additional upgrade info
+  int32 levels_gained = 4;
+  int64 exp_gained = 5;
+  int32 old_grade = 6;
+  int32 new_grade = 7;
+}
+
+// Data Models
+
+message MountData {
+  int64 id = 1;                      // Database ID
+  int64 user_id = 2;                 // Owner user ID
+  int32 mount_index = 3;             // Mount slot index (0-based)
+  int32 mount_id = 4;                // Config ID from harness.json
+  int32 level = 5;                   // Mount level
+  int32 grade = 6;                   // Mount grade/quality
+  int64 exp = 7;                     // Current experience
+  bool is_active = 8;                // Is unlocked/activated
+  bool is_equipped = 9;              // Is currently riding
+  int32 appearance_id = 10;          // Cosmetic appearance
+  int32 skin_id = 11;                // Skin ID
+  int32 skin_level = 12;             // Skin upgrade level
+  int64 explore_progress = 13;       // Exploration progress
+  int32 harness_slot_1 = 14;         // Harness equipment slot 1
+  int32 harness_slot_2 = 15;         // Harness equipment slot 2
+  int32 harness_slot_3 = 16;         // Harness equipment slot 3
+  int32 harness_slot_4 = 17;         // Harness equipment slot 4
+  int64 combat_power = 18;           // Calculated combat power
+  
+  // Timestamps
+  int64 created_at = 20;             // Creation timestamp (millis)
+  int64 updated_at = 21;             // Last update timestamp
+}

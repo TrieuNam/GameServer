@@ -11,8 +11,8 @@ public class WalletAccount {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="role_id", nullable=false, length=64)
-    private String roleId;
+    @Column(name="role_id", nullable=false)
+    private Long roleId;
 
     @Column(name="item_id", nullable=false)
     private Long itemId;

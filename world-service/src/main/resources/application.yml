@@ -1,9 +1,11 @@
 spring:
+  profiles:
+    active: local
   application:
     name: world-service
 
 server:
-  port: 8084
+  port: 8370
 
 config-service:
   url: http://localhost:8080

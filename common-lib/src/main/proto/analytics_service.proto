@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package analytics;
+
+option java_package = "org.SouthMillion.proto.analytics";
+option java_outer_classname = "AnalyticsProto";
+
+import "common.proto";
+
+service AnalyticsService {
+  rpc TrackEvent(TrackEventRequest) returns (common.ResponseStatus);
+  rpc GetPlayerEvents(GetPlayerEventsRequest) returns (PlayerEventsResponse);
+  rpc GetPlayerKpi(GetPlayerKpiRequest) returns (PlayerKpiResponse);
+  rpc GetTopSpenders(GetTopSpendersRequest) returns (TopSpendersResponse);
+  rpc GetMostActiveUsers(GetMostActiveUsersRequest) returns (MostActiveUsersResponse);
+}
+
+message TrackEventRequest {
+  int64 player_id = 1;
+  string event_type = 2;
+  string event_category = 3;
+  string event_data = 4; // JSON
+  string session_id = 5;
+}
+
+message GetPlayerEventsRequest {
+  int64 player_id = 1;
+  int64 start_time = 2; // timestamp millis
+  int64 end_time = 3;
+}
+
+message PlayerEventsResponse {
+  repeated PlayerEvent events = 1;
+}
+
+message PlayerEvent {
+  int64 id = 1;
+  int64 player_id = 2;
+  string event_type = 3;
+  string event_category = 4;
+  string event_data = 5;
+  int64 event_time = 6;
+  string server_name = 7;
+  string session_id = 8;
+}
+
+message GetPlayerKpiRequest {
+  int64 player_id = 1;
+  int64 date = 2; // timestamp millis
+}
+
+message PlayerKpiResponse {
+  PlayerKpi kpi = 1;
+}
+
+message PlayerKpi {
+  int64 id = 1;
+  int64 player_id = 2;
+  int64 date = 3;
+  int32 login_count = 4;
+  int32 session_duration = 5;
+  string total_spent = 6; // decimal as string
+  string total_earned = 7;
+  int32 purchase_count = 8;
+  int32 battles_played = 9;
+  int32 battles_won = 10;
+  int32 pvp_matches = 11;
+  int32 messages_sent = 12;
+  int32 friend_requests = 13;
+  int32 tasks_completed = 14;
+  int32 levels_gained = 15;
+}
+
+message GetTopSpendersRequest {
+  int64 since = 1; // timestamp millis
+  int32 limit = 2;
+}
+
+message TopSpendersResponse {
+  repeated PlayerKpi top_spenders = 1;
+}
+
+message GetMostActiveUsersRequest {
+  int64 since = 1;
+  int32 limit = 2;
+}
+
+message MostActiveUsersResponse {
+  repeated PlayerKpi active_users = 1;
+}

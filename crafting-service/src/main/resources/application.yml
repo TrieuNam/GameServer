@@ -1,0 +1,67 @@
+﻿server:
+  port: 8280
+
+grpc:
+  server:
+    port: 9280
+    address: 0.0.0.0
+    max-inbound-message-size: 4MB
+    keep-alive-time: 5m
+    keep-alive-timeout: 20s
+  client:
+    # bag-service có gRPC server tại port 9230 — dùng gRPC cho tất cả bag operations
+    bag-service:
+      address: 'static://localhost:9230'
+      negotiation-type: plaintext
+    # wallet-service có gRPC server tại port 9210 — dùng gRPC cho tất cả wallet operations
+    wallet-service:
+      address: 'static://localhost:9210'
+      negotiation-type: plaintext
+
+spring:
+  profiles:
+    active: local
+  application:
+    name: crafting-service
+  threads:
+    virtual:
+      enabled: true
+
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:33071/game_crafting?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:tpnam}
+    password: ${DB_PASSWORD:121831}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        jdbc.time_zone: UTC
+        type:
+          preferred_boolean_jdbc_type: TINYINT
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    connect-retries: 10
+    connect-retries-interval: 5
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

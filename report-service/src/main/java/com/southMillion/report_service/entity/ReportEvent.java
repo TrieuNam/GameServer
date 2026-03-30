@@ -1,7 +1,8 @@
-package com.southMillion.report_service.entity;
+package com.SouthMillion.report_service.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
 
@@ -29,5 +30,6 @@ public class ReportEvent {
     @Column(length = 2000)
     private String extraParams; // Nối các param mở rộng thành 1 chuỗi
 
-    private Instant createdAt = Instant.now(); // Thời điểm lưu DB
+    @CreationTimestamp
+    private Instant createdAt; // Thời điểm lưu DB
 }

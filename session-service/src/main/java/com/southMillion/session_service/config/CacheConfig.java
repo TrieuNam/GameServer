@@ -1,4 +1,4 @@
-package com.southMillion.session_service.config;
+package com.SouthMillion.session_service.config;
 
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;

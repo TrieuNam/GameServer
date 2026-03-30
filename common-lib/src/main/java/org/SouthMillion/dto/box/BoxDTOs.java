@@ -29,6 +29,8 @@ public class BoxDTOs {
         private int arenaItemNum;
         /** Open-time snapshot (equip vừa roll, bonus, v.v.) */
         private Map<String, Object> pending; // null nếu không có
+        /** Typed compare session for compare UI during migration away from pendingJson. */
+        private BoxCompareStateResp compareState;
     }
 
     // ===== /open (request)
@@ -52,9 +54,13 @@ public class BoxDTOs {
         private boolean lastOpenIsFive;
         private List<Map<String,Object>> bonusItems;  // challenge/fashion/... nếu có
 
-        /** Tuỳ chọn: nếu server trả rolled sẵn thì điền vào đây để bắn SC_BOX_EQUIP_INFO không cần parse map. */
-        private EquipRolled openEquip; // optional
-        private Integer isNew;         // 0/1 optional (thường = 1 sau open)
+        /** Typed equip mới vừa roll — dùng cho SC_BOX_EQUIP_INFO popup. */
+        private EquipRolled openEquip;   // optional
+        private Integer isNew;           // 0/1 optional (thường = 1 sau open)
+        /** Equip hiện tại của player ở cùng slot — để client so sánh cũ vs mới. */
+        private EquipRolled currentEquip; // null nếu chưa có equip ở slot này
+        /** Typed compare session stored separately from pendingJson. */
+        private BoxCompareStateResp compareState;
     }
 
     // ===== các req/resp khác
@@ -78,6 +84,15 @@ public class BoxDTOs {
     public static class OkResp {
         private boolean ok;
         private String message;
+    }
+
+    @Getter @Setter
+    @NoArgsConstructor @AllArgsConstructor @Builder
+    public static class SellResp {
+        private boolean ok;
+        private String message;
+        private long sellCoin;
+        private long sellExp;
     }
 
     // ===== Luck Unpacking
@@ -117,6 +132,22 @@ public class BoxDTOs {
         private BoxSettingResp boxSet;
     }
 
+    /** Alias of BoxSettingReq — used by POST /setting to persist auto-sweep stop conditions */
+    @Getter @Setter
+    @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class SaveSettingReq {
+        private String roleId;
+        /** eqality: min quality to keep (PB_WaBaoSet.eqality) */
+        private int equipEqality;
+        /** eqalityMark: 1=stop when got ≥ eqality, 0=ignore (PB_WaBaoSet.eqality_mark) */
+        private int openFiveMark;
+        /** newRecord: 1=stop on new collection record (PB_WaBaoSet.new_record) */
+        private int retainMark;
+        /** newBook: 1=stop on new collection book (PB_WaBaoSet.new_book) */
+        private int newBook;
+    }
+
     // ===== Decompose
     @Getter @Setter
     @NoArgsConstructor @AllArgsConstructor @Builder
@@ -127,14 +158,6 @@ public class BoxDTOs {
         private long gotNum;
         private long gotExp;
         private String message;
-    }
-
-    @Getter @Setter
-    @NoArgsConstructor @AllArgsConstructor @Builder
-    public static class SetPendingReq {
-        @NotBlank private String roleId;
-        /** sẽ chuẩn hóa thành {"kind":"equip","equip":{...}} */
-        @NotNull  private Map<String, Object> pending;
     }
 
     /** Dòng parse kiểu hoá theo file thực tế. */
@@ -250,6 +273,78 @@ public class BoxDTOs {
         private EquipRolled equipInfo;
     }
 
+    @Getter @Setter
+    @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class BoxCompareSnapshotDTO {
+        private Integer itemId;
+        private Integer equipType;
+        private Integer quality;
+        private Integer equipLevel;
+        private Integer hp;
+        private Integer attack;
+        private Integer defend;
+        private Integer speed;
+        private Integer attrType1;
+        private Integer attrValue1;
+        private Integer attrType2;
+        private Integer attrValue2;
+
+        public EquipRolled toEquipRolled() {
+            return EquipRolled.builder()
+                    .equipType(equipType)
+                    .itemId(itemId)
+                    .hp(hp)
+                    .attack(attack)
+                    .defend(defend)
+                    .speed(speed)
+                    .attrType1(attrType1)
+                    .attrValue1(attrValue1)
+                    .attrType2(attrType2)
+                    .attrValue2(attrValue2)
+                    .build();
+        }
+
+        public static BoxCompareSnapshotDTO fromEquipRolled(EquipRolled rolled) {
+            if (rolled == null) return null;
+            return BoxCompareSnapshotDTO.builder()
+                    .equipType(rolled.getEquipType())
+                    .itemId(rolled.getItemId())
+                    .hp(rolled.getHp())
+                    .attack(rolled.getAttack())
+                    .defend(rolled.getDefend())
+                    .speed(rolled.getSpeed())
+                    .attrType1(rolled.getAttrType1())
+                    .attrValue1(rolled.getAttrValue1())
+                    .attrType2(rolled.getAttrType2())
+                    .attrValue2(rolled.getAttrValue2())
+                    .build();
+        }
+    }
+
+    @Getter @Setter
+    @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class BoxCompareStateResp {
+        private Long roleId;
+        private String stateVersion;
+        private String source;
+        private String status;
+        private long openedAt;
+        private Integer isNew;
+        private BoxCompareSnapshotDTO candidateEquip;
+        private BoxCompareSnapshotDTO equippedBefore;
+    }
+
+    public static EquipInfo equipInfoFromCompareState(BoxCompareStateResp compareState, Integer isNewDefault) {
+        if (compareState == null || compareState.getCandidateEquip() == null) return null;
+        Integer finalIsNew = compareState.getIsNew() != null ? compareState.getIsNew() : isNewDefault;
+        return EquipInfo.builder()
+                .isNew(finalIsNew)
+                .equipInfo(compareState.getCandidateEquip().toEquipRolled())
+                .build();
+    }
+
     // ---------- Helpers để parse pending => EquipInfo (nếu pending đã chứa trị số đơn) ----------
     @SuppressWarnings("unchecked")
     public static EquipInfo equipInfoFromPending(Map<String, Object> pending, Integer isNewDefault) {
@@ -259,7 +354,13 @@ public class BoxDTOs {
         Object nested = pending.get("equip");
         if (nested instanceof Map<?, ?> m) src = (Map<String, Object>) m;
 
-        Integer itemId   = pickInt(src, "itemId", "item_id", "id");
+        Integer pendingIsNew = pickInt(src, "isNew", "is_new");
+        if (pendingIsNew == null) {
+            pendingIsNew = pickInt(pending, "isNew", "is_new");
+        }
+        Integer finalIsNew = pendingIsNew != null ? pendingIsNew : isNewDefault;
+
+        Integer itemId   = pickInt(src, "itemId", "item_id");
         Integer equipTyp = pickInt(src, "equipType", "equip_type", "type", "pos", "part");
 
         // stats có thể nằm trong src hoặc src.stats
@@ -283,7 +384,7 @@ public class BoxDTOs {
                 .build();
 
         return EquipInfo.builder()
-                .isNew(isNewDefault)
+            .isNew(finalIsNew)
                 .equipInfo(rolled)
                 .build();
     }
@@ -325,4 +426,93 @@ public class BoxDTOs {
         } catch (Exception ignore) {}
         return null;
     }
+
+    // ===== WaBao SC DTOs — SC 1643/1645/1646/1647/1648/1650/1651 ==========
+
+    /** SC 1643 PB_SCWaBaoMapInfo */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WaBaoMapInfo {
+        private int curMap;        // PB_SCWaBaoMapInfo.cur_map
+        private int unlockedMap;   // PB_SCWaBaoMapInfo.unlocked_map
+        private List<Integer> mapConditionNum; // PB_SCWaBaoMapInfo.map_condition_num
+    }
+
+    /** One node for SC 1645 PB_WaBaoIntegrityNode */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WaBaoIntegrityNode {
+        private int itemId;
+        private int maxIntegrity;
+    }
+
+    /** SC 1645 PB_SCWaBaoIntegrityInfo */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WaBaoIntegrityInfo {
+        private int isLogin;                    // 1=login push list
+        private List<WaBaoIntegrityNode> dataList;
+    }
+
+    /** One node for SC 1646 PB_WaBaoCollectionNode */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WaBaoCollectionNode {
+        private int itemType;   // 宝物种类 (4 types)
+        private int index;      // bag slot (6 per type)
+        private int itemId;
+        private int integrity;
+        private int attrType1;  private int attrValue1;
+        private int attrType2;  private int attrValue2;
+    }
+
+    /** SC 1646 PB_SCWaBaoCollectionListInfo */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WaBaoCollectionInfo {
+        private int isLogin;
+        private List<WaBaoCollectionNode> dataList;
+    }
+
+    /** One tool item for SC 1647 */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WaBaoToolNode {
+        private int itemId;
+        private int count;
+    }
+
+    /** SC 1647 PB_SCWaBaoToolInfo */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WaBaoToolInfo {
+        private List<WaBaoToolNode> toolList;
+    }
+
+    /** One task for SC 1648 */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WaBaoTaskNode {
+        private int taskId;
+        private int progress;
+        private int target;
+        private int status;   // 0=ongoing 1=claimable 2=claimed
+    }
+
+    /** SC 1648 PB_SCWaBaoTaskInfo — task_flag + repeated int32 task_list + task_type_num */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WaBaoTaskInfo {
+        private Integer taskFlag;
+        private List<Integer> taskList;
+        private List<Integer> taskTypeNumList;
+    }
+
+    /** SC 1651 PB_SCWaBaoBookListInfo — repeated int32 activate_flag */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WaBaoBookListInfo {
+        private List<Integer> activateFlagList;
+    }
 }
+

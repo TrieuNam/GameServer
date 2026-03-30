@@ -1,4 +1,4 @@
-package com.southMillion.equip_service.entity;
+package com.SouthMillion.equip_service.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,8 +18,8 @@ public class EquipSlotEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="role_id", nullable=false, length=64)
-    private String roleId;
+    @Column(name="role_id", nullable=false)
+    private Long roleId;
 
     /** Vị trí trang bị (helmet/chest/weapon…) — map từ meta item */
     @Column(name="equip_type", nullable=false)

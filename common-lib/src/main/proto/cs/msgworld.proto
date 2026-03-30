@@ -1,0 +1,181 @@
+syntax = "proto3";
+
+package msgworld;
+
+option java_package = "org.SouthMillion.proto.Msgworld";
+option java_outer_classname = "Msgworld";
+
+// ==================== World & Scene System Messages ====================
+
+// 位置信息
+message PB_Position {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+// 方向信息
+message PB_Direction {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+// 客户端请求进入场景
+message PB_CSEnterSceneReq {
+    int32 scene_id = 1;          // 场景ID
+    int32 enter_type = 2;        // 进入类型: 1-传送, 2-副本, 3-跳转
+    PB_Position target_pos = 3;  // 目标位置(可选)
+}
+
+// 服务端确认进入场景
+message PB_SCEnterSceneAck {
+    int32 ret_code = 1;          // 返回码: 0-成功
+    string ret_msg = 2;
+    int32 scene_id = 3;          // 场景ID
+    PB_Position spawn_pos = 4;   // 出生点位置
+    int64 server_time = 5;       // 服务器时间
+}
+
+// 客户端请求离开场景
+message PB_CSLeaveSceneReq {
+    int32 scene_id = 1;
+    int32 leave_type = 2;        // 离开类型: 1-正常, 2-强制
+}
+
+// 服务端确认离开场景
+message PB_SCLeaveSceneAck {
+    int32 ret_code = 1;
+    string ret_msg = 2;
+}
+
+// 客户端移动请求
+message PB_CSMoveReq {
+    PB_Position start_pos = 1;   // 起始位置
+    PB_Position end_pos = 2;     // 目标位置
+    PB_Direction direction = 3;   // 方向
+    float speed = 4;             // 速度
+    int64 timestamp = 5;         // 时间戳
+}
+
+// 服务端移动确认
+message PB_SCMoveAck {
+    int32 ret_code = 1;
+    PB_Position position = 2;    // 当前位置
+    int64 timestamp = 3;         // 服务器时间戳
+}
+
+// 场景中的角色信息
+message PB_SceneRole {
+    int64 role_id = 1;           // 角色ID
+    string role_name = 2;        // 角色名
+    int32 level = 3;             // 等级
+    int32 career = 4;            // 职业
+    int32 sex = 5;               // 性别
+    PB_Position position = 6;    // 位置
+    PB_Direction direction = 7;  // 方向
+    int32 hp = 8;                // 当前生命值
+    int32 max_hp = 9;            // 最大生命值
+    int32 status = 10;           // 状态: 0-正常, 1-战斗, 2-死亡
+    map<int32, int32> equips = 11;  // 装备外观
+}
+
+// 角色进入视野
+message PB_SCRoleEnterView {
+    repeated PB_SceneRole roles = 1;  // 进入的角色列表
+}
+
+// 角色离开视野
+message PB_SCRoleLeaveView {
+    repeated int64 role_ids = 1;  // 离开的角色ID列表
+}
+
+// 场景中的NPC信息
+message PB_SceneNpc {
+    int32 npc_id = 1;            // NPC ID
+    int32 npc_type = 2;          // NPC类型: 1-商人, 2-任务, 3-功能
+    string npc_name = 3;         // NPC名称
+    PB_Position position = 4;    // 位置
+    int32 status = 5;            // 状态
+}
+
+// 场景中的怪物信息
+message PB_SceneMonster {
+    int64 monster_uid = 1;       // 怪物唯一ID
+    int32 monster_id = 2;        // 怪物配置ID
+    int32 level = 3;             // 等级
+    string name = 4;             // 名称
+    PB_Position position = 5;    // 位置
+    int32 hp = 6;                // 当前生命值
+    int32 max_hp = 7;            // 最大生命值
+    int32 status = 8;            // 状态: 0-正常, 1-战斗, 2-死亡
+}
+
+// 场景中的掉落物信息
+message PB_SceneItem {
+    int64 item_uid = 1;          // 掉落物唯一ID
+    int32 item_id = 2;           // 物品配置ID
+    int32 item_count = 3;        // 数量
+    PB_Position position = 4;    // 位置
+    int64 owner_id = 5;          // 归属者ID(0-所有人可拾取)
+    int64 expire_time = 6;       // 过期时间
+}
+
+// 场景信息
+message PB_SCSceneInfo {
+    int32 scene_id = 1;          // 场景ID
+    string scene_name = 2;       // 场景名称
+    int32 scene_type = 3;        // 场景类型: 1-主城, 2-野外, 3-副本
+    repeated PB_SceneRole roles = 4;      // 场景中的角色
+    repeated PB_SceneNpc npcs = 5;        // 场景中的NPC
+    repeated PB_SceneMonster monsters = 6; // 场景中的怪物
+    repeated PB_SceneItem items = 7;      // 场景中的掉落物
+}
+
+// 客户端拾取物品请求
+message PB_CSPickupItemReq {
+    int64 item_uid = 1;          // 掉落物唯一ID
+}
+
+// 服务端拾取物品确认
+message PB_SCPickupItemAck {
+    int32 ret_code = 1;          // 返回码: 0-成功, 1-物品不存在, 2-距离太远, 3-不属于你
+    string ret_msg = 2;
+    int64 item_uid = 3;          // 掉落物ID
+    int32 item_id = 4;           // 物品ID
+    int32 item_count = 5;        // 拾取数量
+}
+
+// 客户端交互NPC请求
+message PB_CSInteractNpcReq {
+    int32 npc_id = 1;            // NPC ID
+    int32 interact_type = 2;     // 交互类型: 1-对话, 2-商店, 3-任务
+}
+
+// 服务端交互NPC确认
+message PB_SCInteractNpcAck {
+    int32 ret_code = 1;
+    string ret_msg = 2;
+    int32 npc_id = 3;
+    int32 interact_type = 4;
+}
+
+// 场景对象移动广播
+message PB_SCObjectMove {
+    int32 obj_type = 1;          // 对象类型: 1-角色, 2-怪物
+    int64 obj_id = 2;            // 对象ID
+    PB_Position start_pos = 3;   // 起始位置
+    PB_Position end_pos = 4;     // 目标位置
+    PB_Direction direction = 5;   // 方向
+    float speed = 6;             // 速度
+    int64 timestamp = 7;         // 时间戳
+}
+
+// 场景对象状态变化
+message PB_SCObjectStatusChange {
+    int32 obj_type = 1;          // 对象类型
+    int64 obj_id = 2;            // 对象ID
+    int32 new_status = 3;        // 新状态
+    int32 hp = 4;                // 当前HP
+    int32 max_hp = 5;            // 最大HP
+}

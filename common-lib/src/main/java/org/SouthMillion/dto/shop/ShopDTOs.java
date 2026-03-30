@@ -53,9 +53,34 @@ public class ShopDTOs {
         private int mysterySlots;
         private long nextResetEpoch;
         private ShopListResp mystery; // reuse list cấu trúc hiện có
+        
+        // Compatibility methods
+        public long getNextReset() { return nextResetEpoch; }
+        public List<ShopItem> getItems() { 
+            return mystery != null ? mystery.items() : List.of();
+        }
     }
 
-    public record ShopListResp(List<ShopItem> items) {}
+    public record ShopListResp(List<ShopItem> items) {
+        // Compatibility method
+        public List<ShopItem> getItems() { return items; }
+    }
 
-    public record BuyResp(boolean ok, String error) {}
+    @Getter
+    @Setter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class BuyResp {
+        private boolean ok;
+        private String error;
+        private long cost;
+        private long remainingBalance;
+        private List<ShopItem> items;
+        
+        // Compatibility methods
+        public long getCost() { return cost; }
+        public long getRemainingBalance() { return remainingBalance; }
+        public List<ShopItem> getItems() { return items != null ? items : List.of(); }
+    }
 }

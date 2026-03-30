@@ -1,6 +1,6 @@
-package com.southMillion.webSocket_server.config;
+package com.SouthMillion.webSocket_server.config;
 
-import com.southMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.net.MessageHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

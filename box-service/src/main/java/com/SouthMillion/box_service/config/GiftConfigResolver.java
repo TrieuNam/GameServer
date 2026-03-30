@@ -27,9 +27,7 @@ public class GiftConfigResolver {
         }
         if (cachedId != null) return cachedId;
 
-        // Lấy file config theo REL dưới "config/" => "gameworld/item/gift.json"
-        // Dùng force=1 để luôn trả 200 + body (tránh 304 Not Modified).
-        var resp = cfg.byPath("gameworld/item/gift.json", null, 1);
+        var resp = cfg.getFile("gameworld/item/gift.json", null);
         if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) {
             throw new IllegalStateException("Không lấy được gift.json, status=" + resp.getStatusCode());
         }

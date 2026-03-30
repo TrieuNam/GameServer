@@ -1,0 +1,23 @@
+server:
+  port: 8560
+spring:
+  profiles:
+    active: local  # Default to local profile
+  application:
+    name: localization-service
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      database: 6
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+# gRPC Server
+grpc:
+  server:
+    port: 9560

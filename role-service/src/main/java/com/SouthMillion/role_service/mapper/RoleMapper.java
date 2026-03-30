@@ -12,7 +12,7 @@ public final class RoleMapper {
 
         return RoleDTOs.RoleResp.builder()
                 // Core id / user binding
-                .roleId(r.getRoleId())
+                .roleId(r.getRoleId() != null ? String.valueOf(r.getRoleId()) : null)
                 .userId(r.getUserId())
 
                 // Name priority: emit 'name' là chính; nickname/roleName để null (hoặc duplicate nếu bạn muốn)

@@ -3,18 +3,19 @@ package com.SouthMillion.task_service.service;
 import com.SouthMillion.task_service.service.client.ConfigFeignClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.SouthMillion.dto.ShiZhuang.AngelConfigDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-@Service
+// AngelConfigService disabled in shizhuang-service (belongs to angel-service)
+// @Service
+@RequiredArgsConstructor
 public class AngelConfigService {
 
-    @Autowired
-    private  ConfigFeignClient configFeignClient;
-
-    private  ObjectMapper objectMapper;
+    private final ConfigFeignClient configFeignClient;
+    private final ObjectMapper objectMapper;
 
     // Cache config trong RAM (chỉ load 1 lần/lazy load)
     private AngelConfigDTO cachedConfig;
@@ -24,7 +25,7 @@ public class AngelConfigService {
      */
     public AngelConfigDTO getAngelConfig() {
         if (cachedConfig == null) {
-            JsonNode jsonNode = configFeignClient.getConfigFile("angel.json");
+            JsonNode jsonNode = configFeignClient.getConfigFile("gameworld/logicconfig/angel.json");
             try {
                 cachedConfig = objectMapper.treeToValue(jsonNode, AngelConfigDTO.class);
             } catch (Exception e) {
@@ -38,7 +39,7 @@ public class AngelConfigService {
      * Reload lại angel.json (nếu hot update)
      */
     public AngelConfigDTO reloadAngelConfig() {
-        JsonNode jsonNode = configFeignClient.getConfigFile("angel.json");
+        JsonNode jsonNode = configFeignClient.getConfigFile("gameworld/logicconfig/angel.json");
         try {
             cachedConfig = objectMapper.treeToValue(jsonNode, AngelConfigDTO.class);
         } catch (Exception e) {

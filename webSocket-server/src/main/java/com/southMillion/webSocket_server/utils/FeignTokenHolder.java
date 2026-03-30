@@ -1,4 +1,4 @@
-package com.southMillion.webSocket_server.utils;
+package com.SouthMillion.webSocket_server.utils;
 
 public final class FeignTokenHolder {
     private FeignTokenHolder(){}

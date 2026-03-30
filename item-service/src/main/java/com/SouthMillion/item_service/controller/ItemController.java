@@ -6,9 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.SouthMillion.dto.item.ItemMetaDTO;
 import org.SouthMillion.dto.item.ValidateResp;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +23,11 @@ public class ItemController {
 
     @GetMapping("/api/item/meta")
     public ResponseEntity<ItemMetaDTO> meta(@RequestParam int itemId) {
-        return ResponseEntity.ok(svc.meta(itemId));
+        try {
+            return ResponseEntity.ok(svc.meta(itemId));
+        } catch (ItemCache.ItemNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/api/item/meta/batch")
@@ -56,5 +58,32 @@ public class ItemController {
         } catch (NumberFormatException e) {
             return ResponseEntity.badRequest().body(null);
         }
+    }
+
+    @DeleteMapping("/internal/item/meta/cache")
+    public ResponseEntity<Map<String, Object>> evictMeta(@RequestParam("itemId") int itemId) {
+        boolean redisDeleted = cache.evictMeta(itemId);
+        return ResponseEntity.ok(Map.of(
+                "ok", true,
+                "itemId", itemId,
+                "redisDeleted", redisDeleted
+        ));
+    }
+
+    @DeleteMapping("/internal/item/meta/cache/all")
+    public ResponseEntity<Map<String, Object>> evictAllMeta() {
+        int removed = cache.evictAllMeta();
+        return ResponseEntity.ok(Map.of(
+                "ok", true,
+                "removed", removed
+        ));
+    }
+
+    // ===== Item Recycle =====
+    @PostMapping("/api/item/{roleId}/recycle")
+    public ResponseEntity<Map<String, Object>> recycleItems(
+            @PathVariable Long roleId,
+            @RequestBody List<Integer> itemIds) {
+        return ResponseEntity.ok(svc.recycleItems(roleId, itemIds));
     }
 }

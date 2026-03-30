@@ -1,4 +1,4 @@
-package com.southMillion.webSocket_server;
+package com.SouthMillion.webSocket_server;
 
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;

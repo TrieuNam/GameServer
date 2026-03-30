@@ -15,8 +15,8 @@ public class ShopLimit {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name="role_id", nullable=false, length=64)
-    private String roleId;
+    @Column(name="role_id", nullable=false)
+    private Long roleId;
 
     @Column(name="kind", nullable=false, length=16) // COMMON/CLOTH/SHENMI
     private String kind;

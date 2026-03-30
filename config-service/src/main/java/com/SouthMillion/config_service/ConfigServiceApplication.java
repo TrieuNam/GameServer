@@ -9,12 +9,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 
 
 /**
- * WHAT: Ứng dụng Spring Boot của config-service.
- * WHY: Điểm khởi động service.
- * WHERE: entrypoint của service.
- * HOW: Bật @EnableConfigurationProperties để đọc cấu hình 'config.*' từ application.yml.
+ * WHAT: á»¨ng dá»¥ng Spring Boot cá»§a config-service.
+ * WHY: Äiá»ƒm khá»Ÿi Ä‘á»™ng service.
+ * WHERE: entrypoint cá»§a service.
+ * HOW: Báº­t @EnableConfigurationProperties Ä‘á»ƒ Ä‘á»c cáº¥u hÃ¬nh 'config.*' tá»« application.yml.
  */
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.SouthMillion")
 @EnableConfigurationProperties({ConfigProps.class, CorsProps.class, InternalProps.class})
 public class ConfigServiceApplication {
 

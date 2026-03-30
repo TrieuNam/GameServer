@@ -13,12 +13,14 @@ import java.util.Optional;
 public interface BagItemRepository extends JpaRepository<BagItem, String> {
 
     @Query("select b from BagItem b where b.roleId = :roleId")
-    List<BagItem> findAllByRoleId(@Param("roleId") String roleId);
+    List<BagItem> findAllByRoleId(@Param("roleId") Long roleId);
 
-    @Query("select b from BagItem b where b.roleId=:roleId and b.itemId=:itemId and b.bind=:bind and ((:exp is null and b.expireAt is null) or b.expireAt=:exp)")
-    Optional<BagItem> findExact(@Param("roleId") String roleId,
+    @Query("select b from BagItem b where b.roleId=:roleId and b.itemId=:itemId and b.bind=:bind and b.quality=:quality and b.bagType=:bagType and ((:exp is null and b.expireAt is null) or b.expireAt=:exp)")
+    Optional<BagItem> findExact(@Param("roleId") Long roleId,
                                 @Param("itemId") Integer itemId,
                                 @Param("bind") Boolean bind,
+                                @Param("quality") Integer quality,
+                                @Param("bagType") Integer bagType,
                                 @Param("exp") Instant expireAt);
 
     @Modifying
@@ -27,9 +29,9 @@ public interface BagItemRepository extends JpaRepository<BagItem, String> {
 
     @Modifying
     @Query("update BagItem b set b.num = b.num - :use where b.roleId=:roleId and b.itemId=:itemId and b.num >= :use")
-    int consume(@Param("roleId") String roleId, @Param("itemId") Integer itemId, @Param("use") int use);
+    int consume(@Param("roleId") Long roleId, @Param("itemId") Integer itemId, @Param("use") int use);
 
     @Modifying
     @Query("delete from BagItem b where b.roleId=:roleId and b.itemId=:itemId and b.num<=0")
-    int cleanupZero(@Param("roleId") String roleId, @Param("itemId") Integer itemId);
+    int cleanupZero(@Param("roleId") Long roleId, @Param("itemId") Integer itemId);
 }

@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface SevenDaySignRepository extends JpaRepository<SevenDaySignEntity, Long> {
-    Optional<SevenDaySignEntity> findByPlayerId(String playerId);
+    Optional<SevenDaySignEntity> findByPlayerId(Long playerId);
 }

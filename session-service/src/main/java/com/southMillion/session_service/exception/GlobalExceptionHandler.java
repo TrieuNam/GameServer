@@ -1,4 +1,4 @@
-package com.southMillion.session_service.exception;
+package com.SouthMillion.session_service.exception;
 
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;

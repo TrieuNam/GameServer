@@ -9,10 +9,14 @@ import com.SouthMillion.main_fb_service.repository.MainFbTaskProgressRepository;
 import com.SouthMillion.main_fb_service.service.client.GameworldFeignClient;
 import com.SouthMillion.main_fb_service.service.client.ItemFeignClient;
 import com.SouthMillion.main_fb_service.service.remote.MainFbTaskConfigService;
+import com.SouthMillion.main_fb_service.service.remote.MaoxianConfig;
 import com.SouthMillion.main_fb_service.service.remote.RemoteMaoxianConfigService;
 import com.SouthMillion.main_fb_service.utils.ReqId;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.SouthMillion.dto.item.ChangeItemPair;
+import org.SouthMillion.dto.item.ChangeItemRequestDTO;
 import org.SouthMillion.dto.main_fb.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,6 +27,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MainFbService {
@@ -34,6 +39,7 @@ public class MainFbService {
     private final MainFbChapterRewardRepository chapterRepo;
     private final MainFbTaskProgressRepository taskRepo;           // NEW
     private final StringRedisTemplate redis;
+    private final TaskProgressPublisher taskProgressPublisher;
 
     @Value("${mainfb.stamina-item-id:50001}")
     private Long STAMINA_ITEM_ID;
@@ -250,6 +256,11 @@ public class MainFbService {
             state.markDone(idxOf);
         }
         taskRepo.save(state);
+
+        // → task-service: report complete_dungeon progress (delta=1 per dungeon cleared in order)
+        if (!taskProgressPublisher.publish(playerId, "complete_dungeon", 1, "main-fb-service")) {
+            log.warn("[MainFb] Failed to publish dungeon progress for player {}", playerId);
+        }
     }
 
     private void validateUnlock(String playerId, int stage, int level) {

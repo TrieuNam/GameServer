@@ -18,7 +18,7 @@ public class PlayerClothesEntity {
     private Long id;
 
     @Column(name = "player_id")
-    private String playerId;
+    private Long playerId;
 
     @Column(name = "clothes_id")
     private Integer clothesId;

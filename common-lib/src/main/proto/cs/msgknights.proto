@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package msgknights;
+
+option java_package = "org.SouthMillion.proto.Msgknights";
+option java_outer_classname = "Msgknights";
+
+// ==================== Knights System Messages ====================
+
+// 客户端请求骑士信息
+message PB_CSKnightsReq {
+    int32 req_type = 1;      // 请求类型: 1-列表, 2-升级, 3-激活, 4-出战
+    int32 knights_id = 2;    // 骑士ID
+    int32 target_level = 3;  // 目标等级(升级时使用)
+}
+
+// 单个骑士信息
+message PB_KnightsInfo {
+    int32 knights_id = 1;     // 骑士ID
+    int32 level = 2;          // 等级
+    int32 exp = 3;            // 经验值
+    int32 star = 4;           // 星级
+    int32 status = 5;         // 状态: 0-未激活, 1-已激活, 2-出战中
+    int64 active_time = 6;    // 激活时间
+    repeated int32 skills = 7; // 技能列表
+}
+
+// 骑士属性加成
+message PB_KnightsAttr {
+    int32 hp = 1;             // 生命值加成
+    int32 attack = 2;         // 攻击力加成
+    int32 defense = 3;        // 防御力加成
+    int32 speed = 4;          // 速度加成
+    int32 crit = 5;           // 暴击率加成
+    int32 crit_damage = 6;    // 暴击伤害加成
+}
+
+// 服务端返回骑士操作结果
+message PB_SCKnightsOpRet {
+    int32 ret_code = 1;  // 返回码: 0-成功, 其他-失败
+    int32 knights_id = 2;  // 骑士ID
+    string msg = 3;  // 返回消息
+    string ret_msg = 4;       // 返回信息(alternative)
+    int32 op_type = 5;        // 操作类型
+    PB_KnightsInfo knights_info = 6;  // 更新后的骑士信息
+    PB_KnightsAttr total_attr = 7;    // 更新后的总属性
+}
+
+// 服务端返回骑士信息
+message PB_SCKnightsInfo {
+    repeated PB_KnightsInfo knights_list = 1;  // 骑士列表
+    int32 active_knights_id = 2;               // 当前出战骑士ID
+    PB_KnightsAttr total_attr = 3;             // 总属性加成
+}
+
+// 骑士条件信息
+message PB_SCKnightsConditionInfo {
+    int32 knights_id = 1;     // 骑士ID
+    bool is_unlocked = 2;     // 是否已解锁
+    repeated string conditions = 3;  // 解锁条件描述
+    int32 progress = 4;       // 完成进度
+    int32 total = 5;          // 总进度
+}

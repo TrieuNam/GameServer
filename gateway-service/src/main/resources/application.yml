@@ -22,6 +22,31 @@ spring:
               filters:
                 - StripPrefix=1
 
+            - id: config-c2s-api
+              uri: lb://config-service
+              predicates:
+                - Path=/api/c2s/**
+              # Không StripPrefix — config-service xử lý /api/c2s/**
+
+            - id: session-api
+              uri: lb://session-service
+              predicates:
+                - Path=/api/session/**
+              # Không StripPrefix — session-service xử lý /api/session/**
+
+            - id: session-service-prefix
+              uri: lb://session-service
+              predicates:
+                - Path=/session-service/**
+              filters:
+                - StripPrefix=1
+
+            - id: auth-api
+              uri: lb://user-service
+              predicates:
+                - Path=/api/auth/**
+              # Không StripPrefix — user-service xử lý /api/auth/**
+
           # === Tự động tạo route theo Eureka ===
           discovery:
             locator:
@@ -62,13 +87,26 @@ management:
 
 app:
   auth:
-    whitelist:
-      - /actuator/**
-      - /session-service/api/session/timesync
-      - /session-service/api/session/login
-      - /config-service/api/config/file/**
-      - /report-service/api/report/**
-      # KHÔNG thêm /websocket-server/** vào whitelist của AuthGlobalFilter
+    secured:
+      # Game services — tất cả cần token
+      - /wallet-service/**
+      - /bag-service/**
+      - /equip-service/**
+      - /shop-service/**
+      - /crafting-service/**
+      - /box-service/**
+      - /item-service/**
+      - /drop-service/**
+      - /gift-service/**
+      - /lingzhu-service/**
+      - /knights-service/**
+      - /pagoda-service/**
+      - /scroll-service/**
+      - /gem-service/**
+      - /activity-service/**
+      # WebSocket
+      - /websocket-server/**
+      # Khi thêm game service mới cần auth, thêm vào đây
     sessionServiceId: session-service
     introspectPath: /internal/session/introspect
     introspectMethod: POST

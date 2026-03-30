@@ -1,11 +1,11 @@
-package com.southMillion.session_service.service;
+package com.SouthMillion.session_service.service;
 
 
 
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.SignedJWT;
-import com.southMillion.session_service.service.client.UserFeignClient;
+import com.SouthMillion.session_service.service.client.UserFeignClient;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.session.LoginDTOs;
 import org.SouthMillion.dto.user.VerifyReq;

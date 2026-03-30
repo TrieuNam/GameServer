@@ -98,6 +98,15 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Tomcat (compile-only) — cần để compile MemoryOptimizationConfig;
+             session-service dùng WebFlux/Netty nên Tomcat không chạy ở runtime.
+             @ConditionalOnWebApplication(SERVLET) đảm bảo các bean Tomcat bị bỏ qua. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Thư viện nội bộ -->
         <dependency>
             <groupId>org.SouthMillion</groupId>

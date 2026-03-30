@@ -19,7 +19,7 @@ public interface EquipFeign {
 
     /** Mặc món pending từ Box; trả về { "replaced": { ... } } nếu có món cũ. */
     @PostMapping(value = "/wear-from-box", consumes = "application/json", produces = "application/json")
-    Map<String, Object> wearFromBox(@RequestBody Map<String, Object> req);
+    EquipDTOs.WearFromBoxResp wearFromBox(@RequestBody EquipDTOs.WearFromBoxReq req);
 
     /** Tính coin/exp khi bán equip; trả về { "coin": long, "exp": long }. */
     @PostMapping(value = "/compute-sell", consumes = "application/json", produces = "application/json")
@@ -46,6 +46,11 @@ public interface EquipFeign {
     /** Danh sách equip theo slot cho 1 role. */
     @GetMapping(value = "/{roleId}", produces = "application/json")
     EquipDTOs.ListResp list(@PathVariable("roleId") String roleId);
+
+    /** Snapshot equip theo role + equipType (ưu tiên Redis tại equip-service). */
+    @GetMapping(value = "/snapshot/{roleId}/{equipType}", produces = "application/json")
+    EquipDTOs.EquipItem snapshot(@PathVariable("roleId") Long roleId,
+                                 @PathVariable("equipType") int equipType);
 
     /** Mặc từ túi (public API mirror – dùng nội bộ nếu cần). */
     @PostMapping(value = "/equip", consumes = "application/json", produces = "application/json")

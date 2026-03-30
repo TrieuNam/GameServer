@@ -6,6 +6,7 @@ import com.SouthMillion.box_service.config.UnpackConfigCache;
 import com.SouthMillion.box_service.enity.BoxSetting;
 import com.SouthMillion.box_service.enity.BoxState;
 import com.SouthMillion.box_service.enity.LuckState;
+import com.SouthMillion.box_service.repository.BoxCompareStateRepository;
 import com.SouthMillion.box_service.repository.BoxSettingRepository;
 import com.SouthMillion.box_service.repository.BoxStateRepository;
 import com.SouthMillion.box_service.repository.LuckStateRepository;
@@ -13,15 +14,24 @@ import com.SouthMillion.box_service.service.client.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagDTOs;
 import org.SouthMillion.dto.bag.BagDTOs.ItemDelta;
+import org.SouthMillion.dto.bag.BagAddItemReq;
+import org.SouthMillion.dto.bag.BagConsumeReq;
 import org.SouthMillion.dto.box.BoxDTOs;
+import org.SouthMillion.dto.equip.EquipDTOs;
 import org.SouthMillion.dto.role.RoleDTOs;
+import org.SouthMillion.dto.wallet.ResultDTO;
+import org.SouthMillion.dto.wallet.WalletDTOs;
+import org.springframework.beans.factory.annotation.Value;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -34,13 +44,14 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class BoxService {
+    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
 
     // ========= DEPENDENCIES =========
     private final BoxStateRepository boxRepo;
     private final LuckStateRepository luckRepo;
     private final BoxSettingRepository settingRepo;
+    private final BoxCompareStateRepository compareStateRepo;
 
     private final UnpackConfigCache unpackCfg;
     private final LuckUnpackConfigCache luckCfg;
@@ -49,7 +60,48 @@ public class BoxService {
     private final ItemMetaFeign itemFeign;                // meta để lọc virtual
     private final EquipFeign equipFeign;
     private final RoleFeign roleFeign;
-    private final ObjectMapper om = new ObjectMapper();
+    private final WalletFeign walletFeign;
+    private final Counter compareMissingEquippedBeforeCounter;
+    private final Counter compareIncompleteStateCounter;
+    /** Arena ticket itemId to drop on box open. Set -1 (default) to disable. */
+    @Value("${box.arena-ticket.item-id:-1}")
+    private int arenaTicketItemId;
+
+    /**
+     * Fallback unpack item id khi config-service chưa trả về "other.unpack_item_id".
+     * Set trong application.yml: box.unpack-item-id=1001 (hoặc id hộp của bạn).
+     */
+    @Value("${box.unpack-item-id:0}")
+    private int unpackItemIdFallback;
+
+    public BoxService(BoxStateRepository boxRepo,
+                      LuckStateRepository luckRepo,
+                      BoxSettingRepository settingRepo,
+                      BoxCompareStateRepository compareStateRepo,
+                      UnpackConfigCache unpackCfg,
+                      LuckUnpackConfigCache luckCfg,
+                      EquipmentIndex equipIdx,
+                      BagFeign bag,
+                      ItemMetaFeign itemFeign,
+                      EquipFeign equipFeign,
+                      RoleFeign roleFeign,
+                      WalletFeign walletFeign,
+                      MeterRegistry meterRegistry) {
+        this.boxRepo = boxRepo;
+        this.luckRepo = luckRepo;
+        this.settingRepo = settingRepo;
+        this.compareStateRepo = compareStateRepo;
+        this.unpackCfg = unpackCfg;
+        this.luckCfg = luckCfg;
+        this.equipIdx = equipIdx;
+        this.bag = bag;
+        this.itemFeign = itemFeign;
+        this.equipFeign = equipFeign;
+        this.roleFeign = roleFeign;
+        this.walletFeign = walletFeign;
+        this.compareMissingEquippedBeforeCounter = meterRegistry.counter("box.compare.missing_equipped_before");
+        this.compareIncompleteStateCounter = meterRegistry.counter("box.compare.incomplete_state");
+    }
 
     // ========= CONSTANTS =========
     private static final byte BAG_COMMON = 0;
@@ -61,14 +113,18 @@ public class BoxService {
     private static final int SRC_OP_BUY = 3003;
     private static final int SRC_OP_LEVEL = 3004;
     private static final int SRC_OP_CONSUME = 3005;
+    private static final String MSG_NOT_REACHED = "NOT_REACHED";
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
 
     // ========= PUBLIC APIS =========
 
-    public BoxDTOs.InfoResp info(String roleId) {
+    public BoxDTOs.InfoResp info(Long roleId) {
         var s = getOrCreate(roleId);
         maybeCompleteLevelUp(s);
-        Map<String, Object> pending = parsePendingJsonSafe(s.getPendingJson());
+        maybeDailyReset(s);
+        EquipDTOs.WearFromBoxItem activeItem = resolveWearItem(roleId, s);
+        Map<String, Object> pending = activeItem != null ? activeItem.toPendingMap() : parsePendingJsonSafe(s.getPendingJson());
 
         return BoxDTOs.InfoResp.builder()
                 .boxLevel(s.getBoxLevel())
@@ -80,6 +136,7 @@ public class BoxService {
                 .shiZhuangNum(getSafeIntField(s, "shiZhuangNum"))  // cột optional
                 .arenaItemNum(getSafeIntField(s, "arenaItemNum"))  // cột optional
                 .pending(pending)
+                .compareState(null)
                 .build();
     }
 
@@ -92,7 +149,7 @@ public class BoxService {
      */
     @Transactional
     public BoxDTOs.OpenResp open(BoxDTOs.OpenReq req) {
-        String roleId = req.getRoleId();
+        Long roleId = Long.valueOf(req.getRoleId());
         int count = Math.max(1, Math.min(5, req.getCount()));
         boolean isFive = count >= 5;
 
@@ -102,11 +159,11 @@ public class BoxService {
 
         long nowSec = Instant.now().getEpochSecond();
 
-        Map<String, Object> pend = parsePendingJsonSafe(s.getPendingJson());
-        boolean hasPendingEquip = pend != null && "equip".equals(String.valueOf(pend.get("kind")));
+        EquipDTOs.WearFromBoxItem activeWearItem = resolveWearItem(roleId, s);
+        boolean hasPendingEquip = activeWearItem != null && activeWearItem.getItemId() != null && activeWearItem.getItemId() > 0;
         if (hasPendingEquip) {
             return BoxDTOs.OpenResp.builder()
-                    .pending(pend)
+                .pending(activeWearItem.toPendingMap())
                     .openBoxTotal(s.getOpenBoxTotal())
                     .lastOpenIsFive(s.isLastOpenIsFive())
                     .bonusItems(List.of())
@@ -124,7 +181,7 @@ public class BoxService {
         }
         if (last > nowSec) {
             return BoxDTOs.OpenResp.builder()
-                    .pending(pend)
+                    .pending(parsePendingJsonSafe(s.getPendingJson()))
                     .openBoxTotal(s.getOpenBoxTotal())
                     .lastOpenIsFive(s.isLastOpenIsFive())
                     .bonusItems(List.of())
@@ -134,18 +191,31 @@ public class BoxService {
         // Unpack config
         Map<String, String> other = firstOrEmpty(unpackCfg.other());
         int boxItemId = pInt(other.get("unpack_item_id"), 0);
-        if (boxItemId <= 0) throw new IllegalStateException("Bad config: other.unpack_item_id");
+        // Fallback sang @Value nếu config-service chưa load hoặc thiếu key
+        if (boxItemId <= 0) boxItemId = unpackItemIdFallback;
+        if (boxItemId <= 0) {
+            log.error("[box] Bad config: other.unpack_item_id not configured (set box.unpack-item-id in application.yml)");
+            return BoxDTOs.OpenResp.builder()
+                    .pending(parsePendingJsonSafe(s.getPendingJson()))
+                    .openBoxTotal(s.getOpenBoxTotal())
+                    .lastOpenIsFive(s.isLastOpenIsFive())
+                    .bonusItems(List.of())
+                    .build();
+        }
 
         // Fixed step?
         int step = nextFixedStep(s.getOpenBoxTotal(), isFive);
         long need = (step > 0) ? step : (isFive ? 5L : 1L);
 
         // Consume box item
-        bag.consume(new BagDTOs.ConsumeReq(
-                roleId, BAG_COMMON,
-                List.of(new ItemDelta(boxItemId, need, false, "BOX_OPEN")),
-                SRC_MSG_BOX, SRC_OP_CONSUME
-        ));
+        BagConsumeReq consumeReq = BagConsumeReq.builder()
+                .userId(1L) // audit field
+                .roleId(roleId)
+                .itemId(boxItemId)
+                .amount((int) need)
+                .source("BOX_OPEN")
+                .build();
+        bag.consume(consumeReq);
 
         List<Map<String, Object>> bonus = new ArrayList<>();
 
@@ -190,8 +260,15 @@ public class BoxService {
                             .orElse(null);
                     if (idxPrefId != null) pending.put("idxPrefId", idxPrefId);
 
-                    s.setPendingJson(writeJson(pending));
-                    s.setOpenBoxTotal(s.getOpenBoxTotal() + (int) need);
+                    BoxDTOs.EquipRolled newEquipFixed = buildEquipRolled(resolvedItemId, part);
+                    putRolledSnapshot(pending, newEquipFixed);
+                    s.setPendingJson(writePendingJson(pending));
+                        CurrentEquipLookup lookupFixed = findCurrentEquipWithRetry(roleId, part);
+                        String statusFixed = lookupFixed.isLookupFailed() ? "PENDING_COMPARE_INCOMPLETE" : "PENDING_COMPARE";
+                        BoxDTOs.BoxCompareStateResp compareStateFixed = saveCompareState(
+                            roleId, newEquipFixed, lookupFixed.getEquip(), quality, equipLevel, 1, "BOX_OPEN", statusFixed);
+
+                        s.setOpenBoxTotal(s.getOpenBoxTotal() + (int) need);
                     s.setLastOpenIsFive(need == 5);
                     setSafeLongField(s, "lastOpenEpoch", nowSec + 1);
                     boxRepo.save(s);
@@ -202,11 +279,14 @@ public class BoxService {
                             .openBoxTotal(s.getOpenBoxTotal())
                             .lastOpenIsFive(s.isLastOpenIsFive())
                             .bonusItems(bonus)
+                            .isNew(1)
+                            .openEquip(newEquipFixed)
+                            .compareState(compareStateFixed)
                             .build();
                 } else {
                     // Non-equip fixed → add vào túi thường
                     addNonVirtualItems(roleId,
-                            List.of(new ItemDelta(fixedItemId, 1, false, "BOX_FIXED")),
+                            List.of(new ItemDelta(fixedItemId, 1)),
                             BAG_COMMON, SRC_OP_REWARD);
                     bonus.add(bonusItem(fixedItemId, 1, "fixed"));
                 }
@@ -235,7 +315,7 @@ public class BoxService {
             BoxState finalS = s;
             pickFashionId().ifPresent(fid -> {
                 addNonVirtualItems(roleId,
-                        List.of(new ItemDelta(fid, 1, false, "BOX_FASHION")),
+                        List.of(new ItemDelta(fid, 1)),
                         BAG_COMMON, SRC_OP_REWARD);
                 bonus.add(bonusItem(fid, 1, "fashion"));
                 setSafeIntField(finalS, "shiZhuangNum", curSz + 1);
@@ -286,6 +366,14 @@ public class BoxService {
                 .orElse(null);
         if (idxPrefId != null) pending.put("idxPrefId", idxPrefId);
 
+        BoxDTOs.EquipRolled newEquip = buildEquipRolled(itemId, part);
+        putRolledSnapshot(pending, newEquip);
+        s.setPendingJson(writePendingJson(pending));
+        CurrentEquipLookup currentLookup = findCurrentEquipWithRetry(roleId, part);
+        String compareStatus = currentLookup.isLookupFailed() ? "PENDING_COMPARE_INCOMPLETE" : "PENDING_COMPARE";
+        BoxDTOs.BoxCompareStateResp compareStateRolled = saveCompareState(
+            roleId, newEquip, currentLookup.getEquip(), quality, equipLevel, 1, "BOX_OPEN", compareStatus);
+
         // Bonus reward theo colorRow (nếu có) — lọc virtual qua meta
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> reward = (List<Map<String, Object>>) colorRow.get("reward");
@@ -295,48 +383,91 @@ public class BoxService {
                 int rid = pInt(r.get("item_id"), 0);
                 long num = pLong(r.get("num"), 0L);
                 if (rid > 0 && num > 0) {
-                    add.add(new ItemDelta(rid, num, false, "BOX_COLOR_REWARD"));
+                    add.add(new ItemDelta(rid, (int) num));
                     bonus.add(bonusItem(rid, num, "colorReward"));
                 }
             }
             addNonVirtualItems(roleId, add, BAG_COMMON, SRC_OP_REWARD);
         }
 
-        s.setPendingJson(writeJson(pending));
         s.setOpenBoxTotal(s.getOpenBoxTotal() + (int) need);
         s.setLastOpenIsFive(need == 5);
         setSafeLongField(s, "lastOpenEpoch", nowSec + 1);
         boxRepo.save(s);
 
         rollArenaTicketIfAny(roleId, s, bonus, other);
-
         return BoxDTOs.OpenResp.builder()
                 .pending(pending)
                 .openBoxTotal(s.getOpenBoxTotal())
                 .lastOpenIsFive(s.isLastOpenIsFive())
                 .bonusItems(bonus)
+                .isNew(1)
+                .openEquip(newEquip)
+                .compareState(compareStateRolled)
                 .build();
     }
 
     /**
-     * Mặc equip (tối thiểu): mint item vào BAG_EQUIP rồi clear pending.
+     * Mặc equip từ compare-state qua equip-service.
+     * Sau khi mặc thành công thì luôn clear compare-state để kết thúc flow compare.
      */
-    @Transactional
-    public BoxDTOs.OkResp wear(String roleId) {
-        var s = getOrCreate(roleId);
-        Map<String, Object> pend = parsePendingJsonSafe(s.getPendingJson());
-        if (pend == null || !"equip".equals(String.valueOf(pend.get("kind")))) {
+    public BoxDTOs.OkResp wear(Long roleId) {
+        BoxState s = getOrCreate(roleId);
+        EquipDTOs.WearFromBoxItem wearItem = resolveWearItem(roleId, s);
+        if (wearItem == null || wearItem.getItemId() == null || wearItem.getItemId() <= 0) {
             return BoxDTOs.OkResp.builder().ok(false).message("NO_PENDING").build();
         }
-        int itemId = pInt(pend.get("itemId"), 0);
+        int itemId = wearItem.getItemId();
         if (itemId <= 0) return BoxDTOs.OkResp.builder().ok(false).message("BAD_ITEM").build();
 
-        addNonVirtualItems(roleId,
-                List.of(new ItemDelta(itemId, 1, false, "BOX_WEAR")),
-                BAG_EQUIP, SRC_OP_REWARD);
+        BoxDTOs.BoxCompareStateResp beforeWearCompare = compareStateRepo.find(roleId).orElse(null);
 
-        s.setPendingJson(null);
-        boxRepo.save(s);
+        EquipDTOs.WearFromBoxResp out;
+        try {
+            out = equipFeign.wearFromBox(EquipDTOs.WearFromBoxReq.builder()
+                    .roleId(String.valueOf(roleId))
+                    .item(wearItem)
+                    .build());
+        } catch (Exception e) {
+            log.warn("[box] wearFromBox failed roleId={} ex={}", roleId, e.toString());
+            return BoxDTOs.OkResp.builder().ok(false).message("WEAR_FAILED").build();
+        }
+
+        EquipDTOs.ReplacedEquip replaced = out != null ? out.getReplaced() : null;
+        if ((replaced == null || replaced.getItemId() == null || replaced.getItemId() <= 0) && beforeWearCompare != null) {
+            replaced = replacedFromCompareState(beforeWearCompare);
+            if (replaced != null && replaced.getItemId() != null && replaced.getItemId() > 0) {
+                log.info("[box] wear fallback replaced from compare-state roleId={} replacedItemId={}", roleId, replaced.getItemId());
+            }
+        }
+        int replacedItemId = replaced != null && replaced.getItemId() != null ? replaced.getItemId() : 0;
+        EquipDTOs.WearFromBoxItem replacedWearItem = wearItemFromReplaced(replaced);
+        boolean shouldSwapCompare = replacedItemId > 0 && !sameWearItemSnapshot(replacedWearItem, wearItem);
+
+        if (shouldSwapCompare) {
+            Map<String, Object> replacedPending = replacedWearItem.toPendingMap();
+            replacedPending.put("isNew", false);
+            s.setPendingJson(writePendingJson(replacedPending));
+            boxRepo.save(s);
+
+            BoxDTOs.EquipRolled replacedRolled = wearItemToEquipRolled(replacedWearItem);
+            CurrentEquipLookup equippedAfterWearLookup = findCurrentEquipWithRetry(roleId, wearItem.getEquipType() != null ? wearItem.getEquipType() : 0);
+            BoxDTOs.EquipRolled equippedNow = equippedAfterWearLookup.getEquip() != null
+                    ? equippedAfterWearLookup.getEquip()
+                    : wearItemToEquipRolled(wearItem);
+            int replacedQuality = replacedWearItem.getQuality() != null ? replacedWearItem.getQuality() : 1;
+            int replacedLevel = replacedWearItem.getEquipLevel() != null ? replacedWearItem.getEquipLevel() : 1;
+            saveCompareState(roleId, replacedRolled, equippedNow, replacedQuality, replacedLevel, 0, "BOX_WEAR", "PENDING_COMPARE");
+            log.info("[box] wear swap pending roleId={} candidateItemId={} equippedBeforeItemId={}", roleId, replacedItemId, itemId);
+        } else {
+            s.setPendingJson(null);
+            boxRepo.save(s);
+            compareStateRepo.delete(roleId);
+            if (replacedItemId > 0) {
+                log.warn("[box] skip swap compare because replaced equals candidate roleId={} itemId={}", roleId, itemId);
+            }
+        }
+
         return BoxDTOs.OkResp.builder().ok(true).message("OK").build();
     }
 
@@ -344,18 +475,83 @@ public class BoxService {
      * Bán equip (tối thiểu): clear pending. (Coin nên do wallet-service xử lý; ở đây không cộng tiền ảo)
      */
     @Transactional
-    public BoxDTOs.OkResp sell(String roleId) {
+    public BoxDTOs.SellResp sell(Long roleId) {
         BoxState s = getOrCreate(roleId);
-        s.setPendingJson(null);
+
+        EquipDTOs.WearFromBoxItem activeItem = resolveWearItem(roleId, s);
+        if (activeItem == null || activeItem.getItemId() == null || activeItem.getItemId() <= 0) {
+            return BoxDTOs.SellResp.builder().ok(false).message("No pending equip").build();
+        }
+        Map<String, Object> activeItemMap = activeItem.toPendingMap();
+
+        Map<String, Object> req = Map.of(
+                "roleId", roleId,
+            "item", activeItemMap
+        );
+
+        Map<String, Object> out;
+        try {
+            out = equipFeign.computeSell(req);
+        } catch (Exception e) {
+            log.warn("equipFeign.computeSell failed: {}", e.getMessage());
+            return BoxDTOs.SellResp.builder().ok(false).message("Sell compute failed").build();
+        }
+
+        long sellCoin = pLong(out.get("coin"), 0);
+        long sellExp = pLong(out.get("exp"), 0);
+
+        if (s.isLastOpenIsFive() && Boolean.TRUE.equals(activeItem.getIsNew())) {
+            if (sellCoin > 0) sellCoin *= 5;
+            if (sellExp > 0) sellExp *= 5;
+        }
+
+        if (sellCoin > 0) {
+            try {
+                ResultDTO<WalletDTOs.MutateResp> walletResp = walletFeign.batchAdd(
+                        WalletDTOs.BatchReq.builder()
+                                .roleId(String.valueOf(roleId))
+                                .changes(List.of(WalletDTOs.Change.builder()
+                                        .itemId(1L)
+                                        .amount(sellCoin)
+                                        .build()))
+                                .reason(SRC_MSG_BOX)
+                                .reasonType(SRC_OP_REWARD)
+                                .idemKey("box:sell:" + roleId + ":" + Instant.now().toEpochMilli())
+                                .build()
+                );
+                if (walletResp == null || walletResp.getCode() != 0) {
+                    String msg = walletResp == null ? "NULL" : walletResp.getMessage();
+                    log.warn("walletFeign.batchAdd failed roleId={} msg={}", roleId, msg);
+                }
+            } catch (Exception e) {
+                log.warn("walletFeign.batchAdd exception roleId={} ex={}", roleId, e.toString());
+            }
+        }
+        if (sellExp > 0) {
+            try {
+                roleFeign.addExp(new RoleDTOs.AddExpReq(String.valueOf(roleId), sellExp));
+            } catch (Exception e) {
+                log.warn("roleFeign.addExp failed: {}", e.getMessage());
+            }
+        }
+
+        s.setLastOpenIsFive(false);
+    s.setPendingJson(null);
         boxRepo.save(s);
-        return BoxDTOs.OkResp.builder().ok(true).message("OK").build();
+        compareStateRepo.delete(roleId);
+        return BoxDTOs.SellResp.builder()
+                .ok(true)
+                .message("OK")
+                .sellCoin(sellCoin)
+                .sellExp(sellExp)
+                .build();
     }
 
     /**
      * Mua lần mở (demo): tăng boxBuyTimes.
      */
     @Transactional
-    public BoxDTOs.OkResp buy(String roleId) {
+    public BoxDTOs.OkResp buy(Long roleId) {
         BoxState s = getOrCreate(roleId);
         setSafeIntField(s, "boxBuyTimes", s.getBoxBuyTimes() + 1);
         boxRepo.save(s);
@@ -366,7 +562,7 @@ public class BoxService {
      * Nâng cấp hộp (demo): set timer 60s.
      */
     @Transactional
-    public BoxDTOs.OkResp levelUp(String roleId) {
+    public BoxDTOs.OkResp levelUp(Long roleId) {
         BoxState s = getOrCreate(roleId);
         long now = Instant.now().getEpochSecond();
         s.setLevelUpEndEpoch(now + 60);
@@ -378,7 +574,7 @@ public class BoxService {
      * Nhận thưởng level (demo): bật cờ.
      */
     @Transactional
-    public BoxDTOs.OkResp levelReward(String roleId, int idx) {
+    public BoxDTOs.OkResp levelReward(Long roleId, int idx) {
         BoxState s = getOrCreate(roleId);
         s.setLevelFetchFlag(s.getLevelFetchFlag() | (1 << Math.max(0, Math.min(30, idx))));
         boxRepo.save(s);
@@ -387,32 +583,60 @@ public class BoxService {
 
     // ========= LUCK (tối thiểu) =========
 
-    public BoxDTOs.LuckInfoResp luckInfo(String roleId) {
-        LuckState ls = luckRepo.findById(roleId).orElseGet(() -> snapshotLuckOpen(roleId, 0));
+    public BoxDTOs.LuckInfoResp luckInfo(Long roleId) {
+        LuckState ls = luckRepo.findById(roleId).orElseGet(() -> snapshotLuckOpen(roleId, luckEventDays()));
+        BoxState bs = getOrCreate(roleId);
         return BoxDTOs.LuckInfoResp.builder()
                 .endTimestamp(ls.getEndEpoch())
                 .receiveFlag(ls.getReceiveBitmap())
-                .openBoxNumDelta(Math.max(0, getOrCreate(roleId).getOpenBoxTotal() - ls.getSnapshotOpenCnt()))
-                .boxLevel(getOrCreate(roleId).getBoxLevel())
+                .openBoxNumDelta(Math.max(0, bs.getOpenBoxTotal() - ls.getSnapshotOpenCnt()))
+                .boxLevel(bs.getBoxLevel())
                 .build();
     }
 
     @Transactional
-    public BoxDTOs.OkResp luckReceive(String roleId, int seq) {
-        LuckState ls = luckRepo.findById(roleId).orElseGet(() -> snapshotLuckOpen(roleId, 0));
+    public BoxDTOs.OkResp luckReceive(Long roleId, int seq) {
+        LuckState ls = luckRepo.findById(roleId).orElseGet(() -> snapshotLuckOpen(roleId, luckEventDays()));
         long now = Instant.now().getEpochSecond();
         if (ls.getEndEpoch() > 0 && ls.getEndEpoch() <= now)
             return BoxDTOs.OkResp.builder().ok(false).message("LUCK_ENDED").build();
 
-        // Demo: cộng 1 item tượng trưng & đánh dấu đã nhận (lọc virtual)
-        addNonVirtualItems(roleId, List.of(new ItemDelta(1000, 1, false, "LUCK_REWARD")), BAG_COMMON, SRC_OP_REWARD);
-        ls.setReceiveBitmap(ls.getReceiveBitmap() | (1L << Math.max(0, Math.min(61, seq))));
+        int safeSeq = Math.max(0, Math.min(61, seq));
+        long bit = 1L << safeSeq;
+        if ((ls.getReceiveBitmap() & bit) != 0) {
+            return BoxDTOs.OkResp.builder().ok(false).message("ALREADY_RECEIVED").build();
+        }
+
+        Optional<Map<String, Object>> rewardRowOpt = luckRewardBySeq(safeSeq);
+        if (rewardRowOpt.isEmpty()) {
+            return BoxDTOs.OkResp.builder().ok(false).message("BAD_SEQ").build();
+        }
+        Map<String, Object> rewardRow = rewardRowOpt.get();
+
+        BoxState bs = getOrCreate(roleId);
+        int typeBoxNum = pInt(rewardRow.get("type_box_num"), 0);
+        int need = pInt(rewardRow.get("type_num"), Integer.MAX_VALUE);
+        int progress = (typeBoxNum == 2)
+                ? bs.getBoxLevel()
+                : Math.max(0, bs.getOpenBoxTotal() - ls.getSnapshotOpenCnt());
+        if (progress < need) {
+            return BoxDTOs.OkResp.builder().ok(false).message(MSG_NOT_REACHED).build();
+        }
+
+        Map<String, Object> rewardItem = asObjMap(rewardRow.get("reward_item"));
+        int rewardItemId = pInt(rewardItem.get("item_id"), 0);
+        int rewardNum = pInt(rewardItem.get("num"), 0);
+        if (rewardItemId > 0 && rewardNum > 0) {
+            addNonVirtualItems(roleId, List.of(new ItemDelta(rewardItemId, rewardNum)), BAG_COMMON, SRC_OP_REWARD);
+        }
+
+        ls.setReceiveBitmap(ls.getReceiveBitmap() | bit);
         luckRepo.save(ls);
         return BoxDTOs.OkResp.builder().ok(true).message("OK").build();
     }
 
     @Transactional
-    public BoxDTOs.OkResp quicken(String roleId, int num) {
+    public BoxDTOs.OkResp quicken(Long roleId, int num) {
         num = Math.max(1, num);
         BoxState s = getOrCreate(roleId);
         maybeCompleteLevelUp(s);
@@ -426,8 +650,14 @@ public class BoxService {
         int secPerItem = pInt(other.get("accelerate_sec"), 60);
 
         if (quickId > 0) {
-            bag.consume(new BagDTOs.ConsumeReq(roleId, (byte) 0,
-                    List.of(new ItemDelta(quickId, num, false, null)), 3201, 0));
+            BagConsumeReq consumeReq = BagConsumeReq.builder()
+                    .userId(1L) // audit field
+                    .roleId(roleId)
+                    .itemId(quickId)
+                    .amount(num)
+                    .source("BOX_QUICKEN")
+                    .build();
+            bag.consume(consumeReq);
         }
 
         long reduce = (long) num * Math.max(1, secPerItem);
@@ -461,22 +691,13 @@ public class BoxService {
     }
 
     // ===== Setting =====
-    public BoxDTOs.BoxSettingResp getSetting(String roleId) {
-        var s = settingRepo.findById(roleId).orElseGet(() -> {
-            var ns = new BoxSetting();
-            ns.setRoleId(roleId);
-            ns.setEquipCapMark(1);
-            return settingRepo.save(ns);
-        });
+    public BoxDTOs.BoxSettingResp getSetting(Long roleId) {
+        var s = getOrCreateSetting(roleId);
         return mapSetting(s);
     }
 
-    public BoxDTOs.BoxSettingResp saveSetting(String roleId, BoxDTOs.BoxSettingResp req) {
-        var s = settingRepo.findById(roleId).orElseGet(() -> {
-            var ns = new BoxSetting();
-            ns.setRoleId(roleId);
-            return ns;
-        });
+    public BoxDTOs.BoxSettingResp saveSetting(Long roleId, BoxDTOs.BoxSettingResp req) {
+        var s = getOrCreateSetting(roleId);
         s.setEquipEqality(req.getEquipEqality());
         s.setOpenFiveMark(req.getOpenFiveMark());
         s.setEquipCapMark(req.getEquipCapMark());
@@ -491,6 +712,175 @@ public class BoxService {
         s.setChallengeMark(req.getChallengeMark());
         settingRepo.save(s);
         return mapSetting(s);
+    }
+
+    public BoxDTOs.BoxCompareStateResp getCompareState(Long roleId) {
+        return compareStateRepo.find(roleId).orElse(null);
+    }
+
+    public void clearCompareState(Long roleId) {
+        compareStateRepo.delete(roleId);
+    }
+
+    private EquipDTOs.WearFromBoxItem resolveWearItem(Long roleId, BoxState state) {
+        Map<String, Object> pending = parsePendingJsonSafe(state != null ? state.getPendingJson() : null);
+        EquipDTOs.WearFromBoxItem fromPending = EquipDTOs.WearFromBoxItem.fromPending(pending);
+        if (fromPending != null && fromPending.getItemId() != null && fromPending.getItemId() > 0) {
+            return fromPending;
+        }
+
+        BoxDTOs.BoxCompareStateResp compareState = compareStateRepo.find(roleId).orElse(null);
+        EquipDTOs.WearFromBoxItem fromCompareState = wearItemFromCompareState(compareState);
+        if (fromCompareState != null && fromCompareState.getItemId() != null && fromCompareState.getItemId() > 0) {
+            if (state != null) {
+                state.setPendingJson(writePendingJson(fromCompareState.toPendingMap()));
+                boxRepo.save(state);
+            }
+            return fromCompareState;
+        }
+        return null;
+    }
+
+    private EquipDTOs.WearFromBoxItem wearItemFromCompareState(BoxDTOs.BoxCompareStateResp compareState) {
+        if (compareState == null || compareState.getCandidateEquip() == null) {
+            return null;
+        }
+        BoxDTOs.BoxCompareSnapshotDTO candidate = compareState.getCandidateEquip();
+        return EquipDTOs.WearFromBoxItem.builder()
+                .kind("equip")
+                .itemId(candidate.getItemId())
+                .equipType(candidate.getEquipType())
+                .quality(candidate.getQuality())
+                .equipLevel(candidate.getEquipLevel())
+                .hp(candidate.getHp())
+                .attack(candidate.getAttack())
+                .defend(candidate.getDefend())
+                .speed(candidate.getSpeed())
+                .attrType1(candidate.getAttrType1())
+                .attrValue1(candidate.getAttrValue1())
+                .attrType2(candidate.getAttrType2())
+                .attrValue2(candidate.getAttrValue2())
+                .isNew(compareState.getIsNew() != null ? compareState.getIsNew() != 0 : null)
+                .build();
+    }
+
+    private Map<String, Object> toPendingMap(BoxDTOs.BoxCompareStateResp compareState) {
+        EquipDTOs.WearFromBoxItem wearItem = wearItemFromCompareState(compareState);
+        return wearItem != null ? wearItem.toPendingMap() : null;
+    }
+
+    private EquipDTOs.WearFromBoxItem wearItemFromReplaced(EquipDTOs.ReplacedEquip replaced) {
+        if (replaced == null || replaced.getItemId() == null || replaced.getItemId() <= 0) {
+            return null;
+        }
+        return EquipDTOs.WearFromBoxItem.builder()
+                .kind("equip")
+                .itemId(replaced.getItemId())
+                .equipType(replaced.getEquipType())
+                .quality(replaced.getQuality())
+                .equipLevel(replaced.getEquipLevel())
+                .hp(replaced.getHp())
+                .attack(replaced.getAttack())
+                .defend(replaced.getDefend())
+                .speed(replaced.getSpeed())
+                .attrType1(replaced.getAttrType1())
+                .attrValue1(replaced.getAttrValue1())
+                .attrType2(replaced.getAttrType2())
+                .attrValue2(replaced.getAttrValue2())
+                .isNew(false)
+                .build();
+    }
+
+    private EquipDTOs.ReplacedEquip replacedFromCompareState(BoxDTOs.BoxCompareStateResp compareState) {
+        if (compareState == null || compareState.getEquippedBefore() == null) {
+            return null;
+        }
+        BoxDTOs.BoxCompareSnapshotDTO before = compareState.getEquippedBefore();
+        if (before.getItemId() == null || before.getItemId() <= 0) {
+            return null;
+        }
+        return EquipDTOs.ReplacedEquip.builder()
+                .itemId(before.getItemId())
+                .equipType(before.getEquipType())
+                .quality(before.getQuality())
+                .equipLevel(before.getEquipLevel())
+                .hp(before.getHp())
+                .attack(before.getAttack())
+                .defend(before.getDefend())
+                .speed(before.getSpeed())
+                .attrType1(before.getAttrType1())
+                .attrValue1(before.getAttrValue1())
+                .attrType2(before.getAttrType2())
+                .attrValue2(before.getAttrValue2())
+                .build();
+    }
+
+    private BoxDTOs.EquipRolled wearItemToEquipRolled(EquipDTOs.WearFromBoxItem item) {
+        if (item == null) {
+            return null;
+        }
+        return BoxDTOs.EquipRolled.builder()
+                .equipType(item.getEquipType())
+                .itemId(item.getItemId())
+                .hp(item.getHp())
+                .attack(item.getAttack())
+                .defend(item.getDefend())
+                .speed(item.getSpeed())
+                .attrType1(item.getAttrType1())
+                .attrValue1(item.getAttrValue1())
+                .attrType2(item.getAttrType2())
+                .attrValue2(item.getAttrValue2())
+                .build();
+    }
+
+    private boolean sameWearItemSnapshot(EquipDTOs.WearFromBoxItem left, EquipDTOs.WearFromBoxItem right) {
+        if (left == right) {
+            return true;
+        }
+        if (left == null || right == null) {
+            return false;
+        }
+        return Objects.equals(left.getItemId(), right.getItemId())
+                && Objects.equals(left.getEquipType(), right.getEquipType())
+                && Objects.equals(left.getQuality(), right.getQuality())
+                && Objects.equals(left.getEquipLevel(), right.getEquipLevel())
+                && Objects.equals(left.getHp(), right.getHp())
+                && Objects.equals(left.getAttack(), right.getAttack())
+                && Objects.equals(left.getDefend(), right.getDefend())
+                && Objects.equals(left.getSpeed(), right.getSpeed())
+                && Objects.equals(left.getAttrType1(), right.getAttrType1())
+                && Objects.equals(left.getAttrValue1(), right.getAttrValue1())
+                && Objects.equals(left.getAttrType2(), right.getAttrType2())
+                && Objects.equals(left.getAttrValue2(), right.getAttrValue2());
+    }
+
+    private Map<String, Object> parsePendingJsonSafe(String pendingJson) {
+        if (!StringUtils.hasText(pendingJson)) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(pendingJson, MAP_TYPE);
+        } catch (Exception e) {
+            log.warn("[box] parse pendingJson failed ex={}", e.toString());
+            return null;
+        }
+    }
+
+    private String writePendingJson(Map<String, Object> pending) {
+        if (pending == null || pending.isEmpty()) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(pending);
+        } catch (Exception e) {
+            throw new IllegalStateException("Cannot serialize pendingJson", e);
+        }
+    }
+
+    private BoxSetting getOrCreateSetting(Long roleId) {
+        settingRepo.insertDefaultIfAbsent(roleId);
+        return settingRepo.findById(roleId)
+                .orElseThrow(() -> new IllegalStateException("BoxSetting not found for roleId=" + roleId));
     }
 
     private BoxDTOs.BoxSettingResp mapSetting(BoxSetting s) {
@@ -515,17 +905,18 @@ public class BoxService {
      * DECOMPOSE: nhờ equip-service trả vật liệu + exp; x5 nếu phù hợp; clear pending & reset cờ.
      */
     @Transactional
-    public BoxDTOs.DecomposeResp decompose(String roleId) {
+    public BoxDTOs.DecomposeResp decompose(Long roleId) {
         BoxState s = getOrCreate(roleId);
 
-        Map<String, Object> pend = parsePendingJsonSafe(s.getPendingJson());
-        if (pend == null || !"equip".equals(String.valueOf(pend.get("kind")))) {
+        EquipDTOs.WearFromBoxItem activeItem = resolveWearItem(roleId, s);
+        if (activeItem == null || activeItem.getItemId() == null || activeItem.getItemId() <= 0) {
             return BoxDTOs.DecomposeResp.builder().ok(false).message("No pending equip").build();
         }
+        Map<String, Object> activeItemMap = activeItem.toPendingMap();
 
         Map<String, Object> req = Map.of(
                 "roleId", roleId,
-                "item", pend
+            "item", activeItemMap
         );
         Map<String, Object> out;
         try {
@@ -539,26 +930,33 @@ public class BoxService {
         long gotNum = pLong(out.get("num"), 0);
         long gotExp = pLong(out.get("exp"), 0);
 
-        if (s.isLastOpenIsFive() && Boolean.TRUE.equals(pend.get("isNew"))) {
+        if (s.isLastOpenIsFive() && Boolean.TRUE.equals(activeItem.getIsNew())) {
             if (gotNum > 0) gotNum *= 5;
             if (gotExp > 0) gotExp *= 5;
         }
 
         if (gotItemId > 0 && gotNum > 0) {
-            bag.add(new BagDTOs.AddItemReq(roleId, (byte) 0,
-                    List.of(new ItemDelta(gotItemId, gotNum, false, "BOX_DECOMPOSE_ITEM")), 3601, 0));
+            Map<String, Object> gotItemMeta = loadItemMeta(gotItemId);
+            BagAddItemReq addReq = BagAddItemReq.builder()
+                    .userId(1L) // audit field
+                    .roleId(roleId)
+                .items(List.of(buildBagAddItem(gotItemId, (int) gotNum, BAG_COMMON, gotItemMeta)))
+                    .source("BOX_DECOMPOSE_ITEM")
+                    .build();
+            bag.add(addReq);
         }
         if (gotExp > 0) {
             try {
-                roleFeign.addExp(new RoleDTOs.AddExpReq(roleId, gotExp));
+                roleFeign.addExp(new RoleDTOs.AddExpReq(String.valueOf(roleId), gotExp));
             } catch (Exception e) {
                 log.warn("roleFeign.addExp failed: {}", e.getMessage());
             }
         }
 
-        s.setPendingJson(null);
         s.setLastOpenIsFive(false);
+    s.setPendingJson(null);
         boxRepo.save(s);
+        compareStateRepo.delete(roleId);
 
         return BoxDTOs.DecomposeResp.builder()
                 .ok(true)
@@ -571,23 +969,10 @@ public class BoxService {
 
     // ========= INTERNAL HELPERS =========
 
-    private BoxState getOrCreate(String roleId) {
-        return boxRepo.findById(roleId).orElseGet(() -> {
-            BoxState s = new BoxState();
-            s.setRoleId(roleId);
-            s.setBoxLevel(1);
-            s.setBoxBuyTimes(0);
-            s.setLevelUpEndEpoch(0);
-            s.setLevelFetchFlag(0);
-            s.setOpenBoxTotal(0);
-            s.setLastOpenIsFive(false);
-            s.setPendingJson(null);
-            // optional fields (shiZhuangNum, arenaItemNum) nếu entity có
-            trySetIntField(s, "shiZhuangNum", 0);
-            trySetIntField(s, "arenaItemNum", 0);
-            trySetLongField(s, "lastOpenEpoch", 0L);
-            return boxRepo.save(s);
-        });
+    private BoxState getOrCreate(Long roleId) {
+        boxRepo.insertDefaultIfAbsent(roleId);
+        return boxRepo.findById(roleId)
+                .orElseThrow(() -> new IllegalStateException("BoxState not found for roleId=" + roleId));
     }
 
     private void maybeCompleteLevelUp(BoxState s) {
@@ -600,27 +985,12 @@ public class BoxService {
     }
 
     private void maybeDailyReset(BoxState s) {
-        // Demo: bỏ qua hoặc reset theo ngày nếu bạn có cột updatedAt; ở đây để trống cho an toàn
-    }
-
-    private Map<String, Object> parsePendingJsonSafe(String json) {
-        if (!StringUtils.hasText(json)) return null;
-        String s = json.trim();
-        if (s.isEmpty() || "null".equalsIgnoreCase(s) || "{}".equals(s)) return null;
-        try {
-            return om.readValue(s, new TypeReference<Map<String, Object>>() {
-            });
-        } catch (Exception e) {
-            // Trả về raw để debug format cũ
-            return Map.of("_raw", json);
-        }
-    }
-
-    private String writeJson(Map<String, Object> m) {
-        try {
-            return om.writeValueAsString(m);
-        } catch (Exception e) {
-            throw new IllegalStateException("writeJson pending fail", e);
+        String todayUtc = LocalDate.now(ZoneOffset.UTC).toString();
+        if (!todayUtc.equals(s.getDailyYmd())) {
+            setSafeIntField(s, "shiZhuangNum", 0);
+            setSafeIntField(s, "arenaItemNum", 0);
+            s.setDailyYmd(todayUtc);
+            boxRepo.save(s);
         }
     }
 
@@ -680,9 +1050,16 @@ public class BoxService {
 
     private Map<String, Object> colorRowByLevel(int boxLevel) {
         var rows = unpackCfg.randomColor();
-        // Có thể lọc theo boxLevel nếu config có cột này
         if (rows == null || rows.isEmpty()) return Map.of();
-        return rows.get(ThreadLocalRandom.current().nextInt(rows.size()));
+
+        List<Map<String, Object>> matched = new ArrayList<>();
+        for (var r : rows) {
+            if (pInt(r.get("box_level"), -1) == boxLevel) {
+                matched.add(r);
+            }
+        }
+        List<Map<String, Object>> pool = matched.isEmpty() ? rows : matched;
+        return pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
     }
 
     /**
@@ -744,13 +1121,217 @@ public class BoxService {
                         "No equipment itemId for part=" + part + " q=" + quality + " lv=" + equipLevel));
     }
 
-    private int fetchPlayerLevel(String roleId, int hintedLevel) {
-        // Tối thiểu: dùng hintedLevel từ req
-        return Math.max(1, hintedLevel);
+    private int fetchPlayerLevel(Long roleId, int hintedLevel) {
+        int fallback = Math.max(1, hintedLevel);
+        try {
+            RoleDTOs.RoleResp role = roleFeign.detail(String.valueOf(roleId));
+            if (role != null && role.getLevel() != null && role.getLevel() > 0) {
+                return role.getLevel();
+            }
+        } catch (Exception e) {
+            log.debug("[box] role-service level fetch failed roleId={}: {}", roleId, e.toString());
+        }
+        return fallback;
     }
 
-    private void rollArenaTicketIfAny(String roleId, BoxState s, List<Map<String, Object>> bonus, Map<String, String> other) {
-        // TODO: nếu game có vé đấu trường → add vào bonus & bag
+    // ========= EQUIP ROLL & COMPARE HELPERS =========
+
+    /** Roll một giá trị đơn từ [min, max]. Trả null nếu cả hai đều = 0 (không có chỉ số này). */
+    private Integer rollRangeOrNull(long min, long max) {
+        if (min == 0 && max == 0) return null;
+        if (max <= min) return (int) min;
+        return (int) ThreadLocalRandom.current().nextLong(min, max + 1);
+    }
+
+    /**
+     * Xây EquipRolled có giá trị đơn (rolled) từ config EquipmentIndex.
+     * Dùng cho SC_BOX_EQUIP_INFO popup và so sánh cũ/mới.
+     */
+    private BoxDTOs.EquipRolled buildEquipRolled(int itemId, int part) {
+        return equipIdx.rowOf(itemId).map(r -> BoxDTOs.EquipRolled.builder()
+                .equipType(part)
+                .itemId(itemId)
+                .hp(rollRangeOrNull(r.getHpMin(), r.getHpMax()))
+                .attack(rollRangeOrNull(r.getAttMin(), r.getAttMax()))
+                .defend(rollRangeOrNull(r.getDefMin(), r.getDefMax()))
+                .speed(rollRangeOrNull(r.getSpeedMin(), r.getSpeedMax()))
+                .attrType1((int) r.getFristAtt())
+                .attrValue1(null)             // secondary attr value computed elsewhere
+                .attrType2((int) r.getSecondAtt())
+                .attrValue2(null)
+                .build()).orElse(null);
+    }
+
+    private void putRolledSnapshot(Map<String, Object> pending, BoxDTOs.EquipRolled rolled) {
+        if (pending == null || rolled == null) return;
+        if (rolled.getItemId() != null) pending.put("itemId", rolled.getItemId());
+        if (rolled.getEquipType() != null) pending.put("equipType", rolled.getEquipType());
+        if (rolled.getHp() != null) pending.put("hp", rolled.getHp());
+        if (rolled.getAttack() != null) pending.put("attack", rolled.getAttack());
+        if (rolled.getDefend() != null) pending.put("defend", rolled.getDefend());
+        if (rolled.getSpeed() != null) pending.put("speed", rolled.getSpeed());
+        if (rolled.getAttrType1() != null) pending.put("attr_type1", rolled.getAttrType1());
+        if (rolled.getAttrValue1() != null) pending.put("attr_value1", rolled.getAttrValue1());
+        if (rolled.getAttrType2() != null) pending.put("attr_type2", rolled.getAttrType2());
+        if (rolled.getAttrValue2() != null) pending.put("attr_value2", rolled.getAttrValue2());
+    }
+
+    /**
+     * Tìm equip hiện tại trong slot (part) của player từ BAG_EQUIP để so sánh cũ vs mới.
+     * Trả null nếu chưa có equip ở slot đó hoặc không thể lấy từ bag-service.
+     */
+    private CurrentEquipLookup findCurrentEquipOnce(Long roleId, int part) {
+        try {
+            EquipDTOs.ListResp resp = equipFeign.list(String.valueOf(roleId));
+            if (resp == null || resp.getItems() == null) {
+                return CurrentEquipLookup.failed(null);
+            }
+            for (EquipDTOs.EquipItem item : resp.getItems()) {
+                if (item.getEquipType() == part && item.getItemId() > 0) {
+                    return CurrentEquipLookup.success(BoxDTOs.EquipRolled.builder()
+                            .equipType(item.getEquipType())
+                            .itemId(item.getItemId())
+                            .hp(item.getHp())
+                            .attack(item.getAttack())
+                            .defend(item.getDefend())
+                            .speed(item.getSpeed())
+                            .attrType1(item.getAttrType1())
+                            .attrValue1(item.getAttrValue1())
+                            .attrType2(item.getAttrType2())
+                            .attrValue2(item.getAttrValue2())
+                            .build());
+                }
+            }
+            return CurrentEquipLookup.success(null);
+        } catch (Exception e) {
+            log.debug("[box] list current-equip miss roleId={} part={} ex={}", roleId, part, e.toString());
+        }
+
+        try {
+            EquipDTOs.EquipItem snapshot = equipFeign.snapshot(roleId, part);
+            if (snapshot != null && snapshot.getItemId() > 0) {
+                return CurrentEquipLookup.success(BoxDTOs.EquipRolled.builder()
+                        .equipType(snapshot.getEquipType())
+                        .itemId(snapshot.getItemId())
+                        .hp(snapshot.getHp())
+                        .attack(snapshot.getAttack())
+                        .defend(snapshot.getDefend())
+                        .speed(snapshot.getSpeed())
+                        .attrType1(snapshot.getAttrType1())
+                        .attrValue1(snapshot.getAttrValue1())
+                        .attrType2(snapshot.getAttrType2())
+                        .attrValue2(snapshot.getAttrValue2())
+                        .build());
+            }
+        } catch (Exception e) {
+            log.debug("[box] snapshot current-equip miss roleId={} part={} ex={}", roleId, part, e.toString());
+        }
+
+        return CurrentEquipLookup.failed(null);
+    }
+
+    private CurrentEquipLookup findCurrentEquipWithRetry(Long roleId, int part) {
+        CurrentEquipLookup first = findCurrentEquipOnce(roleId, part);
+        if (!first.isLookupFailed()) {
+            return first;
+        }
+
+        // Retry once to reduce transient misses from equip-service before opening compare popup.
+        try {
+            Thread.sleep(80L);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return first;
+        }
+        CurrentEquipLookup second = findCurrentEquipOnce(roleId, part);
+        return second.isLookupFailed() ? first : second;
+    }
+
+    private BoxDTOs.BoxCompareStateResp saveCompareState(Long roleId,
+                                                         BoxDTOs.EquipRolled candidateEquip,
+                                                         BoxDTOs.EquipRolled equippedBefore,
+                                                         Integer quality,
+                                                         Integer equipLevel,
+                                                         Integer isNew,
+                                                         String source,
+                                                         String status) {
+        if (roleId == null || candidateEquip == null) {
+            return null;
+        }
+
+        BoxDTOs.BoxCompareSnapshotDTO candidate = BoxDTOs.BoxCompareSnapshotDTO.fromEquipRolled(candidateEquip);
+        if (candidate != null) {
+            candidate.setQuality(quality);
+            candidate.setEquipLevel(equipLevel);
+        }
+
+        BoxDTOs.BoxCompareSnapshotDTO current = BoxDTOs.BoxCompareSnapshotDTO.fromEquipRolled(equippedBefore);
+        BoxDTOs.BoxCompareStateResp state = BoxDTOs.BoxCompareStateResp.builder()
+                .roleId(roleId)
+                .stateVersion(UUID.randomUUID().toString())
+                .source(source)
+                .status((status != null && !status.isBlank()) ? status : "PENDING_COMPARE")
+                .openedAt(Instant.now().getEpochSecond())
+                .isNew(isNew)
+                .candidateEquip(candidate)
+                .equippedBefore(current)
+                .build();
+        compareStateRepo.save(state);
+        Integer candidateItemId = candidate != null ? candidate.getItemId() : null;
+        Integer equippedBeforeItemId = current != null ? current.getItemId() : null;
+        String candidateStats = candidate == null
+                ? "null"
+                : String.format("hp=%s atk=%s def=%s spd=%s", candidate.getHp(), candidate.getAttack(), candidate.getDefend(), candidate.getSpeed());
+        String equippedBeforeStats = current == null
+                ? "null"
+                : String.format("hp=%s atk=%s def=%s spd=%s", current.getHp(), current.getAttack(), current.getDefend(), current.getSpeed());
+        log.info("[box.compare.state] roleId={} stateVersion={} source={} status={} candidateItemId={} equippedBeforeItemId={} candidateStats={} equippedBeforeStats={}",
+            roleId,
+            state.getStateVersion(),
+            source,
+            state.getStatus(),
+            candidateItemId,
+            equippedBeforeItemId,
+            candidateStats,
+            equippedBeforeStats);
+        return state;
+    }
+
+    private static final class CurrentEquipLookup {
+        private final BoxDTOs.EquipRolled equip;
+        private final boolean lookupFailed;
+
+        private CurrentEquipLookup(BoxDTOs.EquipRolled equip, boolean lookupFailed) {
+            this.equip = equip;
+            this.lookupFailed = lookupFailed;
+        }
+
+        static CurrentEquipLookup success(BoxDTOs.EquipRolled equip) {
+            return new CurrentEquipLookup(equip, false);
+        }
+
+        static CurrentEquipLookup failed(BoxDTOs.EquipRolled equip) {
+            return new CurrentEquipLookup(equip, true);
+        }
+
+        BoxDTOs.EquipRolled getEquip() {
+            return equip;
+        }
+
+        boolean isLookupFailed() {
+            return lookupFailed;
+        }
+    }
+
+    private void rollArenaTicketIfAny(Long roleId, BoxState s, List<Map<String, Object>> bonus, Map<String, String> other) {
+        if (arenaTicketItemId <= 0) return; // disabled by config
+        // Add arena ticket to the response bonus list
+        bonus.add(bonusItem(arenaTicketItemId, 1, "arenaTicket"));
+        // Grant actual item to bag
+        addNonVirtualItems(roleId,
+                List.of(ItemDelta.builder().itemId(arenaTicketItemId).amount(1).build()),
+                BAG_COMMON, SRC_OP_REWARD);
+        log.info("[box] Arena ticket itemId={} granted to roleId={}", arenaTicketItemId, roleId);
     }
 
     // ========= BAG helpers =========
@@ -759,7 +1340,7 @@ public class BoxService {
     /**
      * Lọc virtual bằng ItemFeign + knowledge từ equipment.json.
      */
-    private void addNonVirtualItems(String roleId, List<BagDTOs.ItemDelta> items, byte bagType, int srcOp) {
+    private void addNonVirtualItems(Long roleId, List<BagDTOs.ItemDelta> items, byte bagType, int srcOp) {
         if (items == null || items.isEmpty()) return;
 
         // Nhanh: tách item có thể chắc chắn NON-VIRTUAL (equip)
@@ -777,9 +1358,9 @@ public class BoxService {
         if (!unknown.isEmpty()) {
             String csv = unknown.stream().map(i -> String.valueOf(i.getItemId())).distinct().reduce((a, b) -> a + "," + b).orElse("");
             try {
-                Map<String, Map<String, Object>> metas = itemFeign.batchMeta(csv);
+                Map<Integer, Map<String, Object>> metas = batchItemMeta(csv);
                 for (var it : unknown) {
-                    var m = metas.get(String.valueOf(it.getItemId()));
+                    var m = metas.get(it.getItemId());
                     int isVirtual = m == null ? 0 : pInt(m.get("isVirtual"), 0);
                     if (isVirtual == 0) finalAdd.add(it);
                 }
@@ -791,11 +1372,94 @@ public class BoxService {
 
         if (!finalAdd.isEmpty()) {
             try {
-                bag.add(new BagDTOs.AddItemReq(roleId, bagType, finalAdd, SRC_MSG_BOX, srcOp));
+                String csv = finalAdd.stream()
+                    .map(d -> String.valueOf(d.getItemId()))
+                    .distinct()
+                    .reduce((a, b) -> a + "," + b)
+                    .orElse("");
+                Map<Integer, Map<String, Object>> metaLookup;
+                try {
+                    metaLookup = batchItemMeta(csv);
+                } catch (Throwable t) {
+                    log.warn("[box] itemFeign.meta add fallback rid={} ex={}", roleId, t.toString());
+                    metaLookup = Map.of();
+                }
+                final Map<Integer, Map<String, Object>> finalMetas = metaLookup;
+                List<BagAddItemReq.Item> bagItems = finalAdd.stream()
+                    .map(d -> buildBagAddItem(
+                        d.getItemId(),
+                        d.getAmount(),
+                        bagType,
+                        finalMetas.get(d.getItemId())))
+                        .toList();
+                BagAddItemReq addReq = BagAddItemReq.builder()
+                        .userId(1L) // audit field
+                        .roleId(roleId)
+                        .items(bagItems)
+                        .source("BOX_REWARD")
+                        .build();
+                bag.add(addReq);
             } catch (Throwable t) {
                 log.warn("[box] bag.add error rid={} ex={}", roleId, t.toString());
             }
         }
+    }
+
+    private Map<String, Object> loadItemMeta(int itemId) {
+        if (itemId <= 0) return Map.of();
+        try {
+            return batchItemMeta(String.valueOf(itemId)).getOrDefault(itemId, Map.of());
+        } catch (Throwable t) {
+            log.warn("[box] itemFeign.meta single error itemId={} ex={}", itemId, t.toString());
+            return Map.of();
+        }
+    }
+
+    private Map<Integer, Map<String, Object>> batchItemMeta(String csv) {
+        if (!StringUtils.hasText(csv)) return Map.of();
+
+        List<Integer> itemIds = Arrays.stream(csv.split(","))
+                .map(String::trim)
+                .filter(StringUtils::hasText)
+                .map(id -> {
+                    try {
+                        return Integer.valueOf(id);
+                    } catch (NumberFormatException ex) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+        if (itemIds.isEmpty()) return Map.of();
+
+        Map<Integer, Map<String, Object>> metas = itemFeign.batchMeta(itemIds);
+        return metas == null ? Map.of() : metas;
+    }
+
+    private BagAddItemReq.Item buildBagAddItem(int itemId, int amount, int bagType, Map<String, Object> meta) {
+        return BagAddItemReq.Item.builder()
+                .itemId(itemId)
+                .amount(amount)
+                .quality(resolveBagItemQuality(itemId, meta))
+                .bagType(bagType)
+                .build();
+    }
+
+    private int resolveBagItemQuality(int itemId, Map<String, Object> meta) {
+        if (equipIdx.isEquipId(itemId)) {
+            return equipIdx.findPQLById(itemId)
+                    .map(pql -> Math.max(1, pql[1]))
+                    .orElseGet(() -> Math.max(1, pInt(meta == null ? null : firstNonNull(meta.get("quality"), meta.get("color"), meta.get("q")), 1)));
+        }
+        return Math.max(1, pInt(meta == null ? null : firstNonNull(meta.get("quality"), meta.get("color"), meta.get("q")), 1));
+    }
+
+    private Object firstNonNull(Object... values) {
+        for (Object value : values) {
+            if (value != null) return value;
+        }
+        return null;
     }
 
 
@@ -891,7 +1555,7 @@ public class BoxService {
     }
 
     // ========= Luck bootstrap (demo) =========
-    private LuckState snapshotLuckOpen(String roleId, int days) {
+    private LuckState snapshotLuckOpen(Long roleId, int days) {
         long now = Instant.now().getEpochSecond();
         LuckState ls = new LuckState();
         ls.setRoleId(roleId);
@@ -912,59 +1576,46 @@ public class BoxService {
         return list.get(0);
     }
 
+    private int luckEventDays() {
+        try {
+            var rows = luckCfg.other();
+            if (rows != null && !rows.isEmpty()) {
+                int days = pInt(rows.get(0).get("time"), 7);
+                return Math.max(0, days);
+            }
+        } catch (Exception e) {
+            log.debug("[box] luckCfg.other parse failed: {}", e.toString());
+        }
+        return 7;
+    }
+
+    private Optional<Map<String, Object>> luckRewardBySeq(int seq) {
+        var rows = luckCfg.reward();
+        if (rows == null || rows.isEmpty()) return Optional.empty();
+
+        for (var r : rows) {
+            if (pInt(r.get("type"), -1) == seq) {
+                return Optional.of(r);
+            }
+        }
+        if (seq >= 0 && seq < rows.size()) {
+            return Optional.of(rows.get(seq));
+        }
+        return Optional.empty();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> asObjMap(Object value) {
+        if (value instanceof Map<?, ?> m) {
+            return (Map<String, Object>) m;
+        }
+        return Map.of();
+    }
+
 
     private int pickEquipPart() {
         // Ở equipment.json có part 0..9; chọn uniform (có thể thay bằng bảng trọng số nếu bạn thêm vào config)
         return ThreadLocalRandom.current().nextInt(10);
-    }
-
-    @Transactional
-    public void savePending(String roleId, Map<String, Object> pending) {
-        BoxState s = getOrCreate(roleId);
-
-        Map<String, Object> canonical = canonicalizePendingEquip(pending);
-        try {
-            if (canonical == null) {
-                // Không hợp lệ thì xóa pending (an toàn)
-                s.setPendingJson(null);
-            } else {
-                s.setPendingJson(om.writeValueAsString(canonical));
-            }
-            boxRepo.save(s);
-        } catch (Exception e) {
-            throw new IllegalStateException("Cannot persist pendingJson: " + e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Chuẩn hóa về {"kind":"equip","equip":{"itemId":..,"equipType":..}}
-     * Hỗ trợ cả dạng phẳng hoặc lồng {equip:{...}} và nhiều alias key.
-     * Nếu thiếu itemId -> trả null để bỏ.
-     */
-    private Map<String, Object> canonicalizePendingEquip(Map<String, Object> pending) {
-        if (pending == null || pending.isEmpty()) return null;
-
-        Map<String, Object> src = pending;
-        Object nested = pending.get("equip");
-        if (nested instanceof Map<?,?> m) {
-            @SuppressWarnings("unchecked") Map<String,Object> mm = (Map<String,Object>) m;
-            src = mm;
-        }
-
-        Integer itemId   = pickInt(src, "itemId", "item_id", "id");
-        Integer equipTyp = pickInt(src, "equipType", "equip_type", "type", "pos");
-
-        if (itemId == null || itemId <= 0) return null;
-        if (equipTyp == null) equipTyp = 1;
-
-        Map<String, Object> equip = new HashMap<>();
-        equip.put("itemId", itemId);
-        equip.put("equipType", equipTyp);
-
-        Map<String, Object> out = new HashMap<>();
-        out.put("kind", "equip");
-        out.put("equip", equip);
-        return out;
     }
 
     /** Bản pickInt “chịu khó” (nên dùng thay cho bản cũ) */
@@ -988,4 +1639,61 @@ public class BoxService {
         }
         return null;
     }
+
+    // ========= WaBao SC Data Methods (SC 1643/1645/1646/1647/1648/1651) =========
+
+    /** SC 1643 PB_SCWaBaoMapInfo */
+    public BoxDTOs.WaBaoMapInfo getWaBaoMapInfo(Long roleId) {
+        BoxState s = getOrCreate(roleId);
+        int level = s.getBoxLevel();
+        List<Integer> conditions = new ArrayList<>();
+        try {
+            var rows = unpackCfg.fixedReward();
+            if (rows != null && !rows.isEmpty()) conditions.add(rows.size());
+        } catch (Exception ignore) {}
+        return BoxDTOs.WaBaoMapInfo.builder()
+                .curMap(level).unlockedMap(level).mapConditionNum(conditions).build();
+    }
+
+    /** SC 1645 PB_SCWaBaoIntegrityInfo */
+    public BoxDTOs.WaBaoIntegrityInfo getWaBaoIntegrity(Long roleId) {
+        return BoxDTOs.WaBaoIntegrityInfo.builder().isLogin(1).dataList(List.of()).build();
+    }
+
+    /** SC 1646 PB_SCWaBaoCollectionListInfo */
+    public BoxDTOs.WaBaoCollectionInfo getWaBaoCollection(Long roleId) {
+        return BoxDTOs.WaBaoCollectionInfo.builder().isLogin(1).dataList(List.of()).build();
+    }
+
+    /** SC 1647 PB_SCWaBaoToolInfo */
+    public BoxDTOs.WaBaoToolInfo getWaBaoToolInfo(Long roleId) {
+        return BoxDTOs.WaBaoToolInfo.builder().toolList(List.of()).build();
+    }
+
+    /** SC 1648 PB_SCWaBaoTaskInfo
+     *  proto: task_flag(int32), repeated int32 task_list, repeated int32 task_type_num
+     *  task_list   = taskId list
+     *  task_type_num = progress/count per task (same index)
+     */
+    public BoxDTOs.WaBaoTaskInfo getWaBaoTaskInfo(Long roleId) {
+        BoxState s = getOrCreate(roleId);
+        int opened = s.getOpenBoxTotal();
+        int target = 10;
+        int status = opened >= target ? 1 : 0;  // 0=ongoing 1=claimable
+        return BoxDTOs.WaBaoTaskInfo.builder()
+                .taskFlag(0)
+                .taskList(List.of(1))                         // taskId=1
+                .taskTypeNumList(List.of(Math.min(opened, target))) // progress
+                .build();
+    }
+
+    /** SC 1651 PB_SCWaBaoBookListInfo
+     *  proto: repeated int32 activate_flag  (bit-flags per book)
+     */
+    public BoxDTOs.WaBaoBookListInfo getWaBaoBookListInfo(Long roleId) {
+        return BoxDTOs.WaBaoBookListInfo.builder()
+                .activateFlagList(List.of())
+                .build();
+    }
 }
+

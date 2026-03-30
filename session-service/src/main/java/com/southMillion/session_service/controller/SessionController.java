@@ -1,6 +1,6 @@
-package com.southMillion.session_service.controller;
+package com.SouthMillion.session_service.controller;
 
-import com.southMillion.session_service.service.SessionService;
+import com.SouthMillion.session_service.service.SessionService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.session.LoginDTOs;
@@ -11,6 +11,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,19 +21,55 @@ public class SessionController {
     private final SessionService svc;
     private final Scheduler blockingScheduler;
 
-    @PostMapping(value = "/api/session/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<ResponseEntity<LoginDTOs.LoginResp>> login(
+    /**
+     * Frontend expects: { ret: 0, user: { account, uid, login_sign, ... }, role_data: {...} }
+     * We wrap LoginResp into that shape so existing client code works unchanged.
+     *
+     * consumes = "*\/application/json*" — accepts both "application/json" AND
+     * "application/json;charset=utf-8" sent by the TypeScript HttpHelper.
+     */
+    @PostMapping(value = "/api/session/login",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public Mono<ResponseEntity<Map<String, Object>>> login(
             @Valid @RequestBody LoginDTOs.LoginReq req,
             @RequestHeader(value = "X-Forwarded-For", required = false) String xff,
             @RequestHeader(value = "CF-Connecting-IP", required = false) String cfip,
             @RequestHeader(value = "X-Real-IP", required = false) String xrip) {
 
         String ip = firstNonBlank(cfip, xff, xrip, "unknown");
-        return Mono.fromCallable(() -> ResponseEntity.ok(svc.login(req, ip)))
-                .subscribeOn(blockingScheduler);
+        return Mono.fromCallable(() -> {
+            LoginDTOs.LoginResp resp = svc.login(req, ip);
+
+            // Build user object matching frontend LoginVerify.User structure
+            Map<String, Object> user = new HashMap<>();
+            user.put("account",       resp.getAccount());
+            user.put("uid",           resp.getUserId());
+            user.put("login_sign",    resp.getAccessToken());   // frontend uses login_sign to connect game-server
+            user.put("login_time",    System.currentTimeMillis() / 1000L);
+            user.put("account_type",  1);
+            user.put("fcm_flag",      0);
+            user.put("openid",        resp.getUserId());
+            user.put("merger_spid",   "");
+            user.put("spid",          "");
+            user.put("account_spid",  "");
+            // Also expose token fields at top level for convenience
+            user.put("accessToken",   resp.getAccessToken());
+            user.put("refreshToken",  resp.getRefreshToken());
+            user.put("sessionId",     resp.getSessionId());
+            user.put("expiresAt",     resp.getExpiresAt());
+            user.put("tokenType",     resp.getTokenType());
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("ret",       0);
+            result.put("msg",       "ok");
+            result.put("user",      user);
+            result.put("role_data", new HashMap<>());   // populated by game-server after TCP login
+
+            return ResponseEntity.ok(result);
+        }).subscribeOn(blockingScheduler);
     }
 
-    @PostMapping(value = "/api/session/refresh", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/api/session/refresh", produces = MediaType.APPLICATION_JSON_VALUE)
     public Mono<ResponseEntity<LoginDTOs.RefreshResp>> refresh(
             @Valid @RequestBody LoginDTOs.RefreshReq req,
             @RequestHeader(value = "X-User-Id", required = false) String uidForRl) {

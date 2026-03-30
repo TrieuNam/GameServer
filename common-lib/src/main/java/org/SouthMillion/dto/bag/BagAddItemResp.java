@@ -11,6 +11,7 @@ import java.util.List;
  */
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -22,12 +23,13 @@ public class BagAddItemResp {
     private String message;
     private Integer errorCode;
 
-    // No-arg constructor
-    public BagAddItemResp() {
+    // Instance method to check if successful
+    public boolean isSuccess() {
+        return Boolean.TRUE.equals(succeeded);
     }
 
-    // Instance method to check if successful
-    public boolean ok() {
+    // Alias for backward compatibility  
+    public boolean isOk() {
         return Boolean.TRUE.equals(succeeded);
     }
 

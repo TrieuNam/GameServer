@@ -1,4 +1,4 @@
-package com.southMillion.serverInfo_service.entity;
+package com.SouthMillion.serverInfo_service.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

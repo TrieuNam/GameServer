@@ -6,9 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "player_angel_skin",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"player_id", "skin_seq"}))
+// Angel entity disabled in shizhuang-service (belongs to angel-service)
+// @Entity
+// @Table(name = "player_angel_skin", uniqueConstraints = @UniqueConstraint(columnNames = {"player_id", "skin_seq"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

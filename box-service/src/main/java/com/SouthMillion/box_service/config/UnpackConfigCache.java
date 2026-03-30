@@ -110,8 +110,7 @@ public class UnpackConfigCache {
             );
 
             String ifNoneMatch = (force == 1) ? null : etag.get();
-
-            ResponseEntity<byte[]> resp = cfg.byPath(path, ifNoneMatch, force);
+            ResponseEntity<byte[]> resp = cfg.getFile(path, ifNoneMatch);
 
             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
                 String json = new String(resp.getBody(), StandardCharsets.UTF_8);

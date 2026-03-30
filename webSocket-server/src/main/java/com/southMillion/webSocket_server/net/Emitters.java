@@ -1,12 +1,13 @@
-package com.southMillion.webSocket_server.net;
+package com.SouthMillion.webSocket_server.net;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.MessageLite;
-import com.southMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagDTOs;
 import org.SouthMillion.dto.role.RoleDTOs;
+import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.SouthMillion.proto.Msgknapsack.Msgknapsack;
 import org.SouthMillion.proto.Msglogin.Msglogin;
 import org.SouthMillion.proto.Msgrole.Msgrole;
@@ -14,6 +15,7 @@ import org.SouthMillion.proto.Msgserver.Msgserver;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -161,8 +163,35 @@ public class Emitters {
         emit(ps, MsgIds.SC_ITEM_NOT_ENOUGH_NOTICE, msg.toByteArray());
     }
 
-    /* =========================================================
-     * Helpers
+    /* =========================================================     * Wallet / Currency balance update
+     * ========================================================= */
+
+    /**
+     * Push current wallet balances to the client as individual knapsack single-info
+     * messages.  Currency items (gold, diamond, …) share the same itemId space as
+     * regular bag items, so the client can update its local currency counters.
+     *
+     * @param ps        player session to push to
+     * @param balances  map of (itemId → amount) from {@code WalletDTOs.BalancesResp}
+     */
+    public static void sendWalletBalances(PlayerSession ps, Map<Long, Long> balances) {
+        if (ps == null || balances == null || balances.isEmpty()) return;
+        for (Map.Entry<Long, Long> entry : balances.entrySet()) {
+            int itemId = entry.getKey().intValue();
+            long amount = entry.getValue() != null ? entry.getValue() : 0L;
+            sendKnapsackSingleInfo(ps, itemId, amount);
+        }
+    }
+
+    /**
+     * Push a single currency balance to the client.
+     * Convenience wrapper over {@link #sendKnapsackSingleInfo}.
+     */
+    public static void sendCurrencyUpdate(PlayerSession ps, long itemId, long balance) {
+        sendKnapsackSingleInfo(ps, (int) itemId, balance);
+    }
+
+    /* =========================================================     * Helpers
      * ========================================================= */
     private static int safeParseInt(Object v, int def) {
         try { return Integer.parseInt(String.valueOf(v)); } catch (Exception e) { return def; }

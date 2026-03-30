@@ -4,12 +4,12 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
 import java.util.Map;
 
-// Assumption: item-service expose meta endpoint
-@FeignClient(name="item-service", path="/internal/item")
+@FeignClient(name="item-service")
 public interface ItemMetaFeign {
-    // ids=1,2,3 -> { "1": {"itemId":1,"pileLimit":99,"isVirtual":0,"normalizedId":1}, ... }
-    @GetMapping("/meta")
-    Map<String, Map<String,Object>> batchMeta(@RequestParam("ids") String idsCsv);
+
+    @GetMapping("/api/item/meta/batch")
+    Map<Integer, Map<String, Object>> batchMeta(@RequestParam("itemId") List<Integer> itemIds);
 }

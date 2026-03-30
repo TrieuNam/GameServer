@@ -1,6 +1,6 @@
-package com.southMillion.webSocket_server.config;
+package com.SouthMillion.webSocket_server.config;
 
-import com.southMillion.webSocket_server.handler.WsGatewayHandler;
+import com.SouthMillion.webSocket_server.handler.WsGatewayHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

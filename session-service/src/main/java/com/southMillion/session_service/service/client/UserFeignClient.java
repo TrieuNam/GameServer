@@ -1,4 +1,4 @@
-package com.southMillion.session_service.service.client;
+package com.SouthMillion.session_service.service.client;
 
 import org.SouthMillion.dto.user.ActiveResp;
 import org.SouthMillion.dto.user.VerifyReq;

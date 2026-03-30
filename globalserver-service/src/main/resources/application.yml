@@ -1,8 +1,8 @@
-spring:
+﻿spring:
   application:
     name: globalserver-service
   datasource:
-    url: jdbc:mysql://localhost:3317/globalserver_service_db?useUnicode=true&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3317/game_globalserver?useUnicode=true&characterEncoding=UTF-8
     username: tpnam
     password: 121831
   jpa:

@@ -1,6 +1,6 @@
-package com.southMillion.report_service.repository;
+package com.SouthMillion.report_service.repository;
 
-import com.southMillion.report_service.entity.NoticeEntity;
+import com.SouthMillion.report_service.entity.NoticeEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,7 +1,9 @@
 server:
-  port: 8087
+  port: 8220
 
 spring:
+  profiles:
+    default: local
   application:
     name: item-service
   main:
@@ -11,18 +13,40 @@ spring:
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8761/eureka/
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
 
 # Cấu hình gọi config-service
 item:
   config:
-    # base-url có thể là http://config-service:8080 (qua eureka/gateway)
-    base-url: http://config-service:8080
-    # Đường lấy 1 file item theo itemId (bạn chỉnh cho khớp config-service)
-    item-path-template: /api/config/file?path=config/gameworld/item/%d.json
+    # Local default: config-service runs on localhost:8888
+    # Override with ITEM_CONFIG_BASE_URL in container/prod environments
+    base-url: ${ITEM_CONFIG_BASE_URL:http://localhost:8888}
+    # Item metadata thực tế nằm trong các file gộp dưới gameworld/item/*.json
+    item-catalog-paths:
+      - gameworld/item/equipment.json
+      - gameworld/item/other.json
+      - gameworld/item/expense.json
+      - gameworld/item/gift.json
+      - gameworld/item/debris.json
+      - gameworld/item/model_item.json
+      - gameworld/item/gemstone.json
+      - gameworld/item/gemstone_drawing.json
+      - gameworld/item/scroll_item.json
+      - gameworld/item/title_item.json
+      - gameworld/item/block_item.json
+      - gameworld/item/harness_item.json
+      - gameworld/item/pet_item.json
+      - gameworld/item/pet_weapon_item.json
+      - gameworld/item/inscription_item.json
+      - gameworld/item/wabao_cfg.json
     cache-ttl-seconds: 300
     # có thể thêm size limit nếu dùng caffeine
     cache-max-size: 10000
+    # Redis read-through cache cho item meta
+    meta-redis-ttl-seconds: 21600
+    meta-redis-key-prefix: "item:meta:"
 
 feign:
   okhttp:

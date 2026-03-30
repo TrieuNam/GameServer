@@ -1,0 +1,1314 @@
+﻿# ========================================
+# Docker Compose for Local Development - Full Version
+# 45 MySQL containers (all services with actual database needs)
+# Redis, Kafka, and Web UIs
+# ========================================
+
+networks:
+  gameserver-local:
+    driver: bridge
+
+volumes:
+  # MySQL volumes - P1 Core
+  userdb-data:
+  reportdb-data:
+  boxdb-data:
+  bagdb-data:
+  walletdb-data:
+  equipdb-data:
+  shopdb-data:
+  craftingdb-data:
+  serverinfodb-data:
+  roledb-data:
+  iapverifydb-data:
+  # MySQL volumes - P2 Combat & World
+  arenadb-data:
+  trialdb-data:
+  taskdb-data:
+  battleserverdb-data:
+  globalserverdb-data:
+  gameworlddb-data:
+  starmapdb-data:
+  territorydb-data:
+  escortdb-data:
+  worlddb-data:
+  chatdb-data:
+  guilddb-data:
+  # MySQL volumes - P3 Enhancement & Social
+  frienddb-data:
+  maildb-data:
+  leaderboarddb-data:
+  petdb-data:
+  mountdb-data:
+  runedb-data:
+  angeldb-data:
+  artifactdb-data:
+  analyticsdb-data:
+  notificationdb-data:
+  moderationdb-data:
+  # MySQL volumes - P4 Optional
+  mainfbdb-data:
+  anticheatdb-data:
+  # MySQL volumes - P5 New Gameplay
+  lingzhudb-data:
+  knightsdb-data:
+  pagodadb-data:
+  scrolldb-data:
+  gemdb-data:
+  activitydb-data:
+  shizhuangdb-data:
+  # MySQL volumes - Special Admin
+  admindb-data:
+  gmdb-data:
+  # Infrastructure volumes
+  redis-data:
+  kafka-data:
+
+services:
+  # ========================================
+  # MYSQL DATABASES - One per service
+  # ========================================
+
+  # MySQL for User/Session data
+  userdb:
+    image: mysql:8.0
+    container_name: local-userdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_user
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33061:3306"
+    command: 
+      - "--default-authentication-plugin=mysql_native_password"
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
+      - "--innodb-use-native-aio=0"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - userdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Report data
+  reportdb:
+    image: mysql:8.0
+    container_name: local-reportdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_report
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33065:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - reportdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Box data
+  boxdb:
+    image: mysql:8.0
+    container_name: local-boxdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_box
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33070:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - boxdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Bag/Inventory data
+  bagdb:
+    image: mysql:8.0
+    container_name: local-bagdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_bag
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33067:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - bagdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Wallet/Economy data
+  walletdb:
+    image: mysql:8.0
+    container_name: local-walletdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_wallet
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33064:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - walletdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Equipment data
+  equipdb:
+    image: mysql:8.0
+    container_name: local-equipdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_equip
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33068:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - equipdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Shop data
+  shopdb:
+    image: mysql:8.0
+    container_name: local-shopdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_shop
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33069:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - shopdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Crafting data
+  craftingdb:
+    image: mysql:8.0
+    container_name: local-craftingdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_crafting
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33071:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - craftingdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for ServerInfo data
+  serverinfodb:
+    image: mysql:8.0
+    container_name: local-serverinfodb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_serverinfo
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33063:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - serverinfodb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Role data
+  roledb:
+    image: mysql:8.0
+    container_name: local-roledb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_role
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33062:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - roledb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Arena data
+  arenadb:
+    image: mysql:8.0
+    container_name: local-arenadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_arena
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33072:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - arenadb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for IAP Verify data
+  iapverifydb:
+    image: mysql:8.0
+    container_name: local-iapverifydb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_iap_verify
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33066:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - iapverifydb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Trial/Dungeon data
+  trialdb:
+    image: mysql:8.0
+    container_name: local-trialdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_trial
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33073:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - trialdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Task/Quest data
+  taskdb:
+    image: mysql:8.0
+    container_name: local-taskdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_task
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33074:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - taskdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Battle Server data
+  battleserverdb:
+    image: mysql:8.0
+    container_name: local-battleserverdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_battle
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "3328:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - battleserverdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Global Server data
+  globalserverdb:
+    image: mysql:8.0
+    container_name: local-globalserverdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_globalserver
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "3317:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - globalserverdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Game World data
+  gameworlddb:
+    image: mysql:8.0
+    container_name: local-gameworlddb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_gameworld
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "3308:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - gameworlddb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Star Map data
+  starmapdb:
+    image: mysql:8.0
+    container_name: local-starmapdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_starmap
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33075:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - starmapdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Territory data
+  territorydb:
+    image: mysql:8.0
+    container_name: local-territorydb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_territory
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33076:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - territorydb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Escort data
+  escortdb:
+    image: mysql:8.0
+    container_name: local-escortdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_escort
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33095:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - escortdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for World/World Boss data
+  worlddb:
+    image: mysql:8.0
+    container_name: local-worlddb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_world
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "3323:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - worlddb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Chat data
+  chatdb:
+    image: mysql:8.0
+    container_name: local-chatdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_chat
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33080:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - chatdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Guild data
+  guilddb:
+    image: mysql:8.0
+    container_name: local-guilddb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_guild
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33084:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - guilddb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Friend data
+  frienddb:
+    image: mysql:8.0
+    container_name: local-frienddb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_friend
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33085:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - frienddb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Mail data
+  maildb:
+    image: mysql:8.0
+    container_name: local-maildb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_mail
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33086:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - maildb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Leaderboard data
+  leaderboarddb:
+    image: mysql:8.0
+    container_name: local-leaderboarddb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_leaderboard
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33087:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - leaderboarddb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Pet data
+  petdb:
+    image: mysql:8.0
+    container_name: local-petdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_pet
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33077:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - petdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Mount data
+  mountdb:
+    image: mysql:8.0
+    container_name: local-mountdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_mount
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33078:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mountdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Rune data
+  runedb:
+    image: mysql:8.0
+    container_name: local-runedb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_rune
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33079:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - runedb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Angel data
+  angeldb:
+    image: mysql:8.0
+    container_name: local-angeldb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_angel
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33082:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - angeldb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Artifact data
+  artifactdb:
+    image: mysql:8.0
+    container_name: local-artifactdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_artifact
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33083:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - artifactdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Analytics data
+  analyticsdb:
+    image: mysql:8.0
+    container_name: local-analyticsdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_analytics
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33092:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - analyticsdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Notification data
+  notificationdb:
+    image: mysql:8.0
+    container_name: local-notificationdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_notification
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33090:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - notificationdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Moderation data
+  moderationdb:
+    image: mysql:8.0
+    container_name: local-moderationdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_moderation
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33091:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - moderationdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Main Boss Fight data
+  mainfbdb:
+    image: mysql:8.0
+    container_name: local-mainfbdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_mainfb
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33094:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mainfbdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Anti-Cheat data
+  anticheatdb:
+    image: mysql:8.0
+    container_name: local-anticheatdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_anticheat
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33093:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - anticheatdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Lingzhu (Spirit Pearl) data
+  lingzhudb:
+    image: mysql:8.0
+    container_name: local-lingzhudb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_lingzhu
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "3315:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - lingzhudb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Knights data
+  knightsdb:
+    image: mysql:8.0
+    container_name: local-knightsdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_knights
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "3316:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - knightsdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Pagoda/Tower data
+  pagodadb:
+    image: mysql:8.0
+    container_name: local-pagodadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_pagoda
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "3322:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pagodadb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Scroll data
+  scrolldb:
+    image: mysql:8.0
+    container_name: local-scrolldb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_scroll
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "3319:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - scrolldb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Gem data
+  gemdb:
+    image: mysql:8.0
+    container_name: local-gemdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_gem
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "3320:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - gemdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Activity/Events data
+  activitydb:
+    image: mysql:8.0
+    container_name: local-activitydb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_activity
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "3321:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - activitydb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Costume/Fashion (Shizhuang) data
+  shizhuangdb:
+    image: mysql:8.0
+    container_name: local-shizhuangdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_shizhuang
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33081:3306"
+    command: ["--default-authentication-plugin=mysql_native_password", "--innodb-use-native-aio=0"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - shizhuangdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for Admin Service
+  admindb:
+    image: mysql:8.0
+    container_name: local-admindb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_admin
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "9088:3306"
+    command: 
+      - "--default-authentication-plugin=mysql_native_password"
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
+      - "--innodb-use-native-aio=0"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - admindb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # MySQL for GM Service (Game Master Tool)
+  gmdb:
+    image: mysql:8.0
+    container_name: local-gmdb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: game_gm
+      MYSQL_USER: tpnam
+      MYSQL_PASSWORD: 121831
+    ports:
+      - "33089:3306"
+    command: 
+      - "--default-authentication-plugin=mysql_native_password"
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
+      - "--innodb-use-native-aio=0"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - gmdb-data:/var/lib/mysql
+    networks:
+      - gameserver-local
+
+  # ========================================
+  # REDIS - Caching and Session Storage
+  # ========================================
+  redis:
+    image: redis:7-alpine
+    container_name: local-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - redis-data:/data
+    networks:
+      - gameserver-local
+
+  # ========================================
+  # KAFKA - Event Streaming (KRaft mode)
+  # ========================================
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: local-kafka
+    restart: unless-stopped
+    user: root
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_NODE_ID: 1
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:29092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@localhost:29093'
+      KAFKA_LOG_DIRS: '/var/lib/kafka/data'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_SOCKET_RECEIVE_BUFFER_BYTES: 102400
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 104857600
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+    command: >
+      bash -c "
+      mkdir -p /var/lib/kafka/data;
+      chmod -R 777 /var/lib/kafka/data;
+      if [ ! -f /var/lib/kafka/data/meta.properties ]; then
+        echo 'Formatting Kafka storage...';
+        kafka-storage format -t MkU3OEVBNTcwNTJENDM2Qk -c /etc/kafka/docker/server.properties;
+      fi;
+      echo 'Starting Kafka...';
+      /etc/confluent/docker/run
+      "
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - gameserver-local
+
+  # ========================================
+  # WEB UIs - Management Tools
+  # ========================================
+
+  # phpMyAdmin - MySQL Management
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: local-phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    environment:
+      # No PMA_HOST - will show server selection
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 256M
+    networks:
+      - gameserver-local
+
+  # Redis Commander - Redis Management
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: local-redis-commander
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - gameserver-local
+
+  # Kafka UI - Kafka Management
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: local-kafka-ui
+    restart: unless-stopped
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9101
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - gameserver-local
+
+  # ========================================
+  # MONITORING - Prometheus + Grafana
+  # ========================================
+
+  # Prometheus - Metrics Collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: local-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - gameserver-local
+
+  # Grafana - Metrics Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: local-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_INSTALL_PLUGINS: grafana-clock-panel
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - gameserver-local
+
+  # Loki - Log Aggregation
+  loki:
+    image: grafana/loki:latest
+    container_name: local-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - gameserver-local
+
+  # Promtail - Log Shipper (Optional - for file-based logs)
+  # DISABLED: promtail-config.yml directory is incomplete
+  # promtail:
+  #   image: grafana/promtail:latest
+  #   container_name: local-promtail
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./promtail/promtail-config.yml:/etc/promtail/config.yml
+  #     - ../logs:/var/log/gameserver
+  #   command: -config.file=/etc/promtail/config.yml
+  #   depends_on:
+  #     - loki
+  #   networks:
+  #     - gameserver-local
+
+

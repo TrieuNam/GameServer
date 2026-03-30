@@ -9,6 +9,7 @@ import lombok.*;
  */
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -18,10 +19,6 @@ public class BagOkResp {
 
     private String message;
     private Integer errorCode;
-
-    // No-arg constructor
-    public BagOkResp() {
-    }
 
     // Static factory methods
     public static BagOkResp ok() {
@@ -41,7 +38,12 @@ public class BagOkResp {
     }
 
     // Instance method to check if successful
-    public boolean ok() {
+    public boolean isSuccess() {
+        return Boolean.TRUE.equals(succeeded);
+    }
+
+    // Alias for backward compatibility
+    public boolean isOk() {
         return Boolean.TRUE.equals(succeeded);
     }
 

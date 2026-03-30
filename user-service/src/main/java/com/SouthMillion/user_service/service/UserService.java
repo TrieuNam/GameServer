@@ -44,4 +44,40 @@ public class UserService {
     public Optional<User> findByAccountOrUsername(String s) {
         return repo.findByAccount(s).or(() -> repo.findByUsername(s));
     }
+
+    public User login(String accountOrUsername, String rawPassword) {
+        User user = repo.findByAccount(accountOrUsername)
+                .or(() -> repo.findByUsername(accountOrUsername))
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new IllegalArgumentException("User not active");
+        }
+        
+        if (!encoder.matches(rawPassword, user.getPassHash())) {
+            throw new IllegalArgumentException("Invalid password");
+        }
+        
+        return user;
+    }
+
+    public void changePassword(String userId, String oldPassword, String newPassword) {
+        User user = repo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        if (!encoder.matches(oldPassword, user.getPassHash())) {
+            throw new IllegalArgumentException("Invalid old password");
+        }
+        
+        user.setPassHash(encoder.encode(newPassword));
+        repo.save(user);
+    }
+
+    public void updateStatus(String userId, UserStatus newStatus) {
+        User user = repo.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        
+        user.setStatus(newStatus);
+        repo.save(user);
+    }
 }

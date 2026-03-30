@@ -69,7 +69,7 @@ public class EquipmentIndex {
         if (idxPref.get() != null && idxAll.get() != null && allEquipIds.get() != null && metaById.get() != null) return;
 
         String ifNoneMatch = etag.get();
-        ResponseEntity<byte[]> resp = configFeign.getItem("equipment.json", ifNoneMatch);
+        ResponseEntity<byte[]> resp = configFeign.getFile("gameworld/item/equipment.json", ifNoneMatch);
 
         if (resp.getStatusCode().is2xxSuccessful()) {
             try {

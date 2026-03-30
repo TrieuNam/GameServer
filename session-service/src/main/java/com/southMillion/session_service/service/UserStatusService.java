@@ -1,6 +1,6 @@
-package com.southMillion.session_service.service;
+package com.SouthMillion.session_service.service;
 
-import com.southMillion.session_service.service.client.UserFeignClient;
+import com.SouthMillion.session_service.service.client.UserFeignClient;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.user.ActiveResp;
 import org.springframework.cache.annotation.Cacheable;

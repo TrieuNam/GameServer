@@ -1,7 +1,8 @@
-package com.southMillion.equip_service.controller;
+package com.SouthMillion.equip_service.controller;
 
-import com.southMillion.equip_service.service.EquipFumoService;
-import com.southMillion.equip_service.service.EquipService;
+import com.SouthMillion.equip_service.dto.WearableItemsResponse;
+import com.SouthMillion.equip_service.service.EquipFumoService;
+import com.SouthMillion.equip_service.service.EquipService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.SouthMillion.dto.equip.EquipDTOs;
@@ -9,6 +10,7 @@ import org.SouthMillion.dto.equip.EquipFumoDTOs;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,8 +23,13 @@ public class EquipController {
     // ======= Equip basic =======
 
     @GetMapping("/{roleId}")
-    public EquipDTOs.ListResp list(@PathVariable("roleId") String roleId) {
+    public EquipDTOs.ListResp list(@PathVariable("roleId") Long roleId) {
         return equipService.list(roleId);
+    }
+
+    @GetMapping("/{roleId}/wearable-items")
+    public WearableItemsResponse listWearableItems(@PathVariable("roleId") Long roleId) {
+        return equipService.listWearableItems(roleId);
     }
 
     @PostMapping(value = "/equip", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -40,7 +47,7 @@ public class EquipController {
     // NEW: wear theo itemId trong túi. Optional: ?bagType=1 (mặc định lấy từ props)
     @PostMapping("/wear/{roleId}/{itemId}")
     @ResponseStatus(HttpStatus.OK)
-    public EquipDTOs.OkResp wear(@PathVariable("roleId") String roleId,
+    public EquipDTOs.OkResp wear(@PathVariable("roleId") Long roleId,
                                  @PathVariable("itemId") int itemId,
                                  @RequestParam(value = "bagType", required = false) Integer bagType) {
         return equipService.wear(roleId, itemId, bagType);
@@ -49,12 +56,12 @@ public class EquipController {
     // ======= Fumo =======
 
     @GetMapping("/fumo/{roleId}")
-    public EquipFumoDTOs.FumoListResp fumoList(@PathVariable("roleId") String roleId) {
+    public EquipFumoDTOs.FumoListResp fumoList(@PathVariable("roleId") Long roleId) {
         return fumoService.list(roleId);
     }
 
     @GetMapping("/fumo/{roleId}/{equipType}")
-    public EquipFumoDTOs.FumoOneResp fumoOne(@PathVariable("roleId") String roleId,
+    public EquipFumoDTOs.FumoOneResp fumoOne(@PathVariable("roleId") Long roleId,
                                              @PathVariable("equipType") int equipType) {
         return fumoService.one(roleId, equipType);
     }
@@ -72,5 +79,22 @@ public class EquipController {
     @PostMapping(value = "/fumo/reset", consumes = MediaType.APPLICATION_JSON_VALUE)
     public EquipFumoDTOs.OkResp reset(@Valid @RequestBody EquipFumoDTOs.ResetReq req) {
         return fumoService.reset(req);
+    }
+
+    @PostMapping(value = "/bag-sell", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public EquipDTOs.OkResp bagSell(@RequestBody Map<String, Object> req) {
+        Long roleId   = Long.parseLong(req.get("roleId").toString());
+        int equipType = ((Number) req.get("equipType")).intValue();
+        return equipService.bagSell(roleId, equipType);
+    }
+
+    @PostMapping(value = "/transform", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    public EquipDTOs.OkResp transform(@RequestBody Map<String, Object> req) {
+        Long roleId    = Long.parseLong(req.get("roleId").toString());
+        int equipType  = ((Number) req.get("equipType")).intValue();
+        int targetRank = req.containsKey("targetRank") ? ((Number) req.get("targetRank")).intValue() : 1;
+        return equipService.transform(roleId, equipType, targetRank);
     }
 }

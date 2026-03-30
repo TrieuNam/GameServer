@@ -1,16 +1,16 @@
-package com.southMillion.webSocket_server.service.client;
+package com.SouthMillion.webSocket_server.service.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.Map;
 
 @FeignClient(name = "config-service")
 public interface ConfigFeign {
-    @GetMapping(value = "/config/gameworld/logicconfig/roleexp.json",
-            consumes = MediaType.ALL_VALUE)
-    ResponseEntity<byte[]> roleExpRaw();
+    @GetMapping("/api/config/file")
+    ResponseEntity<byte[]> getFile(
+            @RequestParam("path") String path,
+            @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch
+    );
 }

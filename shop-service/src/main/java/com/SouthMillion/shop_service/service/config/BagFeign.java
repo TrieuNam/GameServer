@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name="bag-service", path="/internal/bag")
+@FeignClient(name="bag-service", path="/api/bag/internal")
 public interface BagFeign {
     @PostMapping("/add")
     BagAddItemResp add(@RequestBody BagAddItemReq req);

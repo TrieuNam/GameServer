@@ -7,5 +7,5 @@ import java.util.Optional;
 
 public interface ShopLimitRepository extends JpaRepository<ShopLimit, Long> {
     Optional<ShopLimit> findByRoleIdAndKindAndEntryIndexAndPeriodAndDayStr(
-            String roleId, String kind, int entryIndex, String period, String dayStr);
+            Long roleId, String kind, int entryIndex, String period, String dayStr);
 }

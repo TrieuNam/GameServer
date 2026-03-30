@@ -1,6 +1,6 @@
-package com.southMillion.webSocket_server.service;
+package com.SouthMillion.webSocket_server.service;
 
-import com.southMillion.webSocket_server.utils.FeignTokenHolder;
+import com.SouthMillion.webSocket_server.utils.FeignTokenHolder;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import org.springframework.http.HttpHeaders;

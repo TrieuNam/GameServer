@@ -1,6 +1,5 @@
 package com.SouthMillion.role_service.entity;
 
-import com.SouthMillion.role_service.utils.IdGen;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,8 +14,9 @@ import java.time.Instant;
 public class Role {
 
     @Id
-    @Column(name = "role_id", nullable = false, length = 26)
-    private String roleId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "role_id", nullable = false)
+    private Long roleId;
 
     @Column(name = "user_id", nullable = false, length = 64)
     private String userId;
@@ -60,6 +60,9 @@ public class Role {
     @Column(name = "guild_name", length = 64)
     private String guildName;
 
+    @Column(name = "notice_time", nullable = false)
+    private Long noticeTime = 0L;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -71,7 +74,6 @@ public class Role {
         var now = Instant.now();
         createdAt = now;
         updatedAt = now;
-        if (roleId == null || roleId.isBlank()) roleId = IdGen.ulid();
         if (level <= 0) level = 1;
     }
 

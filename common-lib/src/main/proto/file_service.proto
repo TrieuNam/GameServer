@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package file;
+
+option java_package = "org.SouthMillion.proto.file";
+option java_outer_classname = "FileProto";
+
+import "common.proto";
+
+service FileService {
+  rpc UploadFile(UploadFileRequest) returns (UploadFileResponse);
+  rpc GetFileUrl(GetFileUrlRequest) returns (GetFileUrlResponse);
+}
+
+message UploadFileRequest {
+  string file_name = 1;
+  bytes file_data = 2;
+  string content_type = 3;
+}
+
+message UploadFileResponse {
+  bool success = 1;
+  string url = 2;
+  string file_name = 3;
+  string error = 4;
+}
+
+message GetFileUrlRequest {
+  string file_name = 1;
+}
+
+message GetFileUrlResponse {
+  bool success = 1;
+  string url = 2;
+  string error = 3;
+}

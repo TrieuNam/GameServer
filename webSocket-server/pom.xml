@@ -70,6 +70,12 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
 
+        <!-- Redis for cross-server session management -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -88,6 +94,27 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
+        <!-- gRPC Spring Boot Starter -->
+        <dependency>
+            <groupId>net.devh</groupId>
+            <artifactId>grpc-spring-boot-starter</artifactId>
+            <version>3.1.0.RELEASE</version>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Resilience4j Circuit Breaker -->
+        <!-- Ngăn 1 service down kéo chết toàn bộ websocket-server -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -101,6 +128,18 @@
                 <configuration>
                     <source>21</source>
                     <target>21</target>
+                    <testIncludes>
+                        <testInclude>**/BoxHandlerTest.java</testInclude>
+                    </testIncludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/BoxHandlerTest.java</include>
+                    </includes>
                 </configuration>
             </plugin>
         </plugins>

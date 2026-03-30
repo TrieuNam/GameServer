@@ -1,6 +1,6 @@
-package com.southMillion.report_service.controller;
+package com.SouthMillion.report_service.controller;
 
-import com.southMillion.report_service.service.BossService;
+import com.SouthMillion.report_service.service.BossService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,5 +1,9 @@
-server:
-  port: 8097
+﻿server:
+  port: 8230
+
+grpc:
+  server:
+    port: 9230  # gRPC port — webSocket-server connects here via BagGrpcClient
 
 spring:
   application:
@@ -10,7 +14,7 @@ spring:
       enabled: true   # Java 21 Virtual Threads
 
   datasource:
-    url: jdbc:mysql://localhost:3311/db_bag
+    url: ${DB_URL:jdbc:mysql://localhost:33067/game_bag?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
     username: ${DB_USERNAME:tpnam}
     password: ${DB_PASSWORD:121831}
 
@@ -26,6 +30,8 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    connect-retries: 10
+    connect-retries-interval: 5
 
   cache:
     type: redis
@@ -39,14 +45,6 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
 
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.add.type.headers: true
-        spring.json.type.mapping: >
-            bagChanged:com.SouthMillion.common.events.BagChangedEvent
-
     consumer:
       group-id: ${BAG_CONSUMER_GROUP:bag-service}
       auto-offset-reset: earliest
@@ -54,7 +52,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring.json.trusted.packages: "*"     # hoặc org.SouthMillion.dto.role.event
+        spring.json.trusted.packages: "org.SouthMillion.dto.role.event"
         spring.json.value.default.type: org.SouthMillion.dto.role.event.BagGrantEvent
 
     listener:
@@ -81,4 +79,3 @@ eureka:
     registerWithEureka: true
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
-

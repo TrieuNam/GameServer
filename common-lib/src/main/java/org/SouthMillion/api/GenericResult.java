@@ -12,19 +12,32 @@ public class GenericResult<T> {
     private T data;
 
     public static <T> GenericResult<T> ok(T data) {
-        return GenericResult.<T>builder().code(0).message("OK").data(data).build();
+        GenericResult<T> result = new GenericResult<>();
+        result.code = 0;
+        result.message = "OK";
+        result.data = data;
+        return result;
     }
 
     public static <T> GenericResult<T> fail(int code, String message) {
-        return GenericResult.<T>builder().code(code).message(message).build();
+        GenericResult<T> result = new GenericResult<>();
+        result.code = code;
+        result.message = message;
+        return result;
     }
 
     public static <T> GenericResult<T> error(String msg) {
-        return new GenericResult<>(-1, msg, null);
+        GenericResult<T> result = new GenericResult<>();
+        result.code = -1;
+        result.message = msg;
+        return result;
     }
 
     public static <T> GenericResult<T> fail(String msg) {
-        return new GenericResult<>(-1, msg, null);
+        GenericResult<T> result = new GenericResult<>();
+        result.code = -1;
+        result.message = msg;
+        return result;
     }
 
     public boolean isOk() {

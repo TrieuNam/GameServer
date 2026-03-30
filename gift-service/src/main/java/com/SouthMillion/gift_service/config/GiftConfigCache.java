@@ -29,6 +29,9 @@ public class GiftConfigCache {
     @Value("${app.gift.cache-seconds:30}")
     private int cacheSeconds;
 
+    @Value("${app.gift.config-path:gameworld/item/gift.json}")
+    private String giftConfigPath;
+
     private final Cache<String, JsonNode> cache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofSeconds(30))
             .maximumSize(16)
@@ -37,14 +40,14 @@ public class GiftConfigCache {
     private final Map<String, String> etags = new ConcurrentHashMap<>();
 
     public JsonNode giftJson() {
-        return getJson("gift.json");
+        return getJson(giftConfigPath);
     }
 
     private JsonNode getJson(String path) {
         JsonNode cached = cache.getIfPresent(path);
         String etag = etags.get(path);
         try {
-            ResponseEntity<byte[]> resp = configFeign.getItem(path, etag);
+            ResponseEntity<byte[]> resp = configFeign.getFile(path, etag);
             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
                 String json = new String(resp.getBody(), StandardCharsets.UTF_8);
                 JsonNode node = om.readTree(json);

@@ -1,4 +1,4 @@
-package com.southMillion.report_service.entity;
+package com.SouthMillion.report_service.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

@@ -1,12 +1,12 @@
-spring:
+﻿spring:
   application:
     name: report-service
 
 
   datasource:
-    url: jdbc:mysql://localhost:3309/report_game_h2
-    username: tpnam
-    password: 121831
+    url: ${DB_URL:jdbc:mysql://localhost:33065/game_report?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:tpnam}
+    password: ${DB_PASSWORD:121831}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -27,7 +27,7 @@ spring:
         spring.json.trusted.packages: "*"
 
 server:
-  port: 8085
+  port: 8098
 
 eureka:
   instance:

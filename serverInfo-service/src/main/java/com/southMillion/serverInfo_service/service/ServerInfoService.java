@@ -1,7 +1,7 @@
-package com.southMillion.serverInfo_service.service;
+package com.SouthMillion.serverInfo_service.service;
 
-import com.southMillion.serverInfo_service.entity.ServerInfo;
-import com.southMillion.serverInfo_service.repository.ServerInfoRepository;
+import com.SouthMillion.serverInfo_service.entity.ServerInfo;
+import com.SouthMillion.serverInfo_service.repository.ServerInfoRepository;
 import org.SouthMillion.dto.serverInfor.ServerInfoDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

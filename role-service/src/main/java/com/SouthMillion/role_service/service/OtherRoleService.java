@@ -18,12 +18,12 @@ public class OtherRoleService {
     @Transactional(readOnly = true)
     public OtherRoleDTOs.OtherRoleInfo getOtherRole(String uid, String roleIdOpt) {
         Role r = (roleIdOpt != null && !roleIdOpt.isBlank())
-                ? roleRepo.findById(roleIdOpt).orElseThrow(() -> new IllegalArgumentException("Role not found"))
+                ? roleRepo.findById(Long.valueOf(roleIdOpt)).orElseThrow(() -> new IllegalArgumentException("Role not found"))
                 : roleRepo.findFirstByUserIdOrderByCreatedAtAsc(uid).orElseThrow(() -> new IllegalArgumentException("Role not found for uid"));
 
         var attr = new OtherRoleDTOs.OtherRoleAttr(r.getLevel(), r.getExp(), r.getHp(), r.getAttackValue(), r.getDefenseValue(), r.getSpeed());
         return new OtherRoleDTOs.OtherRoleInfo(
-                r.getUserId(), r.getRoleId(), r.getName(), r.getHeadChar(), r.getGuildName(),
+                r.getUserId(), String.valueOf(r.getRoleId()), r.getName(), r.getHeadChar(), r.getGuildName(),
                 attr, Collections.emptyList(), Collections.emptyList(), r.getCreatedAt(), r.getUpdatedAt()
         );
     }
