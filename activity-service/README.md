@@ -1,8 +1,8 @@
 ﻿# Activity Service
 
-**Version**: 1.0.0  
-**Phase**: P5 (New Gameplay Systems)  
-**Port**: 8382 (config trong application-local.yml)  
+**Version**: 1.0.0
+**Phase**: P5 (New Gameplay Systems)
+**Port**: 8382
 **Database**: `game_activity`
 
 ---

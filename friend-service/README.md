@@ -252,18 +252,12 @@ All FriendHandler operations call this service via Feign.
 
 ---
 
-## 🚀 Running the Service
+## 🚀 Running
 
-### Build & Run
 ```bash
-# Build
+cd GameServer/friend-service
 mvn clean install
-
-# Run
 mvn spring-boot:run
-
-# Or run JAR
-java -jar target/friend-service-1.0.0.jar
 ```
 
 ### Configuration
@@ -273,10 +267,10 @@ server:
 
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/friend_db
-    username: root
-    password: root
-  
+    url: jdbc:mysql://127.0.0.1:33085/game_friend?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: tpnam
+    password: 121831
+
   redis:
     host: localhost
     port: 6379
