@@ -1,0 +1,110 @@
+option java_package = "org.SouthMillion.proto.Msgwabao";
+
+message PB_WaBaoSet
+{
+	optional int32	eqality = 1;			//!<品质
+	optional int32	eqality_mark = 2;		//!<品质是否打钩
+	optional int32	new_record = 3;			//!<达成新纪录时停止
+	optional int32	new_book = 4;			//!<解锁新图鉴时停止
+}
+
+message PB_WaBaoItemData {//!<挖宝物品信息
+	optional int32	item_id = 1;			//!< 物品ID
+	optional int32	integrity = 2;			//!< 完整度
+
+	optional int32	attr_type1 = 3;			//!< 属性类型1
+	optional int32	attr_value1 = 4;		//!< 属性类型1值
+	optional int32	attr_type2 = 5;			//!< 属性类型2
+	optional int32	attr_value2 = 6;		//!< 属性类型2值
+}
+
+message PB_WaBaoIntegrityNode
+{
+	optional int32	item_id = 1;			//!<宝物ID
+	optional int32	max_integrity = 2;		//!<最大完整度
+}
+
+message PB_WaBaoCollectionNode
+{
+	optional int32	item_type = 1;			//!<宝物种类
+	optional int32	index = 2;				//!<下标
+	optional PB_WaBaoItemData item_data = 3;//!<宝物数据
+}
+
+
+//!<MsgId:1640
+message PB_CSWaBaoReq {								//!< 1640 挖宝操作
+	optional int32	op_type = 1;					//!<操作类型
+	optional int32	param1 = 2;						//!<参数1
+	optional int32	param2 = 3;						//!<参数2
+}
+
+//!<MsgId:1641
+message PB_CSWaBaoSetReq {							//!< 1641 宝箱自动开启设置
+	optional PB_WaBaoSet wabao_set = 1;				//!<自动挖宝设置
+}
+
+
+//!<MsgId:1642
+message PB_SCWaBaoInfo {							//!< 1642 挖宝信息
+	optional uint32	ti_li_itme = 1;					//!<恢复体力时间戳
+	optional int32	collection_level = 2;			//!<收藏柜等级
+	optional int32	collection_buy_times = 3;		//!<收藏柜升级购买次数
+	optional uint32	collection_level_up_time = 4;	//!<收藏柜升级时间戳
+	optional int32	collection_level_fetch_flag = 5;//!<收藏柜升级奖励领取标识 位运算
+}
+
+//!<MsgId:1643
+message PB_SCWaBaoMapInfo {							//!< 1643 挖宝地图信息
+	optional int32	cur_map = 1;					//!<当前地图
+	optional int32	unlocked_map = 2;				//!<已解锁最大地图
+	repeated int32	map_condition_num = 3;			//!<下个地图解锁条件数量 数组大小根据配置
+}
+
+//!<MsgId:1644
+message PB_SCWaBaoItemInfo {						//!< 1644 挖出宝物信息
+	optional int32	result = 1;						//!<挖宝结果
+	optional PB_WaBaoItemData item_data = 2;		//!<当前宝物信息
+}
+
+//!<MsgId:1645
+message PB_SCWaBaoIntegrityInfo {					//!< 1645 宝物完整度信息
+	optional int32	is_login = 1;					//!<登陆下发列表 其余下发单个
+	repeated PB_WaBaoIntegrityNode data_list = 2;	//!<最大完整度 最大512个
+}
+
+//!<MsgId:1646
+message PB_SCWaBaoCollectionListInfo {				//!< 1646 收藏柜列表信息
+	optional int32	is_login = 1;					//!<登陆下发列表 其余下发单个
+	repeated PB_WaBaoCollectionNode data_list = 2;	//!<收藏柜列表 数组最大24(4种类 * 6格子）
+}
+
+//!<MsgId:1647
+message PB_SCWaBaoToolInfo {						//!< 1647 挖宝工具信息
+	repeated int32	tool_grade = 1;					//!<工具阶级 数组大小5
+	repeated int32	tool_level = 2;					//!<工具等级 数组大小5
+	repeated int32	condition_type = 3;				//!<工具进阶条件 数组大小5
+	repeated int32	condition_num = 4;				//!<工具进阶提交数量 数组大小5
+}
+
+//!<MsgId:1648
+message PB_SCWaBaoTaskInfo {						//!< 1648 挖宝订单信息
+	optional int32	task_flag = 1;					//!<每日订单领取标识(位运算)
+	repeated int32	task_list = 2;					//!<每日订单
+	repeated int32	task_type_num = 3;				//!<每日订单条件完成数量(下标对应task_list)
+}
+
+//!<MsgId:1649
+message PB_SCWaBaoSetingInfo {						//!< 1649 自动挖宝设置信息
+	optional PB_WaBaoSet box_set = 1;				//!<自动挖宝设置
+}
+
+//!<MsgId:1650
+message PB_SCWaBaoCollectionBookInfo {				//!< 1650 挖宝收藏品图鉴
+	repeated int32 level = 1;						//!<图鉴等级列表
+}
+
+//!<MsgId:1651
+message PB_SCWaBaoBookListInfo {					//!< 1651 挖宝图鉴激活信息
+	repeated int32 activate_flag = 1;				//!<图鉴激活信息 位运算
+}

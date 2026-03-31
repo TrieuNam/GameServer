@@ -1,0 +1,5 @@
+# Production profile - uses tpnam/121831 account
+spring:
+  datasource:
+    username: tpnam
+    password: 121831

@@ -1,0 +1,133 @@
+// Bag/Inventory Service gRPC definitions
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.grpc.bag";
+option java_outer_classname = "BagServiceProto";
+
+package bag;
+
+// Bag Service Definition
+service BagService {
+  // Get player inventory
+  rpc GetInventory(GetInventoryRequest) returns (InventoryResponse);
+  
+  // Add items to inventory
+  rpc AddItems(AddItemsRequest) returns (AddItemsResponse);
+  
+  // Remove items from inventory
+  rpc RemoveItems(RemoveItemsRequest) returns (RemoveItemsResponse);
+  
+  // Use item
+  rpc UseItem(UseItemRequest) returns (UseItemResponse);
+  
+  // Check item ownership
+  rpc HasItems(HasItemsRequest) returns (HasItemsResponse);
+  
+  // Stream inventory updates
+  rpc StreamInventoryUpdates(InventoryStreamRequest) returns (stream InventoryUpdateEvent);
+}
+
+// Messages
+message GetInventoryRequest {
+  int64 role_id = 1;
+  string category = 2;  // ALL, CONSUMABLE, MATERIAL, QUEST, etc.
+  common.PageRequest pagination = 3;
+}
+
+message InventoryResponse {
+  int64 role_id = 1;
+  repeated InventorySlot slots = 2;
+  int32 used_slots = 3;
+  int32 max_slots = 4;
+  common.PageResponse page_info = 5;
+  common.ResponseStatus status = 6;
+}
+
+message InventorySlot {
+  int32 slot_id = 1;
+  int32 item_id = 2;
+  int32 quantity = 3;
+  bool is_bound = 4;
+  int64 expire_time = 5;
+  map<string, string> properties = 6;
+}
+
+message AddItemsRequest {
+  int64 role_id = 1;
+  repeated common.ItemStack items = 2;
+  string source = 3;  // QUEST, DROP, SHOP, GIFT, etc.
+  string event_id = 4;  // For idempotency
+}
+
+message AddItemsResponse {
+  repeated InventorySlot added_slots = 1;
+  repeated int32 failed_item_ids = 2;
+  string failure_reason = 3;
+  common.ResponseStatus status = 4;
+}
+
+message RemoveItemsRequest {
+  int64 role_id = 1;
+  repeated common.ItemStack items = 2;
+  string reason = 3;  // CONSUME, TRADE, CRAFT, DELETE, etc.
+}
+
+message RemoveItemsResponse {
+  bool success = 1;
+  repeated int32 removed_item_ids = 2;
+  common.ResponseStatus status = 3;
+}
+
+message UseItemRequest {
+  int64 role_id = 1;
+  int32 slot_id = 2;
+  int32 item_id = 3;
+  int32 quantity = 4;
+  int64 target_role_id = 5;  // Optional, for buff items
+}
+
+message UseItemResponse {
+  bool success = 1;
+  int32 remaining_quantity = 2;
+  common.RewardBundle rewards = 3;
+  repeated BuffEffect buffs = 4;
+  common.ResponseStatus status = 5;
+}
+
+message BuffEffect {
+  string buff_type = 1;
+  int32 value = 2;
+  int64 duration_ms = 3;
+}
+
+message HasItemsRequest {
+  int64 role_id = 1;
+  repeated common.ItemStack required_items = 2;
+}
+
+message HasItemsResponse {
+  bool has_all = 1;
+  repeated ItemAvailability item_status = 2;
+  common.ResponseStatus status = 3;
+}
+
+message ItemAvailability {
+  int32 item_id = 1;
+  int32 required_quantity = 2;
+  int32 available_quantity = 3;
+  bool has_enough = 4;
+}
+
+message InventoryStreamRequest {
+  int64 role_id = 1;
+}
+
+message InventoryUpdateEvent {
+  int64 role_id = 1;
+  string event_type = 2;  // ADD, REMOVE, USE, UPDATE
+  repeated InventorySlot affected_slots = 3;
+  int64 timestamp = 4;
+}

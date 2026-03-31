@@ -1,0 +1,77 @@
+option java_package = "org.SouthMillion.proto.Msgfriend";
+
+// Message types for friend system
+message CS_FRIEND_REQ {
+    optional int32 op = 1;              // Operation type: 1=list, 2=sendRequest, 3=handleRequest, 4=remove, 5=block, 6=unblock, 7=search, 8=onlineNotify
+    optional string targetRoleId = 2;   // Target player ID
+    optional string targetName = 3;     // Target player name
+    optional bool approve = 4;          // Accept or reject (for handleRequest)
+    optional int32 requestId = 5;       // Friend request ID
+    optional string message = 6;        // Message to send with friend request
+    optional string keyword = 7;        // Search keyword
+}
+
+message FriendInfo {
+    optional string roleId = 1;         // Role ID
+    optional string roleName = 2;       // Role name
+    optional int32 level = 3;           // Level
+    optional int32 vipLevel = 4;        // VIP level
+    optional int64 lastOnlineTime = 5;  // Last online time
+    optional bool online = 6;           // Is currently online
+    optional int32 intimacy = 7;        // Intimacy level
+}
+
+message RequestInfo {
+    optional int32 requestId = 1;       // Request ID
+    optional string fromRoleId = 2;     // From role ID
+    optional string fromRoleName = 3;   // From role name
+    optional int32 fromLevel = 4;       // From level
+    optional int64 requestTime = 5;     // Request timestamp
+}
+
+message PlayerInfo {
+    optional string roleId = 1;         // Role ID
+    optional string roleName = 2;       // Role name
+    optional int32 level = 3;           // Level
+    optional int32 vipLevel = 4;        // VIP level
+    optional bool isFriend = 5;         // Is already friend
+}
+
+message OnlineStatus {
+    optional string roleId = 1;         // Role ID
+    optional bool online = 2;           // Online status
+    optional int64 timestamp = 3;       // Timestamp
+}
+
+message SC_FRIEND_LIST {
+    optional int32 code = 1;            // 0=success, other=error code
+    repeated FriendInfo friends = 2;    // Friend list
+}
+
+message SC_FRIEND_OPERATION {
+    optional int32 code = 1;            // 0=success, other=error code
+    optional string message = 2;        // Error message
+    optional int32 opType = 3;          // Operation type
+    optional string targetId = 4;       // Target player ID
+}
+
+message SC_FRIEND_REQUEST {
+    optional int32 code = 1;            // 0=success, other=error code
+    repeated RequestInfo requests = 2;  // Pending requests
+}
+
+message SC_FRIEND_SEARCH {
+    optional int32 code = 1;            // 0=success, other=error code
+    repeated PlayerInfo players = 2;    // Search results
+}
+
+message SC_FRIEND_ONLINE {
+    optional int32 code = 1;            // 0=success, other=error code
+    repeated OnlineStatus statuses = 2; // Online status list
+}
+
+message SC_FRIEND_NOTIFICATION {
+    optional int32 notifyType = 1;      // 1=newRequest, 2=accepted, 3=deleted, 4=online, 5=offline
+    optional FriendInfo friendInfo = 2; // Friend info
+    optional RequestInfo requestInfo = 3; // Request info (for newRequest)
+}

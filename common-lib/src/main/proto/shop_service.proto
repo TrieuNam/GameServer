@@ -1,0 +1,133 @@
+// Shop Service gRPC definitions
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.grpc.shop";
+option java_outer_classname = "ShopServiceProto";
+
+package shop;
+
+// Shop Service Definition
+service ShopService {
+  // Get shop items
+  rpc GetShopItems(GetShopItemsRequest) returns (ShopItemsResponse);
+  
+  // Purchase item
+  rpc Purchase(PurchaseRequest) returns (PurchaseResponse);
+  
+  // Batch purchase
+  rpc BatchPurchase(BatchPurchaseRequest) returns (BatchPurchaseResponse);
+  
+  // Get purchase history
+  rpc GetPurchaseHistory(GetPurchaseHistoryRequest) returns (PurchaseHistoryResponse);
+  
+  // Check purchase limits
+  rpc CheckPurchaseLimit(CheckPurchaseLimitRequest) returns (CheckPurchaseLimitResponse);
+}
+
+// Messages
+message GetShopItemsRequest {
+  string shop_type = 1;  // GENERAL, VIP, GUILD, EVENT, etc.
+  int32 role_level = 2;
+  int32 vip_level = 3;
+  common.PageRequest pagination = 4;
+}
+
+message ShopItemsResponse {
+  repeated ShopItem items = 1;
+  int64 refresh_time = 2;
+  common.PageResponse page_info = 3;
+  common.ResponseStatus status = 4;
+}
+
+message ShopItem {
+  int32 shop_item_id = 1;
+  int32 item_id = 2;
+  int32 quantity = 3;
+  Price price = 4;
+  int32 stock = 5;
+  int32 max_purchases_per_day = 6;
+  int32 remaining_purchases_today = 7;
+  int32 discount_percent = 8;
+  bool is_on_sale = 9;
+  int64 sale_end_time = 10;
+  int32 min_level = 11;
+  int32 min_vip_level = 12;
+}
+
+message Price {
+  string currency_type = 1;  // GOLD, DIAMOND, GUILD_COIN, etc.
+  int64 amount = 2;
+  int64 original_amount = 3;
+}
+
+message PurchaseRequest {
+  int64 role_id = 1;
+  int32 shop_item_id = 2;
+  int32 quantity = 3;
+  string currency_type = 4;
+}
+
+message PurchaseResponse {
+  bool success = 1;
+  repeated common.ItemStack purchased_items = 2;
+  int64 total_cost = 3;
+  int64 remaining_balance = 4;
+  int32 remaining_purchases_today = 5;
+  common.ResponseStatus status = 6;
+}
+
+message BatchPurchaseRequest {
+  int64 role_id = 1;
+  repeated PurchaseItem items = 2;
+}
+
+message PurchaseItem {
+  int32 shop_item_id = 1;
+  int32 quantity = 2;
+}
+
+message BatchPurchaseResponse {
+  repeated PurchaseResponse results = 1;
+  int32 successful_purchases = 2;
+  int32 failed_purchases = 3;
+  common.ResponseStatus status = 4;
+}
+
+message GetPurchaseHistoryRequest {
+  int64 role_id = 1;
+  int64 start_time = 2;
+  int64 end_time = 3;
+  common.PageRequest pagination = 4;
+}
+
+message PurchaseHistoryResponse {
+  repeated PurchaseRecord records = 1;
+  common.PageResponse page_info = 2;
+  common.ResponseStatus status = 3;
+}
+
+message PurchaseRecord {
+  int64 purchase_id = 1;
+  int32 shop_item_id = 2;
+  int32 item_id = 3;
+  int32 quantity = 4;
+  int64 cost = 5;
+  string currency_type = 6;
+  int64 purchase_time = 7;
+}
+
+message CheckPurchaseLimitRequest {
+  int64 role_id = 1;
+  int32 shop_item_id = 2;
+}
+
+message CheckPurchaseLimitResponse {
+  bool can_purchase = 1;
+  int32 remaining_purchases_today = 2;
+  int32 max_purchases_per_day = 3;
+  int64 reset_time = 4;
+  common.ResponseStatus status = 5;
+}

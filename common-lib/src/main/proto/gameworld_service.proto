@@ -1,0 +1,163 @@
+// Game World Service gRPC definitions
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.grpc.gameworld";
+option java_outer_classname = "GameWorldServiceProto";
+
+package gameworld;
+
+// Game World Service Definition
+service GameWorldService {
+  // Update player position
+  rpc UpdatePosition(UpdatePositionRequest) returns (UpdatePositionResponse);
+  
+  // Get nearby players
+  rpc GetNearbyPlayers(GetNearbyPlayersRequest) returns (NearbyPlayersResponse);
+  
+  // Stream position updates (real-time)
+  rpc StreamPositionUpdates(stream PositionUpdateRequest) returns (stream PositionUpdateEvent);
+  
+  // Enter zone/map
+  rpc EnterZone(EnterZoneRequest) returns (ZoneInfoResponse);
+  
+  // Leave zone/map
+  rpc LeaveZone(LeaveZoneRequest) returns (common.ResponseStatus);
+  
+  // Get zone info
+  rpc GetZoneInfo(GetZoneInfoRequest) returns (ZoneInfoResponse);
+  
+  // Spawn entity (monster, NPC, etc.)
+  rpc SpawnEntity(SpawnEntityRequest) returns (EntityResponse);
+  
+  // Despawn entity
+  rpc DespawnEntity(DespawnEntityRequest) returns (common.ResponseStatus);
+}
+
+// Messages
+message Position {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  float rotation = 4;
+}
+
+message UpdatePositionRequest {
+  int64 role_id = 1;
+  int32 zone_id = 2;
+  Position position = 3;
+  string movement_state = 4;  // IDLE, WALKING, RUNNING, JUMPING, FLYING
+  int64 timestamp = 5;
+}
+
+message UpdatePositionResponse {
+  bool success = 1;
+  Position confirmed_position = 2;
+  common.ResponseStatus status = 3;
+}
+
+message GetNearbyPlayersRequest {
+  int64 role_id = 1;
+  int32 zone_id = 2;
+  Position center_position = 3;
+  float radius = 4;
+  int32 max_players = 5;
+}
+
+message NearbyPlayersResponse {
+  repeated PlayerInfo players = 1;
+  int32 total_count = 2;
+  common.ResponseStatus status = 3;
+}
+
+message PlayerInfo {
+  int64 role_id = 1;
+  string role_name = 2;
+  int32 level = 3;
+  Position position = 4;
+  string movement_state = 5;
+  int32 fight_power = 6;
+  string guild_name = 7;
+}
+
+message PositionUpdateRequest {
+  int64 role_id = 1;
+  int32 zone_id = 2;
+  Position position = 3;
+  string movement_state = 4;
+}
+
+message PositionUpdateEvent {
+  int64 role_id = 1;
+  int32 zone_id = 2;
+  Position position = 3;
+  string movement_state = 4;
+  int64 timestamp = 5;
+  string event_type = 6;  // MOVE, ENTER, LEAVE, TELEPORT
+}
+
+message EnterZoneRequest {
+  int64 role_id = 1;
+  int32 zone_id = 2;
+  Position spawn_position = 3;
+  string entry_type = 4;  // TELEPORT, DOOR, RESPAWN
+}
+
+message ZoneInfoResponse {
+  int32 zone_id = 1;
+  string zone_name = 2;
+  int32 player_count = 3;
+  int32 max_players = 4;
+  repeated EntityInfo entities = 5;
+  repeated PlayerInfo players = 6;
+  common.ResponseStatus status = 7;
+}
+
+message LeaveZoneRequest {
+  int64 role_id = 1;
+  int32 zone_id = 2;
+  string leave_type = 3;  // TELEPORT, LOGOUT, DISCONNECT
+}
+
+message GetZoneInfoRequest {
+  int32 zone_id = 1;
+  bool include_players = 2;
+  bool include_entities = 3;
+}
+
+message SpawnEntityRequest {
+  int32 zone_id = 1;
+  string entity_type = 2;  // MONSTER, NPC, OBJECT, RESOURCE
+  int32 entity_id = 3;
+  Position spawn_position = 4;
+  map<string, string> properties = 5;
+}
+
+message EntityResponse {
+  string instance_id = 1;
+  int32 entity_id = 2;
+  string entity_type = 3;
+  Position position = 4;
+  int32 hp = 5;
+  int32 max_hp = 6;
+  bool is_alive = 7;
+  common.ResponseStatus status = 8;
+}
+
+message EntityInfo {
+  string instance_id = 1;
+  int32 entity_id = 2;
+  string entity_type = 3;
+  Position position = 4;
+  int32 hp = 5;
+  int32 max_hp = 6;
+  bool is_alive = 7;
+}
+
+message DespawnEntityRequest {
+  string instance_id = 1;
+  int32 zone_id = 2;
+  string reason = 3;  // KILLED, TIMEOUT, SYSTEM
+}

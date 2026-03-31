@@ -1,0 +1,22 @@
+option java_package = "org.SouthMillion.proto.Msgrank";
+
+import "cs/msgrole.proto";
+
+message PB_SCRankNode
+{
+	optional int64 value = 1;				//!<排行榜的值
+	optional PB_RoleInfo roleinfo = 2;		//!<人物信息
+}
+
+message PB_SCRankList {//!< 9601 排行榜信息
+	optional int32	type = 1;				//!<排行榜类型
+	optional int32	list_begin = 2;			//!<角色列表的起点
+	repeated PB_SCRankNode ranklist = 3;	//!<角色列表
+	optional int32	my_rank = 4;			//!<我的排名
+	optional int64	my_rank_value = 5;		//!<我的排名值
+}
+
+message PB_CSRankReq {//!< 9602 请求排行榜
+	optional int32	type = 1;				//!<排行榜类型
+	optional int32	list_begin = 2;			//!<角色列表的起点 打开界面的时候 发0 收到10个就说明还能下滑 下次请求就+10 如果收到的小于10就表示到底了
+}

@@ -1,0 +1,69 @@
+// Wallet Service gRPC definitions
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.grpc.wallet";
+option java_outer_classname = "WalletServiceProto";
+
+package wallet;
+
+// Wallet Service Definition
+service WalletService {
+  // Deduct currency (e.g., spend coins to craft)
+  rpc BatchCost(BatchCostRequest) returns (MutateResponse);
+
+  // Add currency (e.g., grant coins as reward)
+  rpc BatchAdd(BatchAddRequest) returns (MutateResponse);
+
+  // Get balances for specific currency items
+  rpc GetBalances(GetBalancesRequest) returns (BalancesResponse);
+}
+
+// ── Request / Response messages ───────────────────────────────
+
+message CurrencyChange {
+  int64 item_id = 1;   // virtual item id (e.g., 1 = coin, 2 = diamond)
+  int64 amount  = 2;   // positive value
+}
+
+message BatchCostRequest {
+  int64  role_id  = 1;
+  repeated CurrencyChange changes = 2;
+  string idem_key = 3;  // idempotency key (optional)
+  int32  reason   = 4;  // reason code (e.g., 20 = CRAFT)
+}
+
+message BatchAddRequest {
+  int64  role_id  = 1;
+  repeated CurrencyChange changes = 2;
+  string idem_key = 3;
+  int32  reason   = 4;
+}
+
+message BalanceEntry {
+  int64 item_id = 1;
+  int64 balance = 2;
+}
+
+message MutateResponse {
+  bool   success = 1;
+  string error   = 2;
+  repeated BalanceEntry new_balances = 3;
+  int64  at_epoch_sec = 4;
+  common.ResponseStatus status = 5;
+}
+
+message GetBalancesRequest {
+  int64 role_id = 1;
+  repeated int64 item_ids = 2;
+}
+
+message BalancesResponse {
+  int64 role_id = 1;
+  repeated BalanceEntry balances = 2;
+  int64 at_epoch_sec = 3;
+  common.ResponseStatus status = 4;
+}
+

@@ -1,0 +1,56 @@
+spring:
+  profiles:
+    active: local  # Default to local profile
+  application:
+    name: main-fb-service
+  threads:
+    virtual:
+      enabled: true   # Java 21 Virtual Threads
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:33094/game_mainfb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:tpnam}
+    password: ${DB_PASSWORD:121831}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+
+server:
+  port: 8128
+
+grpc:
+  server:
+    port: 9128
+    max-inbound-message-size: 4MB
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    metadata-map:
+      grpc.port: 9128
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+logging:
+  level:
+    com.SouthMillion: DEBUG
+
+mainfb:
+  stamina-item-id: 50001
+
+app:
+  kafka:
+    task-progress-topic: task.progress.update

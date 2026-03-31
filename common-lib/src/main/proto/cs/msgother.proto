@@ -1,0 +1,223 @@
+option java_package = "org.SouthMillion.proto.Msgother";
+
+// syntax = "proto3";                                              //!< proto3 必须添加该行
+import "cs/msgknapsack.proto";
+
+//====市集====================================================================================================
+//!<MsgId:1620
+message PB_CSShopBuyReq {						//!< 1620 市集操作
+	optional int32	index = 1;					//!<购买配置index
+	optional int32	num = 2;					//!<购买数量
+}
+
+message PB_ShopData {//!<商品限购数据
+	optional int32	index = 1;					//!< 配置index
+	optional int32	buy_num = 2;				//!< 购买次数
+}
+//!<MsgId:1621
+message PB_SCShopInfo {							//!< 1621 市集限购信息
+	repeated PB_ShopData data_list = 1;			//!<市集限购数据
+}
+
+message PB_CSClothShopBuyReq {					//!< 1622 市集操作
+	optional int32	seq = 1;					//!<seq
+	optional int32	num = 2;					//!<购买数量
+}
+
+//====骑士手册=================================================================================================
+//!<MsgId:1625
+message PB_CSKnightsReq {						//!< 1625 骑士手册操作
+	optional int32	op_type = 1;				//!<操作类型
+	optional int32	param1 = 2;					//!<参数
+}
+
+//!<MsgId:1626
+message PB_SCKnightsInfo {						//!< 1626 骑士手册信息
+	optional int32	level = 1;					//!<骑士手册等级
+	optional int32	flag = 2;					//!<seq领取标识 [1, 3]位运算
+	optional int32	level_flag = 3;				//!<等级领取标识 位运算
+}
+
+//!<MsgId:1627
+message PB_SCKnightsConditionInfo {				//!< 1626 骑士手册条件类型列表
+	repeated int32 contition_list = 1;			//!<条件列表完成数量(三个条件)
+}
+
+
+//====神秘商店=================================================================================================
+//!<MsgId:1630
+message PB_CSMysteryShopReq {					//!< 1630 神秘商店操作
+	optional int32	op_type = 1;				//!<操作类型 0：刷新商品 1：购买商品param-index[0, 32](不是配置的index)
+	optional int32	param = 2;					//!<参数
+}
+
+//!<MsgId:1631
+message PB_SCMysteryShopInfo {					//!< 1631 神秘商店信息
+	optional int32 buy_flag = 1;				//!<购买标识 位运算
+	repeated int32 index_list = 2;				//!<商品列表
+}
+
+
+//====夺宝=====================================================================================================
+message PB_DuoBaoData {//!<夺宝数据
+	optional int32	integral = 1;				//!< 积分
+	optional int32	fetch_flag = 2;				//!< 积分奖励领取标识
+	optional int32	free_refresh_num = 3;		//!< 免费刷新次数
+	optional uint32	free_refresh_time = 4;		//!< 下次免费刷新次数时间
+}
+
+message PB_DuoBaoItem {//!<夺宝道具
+	optional int32	index = 1;					//!< 唯一标识
+	optional int32	get_num = 2;				//!< 获取次数
+}
+
+message PB_DuoBaoRecord {//!<夺宝记录
+	optional bytes 	name = 1;					//!< 角色名 GameName = char[64]
+	optional int32	item_id = 2;				//!< 物品ID
+}
+
+//!<MsgId:1655
+message PB_CSDuoBaoReq {						//!< 1655 夺宝操作
+	optional int32	op_type = 1;				//!<操作类型
+	optional int32	param1 = 2;					//!<参数1
+	optional int32	param2 = 3;					//!<参数2
+}
+
+//!<MsgId:1656
+message PB_SCDuoBaoInfo {						//!< 1656 夺宝信息
+	repeated PB_DuoBaoData data_list = 1;		//!<夺宝数据 数组大小2（初级、高级夺宝）
+}
+
+//!<MsgId:1657
+message PB_SCDuoBaoItemInfo {					//!< 1657 夺宝道具列表信息
+	optional int32	duobao_type = 1;			//!<夺宝类型
+	repeated PB_DuoBaoItem item_list = 2;		//!<夺宝道具列表 数组大小8
+}
+
+//!<MsgId:1658
+message PB_SCDuoBaoRecordInfo {					//!< 1658 夺宝全服记录信息
+	optional int32	duobao_type = 1;			//!<夺宝类型
+	repeated PB_DuoBaoRecord record_list = 2;	//!<夺宝记录列表 数组最大30
+}
+
+
+//====宝石========================================================================================================
+message PB_GemInlayData {//!<宝石镶嵌数据
+	optional int32	item_id = 1;				//!< 镶嵌的宝石
+	optional int32	pos = 2;					//!< 镶嵌坐标 x*100 + y
+}
+
+message PB_GemDrawingData {//!<宝石图纸数据
+	optional int32	level = 1;					//!< 图纸等级
+	repeated PB_GemInlayData gem_list = 2;		//!< 图纸镶嵌宝石列表 固定数组大小为6
+}
+
+//!<MsgId:1660
+message PB_CSGemReq {							//!< 1660 宝石操作
+	optional int32	op_type = 1;				//!<请求类型
+	optional int32	param1 = 2;					//!<参数1
+	optional int32	param2 = 3;					//!<参数2
+	optional int32	param3 = 4;					//!<参数3
+	optional int32	param4 = 5;					//!<参数4
+}
+
+//!<MsgId:1661
+message PB_SCGemInfo {							//!< 1661 宝石信息
+	optional int32	drawing_id = 1;				//!<图纸ID -1:下发全部  其他下发单个对应图纸ID信息
+	repeated PB_GemDrawingData drawing_list = 2;//!<图纸信息
+}
+
+//!<MsgId:1666
+message PB_CSGemOneKeyUpLevelReq {
+	repeated int32 item_ids = 1;				//!< 宝石物品ID
+}
+
+//!<MsgId:1667	
+message PB_CSGemBuyReq {						//!< 1667 宝石购买请求
+	repeated int32 item_ids = 1;				//!< 宝石物品ID
+}
+
+
+//====广告========================================================================================================
+message PB_SCAdvertisement{
+	optional int32 seq=1;
+	optional int32 today_count=2;
+	optional int32 next_fetch_time=3;
+}
+
+//!<MsgId:1662
+message PB_SCAdvertisementInfo {				//!< 1662 广告列表(登录时发一次领过的 list为0就是 什么都没领 领取后就发对应seq的那个)
+	repeated PB_SCAdvertisement ad_list = 1;
+	optional int32 is_init=2;
+}
+
+//!<MsgId:1663
+message PB_CSAdvertisementFetch {				//!< 1663 领取广告奖励
+	optional int32 seq = 1;
+	optional int32 is_dia = 2;					//0看广告 1消耗钻石
+	optional int32 param = 3;					//参数
+}
+
+
+
+message PB_CSNoticeTimeReq {					//!< 1464 通知时间设置
+	optional int32 type = 1;					//0请求 1设置
+	optional int64 param = 2;					//设置时发时间
+}
+
+
+message PB_SCNoticeTimeRet {					//!< 1465 通知时间回调
+	optional int64 notice_time = 1;				//时间
+}
+
+message PB_SCCmdToClientCmd {					//!< 1466 通知客户端
+	optional int32 id = 1;
+	optional bytes str = 2;
+}
+
+
+//====限制核心========================================================================================================
+message PB_CSLimitCoreReq {						//!< 1467 限制核心
+	optional int32 type = 1;					//操作类型 0:升级  		1:抽奖
+	optional int32 p1 = 2;						//			limit_tpye    box_type
+}
+
+message PB_SCLimitCoreInfo {					//!< 1468 限制核心信息
+	repeated int32 core_level = 1;	//核心等级
+}
+
+
+//====物品回收========================================================================================================
+//!<MsgId:1685
+message PB_CSItemRecycleLevelUpReq {			//!< 1685 物品回收升级请求
+	repeated int32 item_ids = 1;				//!< 物品ID
+}
+
+//!<MsgId:1686
+message PB_SCItemRecycleInfo {					//!< 1686 物品回收信息
+	optional int32 level = 1;					//!<等级
+	optional int64 exp = 2;						//!<经验
+}
+
+//!<MsgId:1687
+message PB_SCItemRecycleListInfo {				//!< 1687 物品回收物品列表信息
+	repeated PB_ItemData item_list = 1;			//可回收物品列表
+}
+
+//!<MsgId:1688
+message PB_SCItemRecycleOneInfo {				//!< 1688 物品回收物品单个信息
+	optional PB_ItemData item_data = 1;			//可回收物品单个
+}
+
+//====宠物副本========================================================================================================
+//!<MsgId:1690
+message PB_CSPetFbReq {							//!< 1690 宠物副本请求
+	optional int32 type = 1;					//操作类型 1:挑战
+	optional int32 p1 = 2;						//			level
+}
+
+//!<MsgId:1691
+message PB_SCPetFbInfo {						//!< 1491 宠物副本信息
+	optional int32 pass_level = 1;				//通关关卡
+	optional int64 fetch_flag = 2;				//领取标识 位运算
+}

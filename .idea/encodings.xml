@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/arena-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/bag-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/battleserver-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common-lib/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common-lib/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/dataaccess-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/eureka-server/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/gameworld-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/globalserver-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/report-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/serverInfo-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/task-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/user-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/webSocket-server/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/world-service/src/main/java" charset="UTF-8" />
+  </component>
+</project>

@@ -1,0 +1,52 @@
+-- escort-service consolidated schema (final: BIGINT user_id, all proto columns)
+
+CREATE TABLE IF NOT EXISTS escort_stats (
+    id                  BIGINT  AUTO_INCREMENT PRIMARY KEY,
+    user_id             BIGINT  NOT NULL UNIQUE COMMENT 'Player user ID',
+    total_completed     INT     NOT NULL DEFAULT 0,
+    total_failed        INT     NOT NULL DEFAULT 0,
+    daily_completed     INT     NOT NULL DEFAULT 0,
+    daily_limit         INT     NOT NULL DEFAULT 10,
+    free_refreshes      INT     NOT NULL DEFAULT 3,
+    total_refreshes_today INT   NOT NULL DEFAULT 0,
+    last_reset_date     DATETIME,
+    best_quality        INT     NOT NULL DEFAULT 1,
+    perfect_completions INT     NOT NULL DEFAULT 0,
+    total_distance      BIGINT  NOT NULL DEFAULT 0,
+    total_gold_earned   BIGINT  NOT NULL DEFAULT 0,
+    total_exp_earned    BIGINT  NOT NULL DEFAULT 0,
+    escort_count        INT     NOT NULL DEFAULT 0 COMMENT 'SC:9622 escort_count',
+    intercept_count     INT     NOT NULL DEFAULT 0 COMMENT 'SC:9622 intercept_count',
+    help_count          INT     NOT NULL DEFAULT 0 COMMENT 'SC:9622 help_count',
+    current_ship_level  INT     NOT NULL DEFAULT 1 COMMENT 'SC:9622 ship',
+    rewards_claimed     INT     NOT NULL DEFAULT 0 COMMENT 'SC:9622 reward_index',
+    created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS escort_mission (
+    id                  BIGINT  AUTO_INCREMENT PRIMARY KEY,
+    user_id             BIGINT  NOT NULL COMMENT 'Player user ID',
+    mission_id          INT     NOT NULL,
+    quality             INT     NOT NULL,
+    status              INT     NOT NULL,
+    start_time          DATETIME,
+    expiry_time         DATETIME,
+    completion_time     DATETIME,
+    distance            INT     NOT NULL,
+    progress            INT     NOT NULL DEFAULT 0,
+    attacks_survived    INT     NOT NULL DEFAULT 0,
+    reward_gold         BIGINT  NOT NULL,
+    reward_exp          BIGINT  NOT NULL,
+    bonus_multiplier    DOUBLE  NOT NULL DEFAULT 1.0,
+    is_reward_claimed   BOOLEAN NOT NULL DEFAULT FALSE,
+    source_location     INT     NOT NULL,
+    destination_location INT    NOT NULL,
+    cargo_type          INT     NOT NULL,
+    ship_key            INT     NOT NULL DEFAULT 0 COMMENT 'Unique ship key for intercept/help targeting',
+    created_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user_id (user_id),
+    INDEX idx_status  (user_id, status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

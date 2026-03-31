@@ -1,0 +1,82 @@
+{
+  "debris": [
+    {
+      "id": "55000",
+      "name": "mảnh vỡ gió",
+      "item_type": "9",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param_0": "100",
+      "param_1": "40081",
+      "get_the_source": "0"
+    },
+    {
+      "id": "55001",
+      "name": "Mảnh vỡ ngựa địa ngục",
+      "item_type": "9",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param_0": "100",
+      "param_1": "40082",
+      "get_the_source": "0"
+    },
+    {
+      "id": "55002",
+      "name": "Mảnh vỡ của con ngựa chiến thắng",
+      "item_type": "9",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param_0": "150",
+      "param_1": "40083",
+      "get_the_source": "0"
+    },
+    {
+      "id": "55003",
+      "name": "Mảnh vỡ của Tiếng hú của thế giới ngầm",
+      "item_type": "9",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param_0": "150",
+      "param_1": "40084",
+      "get_the_source": "0"
+    },
+    {
+      "id": "55004",
+      "name": "Mảnh vỡ chiến mã Asgard",
+      "item_type": "9",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param_0": "200",
+      "param_1": "40085",
+      "get_the_source": "0"
+    },
+    {
+      "id": "55005",
+      "name": "Mảnh Pegasus đầy màu sắc",
+      "item_type": "9",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param_0": "200",
+      "param_1": "40086",
+      "get_the_source": "0"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# Production profile
+# gift-service is STATELESS - no database required
+# Loads gift.json from config-service via Feign

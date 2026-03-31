@@ -1,0 +1,67 @@
+option java_package = "org.SouthMillion.proto.Msgequip";
+// syntax = "proto3";
+
+//!<MsgId:1600
+message PB_CSEquipReq {//!<装备系统操作
+	optional int32	req_type = 1;		//!<操作类型
+	optional int32	param1 = 2;			//!<参数1
+	optional int32	param2 = 3;			//!<参数2
+	optional int32	param3 = 4;			//!<参数3
+}
+
+message PB_EquipData {//!<装备信息
+	optional int32	equip_type = 1;		//!< 装备类型（部位）
+	optional int32	item_id = 2;		//!< 物品ID
+
+	optional int32	hp = 3;				//!< 血量
+	optional int32	attack = 4;			//!< 攻击
+	optional int32	defend = 5;			//!< 防御
+	optional int32	speed = 6;			//!< 速度
+	optional int32	attr_type1 = 7;		//!< 属性类型1
+	optional int32	attr_value1 = 8;	//!< 属性类型1值
+	optional int32	attr_type2 = 9;		//!< 属性类型2
+	optional int32	attr_value2 = 10;	//!< 属性类型2值
+}
+
+message PB_EquipFuMoData {//!<装备附魔信息
+	optional int32	level = 1;			//!< 等级
+	optional int32	exp = 2;			//!< 经验
+	optional uint32	end_time = 3;		//!< 结束时间
+}
+
+//!<MsgId:1603
+message PB_SCEquipFuMoListInfo {//!<装备附魔信息
+	repeated PB_EquipFuMoData fumo_list = 1;	//!<附魔列表
+}
+
+//!<MsgId:1604
+message PB_SCEquipFuMoOneInfo {//!<装备附魔单个信息
+	optional int32 equip_type = 1;				//!<z装备类型
+	optional PB_EquipFuMoData fumo_data = 2;	//!<附魔信息
+}
+
+//!<MsgId:1605
+message PB_SCEquipListInfo {//!<装备列表信息
+	repeated PB_EquipData equip_list = 1;		//!<装备列表
+}
+
+//!<MsgId:1606
+message PB_SCEquipOneInfo {//!<装备单个信息
+	optional PB_EquipData equip_data = 1;		//!<装备信息
+}
+
+
+message PB_EquipBagData {//!<装备背包信息
+	optional int32	index = 1;					//!< 下标
+	optional PB_EquipData bag_data = 2;			//!< 物品ID
+}
+
+//!<MsgId:1607
+message PB_SCEquipBagListInfo {//!<装备背包列表信息
+	repeated PB_EquipBagData bag_list = 1;		//!<背包列表
+}
+
+//!<MsgId:1608
+message PB_SCEquipBagOneInfo {//!<装备背包单个信息
+	optional PB_EquipBagData bag_data = 1;		//!<装备信息
+}

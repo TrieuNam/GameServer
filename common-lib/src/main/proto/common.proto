@@ -1,0 +1,63 @@
+// Common message types shared across all services
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.grpc.common";
+option java_outer_classname = "CommonProto";
+
+package common;
+
+// Generic response wrapper
+message ResponseStatus {
+  int32 code = 1;
+  string message = 2;
+  bool success = 3;
+}
+
+// Pagination request
+message PageRequest {
+  int32 page = 1;
+  int32 size = 2;
+  string sort_by = 3;
+  string order = 4;
+}
+
+// Pagination response
+message PageResponse {
+  int32 total_pages = 1;
+  int64 total_elements = 2;
+  int32 current_page = 3;
+  int32 page_size = 4;
+}
+
+// Player context (for authentication/authorization)
+message PlayerContext {
+  int64 user_id = 1;
+  int64 role_id = 2;
+  string session_token = 3;
+  int64 timestamp = 4;
+}
+
+// Item stack
+message ItemStack {
+  int32 item_id = 1;
+  int32 quantity = 2;
+  map<string, string> properties = 3;
+}
+
+// Currency amount
+message CurrencyAmount {
+  string currency_type = 1;  // GOLD, DIAMOND, COIN, etc.
+  int64 amount = 2;
+}
+
+// Reward bundle
+message RewardBundle {
+  repeated ItemStack items = 1;
+  repeated CurrencyAmount currencies = 2;
+  int64 exp = 3;
+}
+
+// Empty message for void responses
+message Empty {
+}

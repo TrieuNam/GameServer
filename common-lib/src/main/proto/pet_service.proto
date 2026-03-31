@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package pet;
+
+option java_package = "org.SouthMillion.proto.pet";
+option java_outer_classname = "PetServiceProto";
+option java_multiple_files = true;
+
+import "common.proto";
+
+// Pet gRPC Service Definition
+service PetService {
+  // Get all pets for a role
+  rpc GetRolePets(GetRolePetsRequest) returns (GetRolePetsResponse);
+  
+  // Get specific pet by ID
+  rpc GetPet(GetPetRequest) returns (PetResponse);
+  
+  // Activate a new pet
+  rpc ActivatePet(ActivatePetRequest) returns (PetResponse);
+  
+  // Upgrade pet level
+  rpc UpgradePet(UpgradePetRequest) returns (PetResponse);
+  
+  // Evolve pet (increase star rating)
+  rpc EvolvePet(EvolvePetRequest) returns (PetResponse);
+  
+  // Set active pet (equip)
+  rpc SetActivePet(SetActivePetRequest) returns (common.ResponseStatus);
+  
+  // Rename pet
+  rpc RenamePet(RenamePetRequest) returns (common.ResponseStatus);
+}
+
+// Request Messages
+
+message GetRolePetsRequest {
+  int64 role_id = 1;
+}
+
+message GetPetRequest {
+  int64 role_id = 1;
+  int64 pet_id = 2;
+}
+
+message ActivatePetRequest {
+  int64 role_id = 1;
+  int32 pet_template_id = 2;
+}
+
+message UpgradePetRequest {
+  int64 role_id = 1;
+  int64 pet_id = 2;
+  repeated int64 material_ids = 3;  // Item IDs to consume for upgrade
+}
+
+message EvolvePetRequest {
+  int64 role_id = 1;
+  int64 pet_id = 2;
+}
+
+message SetActivePetRequest {
+  int64 role_id = 1;
+  int64 pet_id = 2;  // 0 to deactivate
+}
+
+message RenamePetRequest {
+  int64 role_id = 1;
+  int64 pet_id = 2;
+  string pet_name = 3;
+}
+
+// Response Messages
+
+message GetRolePetsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated PetData pets = 3;
+}
+
+message PetResponse {
+  bool success = 1;
+  string message = 2;
+  PetData pet = 3;
+  
+  // Additional upgrade info
+  int32 exp_gained = 4;
+  int32 levels_gained = 5;
+}
+
+// Data Models
+
+message PetData {
+  int64 pet_id = 1;                  // Unique pet instance ID
+  int64 role_id = 2;                 // Owner role ID
+  int32 pet_template_id = 3;         // Pet type/species ID
+  int32 level = 4;                   // Pet level (1-100)
+  int32 pet_exp = 5;                 // Current experience points
+  int32 pet_star = 6;                // Star rating (1-5)
+  int32 pet_status = 7;              // 0=inactive, 1=active, 2=locked
+  string pet_name = 8;               // Custom name (optional)
+  
+  // Attributes
+  int32 hp = 10;                     // HP attribute
+  int32 attack = 11;                 // Attack attribute
+  int32 defense = 12;                // Defense attribute
+  int32 speed = 13;                  // Speed attribute
+  
+  // Timestamps
+  int64 created_at = 20;             // Creation timestamp (millis)
+  int64 updated_at = 21;             // Last update timestamp
+}

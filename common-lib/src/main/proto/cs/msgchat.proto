@@ -1,0 +1,43 @@
+option java_package = "org.SouthMillion.proto.Msgchat";
+
+// Message types for chat
+message CS_CHAT_REQ {
+    optional int32 op = 1;              // Operation type: 1=send, 2=history, 3=mute, 4=unmute
+    optional int32 channel = 2;         // Channel: 1=world, 2=guild, 3=private, 4=system
+    optional string receiverId = 3;     // Target player ID (for private chat)
+    optional string content = 4;        // Message content
+    optional int64 fromTime = 5;        // From timestamp (for history)
+    optional int32 limit = 6;           // Limit (for history)
+    optional string targetRoleId = 7;   // Target role ID (for mute/unmute)
+    optional int64 muteDuration = 8;    // Mute duration in seconds
+}
+
+message MessageInfo {
+    optional int64 messageId = 1;       // Message ID
+    optional int32 channel = 2;         // Channel type
+    optional string senderId = 3;       // Sender ID
+    optional string senderName = 4;     // Sender name
+    optional string content = 5;        // Message content
+    optional int64 timestamp = 6;       // Send time
+    optional int32 senderLevel = 7;     // Sender level
+    optional string receiverId = 8;     // Receiver ID (for private chat)
+}
+
+message SC_CHAT_SEND {
+    optional int32 code = 1;            // 0=success, other=error code
+    optional string message = 2;        // Error message
+    optional MessageInfo messageInfo = 3; // Sent message info
+}
+
+message SC_CHAT_HISTORY {
+    optional int32 code = 1;            // 0=success, other=error code
+    repeated MessageInfo messages = 2;  // Message list
+    optional int32 channel = 3;         // Channel type
+}
+
+message SC_CHAT_MUTE {
+    optional int32 code = 1;            // 0=success, other=error code
+    optional string targetId = 2;       // Target player ID
+    optional bool isMuted = 3;          // Is muted
+    optional int64 muteUntil = 4;       // Mute until timestamp
+}

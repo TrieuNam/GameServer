@@ -1,0 +1,117 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # === Áp dụng cho mọi route (fix trùng header CORS) ===
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials Access-Control-Expose-Headers, RETAIN_FIRST
+
+          # === Route WebSocket ===
+          routes:
+            - id: game-ws
+              uri: lb:ws://websocket-server
+              predicates:
+                - Path=/websocket-server/**
+              filters:
+                - StripPrefix=1
+
+            - id: config-c2s-api
+              uri: lb://config-service
+              predicates:
+                - Path=/api/c2s/**
+              # Không StripPrefix — config-service xử lý /api/c2s/**
+
+            - id: session-api
+              uri: lb://session-service
+              predicates:
+                - Path=/api/session/**
+              # Không StripPrefix — session-service xử lý /api/session/**
+
+            - id: session-service-prefix
+              uri: lb://session-service
+              predicates:
+                - Path=/session-service/**
+              filters:
+                - StripPrefix=1
+
+            - id: auth-api
+              uri: lb://user-service
+              predicates:
+                - Path=/api/auth/**
+              # Không StripPrefix — user-service xử lý /api/auth/**
+
+          # === Tự động tạo route theo Eureka ===
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+
+          # === CORS toàn cục tại Gateway ===
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:7456"
+                  - "http://127.0.0.1:7456"
+                allowedMethods: [ GET, POST, PUT, DELETE, OPTIONS ]
+                allowedHeaders: [ "*" ]
+                allowCredentials: true
+                maxAge: 3600
+
+          # === Netty client (GW -> downstream): tăng frame WS ===
+          httpclient:
+            websocket:
+              max-frame-payload-length: 1048576
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+app:
+  auth:
+    secured:
+      # Game services — tất cả cần token
+      - /wallet-service/**
+      - /bag-service/**
+      - /equip-service/**
+      - /shop-service/**
+      - /crafting-service/**
+      - /box-service/**
+      - /item-service/**
+      - /drop-service/**
+      - /gift-service/**
+      - /lingzhu-service/**
+      - /knights-service/**
+      - /pagoda-service/**
+      - /scroll-service/**
+      - /gem-service/**
+      - /activity-service/**
+      # WebSocket
+      - /websocket-server/**
+      # Khi thêm game service mới cần auth, thêm vào đây
+    sessionServiceId: session-service
+    introspectPath: /internal/session/introspect
+    introspectMethod: POST
+    ws:
+      queryTokenKey: token
+      headerTokenKeys:
+        - Authorization
+        - Sec-WebSocket-Protocol

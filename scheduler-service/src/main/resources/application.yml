@@ -1,0 +1,31 @@
+server:
+  port: 8550
+
+spring:
+  profiles:
+    active: local  # Default to local profile
+  application:
+    name: scheduler-service
+  
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      database: 5
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+# Scheduled tasks configuration
+scheduler:
+  daily-reset-cron: "0 0 0 * * ?" # Every day at midnight
+  weekly-reset-cron: "0 0 0 ? * MON" # Every Monday at midnight
+  arena-season-cron: "0 0 0 1 * ?" # 1st of every month
+  cleanup-cron: "0 0 3 * * ?" # Every day at 3 AM
+
+logging:
+  level:
+    root: INFO
+    com.southMillion: DEBUG

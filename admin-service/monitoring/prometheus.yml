@@ -1,0 +1,145 @@
+# Prometheus Configuration for GameServer Monitoring
+
+global:
+  scrape_interval: 15s # Scrape every 15 seconds
+  evaluation_interval: 15s # Evaluate rules every 15 seconds
+  external_labels:
+    monitor: 'gameserver-monitor'
+    environment: 'local'
+
+# Alertmanager configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alerts/*.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Admin Service
+  - job_name: 'admin-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:9091']
+        labels:
+          service: 'admin-service'
+          phase: 'ADMIN'
+
+  # GM Service
+  - job_name: 'gm-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:9092']
+        labels:
+          service: 'gm-service'
+          phase: 'ADMIN'
+
+  # P0 Services - Core Infrastructure
+  - job_name: 'eureka-server'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8761']
+        labels:
+          service: 'eureka-server'
+          phase: 'P0'
+
+  - job_name: 'config-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8888']
+        labels:
+          service: 'config-service'
+          phase: 'P0'
+
+  - job_name: 'gateway-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8080']
+        labels:
+          service: 'gateway-service'
+          phase: 'P0'
+
+  - job_name: 'user-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8110']
+        labels:
+          service: 'user-service'
+          phase: 'P0'
+
+  - job_name: 'role-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8410']
+        labels:
+          service: 'role-service'
+          phase: 'P0'
+
+  - job_name: 'session-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8096']
+        labels:
+          service: 'session-service'
+          phase: 'P0'
+
+  - job_name: 'gameworld-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8105']
+        labels:
+          service: 'gameworld-service'
+          phase: 'P0'
+
+  - job_name: 'world-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8084']
+        labels:
+          service: 'world-service'
+          phase: 'P0'
+
+  # P1 Services - Game Systems
+  - job_name: 'item-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8220']
+        labels:
+          service: 'item-service'
+          phase: 'P1'
+
+  - job_name: 'bag-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8230']
+        labels:
+          service: 'bag-service'
+          phase: 'P1'
+
+  - job_name: 'wallet-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8210']
+        labels:
+          service: 'wallet-service'
+          phase: 'P1'
+
+  - job_name: 'shop-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['host.docker.internal:8260']
+        labels:
+          service: 'shop-service'
+          phase: 'P1'
+
+  # Add more services as needed...
+  # P2 Services - Advanced Features
+  # ...

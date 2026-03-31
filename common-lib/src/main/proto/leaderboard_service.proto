@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package com.southMillion.proto.leaderboard;
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.proto.leaderboard";
+option java_outer_classname = "LeaderboardServiceProto";
+
+service LeaderboardGrpcService {
+  rpc GetLeaderboard(GetLeaderboardRequest) returns (GetLeaderboardResponse);
+  rpc UpdateScore(UpdateScoreRequest) returns (UpdateScoreResponse);
+  rpc GetPlayerRank(GetPlayerRankRequest) returns (GetPlayerRankResponse);
+}
+
+// Ranking type constants (1=Power, 2=Level, 3=Arena, 4=Wealth, 5=Guild, 6=Pet, 7=Mount, 8=PVP)
+message RankingEntry {
+  int32 rank         = 1;
+  string role_id     = 2;
+  string role_name   = 3;
+  int32 role_level   = 4;
+  int64 score        = 5;
+  int32 rank_change  = 6;  // positive = moved up, negative = moved down
+  string guild_name  = 7;
+}
+
+// ── GetLeaderboard ──────────────────────────────────────────────────────────
+
+message GetLeaderboardRequest {
+  int32  ranking_type     = 1;   // 1-8, see RankingType constants
+  string current_role_id  = 2;   // optional: include requester's rank in response
+  int32  page             = 3;   // 0-based page (default 0)
+  int32  size             = 4;   // page size (default 50, max 100)
+}
+
+message GetLeaderboardResponse {
+  common.ResponseStatus status   = 1;
+  int32                 ranking_type   = 2;
+  string                ranking_name   = 3;
+  int32                 total_players  = 4;
+  repeated RankingEntry rankings       = 5;
+  RankingEntry          my_rank        = 6;  // set only if current_role_id was provided
+}
+
+// ── UpdateScore ─────────────────────────────────────────────────────────────
+
+message UpdateScoreRequest {
+  int32  ranking_type = 1;
+  string role_id      = 2;
+  string role_name    = 3;
+  int32  role_level   = 4;
+  int64  score        = 5;
+  string guild_name   = 6;   // optional
+}
+
+message UpdateScoreResponse {
+  common.ResponseStatus status = 1;
+  RankingEntry          entry  = 2;
+}
+
+// ── GetPlayerRank ────────────────────────────────────────────────────────────
+
+message GetPlayerRankRequest {
+  string role_id      = 1;
+  int32  ranking_type = 2;   // 0 = query all types
+}
+
+message GetPlayerRankResponse {
+  common.ResponseStatus  status  = 1;
+  repeated RankingEntry  entries = 2;   // one entry per ranking_type queried
+}

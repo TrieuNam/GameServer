@@ -1,0 +1,2 @@
+ALTER TABLE crafting_recipe
+    MODIFY COLUMN enabled TINYINT(1) NOT NULL DEFAULT 1;

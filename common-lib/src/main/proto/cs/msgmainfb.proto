@@ -1,0 +1,16 @@
+option java_package = "org.SouthMillion.proto.Msgmainfb";
+
+//MsgId:2005 主线副本操作
+message PB_CSMainFbReq {
+	optional int32 type = 1;										//!< 0挑战 1领取阶段奖励
+}
+
+//MsgId:2006 主线副本信息
+message PB_SCMainFbInfo {											//!< 2006 主线副本
+	optional int32 level = 1;										//!< 打了几关  初始化为0
+	optional int32 stage = 2;										//!< 领了第几阶段  初始化为0
+	optional int32 dia_fetch_num = 3;								//!< 今日快速领取挂机收益（冥想收益）次数
+	optional uint32 last_fetch_time = 4;							//!< 上次领取挂机收益（冥想收益）时间
+}
+
+

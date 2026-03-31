@@ -1,0 +1,389 @@
+package com.southMillion.webSocket_server.handler.arena;
+
+import com.southMillion.webSocket_server.dto.PlayerSession;
+import com.southMillion.webSocket_server.net.MessageHandler;
+import com.southMillion.webSocket_server.net.PacketCodec;
+import com.southMillion.webSocket_server.service.client.ArenaFeign;
+import com.google.protobuf.ByteString;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.SouthMillion.proto.Msgarena.Msgarena;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Arena Handler - Handles all arena/PvP system operations
+ * 
+ * Operations (MSGID_3301-3316):
+ * OP1: GET_ARENA_INFO - Get player's arena data (rank, score, challenges)
+ * OP2: CHALLENGE - Challenge another player
+ * OP3: GET_RANKING - Get leaderboard
+ * OP4: CLAIM_REWARDS - Claim daily/season rewards
+ * OP5: GET_OPPONENTS - Get matchmaking list
+ * OP6: BUY_CHALLENGE - Purchase additional challenge attempts
+ * OP7: GET_BATTLE_HISTORY - Get battle log/history
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class ArenaHandler implements MessageHandler {
+
+    private final ArenaFeign arenaFeign;
+    
+    // Operation types from MSGID_3301+ documents
+    private static final int OP_GET_ARENA_INFO = 1;
+    private static final int OP_CHALLENGE = 2;
+    private static final int OP_GET_RANKING = 3;
+    private static final int OP_CLAIM_REWARDS = 4;
+    private static final int OP_GET_OPPONENTS = 5;
+    private static final int OP_BUY_CHALLENGE = 6;
+    private static final int OP_GET_BATTLE_HISTORY = 7;
+
+    @Override
+    public int[] interests() {
+        return new int[]{9610}; // PB_CSArenaReq
+    }
+
+    @Override
+    public void handle(PlayerSession session, int msgId, byte[] payload) {
+        if (session.getRoleId() == null) {
+            log.warn("[Arena] User not logged in");
+            return;
+        }
+
+        try {
+            Msgarena.PB_CSArenaReq req = Msgarena.PB_CSArenaReq.parseFrom(payload);
+            int operation = req.getReqType();
+            
+            log.debug("[Arena] op={}, roleId={}", operation, session.getRoleId());
+            
+            // Route to operation handlers
+            switch (operation) {
+                case OP_GET_ARENA_INFO:
+                    handleGetArenaInfo(session, req);
+                    break;
+                case OP_CHALLENGE:
+                    handleChallenge(session, req);
+                    break;
+                case OP_GET_RANKING:
+                    handleGetRanking(session, req);
+                    break;
+                case OP_CLAIM_REWARDS:
+                    handleClaimRewards(session, req);
+                    break;
+                case OP_GET_OPPONENTS:
+                    handleGetOpponents(session, req);
+                    break;
+                case OP_BUY_CHALLENGE:
+                    handleBuyChallenge(session, req);
+                    break;
+                case OP_GET_BATTLE_HISTORY:
+                    handleGetBattleHistory(session, req);
+                    break;
+                default:
+                    log.warn("[Arena] Unknown operation: {}", operation);
+                    sendErrorResponse(session, "Unknown operation");
+            }
+            
+        } catch (Exception e) {
+            log.error("[Arena] Error handling request for roleId={}", session.getRoleId(), e);
+            sendErrorResponse(session, "System error");
+        }
+    }
+    
+    /**
+     * OP1: Get arena info (rank, score, challenges left)
+     */
+    private void handleGetArenaInfo(PlayerSession session, Msgarena.PB_CSArenaReq req) {
+        try {
+            log.info("[Arena] Get arena info: roleId={}", session.getRoleId());
+            
+            Map<String, Object> arenaData = arenaFeign.getArenaInfo(session.getRoleId());
+            
+            Msgarena.PB_SCArenaInfo.Builder response = Msgarena.PB_SCArenaInfo.newBuilder();
+            if (arenaData != null) {
+                response.setRank(((Number) arenaData.getOrDefault("rank", 0)).intValue());
+                response.setScore(((Number) arenaData.getOrDefault("score", 0)).intValue());
+                response.setChallengeCount(((Number) arenaData.getOrDefault("challengeCount", 0)).intValue());
+                response.setMaxChallenges(((Number) arenaData.getOrDefault("maxChallenges", 10)).intValue());
+                response.setWins(((Number) arenaData.getOrDefault("wins", 0)).intValue());
+                response.setLosses(((Number) arenaData.getOrDefault("losses", 0)).intValue());
+                response.setHighestRank(((Number) arenaData.getOrDefault("highestRank", 0)).intValue());
+                
+                log.info("[Arena] Arena info sent: rank={}, score={}", response.getRank(), response.getScore());
+            }
+            
+            sendInfoResponse(session, response.build());
+            
+        } catch (Exception e) {
+            log.error("[Arena] Get arena info error", e);
+            sendErrorResponse(session, "Failed to get arena info");
+        }
+    }
+    
+    /**
+     * OP2: Challenge another player
+     */
+    private void handleChallenge(PlayerSession session, Msgarena.PB_CSArenaReq req) {
+        try {
+            String targetRoleId = req.getTargetRoleId().toStringUtf8();
+            
+            log.info("[Arena] Challenge: challenger={}, target={}", session.getRoleId(), targetRoleId);
+            
+            Map<String, Object> params = new HashMap<>();
+            params.put("targetRoleId", targetRoleId);
+            
+            Map<String, Object> result = arenaFeign.challenge(session.getRoleId(), params);
+            
+            Msgarena.PB_SCArenaInfo.Builder response = Msgarena.PB_SCArenaInfo.newBuilder();
+            if (result != null && (Boolean) result.getOrDefault("success", false)) {
+                response.setRank(((Number) result.get("newRank")).intValue());
+                response.setScore(((Number) result.get("newScore")).intValue());
+                
+                log.info("[Arena] Challenge result: newRank={}, newScore={}", 
+                    response.getRank(), response.getScore());
+            } else {
+                log.warn("[Arena] Challenge failed: {}", result != null ? result.get("error") : "Unknown error");
+            }
+            
+            sendOpResponse(session, response.build());
+            
+        } catch (Exception e) {
+            log.error("[Arena] Challenge error", e);
+            sendErrorResponse(session, "Challenge failed");
+        }
+    }
+    
+    /**
+     * OP3: Get leaderboard ranking
+     */
+    private void handleGetRanking(PlayerSession session, Msgarena.PB_CSArenaReq req) {
+        try {
+            int startRank = req.getParam1();
+            int count = req.getParam2();
+            
+            log.info("[Arena] Get ranking: start={}, count={}, roleId={}", startRank, count, session.getRoleId());
+            
+            Map<String, Object> params = new HashMap<>();
+            params.put("startRank", startRank);
+            params.put("count", count);
+            
+            Map<String, Object> result = arenaFeign.getRanking(session.getRoleId(), params);
+            
+            Msgarena.PB_SCArenaInfo.Builder response = Msgarena.PB_SCArenaInfo.newBuilder();
+            if (result != null) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> rankings = (List<Map<String, Object>>) result.get("rankings");
+                
+                if (rankings != null) {
+                    for (Map<String, Object> rankItem : rankings) {
+                        // Add roleinfo with ranking data
+                        // PB_RoleInfo fields to be populated
+                    }
+                }
+                
+                log.info("[Arena] Ranking sent");
+            }
+            
+            sendRankingResponse(session, response.build());
+            
+        } catch (Exception e) {
+            log.error("[Arena] Get ranking error", e);
+            sendErrorResponse(session, "Failed to get ranking");
+        }
+    }
+    
+    /**
+     * OP4: Claim arena rewards (daily/season)
+     */
+    private void handleClaimRewards(PlayerSession session, Msgarena.PB_CSArenaReq req) {
+        try {
+            int rewardType = req.getParam1(); // 1=daily, 2=season
+            
+            log.info("[Arena] Claim rewards: type={}, roleId={}", rewardType, session.getRoleId());
+            
+            Map<String, Object> params = new HashMap<>();
+            params.put("rewardType", rewardType);
+            
+            Map<String, Object> result = arenaFeign.claimRewards(session.getRoleId(), params);
+            
+            Msgarena.PB_SCArenaInfo.Builder response = Msgarena.PB_SCArenaInfo.newBuilder();
+            if (result != null && (Boolean) result.getOrDefault("success", false)) {
+                response.setWeekBoxFetchFlag(1); // Mark rewards as claimed
+                log.info("[Arena] Rewards claimed: type={}", rewardType);
+            } else {
+                log.warn("[Arena] Claim failed: {}", result != null ? result.get("error") : "Unknown error");
+            }
+            
+            sendOpResponse(session, response.build());
+            
+        } catch (Exception e) {
+            log.error("[Arena] Claim rewards error", e);
+            sendErrorResponse(session, "Claim rewards failed");
+        }
+    }
+    
+    /**
+     * OP5: Get matchmaking opponents list
+     */
+    private void handleGetOpponents(PlayerSession session, Msgarena.PB_CSArenaReq req) {
+        try {
+            log.info("[Arena] Get opponents: roleId={}", session.getRoleId());
+            
+            Map<String, Object> result = arenaFeign.getOpponents(session.getRoleId());
+            
+            Msgarena.PB_SCArenaInfo.Builder response = Msgarena.PB_SCArenaInfo.newBuilder();
+            if (result != null) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> opponents = (List<Map<String, Object>>) result.get("opponents");
+                
+                if (opponents != null) {
+                    // Add to roleinfo field (PB_RoleInfo)
+                    log.info("[Arena] Opponents sent: {} entries", opponents.size());
+                }
+            }
+            
+            sendOpponentsResponse(session, response.build());
+            
+        } catch (Exception e) {
+            log.error("[Arena] Get opponents error", e);
+            sendErrorResponse(session, "Failed to get opponents");
+        }
+    }
+    
+    /**
+     * OP6: Buy additional challenge attempts
+     */
+    private void handleBuyChallenge(PlayerSession session, Msgarena.PB_CSArenaReq req) {
+        try {
+            int buyCount = req.getParam1();
+            
+            log.info("[Arena] Buy challenge: count={}, roleId={}", buyCount, session.getRoleId());
+            
+            Map<String, Object> params = new HashMap<>();
+            params.put("buyCount", buyCount);
+            
+            Map<String, Object> result = arenaFeign.buyChallenge(session.getRoleId(), params);
+            
+            Msgarena.PB_SCArenaInfo.Builder response = Msgarena.PB_SCArenaInfo.newBuilder();
+            if (result != null && (Boolean) result.getOrDefault("success", false)) {
+                response.setChallengeCount(((Number) result.get("newChallengeCount")).intValue());
+                
+                log.info("[Arena] Buy challenge success: new count={}", response.getChallengeCount());
+            } else {
+                log.warn("[Arena] Buy failed: {}", result != null ? result.get("error") : "Unknown error");
+            }
+            
+            sendOpResponse(session, response.build());
+            
+        } catch (Exception e) {
+            log.error("[Arena] Buy challenge error", e);
+            sendErrorResponse(session, "Buy challenge failed");
+        }
+    }
+    
+    /**
+     * OP7: Get battle history
+     */
+    private void handleGetBattleHistory(PlayerSession session, Msgarena.PB_CSArenaReq req) {
+        try {
+            int page = req.getParam1();
+            int pageSize = req.getParam2();
+            
+            log.info("[Arena] Get battle history: page={}, size={}, roleId={}", page, pageSize, session.getRoleId());
+            
+            Map<String, Object> params = new HashMap<>();
+            params.put("page", page);
+            params.put("pageSize", pageSize);
+            
+            Map<String, Object> result = arenaFeign.getBattleHistory(session.getRoleId(), params);
+            
+            Msgarena.PB_SCArenaReportList.Builder response = Msgarena.PB_SCArenaReportList.newBuilder();
+            if (result != null) {
+                @SuppressWarnings("unchecked")
+                List<Map<String, Object>> battles = (List<Map<String, Object>>) result.get("battles");
+                
+                if (battles != null) {
+                    for (Map<String, Object> battle : battles) {
+                        Msgarena.PB_ArenaReport.Builder record = Msgarena.PB_ArenaReport.newBuilder();
+                        record.setIsAttack(((Number) battle.get("isAttack")).intValue());
+                        record.setIsWin(((Number) battle.get("isWin")).intValue());
+                        record.setScore(((Number) battle.get("scoreChange")).intValue());
+                        record.setTime(((Number) battle.get("battleTime")).longValue());
+                        record.setTargetScore(((Number) battle.get("targetScore")).intValue());
+                        
+                        response.addReportList(record);
+                    }
+                }
+                
+                log.info("[Arena] Battle history sent: {} records", response.getReportListCount());
+            }
+            
+            sendHistoryResponse(session, response.build());
+            
+        } catch (Exception e) {
+            log.error("[Arena] Get battle history error", e);
+            sendErrorResponse(session, "Failed to get battle history");
+        }
+    }
+    
+    private void sendInfoResponse(PlayerSession session, Msgarena.PB_SCArenaInfo response) {
+        try {
+            byte[] responseBytes = response.toByteArray();
+            byte[] packet = PacketCodec.encode(9611, responseBytes); // PB_SCArenaInfo
+            session.sendBinary(packet);
+        } catch (Exception e) {
+            log.error("[Arena] Failed to send info response", e);
+        }
+    }
+    
+    private void sendOpResponse(PlayerSession session, Msgarena.PB_SCArenaInfo response) {
+        try {
+            byte[] responseBytes = response.toByteArray();
+            byte[] packet = PacketCodec.encode(9611, responseBytes); // PB_SCArenaInfo
+            session.sendBinary(packet);
+        } catch (Exception e) {
+            log.error("[Arena] Failed to send op response", e);
+        }
+    }
+    
+    private void sendRankingResponse(PlayerSession session, Msgarena.PB_SCArenaInfo response) {
+        try {
+            byte[] responseBytes = response.toByteArray();
+            byte[] packet = PacketCodec.encode(9611, responseBytes); // PB_SCArenaInfo
+            session.sendBinary(packet);
+        } catch (Exception e) {
+            log.error("[Arena] Failed to send ranking response", e);
+        }
+    }
+    
+    private void sendOpponentsResponse(PlayerSession session, Msgarena.PB_SCArenaInfo response) {
+        try {
+            byte[] responseBytes = response.toByteArray();
+            byte[] packet = PacketCodec.encode(9611, responseBytes); // PB_SCArenaInfo
+            session.sendBinary(packet);
+        } catch (Exception e) {
+            log.error("[Arena] Failed to send opponents response", e);
+        }
+    }
+    
+    private void sendHistoryResponse(PlayerSession session, Msgarena.PB_SCArenaReportList response) {
+        try {
+            byte[] responseBytes = response.toByteArray();
+            byte[] packet = PacketCodec.encode(9612, responseBytes); // PB_SCArenaReportList
+            session.sendBinary(packet);
+        } catch (Exception e) {
+            log.error("[Arena] Failed to send history response", e);
+        }
+    }
+    
+    private void sendErrorResponse(PlayerSession session, String errorMsg) {
+        Msgarena.PB_SCArenaInfo.Builder response = Msgarena.PB_SCArenaInfo.newBuilder();
+        // Set error flag or use retcode if proto has it
+        log.error("[Arena] Error: {}", errorMsg);
+        sendInfoResponse(session, response.build());
+    }
+}

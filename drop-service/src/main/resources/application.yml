@@ -1,0 +1,51 @@
+server:
+  port: 8250
+
+spring:
+  profiles:
+    active: local  # Default to local profile
+  application:
+    name: drop-service
+
+  threads:
+    virtual:
+      enabled: true
+
+  # No database needed - loads drop tables from XML via config-service (Feign)
+  # datasource:
+  #   url: jdbc:mysql://localhost:3313/drop_db
+  #   username: ${DB_USERNAME:root}
+  #   password: ${DB_PASSWORD:1234}
+
+  # jpa:
+  #   hibernate:
+  #     ddl-auto: update
+
+  # flyway:
+  #   enabled: false
+
+  cache:
+    type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+app:
+  config:
+    serviceName: config-service
+    dropPathTemplate: gameworld/drop/%s.xml
+    knownDropIds: []
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

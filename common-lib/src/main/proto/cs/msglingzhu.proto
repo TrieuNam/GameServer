@@ -1,0 +1,22 @@
+option java_package = "org.SouthMillion.proto.Msglingzhu";
+
+//MsgId:2008 领主副本 操作
+message PB_CSLingZhuReq {
+	optional int32 type = 1;										//!< LING_ZHU_REQ_TYEP
+	optional int32 p1 = 2;
+	optional int32 p2 = 3;
+}
+
+
+message PB_CSLingZhuData {
+	optional int32 stage = 1;				//!< 副本类型 看配置表
+	optional int32 pass_level = 2;			//!< 通关数 初始为0 
+	optional int32 sweep_count = 3;			//!< 扫荡数 初始为0
+}
+
+//MsgId:2009 领主副本 信息
+message PB_SCLingZhuInfo {
+	repeated PB_CSLingZhuData lingzhu_list = 1;		//!<登录时全发  后续有改动几个发几个
+}
+
+

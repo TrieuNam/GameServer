@@ -1,0 +1,76 @@
+{
+  "pet": [
+    {
+      "id": "56000",
+      "name": "\u5927\u6811",
+      "item_type": "6",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param": "1",
+      "get_the_source": "0"
+    },
+    {
+      "id": "56001",
+      "name": "\u5927\u5c3e\u72fc",
+      "item_type": "6",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param": "2",
+      "get_the_source": "0"
+    },
+    {
+      "id": "56002",
+      "name": "\u5377\u9f3b\u8c61",
+      "item_type": "6",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param": "3",
+      "get_the_source": "0"
+    },
+    {
+      "id": "56003",
+      "name": "\u6218\u65a7\u873b\u8713",
+      "item_type": "6",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param": "4",
+      "get_the_source": "0"
+    },
+    {
+      "id": "56004",
+      "name": "\u6811\u5b9d",
+      "item_type": "6",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param": "5",
+      "get_the_source": "0"
+    },
+    {
+      "id": "56005",
+      "name": "\u8718\u86db",
+      "item_type": "6",
+      "is_virtual": "0",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "param": "6",
+      "get_the_source": "0"
+    }
+  ]
+}

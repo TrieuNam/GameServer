@@ -1,0 +1,299 @@
+﻿server:
+  port: 8094
+
+spring:
+  application:
+    name: websocket-server   # rất quan trọng: gateway route dùng lb:ws://websocket-server
+  main:
+    web-application-type: reactive
+  cloud:
+    loadbalancer:
+      retry:
+        # Tắt retry của RetryableFeignBlockingLoadBalancerClient
+        # Mặc định retry 3 lần → mỗi service down tốn 3-6 giây block login
+        enabled: false
+  # ── Redis (session registry) ───────────────────────────────────────────
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        # DÙNG HEADER ALIAS:
+        spring.json.type.mapping: >
+          bagChanged:org.SouthMillion.dto.event.bag.BagChangedEvent
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: true
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5      # heartbeat mỗi 5s (default 30s)
+    lease-expiration-duration-in-seconds: 15  # hết hạn sau 15s nếu không heartbeat
+  client:
+    fetchRegistry: true
+    registerWithEureka: true
+    registry-fetch-interval-seconds: 5        # refresh danh sách service mỗi 5s (default 30s)
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# optional: cấu hình feign timeouts
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: FULL   # log URL, headers, body request/response
+        connectTimeout: 1000   # 1s (was 3s) — fail fast khi service down
+        readTimeout: 3000      # 3s (was 5s) — không chờ quá lâu
+  okhttp:
+    enabled: true           # nếu dùng OkHttp (khuyên dùng)
+
+
+app:
+  bootstrap:
+    readiness:
+      enabled: true
+      required-services: role-service,world-service,bag-service
+      max-attempts: 8
+      initial-delay-ms: 400
+      max-delay-ms: 3000
+  server:
+    startEpoch: 0        # epoch giây lần đầu mở server (để tính open_days)
+    combineEpoch: 0      # epoch giây lần combine server (nếu có)
+  kafka:
+    bag-grant-topic: gameh5.bag.grant
+    bag-changed-topic: gameh5.bag.changed
+    task-progress-topic: task.progress.update
+    concurrency: 3
+  task-progress:
+    conditions:
+      # Keep only verified defaults here. Add guild/trial condition ids after task-cfg mapping is approved.
+      arena-win: 0
+      # Disabled until condition-id table is frozen; previous values could progress wrong legacy tasks.
+      guild-join: 0
+      guild-create: 0
+      trial-complete: 0
+      pet-activate: 0
+      pet-upgrade: 0
+      pet-evolve: 0
+      mount-level-up: 0
+      mount-grade-up: 0
+      mount-wear: 0
+      mount-decompose: 0
+      skill-learn: 0
+      skill-one-key-level-up: 0
+      crafting-start: 0
+      crafting-claim: 0
+      gem-inlay: 32
+      gem-compose: 0
+      gem-upgrade: 0
+      gem-buy: 0
+      shenqi-activate: 0
+      shenqi-upgrade: 0
+      shenqi-evolve: 0
+      shenqi-refine: 0
+      shenqi-draw: 57
+      angel-level-up: 0
+      angel-grade-up: 0
+      angel-equip: 0
+      angel-appearance-level-up: 0
+      rune-level-up: 0
+      rune-upgrade-quality: 0
+      rune-equip: 61
+      escort-start: 0
+      escort-complete: 29
+      escort-rob: 0
+      territory-fetch-reward: 59
+      territory-level-up: 0
+      pagoda-shilian-challenge: 0
+      pagoda-shilian-claim: 0
+      pagoda-gumo-challenge: 40
+      pagoda-gumo-claim: 0
+      lingzhu-challenge: 60
+      lingzhu-sweep: 0
+      shizhuang-equip: 0
+      shizhuang-fumo: 56
+      block-inlay: 71
+      block-remove: 0
+      block-compose: 73
+      formation-level-up: 27
+  redis-preload:
+    enabled: true
+    ttl-hours: 24
+    p1-async: true
+    p1-timeout-ms: 15000
+    p0-paths:
+      - gameworld/logicconfig/task_cfg.json
+      - gameworld/logicconfig/roleexp.json
+      - gameworld/logicconfig/role_name.json
+      - gameworld/skill/single_skill.json
+      - gameworld/skill/passive_skill.json
+    p1-paths:
+      - gameworld/item/equipment.json
+      - gameworld/item/other.json
+      - gameworld/item/expense.json
+      - gameworld/item/gift.json
+      - gameworld/logicconfig/shop_cfg.json
+      - gameworld/logicconfig/shop_shenmi.json
+      - gameworld/logicconfig/cloth_shop.json
+      - gameworld/logicconfig/unpack.json
+      - gameworld/logicconfig/kaixiangdaji.json
+  login-snapshot:
+    enabled: true
+    rollout-percent: 100
+    ttl-hours: 24
+    schema-version: v1
+    module-version-token: bootstrap-v1
+
+# Cross-server configuration
+cross-server:
+  enabled: false  # Set to true in production to enable cross-server features
+  min-level: 50   # Minimum player level required for cross-server transfer
+  target-server-id: cross-server-1  # Target cross-server identifier
+  origin-server-id: server-1        # This server's identifier
+  gateway:
+    host: localhost  # Cross-server gateway hostname
+    port: 9000       # Cross-server gateway port
+  session:
+    ttl-minutes: 30  # Session expiry time (30 minutes default)
+    secret: ${CROSS_SERVER_SECRET:change-me-in-production-use-minimum-32-chars}  # HMAC secret for session keys
+
+grpc:
+  server:
+    port: -1   # disable gRPC server (webSocket-server is gRPC client only)
+  client:
+    arena-service:
+      address: 'static://localhost:9084'
+      negotiation-type: plaintext
+    escort-service:
+      address: 'static://localhost:9085'
+      negotiation-type: plaintext
+    trial-service:
+      address: 'static://localhost:9300'
+      negotiation-type: plaintext
+    territory-service:
+      address: 'static://localhost:9086'
+      negotiation-type: plaintext
+    bag-service:
+      address: 'static://localhost:9230'
+      negotiation-type: plaintext
+    equip-service:
+      address: 'static://localhost:9240'
+      negotiation-type: plaintext
+    starmap-service:
+      address: '${STARMAP_GRPC_ADDRESS:static://localhost:9365}'
+      negotiation-type: plaintext
+    rune-service:
+      address: 'static://localhost:9093'
+      negotiation-type: plaintext
+    angel-service:
+      address: 'static://localhost:9089'
+      negotiation-type: plaintext
+    artifact-service:
+      address: 'static://localhost:9087'
+      negotiation-type: plaintext
+    leaderboard-service:
+      address: 'static://localhost:9094'
+      negotiation-type: plaintext
+    # ── world handler ──
+    gameworld-service:
+      address: 'static://localhost:9105'
+      negotiation-type: plaintext
+    # -- combat/battle handler --
+    battleserver-service:
+      address: 'static://localhost:9082'
+      negotiation-type: plaintext
+    battle-service:
+      address: 'static://localhost:9082'
+      negotiation-type: plaintext
+    # -- main dungeon / fb --
+    main-fb-service:
+      address: 'static://localhost:9128'
+      negotiation-type: plaintext
+    # -- role (gRPC) --
+    role-service:
+      address: 'static://localhost:9410'
+      negotiation-type: plaintext
+    # -- crafting --
+    crafting-service:
+      address: 'static://localhost:9280'
+      negotiation-type: plaintext
+    # -- shop handler (future grpc) --
+    shop-service:
+      address: 'static://localhost:9260'
+      negotiation-type: plaintext
+
+logging:
+  level:
+    root: INFO
+    com.SouthMillion: DEBUG
+    feign: DEBUG
+    feign.Logger: DEBUG
+    org.springframework.cloud.openfeign: DEBUG
+    com.SouthMillion.role_service.feign: DEBUG
+    com.SouthMillion.bag_service.feign: DEBUG
+    com.SouthMillion.equip_service.feign: DEBUG
+    com.SouthMillion.wallet_service.feign: DEBUG
+    com.SouthMillion.box_service.feign: DEBUG
+    # ── gRPC reconnect-backoff spam suppression ────────────────────────
+    # Khi service down, gRPC tự retry name-resolution mỗi 1-120s (exponential backoff).
+    # Mỗi lần retry tạo 2 log dòng từ các class bên dưới — vô tác dụng vì call-level
+    # errors đã được log bởi từng GrpcClient (com.SouthMillion.*).
+    # OFF: hoàn toàn tắt — không mất thông tin do GrpcClient log riêng rồi.
+    net.devh.boot.grpc.client.nameresolver.DiscoveryClientNameResolver: OFF
+    io.grpc.internal.ManagedChannelImpl: OFF
+    # ── Feign load balancer WARN suppression ────────────────────────────
+    # Mỗi Feign call tới service down tạo 2 dòng WARN bên dưới (mỗi call, không lặp).
+    # Handler (PagodaHandler, MailHandler...) đã log ERROR riêng → không mất thông tin.
+    org.springframework.cloud.loadbalancer.core.RoundRobinLoadBalancer: ERROR
+    org.springframework.cloud.openfeign.loadbalancer.FeignBlockingLoadBalancerClient: ERROR
+
+# ── Resilience4j Circuit Breaker ────────────────────────────────────────
+# Khi 1 downstream service down: mở circuit → fail nhanh thay vì đợi timeout
+# Ngăn 1 service chết kéo chết toàn bộ websocket-server
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        minimumNumberOfCalls: 10           # cần ít nhất 10 call để đánh giá
+        failureRateThreshold: 50           # > 50% lỗi → mở circuit
+        waitDurationInOpenState: 10s       # chờ 10s rồi thử HALF_OPEN
+        permittedNumberOfCallsInHalfOpenState: 5
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 20
+        recordExceptions:
+          - java.io.IOException
+          - java.util.concurrent.TimeoutException
+          - feign.FeignException
+          - io.grpc.StatusRuntimeException
+        registerHealthIndicator: true
+    instances:
+      world-service:
+        baseConfig: default
+      bag-service:
+        baseConfig: default
+      shop-service:
+        baseConfig: default
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 6s
+        cancelRunningFuture: true
+    instances:
+      world-service:
+        baseConfig: default
+

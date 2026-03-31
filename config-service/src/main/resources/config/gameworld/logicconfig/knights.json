@@ -1,0 +1,786 @@
+{
+  "knights_book": [
+    {
+      "level": "1",
+      "seq": "1",
+      "condition": "1",
+      "param_1": "5",
+      "att_type": "1",
+      "att_num": "500"
+    },
+    {
+      "level": "1",
+      "seq": "2",
+      "condition": "0",
+      "param_1": "40",
+      "att_type": "2",
+      "att_num": "125"
+    },
+    {
+      "level": "1",
+      "seq": "3",
+      "condition": "6",
+      "param_1": "20",
+      "att_type": "3",
+      "att_num": "50"
+    },
+    {
+      "level": "2",
+      "seq": "1",
+      "condition": "1",
+      "param_1": "8",
+      "att_type": "1",
+      "att_num": "500"
+    },
+    {
+      "level": "2",
+      "seq": "2",
+      "condition": "0",
+      "param_1": "70",
+      "att_type": "2",
+      "att_num": "125"
+    },
+    {
+      "level": "2",
+      "seq": "3",
+      "condition": "6",
+      "param_1": "90",
+      "att_type": "3",
+      "att_num": "50"
+    },
+    {
+      "level": "3",
+      "seq": "1",
+      "condition": "1",
+      "param_1": "12",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "3",
+      "seq": "2",
+      "condition": "0",
+      "param_1": "100",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "3",
+      "seq": "3",
+      "condition": "5",
+      "param_1": "5",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "4",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "105",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "4",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "13",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "4",
+      "seq": "3",
+      "condition": "4",
+      "param_1": "3",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "5",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "110",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "5",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "14",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "5",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "12000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "6",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "115",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "6",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "15",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "6",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "13000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "7",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "120",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "7",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "16",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "7",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "14000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "8",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "125",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "8",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "17",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "8",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "15000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "9",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "130",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "9",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "18",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "9",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "16000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "10",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "135",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "10",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "19",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "10",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "17000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "11",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "140",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "11",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "20",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "11",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "18000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "12",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "145",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "12",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "21",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "12",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "19000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "13",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "150",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "13",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "22",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "13",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "20000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "14",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "155",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "14",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "23",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "14",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "21000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "15",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "160",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "15",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "24",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "15",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "22000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "16",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "165",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "16",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "25",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "16",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "23000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "17",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "170",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "17",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "26",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "17",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "24000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "18",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "175",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "18",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "27",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "18",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "25000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "19",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "180",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "19",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "28",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "19",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "26000",
+      "att_type": "3",
+      "att_num": "150"
+    },
+    {
+      "level": "20",
+      "seq": "1",
+      "condition": "0",
+      "param_1": "185",
+      "att_type": "1",
+      "att_num": "1000"
+    },
+    {
+      "level": "20",
+      "seq": "2",
+      "condition": "1",
+      "param_1": "29",
+      "att_type": "2",
+      "att_num": "250"
+    },
+    {
+      "level": "20",
+      "seq": "3",
+      "condition": "2",
+      "param_1": "27000",
+      "att_type": "3",
+      "att_num": "150"
+    }
+  ],
+  "knights_reward": [
+    {
+      "level": "1",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "100"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59000",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "2",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "200"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59001",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "3",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "300"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59002",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "4",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "400"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59003",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "5",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "500"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59004",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "6",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "600"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59005",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "7",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "700"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59006",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "8",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "800"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59007",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "9",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "900"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59008",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "10",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "1000"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59009",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "11",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "1100"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59010",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "12",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "1200"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59011",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "13",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "1300"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59012",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "14",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "1400"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59013",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "15",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "1500"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59014",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "16",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "1600"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59015",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "17",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "1700"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59016",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "18",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "1800"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59017",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "19",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "1900"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59018",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "level": "20",
+      "jihuo_att": [
+        {
+          "type": "26",
+          "add": "2000"
+        }
+      ],
+      "reward": [
+        {
+          "item_id": "59019",
+          "num": "1"
+        }
+      ]
+    }
+  ]
+}
