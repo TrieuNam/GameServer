@@ -1,0 +1,52 @@
+server:
+  port: 8112
+
+spring:
+  application:
+    name: pet-service
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:33077/game_pet?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:tpnam}
+    password: ${DB_PASSWORD:121831}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+        jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+app:
+  config:
+    serviceName: config-service
+    pet_auto: gameworld/logicconfig/pet_auto.json
+    pet_cloth_auto: gameworld/logicconfig/pet_cloth_auto.json
+    pet_cloth_game_auto: gameworld/logicconfig/pet_cloth_game_auto.json
+  pet:
+    bagType: 0                 # túi tiêu item EXP
+    wallet:
+      coinItemId: 40001        # id tiền ảo để up level khi không dùng item EXP
+    levelUp:
+      reason:
+        string: PET_LEVEL_UP   # reason string ghi vào Bag.ItemDelta.reason
+        code: 201              # reason code gửi Wallet
+      srcMsgId: 0              # theo hệ thống audit của bạn
+      srcOp: 201               # theo hệ thống audit của bạn
+      idemKeyPrefix: PET_LVUP  # prefix idemKey ví
+    level:
+      max: 300                 # fallback nếu config other.pet_level_max thiếu
+
+logging:
+  level:
+    com.SouthMillion.pet_service: INFO
+    org.hibernate.SQL: INFO

@@ -1,0 +1,104 @@
+// Escort Service gRPC definitions
+syntax = "proto3";
+
+package org.SouthMillion.grpc.escort;
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "EscortServiceProto";
+option java_package = "org.SouthMillion.grpc.escort";
+
+service EscortService {
+  rpc GetEscortInfo(EscortInfoRequest) returns (EscortInfoResponse);
+  rpc GetShipList(EscortInfoRequest) returns (EscortShipListResponse);
+  rpc StartEscort(StartEscortRequest) returns (EscortActionResponse);
+  rpc InterceptEscort(InterceptRequest) returns (EscortActionResponse);
+  rpc HelpEscort(HelpRequest) returns (EscortActionResponse);
+  rpc ClaimReward(EscortInfoRequest) returns (EscortActionResponse);
+  rpc GetReportList(EscortInfoRequest) returns (EscortReportListResponse);
+  rpc GetInterceptList(EscortInfoRequest) returns (EscortInterceptListResponse);
+}
+
+// ─── Requests ───────────────────────────────────────────────────────────────
+
+message EscortInfoRequest {
+  int64 role_id = 1;
+}
+
+message StartEscortRequest {
+  int64 role_id = 1;
+  int32 ship_level = 2;
+}
+
+message InterceptRequest {
+  int64 role_id = 1;
+  int32 ship_key = 2;   // target ship key
+  int64 target_uid = 3;
+}
+
+message HelpRequest {
+  int64 role_id = 1;
+  int32 ship_key = 2;
+  int64 target_uid = 3;
+}
+
+// ─── Responses ──────────────────────────────────────────────────────────────
+
+message EscortInfoResponse {
+  EscortRoleStats stats = 1;
+  common.ResponseStatus status = 2;
+}
+
+message EscortShipListResponse {
+  EscortShipData my_ship = 1;
+  repeated EscortShipData ship_list = 2;
+  common.ResponseStatus status = 3;
+}
+
+message EscortActionResponse {
+  bool success = 1;
+  int32 result_type = 2;   // maps to PB_SCEscortRet.type
+  int32 p1 = 3;
+  int32 p2 = 4;
+  common.ResponseStatus status = 5;
+}
+
+message EscortReportListResponse {
+  repeated bytes report_list = 1;
+  repeated int64 report_time = 2;
+  common.ResponseStatus status = 3;
+}
+
+message EscortInterceptListResponse {
+  repeated EscortInterceptData list = 1;
+  common.ResponseStatus status = 2;
+}
+
+// ─── Data Models ─────────────────────────────────────────────────────────────
+
+message EscortRoleStats {
+  int32 ship = 1;           // ship level
+  int32 escort_count = 2;
+  int32 intercept_count = 3;
+  int32 help_count = 4;
+  int64 max_damage = 5;
+  int32 reward_index = 6;
+}
+
+message EscortShipData {
+  int32 ship = 1;
+  int32 uid = 2;
+  int32 be_intercept = 3;
+  int64 over_time = 4;
+  int32 ship_key = 5;
+  int32 is_help = 6;
+}
+
+message EscortInterceptData {
+  int64 role_id = 1;
+  string role_name = 2;
+  int32 level = 3;
+  EscortShipData ship = 4;
+}
+

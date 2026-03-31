@@ -1,0 +1,155 @@
+// Role Service gRPC definitions
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.grpc.role";
+option java_outer_classname = "RoleServiceProto";
+
+package role;
+
+// Role Service Definition
+service RoleService {
+  // Get role by ID
+  rpc GetRole(GetRoleRequest) returns (RoleResponse);
+  
+  // Get role by name
+  rpc GetRoleByName(GetRoleByNameRequest) returns (RoleResponse);
+  
+  // Get roles by user ID
+  rpc GetRolesByUserId(GetRolesByUserIdRequest) returns (RoleListResponse);
+  
+  // Add experience
+  rpc AddExp(AddExpRequest) returns (AddExpResponse);
+  
+  // Update role attributes
+  rpc UpdateRole(UpdateRoleRequest) returns (RoleResponse);
+  
+  // Stream role updates (for real-time sync)
+  rpc StreamRoleUpdates(stream RoleUpdateRequest) returns (stream RoleUpdateEvent);
+  
+  // Batch get roles (for combat, arena, etc.)
+  rpc BatchGetRoles(BatchGetRolesRequest) returns (BatchGetRolesResponse);
+  
+  // Set WX info (WeChat profile)
+  rpc SetWxInfo(SetWxInfoRequest) returns (common.ResponseStatus);
+  
+  // Apply system settings
+  rpc ApplySettings(ApplySettingsRequest) returns (common.ResponseStatus);
+}
+
+// Messages
+message GetRoleRequest {
+  int64 role_id = 1;
+  bool include_equipment = 2;
+  bool include_stats = 3;
+}
+
+message GetRoleByNameRequest {
+  string role_name = 1;
+}
+
+message GetRolesByUserIdRequest {
+  string user_id = 1;
+}
+
+message RoleResponse {
+  int64 role_id = 1;
+  string user_id = 2;
+  string role_name = 3;
+  int32 job = 4;  // 1=Warrior, 2=Mage, 3=Archer, 4=Priest
+  int32 level = 5;
+  int64 exp = 6;
+  int32 vip_level = 7;
+  int32 fight_power = 8;
+  int64 create_time = 9;
+  int64 last_login_time = 10;
+  
+  // Optional detailed stats
+  RoleStats stats = 11;
+  repeated EquipmentSlot equipment = 12;
+}
+
+message RoleStats {
+  int32 hp = 1;
+  int32 max_hp = 2;
+  int32 attack = 3;
+  int32 defense = 4;
+  int32 speed = 5;
+  int32 crit_rate = 6;
+  int32 crit_damage = 7;
+}
+
+message EquipmentSlot {
+  int32 slot_id = 1;
+  int32 item_id = 2;
+  int32 level = 3;
+}
+
+message RoleListResponse {
+  repeated RoleResponse roles = 1;
+  common.ResponseStatus status = 2;
+}
+
+message AddExpRequest {
+  int64 role_id = 1;
+  int64 exp_amount = 2;
+  string source = 3;  // quest, combat, dungeon, etc.
+}
+
+message AddExpResponse {
+  int64 role_id = 1;
+  int32 old_level = 2;
+  int32 new_level = 3;
+  int64 exp_gained = 4;
+  int64 current_exp = 5;
+  int64 exp_to_next_level = 6;
+  bool leveled_up = 7;
+  
+  // Rewards for level up
+  common.RewardBundle rewards = 8;
+  common.ResponseStatus status = 9;
+}
+
+message UpdateRoleRequest {
+  int64 role_id = 1;
+  optional int32 vip_level = 2;
+  optional int32 fight_power = 3;
+  map<string, string> custom_fields = 4;
+}
+
+message RoleUpdateRequest {
+  int64 role_id = 1;
+  string update_type = 2;  // exp, level, equipment, stats
+}
+
+message RoleUpdateEvent {
+  int64 role_id = 1;
+  string event_type = 2;
+  int64 timestamp = 3;
+  bytes event_data = 4;  // Serialized update data
+}
+
+message BatchGetRolesRequest {
+  repeated int64 role_ids = 1;
+  bool include_stats = 2;
+}
+
+message BatchGetRolesResponse {
+  repeated RoleResponse roles = 1;
+  common.ResponseStatus status = 2;
+}
+
+// Set WX Info Request
+message SetWxInfoRequest {
+  int64 role_id = 1;
+  string name = 2;
+  string head_char = 3;
+}
+
+// System Settings Request
+message ApplySettingsRequest {
+  int64 role_id = 1;
+  map<string, int32> settings = 2;  // setting_key -> value
+}

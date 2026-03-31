@@ -1,0 +1,35 @@
+server:
+  port: 8270
+
+spring:
+  profiles:
+    active: local  # Default to local profile
+  application:
+    name: gift-service
+
+  threads:
+    virtual:
+      enabled: true
+
+  # Stateless service: no database, no Redis, no Kafka
+  # Loads gift config from gift.json via config-service (Feign)
+  # Uses Caffeine in-process cache only
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+app:
+  gift:
+    default-bag-type: 1
+    cache-seconds: 30
+    config-path: ${GIFT_CONFIG_PATH:gameworld/item/gift.json}

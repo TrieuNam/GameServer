@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameServer Control Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+        }
+
+        .stats {
+            padding: 20px 30px;
+            background: #fff3cd;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 1em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .phase-controls {
+            padding: 15px 30px;
+            background: #f0f4ff;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .phase-controls .phase-label {
+            font-weight: 700;
+            color: #555;
+            margin-right: 5px;
+        }
+
+        .btn-phase-start {
+            background: #28a745;
+            color: white;
+            padding: 8px 14px;
+            font-size: 0.85em;
+        }
+
+        .btn-phase-stop {
+            background: #dc3545;
+            color: white;
+            padding: 8px 14px;
+            font-size: 0.85em;
+        }
+
+        .btn-db {
+            background: #6610f2;
+            color: white;
+        }
+
+        .btn-db:hover {
+            background: #520dc2;
+        }
+
+        .btn-grant {
+            background: #fd7e14;
+            color: white;
+        }
+
+        .btn-grant:hover {
+            background: #e8690b;
+        }
+
+        .phase-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255,255,255,0.7);
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .phase-group-label {
+            font-size: 0.8em;
+            font-weight: 700;
+            color: #444;
+            padding-right: 4px;
+            border-right: 1px solid #ccc;
+            margin-right: 2px;
+        }
+
+        .docker-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+
+        .docker-running {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .docker-stopped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .docker-unknown {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .service-grid {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .service-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .service-card:hover {
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .service-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .service-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .status-running {
+            background: #28a745;
+            color: white;
+        }
+
+        .status-stopped {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status-starting {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .status-stopping {
+            background: #ff9800;
+            color: white;
+        }
+
+        .status-error {
+            background: #dc3545;
+            color: white;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.5; }
+        }
+
+        .service-info {
+            margin: 15px 0;
+            font-size: 0.95em;
+            color: #666;
+        }
+
+        .service-info div {
+            margin: 8px 0;
+        }
+
+        .service-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .service-actions .btn {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.9em;
+        }
+
+        .phase-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #667eea;
+            color: white;
+            border-radius: 5px;
+            font-size: 0.8em;
+            margin-right: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.5em;
+            color: #666;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.info {
+            background: #17a2b8;
+        }
+
+        /* Logs Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 1000px;
+            height: 80%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .modal-close {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-body {
+            flex: 1;
+            padding: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logs-container {
+            flex: 1;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .log-line {
+            margin-bottom: 5px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .log-line.error {
+            color: #f48771;
+        }
+
+        .log-line.warn {
+            color: #dcdcaa;
+        }
+
+        .log-line.info {
+            color: #4ec9b0;
+        }
+
+        .logs-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .logs-controls button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .logs-controls button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 GameServer Control Panel</h1>
+            <p>Manage 56 Spring Boot Microservices</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-primary" onclick="startAllServices()">
+                ▶️ Start All
+            </button>
+            <button class="btn btn-danger" onclick="stopAllServices()">
+                ⏹️ Stop All
+            </button>
+            <button class="btn btn-db" onclick="startAllDatabases()">
+                🗄️ Start All DBs
+            </button>
+            <button class="btn btn-grant" onclick="grantDbPermissions()">
+                🔐 Grant DB Perms
+            </button>
+            <a href="process-manager.html" class="btn btn-secondary" style="text-decoration: none;">
+                🔧 Process Manager
+            </a>
+            <button class="btn btn-secondary" onclick="refreshServices()">
+                🔄 Refresh
+            </button>
+            <div class="search-box">
+                <input type="text" id="searchBox" placeholder="🔍 Search services..." onkeyup="filterServices()">
+            </div>
+        </div>
+
+        <!-- Phase Controls -->
+        <div class="phase-controls">
+            <span class="phase-label">📦 Phases:</span>
+            <div class="phase-group">
+                <span class="phase-group-label">P0</span>
+                <button class="btn btn-phase-start" onclick="startPhase('P0')" title="Start P0: Eureka, Config, Gateway, WebSocket">▶ Start</button>
+                <button class="btn btn-phase-stop" onclick="stopPhase('P0')" title="Stop P0">⏹ Stop</button>
+            </div>
+            <div class="phase-group">
+                <span class="phase-group-label">P1</span>
+                <button class="btn btn-phase-start" onclick="startPhase('P1')" title="Start P1: User, Role, Session, Wallet...">▶ Start</button>
+                <button class="btn btn-phase-stop" onclick="stopPhase('P1')" title="Stop P1">⏹ Stop</button>
+            </div>
+            <div class="phase-group">
+                <span class="phase-group-label">P2</span>
+                <button class="btn btn-phase-start" onclick="startPhase('P2')" title="Start P2: Combat, World, Social">▶ Start</button>
+                <button class="btn btn-phase-stop" onclick="stopPhase('P2')" title="Stop P2">⏹ Stop</button>
+            </div>
+            <div class="phase-group">
+                <span class="phase-group-label">P3</span>
+                <button class="btn btn-phase-start" onclick="startPhase('P3')" title="Start P3: Enhancements, Support, New Features">▶ Start</button>
+                <button class="btn btn-phase-stop" onclick="stopPhase('P3')" title="Stop P3">⏹ Stop</button>
+            </div>
+            <div class="phase-group">
+                <span class="phase-group-label">P4</span>
+                <button class="btn btn-phase-start" onclick="startPhase('P4')" title="Start P4: Optional Features">▶ Start</button>
+                <button class="btn btn-phase-stop" onclick="stopPhase('P4')" title="Stop P4">⏹ Stop</button>
+            </div>
+            <div class="phase-group">
+                <span class="phase-group-label">⚙️</span>
+                <button class="btn btn-phase-start" onclick="startPhase('SPECIAL')" title="Start Admin & GM services">▶ Admin</button>
+                <button class="btn btn-phase-stop" onclick="stopPhase('SPECIAL')" title="Stop Admin & GM services">⏹ Admin</button>
+            </div>
+            <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
+                <select id="phaseFilter" onchange="filterByPhase()" style="padding:8px 12px; border-radius:6px; border:2px solid #e0e0e0; font-size:0.9em;">
+                    <option value="">All Phases</option>
+                    <option value="P0">P0 - Infrastructure</option>
+                    <option value="P1">P1 - Core</option>
+                    <option value="P2">P2 - Combat & World</option>
+                    <option value="P3">P3 - Enhancements</option>
+                    <option value="P4">P4 - Optional</option>
+                    <option value="SPECIAL">SPECIAL - Admin</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="totalServices">-</div>
+                <div class="stat-label">Total Services</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="runningServices" style="color: #28a745;">-</div>
+                <div class="stat-label">✅ Running</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="stoppedServices" style="color: #dc3545;">-</div>
+                <div class="stat-label">⏹️ Stopped</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="errorServices" style="color: #ff5722;">-</div>
+                <div class="stat-label">❌ Error</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="startingServices" style="color: #ffc107;">-</div>
+                <div class="stat-label">⏳ Starting</div>
+            </div>
+        </div>
+
+        <div class="service-grid" id="serviceGrid">
+            <div class="loading">Loading services...</div>
+        </div>
+    </div>
+
+    <!-- Logs Modal -->
+    <div class="modal" id="logsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📋 Service Logs: <span id="logsServiceName"></span></h2>
+                <button class="modal-close" onclick="closeLogsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="logs-controls">
+                    <button onclick="refreshLogs()">🔄 Refresh</button>
+                    <button onclick="clearLogsDisplay()">🗑️ Clear</button>
+                    <button onclick="downloadLogs()">💾 Download</button>
+                    <select id="logLines" onchange="refreshLogs()">
+                        <option value="50">Last 50 lines</option>
+                        <option value="100" selected>Last 100 lines</option>
+                        <option value="200">Last 200 lines</option>
+                        <option value="500">Last 500 lines</option>
+                        <option value="1000">Last 1000 lines</option>
+                    </select>
+                </div>
+                <div class="logs-container" id="logsContainer">
+                    <div class="log-line info">Loading logs...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/services';
+        let allServices = [];
+        let currentLogsService = null;
+        let logsRefreshInterval = null;
+
+        // Load services on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadServices();
+            // Auto-refresh every 5 seconds
+            setInterval(loadServices, 5000);
+        });
+        
+        // Refresh when user comes back to this tab/window
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                console.log('Page visible - refreshing services...');
+                loadServices();
+            }
+        });
+        
+        // Refresh when window gains focus
+        window.addEventListener('focus', () => {
+            console.log('Window focused - refreshing services...');
+            loadServices();
+        });
+
+        async function loadServices() {
+            try {
+                const response = await fetch(API_BASE);
+                allServices = await response.json();
+                applyCurrentFilter();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading services:', error);
+                showNotification('Failed to load services', 'error');
+            }
+        }
+
+        function applyCurrentFilter() {
+            const phaseFilter = document.getElementById('phaseFilter').value;
+            const searchFilter = document.getElementById('searchBox').value.toLowerCase();
+            let filtered = allServices;
+            if (phaseFilter) {
+                filtered = filtered.filter(s => s.phase === phaseFilter);
+            }
+            if (searchFilter) {
+                filtered = filtered.filter(s =>
+                    s.serviceName.toLowerCase().includes(searchFilter) ||
+                    (s.displayName && s.displayName.toLowerCase().includes(searchFilter)) ||
+                    (s.phase && s.phase.toLowerCase().includes(searchFilter))
+                );
+            }
+            renderServices(filtered);
+        }
+
+        function renderServices(services) {
+            const grid = document.getElementById('serviceGrid');
+            
+            if (services.length === 0) {
+                grid.innerHTML = '<div class="loading">No services found</div>';
+                return;
+            }
+
+            grid.innerHTML = services.map(service => {
+                const dockerHtml = service.requiresDocker
+                    ? `<div><strong>🐳 Docker:</strong> <span class="docker-status ${getDockerStatusClass(service.dockerStatus)}">${service.dockerStatus || 'unknown'}</span>${service.containerName ? ` (${service.containerName})` : ''}</div>`
+                    : '';
+                return `
+                <div class="service-card" data-service="${service.serviceName}">
+                    <div class="service-header">
+                        <div class="service-name">
+                            <span class="phase-badge">${service.phase || 'N/A'}</span>
+                            ${service.displayName || service.serviceName}
+                        </div>
+                        <span class="status-badge status-${service.status.toLowerCase()}">
+                            ${getStatusIcon(service.status)} ${service.status}
+                        </span>
+                    </div>
+                    <div class="service-info">
+                        <div><strong>Service:</strong> ${service.serviceName}</div>
+                        <div><strong>Port:</strong> ${service.port}</div>
+                        <div><strong>Order:</strong> #${service.startupOrder}</div>
+                        ${service.processId ? `<div><strong>PID:</strong> ${service.processId}</div>` : ''}
+                        ${dockerHtml}
+                        ${service.description ? `<div><strong>Info:</strong> ${service.description}</div>` : ''}
+                    </div>
+                    <div class="service-actions">
+                        <button class="btn btn-primary" onclick="startService('${service.serviceName}')" 
+                                ${service.status === 'RUNNING' ? 'disabled' : ''}>
+                            ▶️ Start
+                        </button>
+                        <button class="btn btn-danger" onclick="stopService('${service.serviceName}')"
+                                ${service.status === 'STOPPED' ? 'disabled' : ''}>
+                            ⏹️ Stop
+                        </button>
+                        <button class="btn btn-info" onclick="restartService('${service.serviceName}')">
+                            🔄 Restart
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewLogs('${service.serviceName}')">
+                            📋 Logs
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function getDockerStatusClass(status) {
+            if (!status) return 'docker-unknown';
+            if (status === 'running') return 'docker-running';
+            if (status === 'exited' || status === 'not-found') return 'docker-stopped';
+            return 'docker-unknown';
+        }
+
+        function getStatusIcon(status) {
+            const icons = {
+                'RUNNING': '✅',
+                'STOPPED': '⏹️',
+                'STARTING': '⏳',
+                'STOPPING': '⏳',
+                'ERROR': '❌',
+                'UNKNOWN': '❓'
+            };
+            return icons[status] || '❓';
+        }
+
+        function updateStats() {
+            document.getElementById('totalServices').textContent = allServices.length;
+            document.getElementById('runningServices').textContent = 
+                allServices.filter(s => s.status === 'RUNNING').length;
+            document.getElementById('stoppedServices').textContent = 
+                allServices.filter(s => s.status === 'STOPPED').length;
+            document.getElementById('errorServices').textContent =
+                allServices.filter(s => s.status === 'ERROR').length;
+            document.getElementById('startingServices').textContent =
+                allServices.filter(s => s.status === 'STARTING' || s.status === 'STOPPING').length;
+        }
+
+        async function startService(serviceName) {
+            try {
+                showNotification(`Starting ${serviceName}...`, 'info');
+                const response = await fetch(`${API_BASE}/${serviceName}/start`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                showNotification(`Started ${serviceName}`, 'success');
+                setTimeout(loadServices, 2000);
+            } catch (error) {
+                showNotification(`Failed to start ${serviceName}`, 'error');
+            }
+        }
+
+        async function stopService(serviceName) {
+            try {
+                showNotification(`Stopping ${serviceName}...`, 'info');
+                const response = await fetch(`${API_BASE}/${serviceName}/stop`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                showNotification(`Stopped ${serviceName}`, 'success');
+                setTimeout(loadServices, 2000);
+            } catch (error) {
+                showNotification(`Failed to stop ${serviceName}`, 'error');
+            }
+        }
+
+        async function restartService(serviceName) {
+            try {
+                showNotification(`Restarting ${serviceName}...`, 'info');
+                const response = await fetch(`${API_BASE}/${serviceName}/restart`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                showNotification(`Restarted ${serviceName}`, 'success');
+                setTimeout(loadServices, 2000);
+            } catch (error) {
+                showNotification(`Failed to restart ${serviceName}`, 'error');
+            }
+        }
+
+        async function startAllServices() {
+            if (!confirm('Start ALL 56 services? This may take 10-15 minutes.')) {
+                return;
+            }
+            try {
+                showNotification('Starting all services in priority order...', 'info');
+                await fetch(`${API_BASE}/start-all`, { method: 'POST' });
+                showNotification('Started all services!', 'success');
+                setTimeout(loadServices, 3000);
+            } catch (error) {
+                showNotification('Failed to start all services', 'error');
+            }
+        }
+
+        async function stopAllServices() {
+            if (!confirm('Stop ALL services?')) {
+                return;
+            }
+            try {
+                showNotification('Stopping all services...', 'info');
+                await fetch(`${API_BASE}/stop-all`, { method: 'POST' });
+                showNotification('Stopped all services!', 'success');
+                setTimeout(loadServices, 2000);
+            } catch (error) {
+                showNotification('Failed to stop all services', 'error');
+            }
+        }
+
+        async function startPhase(phase) {
+            try {
+                showNotification(`🚀 Starting phase ${phase}...`, 'info');
+                await fetch(`${API_BASE}/phase/${phase}/start`, { method: 'POST' });
+                showNotification(`✅ Started ${phase} services!`, 'success');
+                setTimeout(loadServices, 2000);
+            } catch (error) {
+                showNotification(`Failed to start ${phase}`, 'error');
+            }
+        }
+
+        async function stopPhase(phase) {
+            if (!confirm(`Stop all ${phase} services?`)) return;
+            try {
+                showNotification(`🛑 Stopping phase ${phase}...`, 'info');
+                await fetch(`${API_BASE}/phase/${phase}/stop`, { method: 'POST' });
+                showNotification(`✅ Stopped ${phase} services!`, 'success');
+                setTimeout(loadServices, 2000);
+            } catch (error) {
+                showNotification(`Failed to stop ${phase}`, 'error');
+            }
+        }
+
+        async function startAllDatabases() {
+            if (!confirm('Start ALL MySQL database containers and grant tpnam permissions?\n\nThis will take ~30 seconds.')) return;
+            try {
+                showNotification('🗄️ Starting all database containers... (~30s)', 'info');
+                await fetch(`${API_BASE}/databases/start`, { method: 'POST' });
+                showNotification('✅ Database containers started! Granting permissions...', 'success');
+            } catch (error) {
+                showNotification('Failed to start databases', 'error');
+            }
+        }
+
+        async function grantDbPermissions() {
+            try {
+                showNotification('🔐 Granting tpnam permissions on all MySQL containers...', 'info');
+                await fetch(`${API_BASE}/databases/grant-permissions`, { method: 'POST' });
+                showNotification('✅ Permissions granted! (async, ~20s)', 'success');
+            } catch (error) {
+                showNotification('Failed to grant permissions', 'error');
+            }
+        }
+
+        function refreshServices() {
+            showNotification('Refreshing...', 'info');
+            loadServices();
+        }
+
+        function filterServices() {
+            applyCurrentFilter();
+        }
+
+        function filterByPhase() {
+            applyCurrentFilter();
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // ========== Logs Functions ==========
+        
+        async function viewLogs(serviceName) {
+            currentLogsService = serviceName;
+            document.getElementById('logsServiceName').textContent = serviceName;
+            document.getElementById('logsModal').classList.add('show');
+            
+            await loadLogs();
+            
+            // Auto-refresh logs every 3 seconds
+            if (logsRefreshInterval) clearInterval(logsRefreshInterval);
+            logsRefreshInterval = setInterval(loadLogs, 3000);
+        }
+
+        async function loadLogs() {
+            if (!currentLogsService) return;
+            
+            const lines = document.getElementById('logLines').value;
+            try {
+                const response = await fetch(`${API_BASE}/${currentLogsService}/logs?lines=${lines}`);
+                const data = await response.json();
+                displayLogs(data.logs);
+            } catch (error) {
+                console.error('Error loading logs:', error);
+                document.getElementById('logsContainer').innerHTML = 
+                    '<div class="log-line error">Failed to load logs</div>';
+            }
+        }
+
+        function displayLogs(logs) {
+            const container = document.getElementById('logsContainer');
+            if (!logs || logs.length === 0) {
+                container.innerHTML = '<div class="log-line info">No logs available</div>';
+                return;
+            }
+
+            container.innerHTML = logs.map(line => {
+                let className = 'log-line';
+                if (line.includes('ERROR') || line.includes('Exception')) {
+                    className += ' error';
+                } else if (line.includes('WARN')) {
+                    className += ' warn';
+                } else if (line.includes('INFO')) {
+                    className += ' info';
+                }
+                return `<div class="${className}">${escapeHtml(line)}</div>`;
+            }).join('');
+            
+            // Auto-scroll to bottom
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function refreshLogs() {
+            loadLogs();
+        }
+
+        function clearLogsDisplay() {
+            document.getElementById('logsContainer').innerHTML = 
+                '<div class="log-line info">Logs cleared. Will refresh automatically...</div>';
+            setTimeout(loadLogs, 1000);
+        }
+
+        function downloadLogs() {
+            const lines = document.getElementById('logLines').value;
+            fetch(`${API_BASE}/${currentLogsService}/logs?lines=${lines}`)
+                .then(response => response.json())
+                .then(data => {
+                    const blob = new Blob([data.logs.join('\n')], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${currentLogsService}-logs.txt`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showNotification('Logs downloaded!', 'success');
+                });
+        }
+
+        function closeLogsModal() {
+            document.getElementById('logsModal').classList.remove('show');
+            currentLogsService = null;
+            if (logsRefreshInterval) {
+                clearInterval(logsRefreshInterval);
+                logsRefreshInterval = null;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close modal on outside click
+        document.getElementById('logsModal').addEventListener('click', (e) => {
+            if (e.target.id === 'logsModal') {
+                closeLogsModal();
+            }
+        });
+    </script>
+</body>
+</html>

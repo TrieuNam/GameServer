@@ -1,0 +1,68 @@
+// Territory Service gRPC definitions
+syntax = "proto3";
+
+package org.SouthMillion.grpc.territory;
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_outer_classname = "TerritoryServiceProto";
+option java_package = "org.SouthMillion.grpc.territory";
+
+service TerritoryService {
+  rpc GetTerritoryInfo(TerritoryRequest) returns (TerritoryInfoResponse);
+  rpc GetNeighbourInfo(TerritoryRequest) returns (TerritoryNeighbourResponse);
+  rpc GetBotInfo(TerritoryRequest) returns (TerritoryBotResponse);
+  rpc GetReportList(TerritoryRequest) returns (TerritoryReportResponse);
+  rpc GetRedInfo(TerritoryRequest) returns (TerritoryRedResponse);
+  rpc DispatchAction(TerritoryActionRequest) returns (TerritoryActionResponse);
+}
+
+// ─── Requests ───────────────────────────────────────────────────────────────
+
+message TerritoryRequest {
+  int64 role_id = 1;
+}
+
+message TerritoryActionRequest {
+  int64 role_id = 1;
+  int32 type    = 2;   // CS operation type (maps to PB_CSTerritoryReq.type)
+  repeated int32 param = 3;
+}
+
+// ─── Responses ──────────────────────────────────────────────────────────────
+
+message TerritoryInfoResponse {
+  int32 territory_level  = 1;
+  int32 bot_num          = 2;
+  int32 bot_run_num      = 3;
+  int32 bot_buy_count    = 4;
+  int32 reward_count     = 5;
+  int32 reason           = 6;
+  common.ResponseStatus status = 7;
+}
+
+message TerritoryNeighbourResponse {
+  int32 neighbour_time = 1;
+  common.ResponseStatus status = 2;
+}
+
+message TerritoryBotResponse {
+  common.ResponseStatus status = 1;
+}
+
+message TerritoryReportResponse {
+  common.ResponseStatus status = 1;
+}
+
+message TerritoryRedResponse {
+  int32 reward_flag = 1;
+  common.ResponseStatus status = 2;
+}
+
+message TerritoryActionResponse {
+  bool success = 1;
+  int32 result_type = 2;
+  common.ResponseStatus status = 3;
+}
+

@@ -1,0 +1,56 @@
+server:
+  port: 8520
+
+spring:
+  application:
+    name: notification-service
+  
+  datasource:
+    $133091/game_notification?useSSL=false&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+    username: tpnam
+    password: 121831
+  
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+  
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+  
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: notification-service-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+  
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+# gRPC Server
+grpc:
+  server:
+    port: 9520
+
+logging:
+  level:
+    root: INFO
+    com.southMillion: DEBUG

@@ -1,0 +1,80 @@
+server:
+  port: 9091
+
+spring:
+  profiles:
+    active: local  # Default to local profile (root/root). Use -Dspring.profiles.active=prod for production
+  application:
+    name: admin-service
+  threads:
+    virtual:
+      enabled: true   # Java 21 Virtual Threads
+
+  # Web MVC configuration
+  web:
+    resources:
+      static-locations: classpath:/static/
+      add-mappings: true
+  mvc:
+    static-path-pattern: /**
+
+  # Database configuration
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:9088/game_admin?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:tpnam}
+    password: ${DB_PASSWORD:121831}
+    hikari:
+      # P1 has 13 async services starting concurrently — each needs up to 2 connections
+      # (one for status=STARTING save, one for final status save). 30 is safe headroom.
+      maximum-pool-size: 30
+      minimum-idle: 5
+      connection-timeout: 30000      # 30s (default) — fail fast, don't queue forever
+      idle-timeout: 600000           # 10 min
+      max-lifetime: 1800000          # 30 min
+  
+  jpa:
+    hibernate:
+      ddl-auto: none   # Let Flyway manage schema
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # Flyway migration
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  # Spring Boot Admin Server configuration
+  boot:
+    admin:
+      ui:
+        title: "GameServer Admin Dashboard"
+        brand: "<h3>🎮 GameServer Monitoring & Control</h3>"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+      service: admin-service
+      phase: ADMIN
+
+logging:
+  level:
+    root: INFO
+    de.codecentric.boot.admin: DEBUG
+    com.southMillion.admin: DEBUG

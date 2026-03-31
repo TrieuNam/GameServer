@@ -1,0 +1,71 @@
+[INFO] Scanning for projects...
+[INFO] ------------------------------------------------------------------------
+[INFO] Detecting the operating system and CPU architecture
+[INFO] ------------------------------------------------------------------------
+[INFO] os.detected.name: windows
+[INFO] os.detected.arch: x86_64
+[INFO] os.detected.bitness: 64
+[INFO] os.detected.version: 10.0
+[INFO] os.detected.version.major: 10
+[INFO] os.detected.version.minor: 0
+[INFO] os.detected.classifier: windows-x86_64
+[WARNING] The requested profile "alwaysActiveProfile" could not be activated because it does not exist.
+[WARNING] The requested profile "anotherAlwaysActiveProfile" could not be activated because it does not exist.
+[INFO] 
+[INFO] --------------------< org.SouthMillion:common-lib >---------------------
+[INFO] Building common-lib 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- protobuf:0.6.1:compile (default) @ common-lib ---
+[INFO] Compiling 64 proto file(s) to D:\project\serverGame\GameServer\common-lib\target\generated-sources\protobuf\java
+[WARNING] PROTOC: file_service.proto:8:1: warning: Import common.proto is unused.
+localization_service.proto:8:1: warning: Import common.proto is unused.
+
+[INFO] 
+[INFO] --- protobuf:0.6.1:compile-custom (default) @ common-lib ---
+[INFO] Compiling 64 proto file(s) to D:\project\serverGame\GameServer\common-lib\target\generated-sources\protobuf\grpc-java
+[WARNING] PROTOC: file_service.proto:8:1: warning: Import common.proto is unused.
+localization_service.proto:8:1: warning: Import common.proto is unused.
+
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ common-lib ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 64 resources from src\main\proto to target\classes
+[INFO] Copying 64 resources from src\main\proto to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ common-lib ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 762 source files with javac [debug release 21] to target\classes
+[INFO] /D:/project/serverGame/GameServer/common-lib/target/generated-sources/protobuf/java/org/SouthMillion/proto/Msgarena/Msgarena.java: Some input files use or override a deprecated API.
+[INFO] /D:/project/serverGame/GameServer/common-lib/target/generated-sources/protobuf/java/org/SouthMillion/proto/Msgarena/Msgarena.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- protobuf:0.6.1:test-compile (default) @ common-lib ---
+[INFO] D:\project\serverGame\GameServer\common-lib\src\test\proto does not exist. Review the configuration or consider disabling the plugin.
+[INFO] 
+[INFO] --- protobuf:0.6.1:test-compile-custom (default) @ common-lib ---
+[INFO] D:\project\serverGame\GameServer\common-lib\src\test\proto does not exist. Review the configuration or consider disabling the plugin.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ common-lib ---
+[INFO] skip non existing resourceDirectory D:\project\serverGame\GameServer\common-lib\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ common-lib ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] --- surefire:3.2.5:test (default-test) @ common-lib ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- jar:3.4.1:jar (default-jar) @ common-lib ---
+[INFO] Building jar: D:\project\serverGame\GameServer\common-lib\target\common-lib-1.0.0.jar
+[INFO] 
+[INFO] --- install:3.1.2:install (default-install) @ common-lib ---
+[INFO] Installing D:\project\serverGame\GameServer\common-lib\pom.xml to D:\env\maven-repo\org\SouthMillion\common-lib\1.0.0\common-lib-1.0.0.pom
+[INFO] Installing D:\project\serverGame\GameServer\common-lib\target\common-lib-1.0.0.jar to D:\env\maven-repo\org\SouthMillion\common-lib\1.0.0\common-lib-1.0.0.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:08 min
+[INFO] Finished at: 2026-03-22T04:12:59+07:00
+[INFO] ------------------------------------------------------------------------
+[WARNING] The requested profile "alwaysActiveProfile" could not be activated because it does not exist.
+[WARNING] The requested profile "anotherAlwaysActiveProfile" could not be activated because it does not exist.

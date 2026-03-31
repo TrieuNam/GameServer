@@ -1,0 +1,15 @@
+# Production profile
+# Activate with: java -jar app.jar --spring.profiles.active=prod
+# Set these environment variables:
+#   DB_URL - Database connection URL
+#   DB_USERNAME - Database username
+#   DB_PASSWORD - Database password
+
+server:
+  port: 8260
+
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}

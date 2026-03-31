@@ -1,0 +1,52 @@
+proto_path,filename,notes
+开箱h5/server/server/src/servercommon/proto/msgguild.proto,msgguild.proto,
+开箱h5/server/server/src/servercommon/proto/msggm.proto,msggm.proto,
+开箱h5/server/server/src/servercommon/proto/msgknapsack.proto,msgknapsack.proto,
+开箱h5/server/server/src/servercommon/proto/msgescort.proto,msgescort.proto,
+开箱h5/server/server/src/servercommon/proto/msgequip.proto,msgequip.proto,
+开箱h5/server/server/src/servercommon/proto/msgentergs.proto,msgentergs.proto,
+开箱h5/server/server/src/servercommon/proto/msgcross.proto,msgcross.proto,
+开箱h5/server/server/src/servercommon/proto/msgbox.proto,msgbox.proto,
+开箱h5/server/server/src/servercommon/proto/msgblock.proto,msgblock.proto,
+开箱h5/server/server/src/servercommon/proto/msgbattle.proto,msgbattle.proto,
+开箱h5/server/server/src/servercommon/proto/msgarena.proto,msgarena.proto,
+开箱h5/server/server/src/servercommon/proto/msgangel.proto,msgangel.proto,
+开箱h5/server/server/src/servercommon/proto/msgrank.proto,msgrank.proto,
+开箱h5/server/server/src/servercommon/proto/msgrandactivity.proto,msgrandactivity.proto,
+开箱h5/server/server/src/servercommon/proto/msgrole.proto,msgrole.proto,
+开箱h5/server/server/src/servercommon/proto/msgpet.proto,msgpet.proto,
+开箱h5/server/server/src/servercommon/proto/msgpagoda.proto,msgpagoda.proto,
+开箱h5/server/server/src/servercommon/proto/msgother.proto,msgother.proto,
+开箱h5/server/server/src/servercommon/proto/msgopenserveractivity.proto,msgopenserveractivity.proto,
+开箱h5/server/server/src/servercommon/proto/msgmount.proto,msgmount.proto,
+开箱h5/server/server/src/servercommon/proto/msgmainfb.proto,msgmainfb.proto,
+开箱h5/server/server/src/servercommon/proto/msgmail.proto,msgmail.proto,
+开箱h5/server/server/src/servercommon/proto/msglogin.proto,msglogin.proto,
+开箱h5/server/server/src/servercommon/proto/msglingzhu.proto,msglingzhu.proto,
+开箱h5/server/server/src/servercommon/proto/msgwabao.proto,msgwabao.proto,
+开箱h5/server/server/src/servercommon/proto/msgterritory.proto,msgterritory.proto,
+开箱h5/server/server/src/servercommon/proto/msgsystem.proto,msgsystem.proto,
+开箱h5/server/server/src/servercommon/proto/msgstarmap.proto,msgstarmap.proto,
+开箱h5/server/server/src/servercommon/proto/msgskill.proto,msgskill.proto,
+开箱h5/server/server/src/servercommon/proto/msgshenqi.proto,msgshenqi.proto,
+开箱h5/server/server/src/servercommon/proto/msgserver.proto,msgserver.proto,
+开箱h5/server/server/src/servercommon/proto/msgscroll.proto,msgscroll.proto,
+开箱h5/server/server/src/servercommon/proto/msgscene.proto,msgscene.proto,
+开箱h5/server/server/src/servercommon/proto/msgrune.proto,msgrune.proto,
+开箱h5/server/server/src/servercommon/proto/msgrole.proto,msgrole.proto,duplicate entry (ok)
+开箱h5/server/server/src/servercommon/proto/msgrank.proto,msgrank.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgrandactivity.proto,msgrandactivity.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgpet.proto,msgpet.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgpagoda.proto,msgpagoda.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgother.proto,msgother.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgopenserveractivity.proto,msgopenserveractivity.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgmount.proto,msgmount.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgmainfb.proto,msgmainfb.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgmail.proto,msgmail.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msglogin.proto,msglogin.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msglingzhu.proto,msglingzhu.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgknapsack.proto,msgknapsack.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgguild.proto,msgguild.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msggm.proto,msggm.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgescort.proto,msgescort.proto,duplicate entry
+开箱h5/server/server/src/servercommon/proto/msgequip.proto,msgequip.proto,duplicate entry

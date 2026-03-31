@@ -1,0 +1,456 @@
+{
+  "harness_item": [
+    {
+      "id": "41101",
+      "name": "\u4f18\u79c0\u9a6c\u76d4",
+      "harness_type": "0",
+      "att": [
+        {
+          "type": "2",
+          "add": "600"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "2",
+      "sell_item_id": "40080",
+      "sell_item_num": "50",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41102",
+      "name": "\u7cbe\u826f\u9a6c\u76d4",
+      "harness_type": "0",
+      "att": [
+        {
+          "type": "2",
+          "add": "1200"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "3",
+      "sell_item_id": "40080",
+      "sell_item_num": "125",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41103",
+      "name": "\u7a00\u6709\u9a6c\u76d4",
+      "harness_type": "0",
+      "att": [
+        {
+          "type": "2",
+          "add": "2400"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "4",
+      "sell_item_id": "40080",
+      "sell_item_num": "250",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41104",
+      "name": "\u53f2\u8bd7\u9a6c\u76d4",
+      "harness_type": "0",
+      "att": [
+        {
+          "type": "2",
+          "add": "3900"
+        },
+        {
+          "type": "28",
+          "add": "250"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "5",
+      "sell_item_id": "40080",
+      "sell_item_num": "1250",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41105",
+      "name": "\u5929\u8d50\u9a6c\u76d4",
+      "harness_type": "0",
+      "att": [
+        {
+          "type": "2",
+          "add": "6000"
+        },
+        {
+          "type": "28",
+          "add": "500"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "6",
+      "sell_item_id": "40080",
+      "sell_item_num": "2500",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41106",
+      "name": "\u4f18\u79c0\u9a6c\u94e0",
+      "harness_type": "1",
+      "att": [
+        {
+          "type": "3",
+          "add": "200"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "2",
+      "sell_item_id": "40080",
+      "sell_item_num": "50",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41107",
+      "name": "\u7cbe\u826f\u9a6c\u94e0",
+      "harness_type": "1",
+      "att": [
+        {
+          "type": "3",
+          "add": "400"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "3",
+      "sell_item_id": "40080",
+      "sell_item_num": "125",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41108",
+      "name": "\u7a00\u6709\u9a6c\u94e0",
+      "harness_type": "1",
+      "att": [
+        {
+          "type": "3",
+          "add": "800"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "4",
+      "sell_item_id": "40080",
+      "sell_item_num": "250",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41109",
+      "name": "\u53f2\u8bd7\u9a6c\u94e0",
+      "harness_type": "1",
+      "att": [
+        {
+          "type": "3",
+          "add": "1300"
+        },
+        {
+          "type": "29",
+          "add": "250"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "5",
+      "sell_item_id": "40080",
+      "sell_item_num": "1250",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41110",
+      "name": "\u5929\u8d50\u9a6c\u94e0",
+      "harness_type": "1",
+      "att": [
+        {
+          "type": "3",
+          "add": "2000"
+        },
+        {
+          "type": "29",
+          "add": "500"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "6",
+      "sell_item_id": "40080",
+      "sell_item_num": "2500",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41111",
+      "name": "\u4f18\u79c0\u9a6c\u978d",
+      "harness_type": "2",
+      "att": [
+        {
+          "type": "1",
+          "add": "2400"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "2",
+      "sell_item_id": "40080",
+      "sell_item_num": "50",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41112",
+      "name": "\u7cbe\u826f\u9a6c\u978d",
+      "harness_type": "2",
+      "att": [
+        {
+          "type": "1",
+          "add": "4800"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "3",
+      "sell_item_id": "40080",
+      "sell_item_num": "125",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41113",
+      "name": "\u7a00\u6709\u9a6c\u978d",
+      "harness_type": "2",
+      "att": [
+        {
+          "type": "1",
+          "add": "9600"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "4",
+      "sell_item_id": "40080",
+      "sell_item_num": "250",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41114",
+      "name": "\u53f2\u8bd7\u9a6c\u978d",
+      "harness_type": "2",
+      "att": [
+        {
+          "type": "1",
+          "add": "15600"
+        },
+        {
+          "type": "27",
+          "add": "250"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "5",
+      "sell_item_id": "40080",
+      "sell_item_num": "1250",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41115",
+      "name": "\u5929\u8d50\u9a6c\u978d",
+      "harness_type": "2",
+      "att": [
+        {
+          "type": "1",
+          "add": "24000"
+        },
+        {
+          "type": "27",
+          "add": "500"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "6",
+      "sell_item_id": "40080",
+      "sell_item_num": "2500",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41116",
+      "name": "\u4f18\u79c0\u9a6c\u8e44",
+      "harness_type": "3",
+      "att": [
+        {
+          "type": "4",
+          "add": "80"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "2",
+      "sell_item_id": "40080",
+      "sell_item_num": "50",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41117",
+      "name": "\u7cbe\u826f\u9a6c\u8e44",
+      "harness_type": "3",
+      "att": [
+        {
+          "type": "4",
+          "add": "160"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "3",
+      "sell_item_id": "40080",
+      "sell_item_num": "125",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41118",
+      "name": "\u7a00\u6709\u9a6c\u8e44",
+      "harness_type": "3",
+      "att": [
+        {
+          "type": "4",
+          "add": "320"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "4",
+      "sell_item_id": "40080",
+      "sell_item_num": "250",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41119",
+      "name": "\u53f2\u8bd7\u9a6c\u8e44",
+      "harness_type": "3",
+      "att": [
+        {
+          "type": "4",
+          "add": "520"
+        },
+        {
+          "type": "30",
+          "add": "250"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "5",
+      "sell_item_id": "40080",
+      "sell_item_num": "1250",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    },
+    {
+      "id": "41120",
+      "name": "\u5929\u8d50\u9a6c\u8e44",
+      "harness_type": "3",
+      "att": [
+        {
+          "type": "4",
+          "add": "800"
+        },
+        {
+          "type": "30",
+          "add": "500"
+        }
+      ],
+      "harness_own_att_num": "2",
+      "harness_att_num_max": "6",
+      "sell_item_id": "40080",
+      "sell_item_num": "2500",
+      "item_type": "13",
+      "sellprice": "200",
+      "pile_limit": "0",
+      "isdroprecord": "1",
+      "invalid_time": "0",
+      "get_the_source": "0"
+    }
+  ]
+}

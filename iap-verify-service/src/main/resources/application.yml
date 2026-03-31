@@ -1,0 +1,90 @@
+﻿server:
+  port: 8580
+
+spring:
+  profiles:
+    active: local  # Default to local profile (root/root). Use -Dspring.profiles.active=prod for production
+  application:
+    name: iap-verify-service
+  
+  datasource:
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:33066/game_iap_verify?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
+    username: ${DB_USERNAME:tpnam}
+    password: ${DB_PASSWORD:121831}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 8
+      timeout: 60000
+      jedis:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: iap-verify-service-group
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${random.value}
+
+# IAP Configuration
+iap:
+  google:
+    package-name: com.southmillion.game
+    service-account-key-path: /config/google-service-account.json
+    verify-url: https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{packageName}/purchases/products/{productId}/tokens/{token}
+  
+  apple:
+    shared-secret: your-apple-shared-secret
+    sandbox-url: https://sandbox.itunes.apple.com/verifyReceipt
+    production-url: https://buy.itunes.apple.com/verifyReceipt
+    use-sandbox: true
+  
+  verification:
+    timeout: 10000
+    retry-attempts: 3
+    cache-duration: 3600
+
+logging:
+  level:
+    com.southMillion: DEBUG
+    org.springframework.kafka: INFO
+    org.hibernate: INFO

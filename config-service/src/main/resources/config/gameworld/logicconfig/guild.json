@@ -1,0 +1,10123 @@
+{
+  "guild_boss_property": [
+    {
+      "boss_seq": "0",
+      "monster_group": "13001",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "20"
+        },
+        {
+          "item_id": "70107",
+          "num": "240"
+        }
+      ]
+    },
+    {
+      "boss_seq": "1",
+      "monster_group": "13002",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "25"
+        },
+        {
+          "item_id": "70107",
+          "num": "320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "2",
+      "monster_group": "13003",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "30"
+        },
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "boss_seq": "3",
+      "monster_group": "13004",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "35"
+        },
+        {
+          "item_id": "70107",
+          "num": "480"
+        }
+      ]
+    },
+    {
+      "boss_seq": "4",
+      "monster_group": "13005",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "40"
+        },
+        {
+          "item_id": "70107",
+          "num": "560"
+        }
+      ]
+    },
+    {
+      "boss_seq": "5",
+      "monster_group": "13006",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "45"
+        },
+        {
+          "item_id": "70107",
+          "num": "640"
+        }
+      ]
+    },
+    {
+      "boss_seq": "6",
+      "monster_group": "13007",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "50"
+        },
+        {
+          "item_id": "70107",
+          "num": "720"
+        }
+      ]
+    },
+    {
+      "boss_seq": "7",
+      "monster_group": "13008",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "55"
+        },
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "boss_seq": "8",
+      "monster_group": "13009",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "60"
+        },
+        {
+          "item_id": "70107",
+          "num": "840"
+        }
+      ]
+    },
+    {
+      "boss_seq": "9",
+      "monster_group": "13010",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "65"
+        },
+        {
+          "item_id": "70107",
+          "num": "880"
+        }
+      ]
+    },
+    {
+      "boss_seq": "10",
+      "monster_group": "13011",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "70"
+        },
+        {
+          "item_id": "70107",
+          "num": "920"
+        }
+      ]
+    },
+    {
+      "boss_seq": "11",
+      "monster_group": "13012",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "75"
+        },
+        {
+          "item_id": "70107",
+          "num": "960"
+        }
+      ]
+    },
+    {
+      "boss_seq": "12",
+      "monster_group": "13013",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "80"
+        },
+        {
+          "item_id": "70107",
+          "num": "1000"
+        }
+      ]
+    },
+    {
+      "boss_seq": "13",
+      "monster_group": "13014",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "85"
+        },
+        {
+          "item_id": "70107",
+          "num": "1040"
+        }
+      ]
+    },
+    {
+      "boss_seq": "14",
+      "monster_group": "13015",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "90"
+        },
+        {
+          "item_id": "70107",
+          "num": "1080"
+        }
+      ]
+    },
+    {
+      "boss_seq": "15",
+      "monster_group": "13016",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "95"
+        },
+        {
+          "item_id": "70107",
+          "num": "1120"
+        }
+      ]
+    },
+    {
+      "boss_seq": "16",
+      "monster_group": "13017",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "100"
+        },
+        {
+          "item_id": "70107",
+          "num": "1160"
+        }
+      ]
+    },
+    {
+      "boss_seq": "17",
+      "monster_group": "13018",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "105"
+        },
+        {
+          "item_id": "70107",
+          "num": "1200"
+        }
+      ]
+    },
+    {
+      "boss_seq": "18",
+      "monster_group": "13019",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "110"
+        },
+        {
+          "item_id": "70107",
+          "num": "1240"
+        }
+      ]
+    },
+    {
+      "boss_seq": "19",
+      "monster_group": "13020",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "115"
+        },
+        {
+          "item_id": "70107",
+          "num": "1280"
+        }
+      ]
+    },
+    {
+      "boss_seq": "20",
+      "monster_group": "13021",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "21",
+      "monster_group": "13022",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "22",
+      "monster_group": "13023",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "23",
+      "monster_group": "13024",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "24",
+      "monster_group": "13025",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "25",
+      "monster_group": "13026",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "26",
+      "monster_group": "13027",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "27",
+      "monster_group": "13028",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "28",
+      "monster_group": "13029",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "29",
+      "monster_group": "13030",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "30",
+      "monster_group": "13031",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "31",
+      "monster_group": "13032",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "32",
+      "monster_group": "13033",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "33",
+      "monster_group": "13034",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "34",
+      "monster_group": "13035",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "35",
+      "monster_group": "13036",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "36",
+      "monster_group": "13037",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "37",
+      "monster_group": "13038",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "38",
+      "monster_group": "13039",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "39",
+      "monster_group": "13040",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "40",
+      "monster_group": "13041",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "41",
+      "monster_group": "13042",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "42",
+      "monster_group": "13043",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "43",
+      "monster_group": "13044",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "44",
+      "monster_group": "13045",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "45",
+      "monster_group": "13046",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "46",
+      "monster_group": "13047",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "47",
+      "monster_group": "13048",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "48",
+      "monster_group": "13049",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    },
+    {
+      "boss_seq": "49",
+      "monster_group": "13050",
+      "res_id": "15001",
+      "win": [
+        {
+          "item_id": "40001",
+          "num": "120"
+        },
+        {
+          "item_id": "70107",
+          "num": "1320"
+        }
+      ]
+    }
+  ],
+  "guild_boss_item": [
+    {
+      "fight_time": "1",
+      "fight_item_id": "40001",
+      "fight_item_num": "0"
+    },
+    {
+      "fight_time": "2",
+      "fight_item_id": "40001",
+      "fight_item_num": "0"
+    },
+    {
+      "fight_time": "3",
+      "fight_item_id": "40001",
+      "fight_item_num": "50"
+    },
+    {
+      "fight_time": "4",
+      "fight_item_id": "40001",
+      "fight_item_num": "100"
+    }
+  ],
+  "player_exercise": [
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "1000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "100"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "2000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "120"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "3000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "140"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "4000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "160"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "5000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "180"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "6000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "7000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "220"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "8000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "240"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "9000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "260"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "10000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "280"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "11000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "12000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "320"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "13000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "340"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "14000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "360"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "15000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "380"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "16000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "17000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "420"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "18000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "440"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "19000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "460"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "20000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "480"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "21000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "22000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "520"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "23000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "540"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "24000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "560"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "25000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "580"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "26000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "27000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "620"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "28000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "640"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "29000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "660"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "30000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "680"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "31000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "32000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "720"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "33000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "740"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "34000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "760"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "35000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "780"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "36000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "37000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "820"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "38000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "840"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "39000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "860"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "0",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "1",
+          "add": "40000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "880"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "200"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "100"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "400"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "120"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "600"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "140"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "800"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "160"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "1000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "180"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "1200"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "1400"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "220"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "1600"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "240"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "1800"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "260"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "2000"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "280"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "2200"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "2400"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "320"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "2600"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "340"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "2800"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "360"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "3000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "380"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "3200"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "3400"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "420"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "3600"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "440"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "3800"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "460"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "4000"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "480"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "4200"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "4400"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "520"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "4600"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "540"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "4800"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "560"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "5000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "580"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "5200"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "5400"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "620"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "5600"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "640"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "5800"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "660"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "6000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "680"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "6200"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "6400"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "720"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "6600"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "740"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "6800"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "760"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "7000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "780"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "7200"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "7400"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "820"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "7600"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "840"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "7800"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "860"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "1",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "2",
+          "add": "8000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "880"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "80"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "100"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "160"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "120"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "240"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "140"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "320"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "160"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "400"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "180"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "480"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "560"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "220"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "640"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "240"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "720"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "260"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "800"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "280"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "880"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "960"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "320"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1040"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "340"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1120"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "360"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1200"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "380"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1280"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1360"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "420"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1440"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "440"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1520"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "460"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1600"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "480"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1680"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1760"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "520"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1840"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "540"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "1920"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "560"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2000"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "580"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2080"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2160"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "620"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2240"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "640"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2320"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "660"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2400"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "680"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2480"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2560"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "720"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2640"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "740"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2720"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "760"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2800"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "780"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2880"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "2960"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "820"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "3040"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "840"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "3120"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "860"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "2",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "3",
+          "add": "3200"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "880"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "25"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "100"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "50"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "120"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "75"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "140"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "100"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "160"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "125"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "180"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "150"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "175"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "220"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "200"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "240"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "225"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "260"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "250"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "280"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "275"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "300"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "320"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "325"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "340"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "350"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "360"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "375"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "380"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "400"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "425"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "420"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "450"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "440"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "475"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "460"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "500"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "480"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "525"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "550"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "520"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "575"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "540"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "600"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "560"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "625"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "580"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "650"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "675"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "620"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "700"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "640"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "725"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "660"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "750"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "680"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "775"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "800"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "720"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "825"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "740"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "850"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "760"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "875"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "780"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "900"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "925"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "820"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "950"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "840"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "975"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "860"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "3",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "27",
+          "add": "1000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "880"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "25"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "100"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "50"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "120"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "75"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "140"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "100"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "160"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "125"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "180"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "150"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "175"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "220"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "200"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "240"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "225"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "260"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "250"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "280"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "275"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "300"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "320"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "325"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "340"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "350"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "360"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "375"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "380"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "400"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "425"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "420"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "450"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "440"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "475"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "460"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "500"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "480"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "525"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "550"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "520"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "575"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "540"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "600"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "560"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "625"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "580"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "650"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "675"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "620"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "700"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "640"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "725"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "660"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "750"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "680"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "775"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "800"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "720"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "825"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "740"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "850"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "760"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "875"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "780"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "900"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "925"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "820"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "950"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "840"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "975"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "860"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "4",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "28",
+          "add": "1000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "880"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "25"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "100"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "50"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "120"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "75"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "140"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "100"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "160"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "125"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "180"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "150"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "175"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "220"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "200"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "240"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "225"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "260"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "250"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "280"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "275"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "300"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "320"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "325"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "340"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "350"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "360"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "375"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "380"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "400"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "425"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "420"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "450"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "440"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "475"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "460"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "500"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "480"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "525"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "550"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "520"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "575"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "540"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "600"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "560"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "625"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "580"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "650"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "675"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "620"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "700"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "640"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "725"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "660"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "750"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "680"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "775"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "800"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "720"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "825"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "740"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "850"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "760"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "875"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "780"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "900"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "925"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "820"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "950"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "840"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "975"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "860"
+        }
+      ]
+    },
+    {
+      "part_type": "0",
+      "part_id": "5",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "29",
+          "add": "1000"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "880"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "30"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "60"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "90"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "120"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "150"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "180"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "210"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "240"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "270"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "300"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "330"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "360"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "390"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "420"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "450"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "480"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "510"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "540"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "570"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "600"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1100"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "630"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "660"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "690"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "720"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "750"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "780"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "810"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "840"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "870"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "900"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "930"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "960"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "990"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "1020"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "1050"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "1080"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "1110"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "1140"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "1170"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "0",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "12",
+          "add": "1200"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2100"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "30"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "60"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "90"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "120"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "150"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "180"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "210"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "240"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "270"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "300"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "330"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "360"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "390"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "420"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "450"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "480"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "510"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "540"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "570"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "600"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1100"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "630"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "660"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "690"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "720"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "750"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "780"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "810"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "840"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "870"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "900"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "930"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "960"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "990"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "1020"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "1050"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "1080"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "1110"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "1140"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "1170"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "1",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "13",
+          "add": "1200"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2100"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "30"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "60"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "90"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "120"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "150"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "180"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "210"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "240"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "270"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "300"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "330"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "360"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "390"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "420"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "450"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "480"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "510"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "540"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "570"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "600"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1100"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "630"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "660"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "690"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "720"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "750"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "780"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "810"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "840"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "870"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "900"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "930"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "960"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "990"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "1020"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "1050"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "1080"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "1110"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "1140"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "1170"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "2",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "14",
+          "add": "1200"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2100"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "30"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "60"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "90"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "120"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "150"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "180"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "210"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "240"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "270"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "300"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "330"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "360"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "390"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "420"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "450"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "480"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "510"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "540"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "570"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "600"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1100"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "630"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "660"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "690"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "720"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "750"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "780"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "810"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "840"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "870"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "900"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "930"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "960"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "990"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "1020"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "1050"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "1080"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "1110"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "1140"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "1170"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "3",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "15",
+          "add": "1200"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2100"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "30"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "60"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "90"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "120"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "150"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "180"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "210"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "240"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "270"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "300"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "330"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "360"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "390"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "420"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "450"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "480"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "510"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "540"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "570"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "600"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1100"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "630"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "660"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "690"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "720"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "750"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "780"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "810"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "840"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "870"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "900"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "930"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "960"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "990"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "1020"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "1050"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "1080"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "1110"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "1140"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "1170"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "4",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "16",
+          "add": "1200"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2100"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "1",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "30"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "2",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "60"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "3",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "90"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "4",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "120"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "5",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "150"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "6",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "180"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "7",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "210"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "8",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "240"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "9",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "270"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "10",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "300"
+        }
+      ],
+      "part_limit_level": "0",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "11",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "330"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "12",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "360"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "13",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "390"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "14",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "420"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "15",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "450"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "16",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "480"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "17",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "510"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "18",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "540"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "19",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "570"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "20",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "600"
+        }
+      ],
+      "part_limit_level": "60",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1100"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "21",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "630"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1150"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "22",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "660"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1200"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "23",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "690"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1250"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "24",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "720"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1300"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "25",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "750"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1350"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "26",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "780"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1400"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "27",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "810"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1450"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "28",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "840"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1500"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "29",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "870"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1550"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "30",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "900"
+        }
+      ],
+      "part_limit_level": "120",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1600"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "31",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "930"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1650"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "32",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "960"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1700"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "33",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "990"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1750"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "34",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "1020"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1800"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "35",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "1050"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1850"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "36",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "1080"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1900"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "37",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "1110"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "1950"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "38",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "1140"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2000"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "39",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "1170"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2050"
+        }
+      ]
+    },
+    {
+      "part_type": "1",
+      "part_id": "5",
+      "part_level": "40",
+      "part_att": [
+        {
+          "type": "17",
+          "add": "1200"
+        }
+      ],
+      "part_limit_level": "180",
+      "exercise": [
+        {
+          "item_id": "70107",
+          "num": "2100"
+        }
+      ]
+    }
+  ],
+  "other": [
+    {
+      "win": [
+        {
+          "item_id": "70107",
+          "num": "100"
+        }
+      ],
+      "found": [
+        {
+          "item_id": "40001",
+          "num": "100"
+        }
+      ],
+      "leader_change_day": "15",
+      "rebuild": [
+        {
+          "item_id": "40001",
+          "num": "300"
+        }
+      ],
+      "adavnced_build_open_level": "60",
+      "boss_round_limit": "5",
+      "guild_pop_num": "20",
+      "robort_num_min": "2",
+      "robort_num_max": "8",
+      "robort_help_time_min": "3600",
+      "robort_help_time_max": "72000",
+      "exit_robort_num": "20",
+      "robort_fight_num": "2",
+      "help_max": "25"
+    }
+  ],
+  "help": [
+    {
+      "help_type": "0",
+      "level": "1",
+      "help_num": "8",
+      "help_time": "6000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "2",
+      "help_num": "8",
+      "help_time": "6000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "3",
+      "help_num": "8",
+      "help_time": "6000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "4",
+      "help_num": "8",
+      "help_time": "6000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "5",
+      "help_num": "8",
+      "help_time": "6000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "6",
+      "help_num": "8",
+      "help_time": "6000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "7",
+      "help_num": "8",
+      "help_time": "6000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "8",
+      "help_num": "8",
+      "help_time": "6000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "9",
+      "help_num": "8",
+      "help_time": "6000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "10",
+      "help_num": "8",
+      "help_time": "6000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "11",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "12",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "13",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "14",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "15",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "16",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "17",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "18",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "19",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "20",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "21",
+      "help_num": "8",
+      "help_time": "12000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "22",
+      "help_num": "8",
+      "help_time": "12000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "23",
+      "help_num": "8",
+      "help_time": "12000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "24",
+      "help_num": "8",
+      "help_time": "12000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "25",
+      "help_num": "8",
+      "help_time": "12000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "26",
+      "help_num": "8",
+      "help_time": "12000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "27",
+      "help_num": "8",
+      "help_time": "12000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "28",
+      "help_num": "8",
+      "help_time": "12000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "29",
+      "help_num": "8",
+      "help_time": "12000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "0",
+      "level": "30",
+      "help_num": "8",
+      "help_time": "12000",
+      "help": [
+        {
+          "item_id": "40004",
+          "num": "10"
+        }
+      ]
+    },
+    {
+      "help_type": "1",
+      "level": "1",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "70107",
+          "num": "30"
+        }
+      ]
+    },
+    {
+      "help_type": "1",
+      "level": "2",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "70107",
+          "num": "35"
+        }
+      ]
+    },
+    {
+      "help_type": "1",
+      "level": "3",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "70107",
+          "num": "40"
+        }
+      ]
+    },
+    {
+      "help_type": "1",
+      "level": "4",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "70107",
+          "num": "45"
+        }
+      ]
+    },
+    {
+      "help_type": "1",
+      "level": "5",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "70107",
+          "num": "50"
+        }
+      ]
+    },
+    {
+      "help_type": "1",
+      "level": "6",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "70107",
+          "num": "55"
+        }
+      ]
+    },
+    {
+      "help_type": "1",
+      "level": "7",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "70107",
+          "num": "60"
+        }
+      ]
+    },
+    {
+      "help_type": "1",
+      "level": "8",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "70107",
+          "num": "65"
+        }
+      ]
+    },
+    {
+      "help_type": "1",
+      "level": "9",
+      "help_num": "8",
+      "help_time": "9000",
+      "help": [
+        {
+          "item_id": "70107",
+          "num": "70"
+        }
+      ]
+    }
+  ],
+  "robort": [
+    {
+      "robort_id": "1",
+      "robort_name": "\u6d6e\u751f\u82e5\u68a6",
+      "robort_level": "80"
+    },
+    {
+      "robort_id": "2",
+      "robort_name": "\u60dc\u541b\u5ae3\u4e91",
+      "robort_level": "80"
+    },
+    {
+      "robort_id": "3",
+      "robort_name": "\u62b9\u8336\u5473\u513f\u7684\u83c7\u51c9",
+      "robort_level": "80"
+    },
+    {
+      "robort_id": "4",
+      "robort_name": "\u6e05\u6b4c\u7f08\u7f26",
+      "robort_level": "80"
+    },
+    {
+      "robort_id": "5",
+      "robort_name": "\u6e05\u65b0\u96c5\u81f4",
+      "robort_level": "80"
+    },
+    {
+      "robort_id": "6",
+      "robort_name": "\u5446\u5230\u6df1\u5904\u81ea\u7136\u840c",
+      "robort_level": "80"
+    },
+    {
+      "robort_id": "7",
+      "robort_name": "\u5404\u4e0d\u6253\u6270",
+      "robort_level": "80"
+    },
+    {
+      "robort_id": "8",
+      "robort_name": "\u65e0\u58f0\u98de\u96ea",
+      "robort_level": "80"
+    },
+    {
+      "robort_id": "9",
+      "robort_name": "\u6d45\u7b11\u5c0f\u5014\u5f3a",
+      "robort_level": "80"
+    },
+    {
+      "robort_id": "10",
+      "robort_name": "\u6d45\u7b11\u5c0f\u5014\u5f3a",
+      "robort_level": "80"
+    },
+    {
+      "robort_id": "11",
+      "robort_name": "\u4eca\u5915\u4f55\u5915",
+      "robort_level": "80"
+    },
+    {
+      "robort_id": "12",
+      "robort_name": "\u840c\u5c0f\u840c",
+      "robort_level": "90"
+    },
+    {
+      "robort_id": "13",
+      "robort_name": "\u5fae\u7b11\u5411\u6696",
+      "robort_level": "90"
+    },
+    {
+      "robort_id": "14",
+      "robort_name": "\u6d45\u7b11\u5b89\u7136",
+      "robort_level": "90"
+    },
+    {
+      "robort_id": "15",
+      "robort_name": "\u4e00\u4e1b\u6df1\u8272\u82b1",
+      "robort_level": "90"
+    },
+    {
+      "robort_id": "16",
+      "robort_name": "\u6342\u4e0d\u70ed\u7684\u5fc3",
+      "robort_level": "90"
+    },
+    {
+      "robort_id": "17",
+      "robort_name": "\u4e88\u6211\u6df1\u62e5",
+      "robort_level": "90"
+    },
+    {
+      "robort_id": "18",
+      "robort_name": "\u4ef2\u590f\u51b0\u6850",
+      "robort_level": "90"
+    },
+    {
+      "robort_id": "19",
+      "robort_name": "\u6307\u5c16\u901d\u53bb\u7684\u6d41\u5e74",
+      "robort_level": "90"
+    },
+    {
+      "robort_id": "20",
+      "robort_name": "\u8c01\u4f34\u6211\u95ef\u8361",
+      "robort_level": "90"
+    },
+    {
+      "robort_id": "21",
+      "robort_name": "\u8349\u7f16\u6212\u6307",
+      "robort_level": "90"
+    },
+    {
+      "robort_id": "22",
+      "robort_name": "\u6c61\u754c\u625b\u628a\u5b50",
+      "robort_level": "95"
+    },
+    {
+      "robort_id": "23",
+      "robort_name": "\u6700\u51c9\u8584\u53ef\u662f\u4eba\u5fc3",
+      "robort_level": "95"
+    },
+    {
+      "robort_id": "24",
+      "robort_name": "\u5e78\u798f\u4e00\u534a\u9633\u5149",
+      "robort_level": "95"
+    },
+    {
+      "robort_id": "25",
+      "robort_name": "\u6d45\u590f\u521d\u96e8",
+      "robort_level": "95"
+    },
+    {
+      "robort_id": "26",
+      "robort_name": "\u6e05\u98ce\u996e\u9732",
+      "robort_level": "95"
+    },
+    {
+      "robort_id": "27",
+      "robort_name": "\u601c\u542c\u96e8\u58f0",
+      "robort_level": "95"
+    },
+    {
+      "robort_id": "28",
+      "robort_name": "\u4f59\u751f\u7b49\u6c5d\u5f52",
+      "robort_level": "95"
+    },
+    {
+      "robort_id": "29",
+      "robort_name": "\u5b81\u590f",
+      "robort_level": "95"
+    },
+    {
+      "robort_id": "30",
+      "robort_name": "\u9e7f\u840c\u840c",
+      "robort_level": "100"
+    },
+    {
+      "robort_id": "31",
+      "robort_name": "\u590f\u82b1\u51ac\u96ea",
+      "robort_level": "100"
+    },
+    {
+      "robort_id": "32",
+      "robort_name": "\u6811\u6df1\u89c1\u9e7f",
+      "robort_level": "100"
+    },
+    {
+      "robort_id": "33",
+      "robort_name": "\u5b64\u72ec\u60a3\u8005",
+      "robort_level": "100"
+    },
+    {
+      "robort_id": "34",
+      "robort_name": "\u5b89\u6735",
+      "robort_level": "100"
+    },
+    {
+      "robort_id": "35",
+      "robort_name": "\u5fae\u96e8\u6e05\u51c9",
+      "robort_level": "100"
+    },
+    {
+      "robort_id": "36",
+      "robort_name": "\u4e45\u5b64\u6210\u75be",
+      "robort_level": "100"
+    },
+    {
+      "robort_id": "37",
+      "robort_name": "\u9752\u886b\u6545\u4eba",
+      "robort_level": "100"
+    },
+    {
+      "robort_id": "38",
+      "robort_name": "\u7cbe\u7075\u96e8\u9732",
+      "robort_level": "100"
+    },
+    {
+      "robort_id": "39",
+      "robort_name": "\u51c9\u57ce\u51c9\u4eba\u5fc3",
+      "robort_level": "100"
+    },
+    {
+      "robort_id": "40",
+      "robort_name": "\u51c9\u57ce\u51c9\u4eba\u5fc3",
+      "robort_level": "100"
+    }
+  ]
+}

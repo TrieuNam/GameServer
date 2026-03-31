@@ -1,0 +1,156 @@
+// Combat/Battle Server gRPC definitions
+syntax = "proto3";
+
+import "common.proto";
+import "role_service.proto";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.grpc.combat";
+option java_outer_classname = "CombatServiceProto";
+
+package combat;
+
+// Combat Service Definition
+service CombatService {
+  // Calculate combat result
+  rpc CalculateCombat(CombatRequest) returns (CombatResponse);
+  
+  // Start combat session
+  rpc StartCombat(StartCombatRequest) returns (CombatSession);
+  
+  // Execute combat action
+  rpc ExecuteAction(CombatActionRequest) returns (CombatActionResponse);
+  
+  // End combat session
+  rpc EndCombat(EndCombatRequest) returns (CombatResult);
+  
+  // Stream combat events (real-time)
+  rpc StreamCombatEvents(CombatStreamRequest) returns (stream CombatEvent);
+  
+  // Batch combat calculations (for PvE)
+  rpc BatchCalculateCombat(BatchCombatRequest) returns (BatchCombatResponse);
+}
+
+// Messages
+message CombatRequest {
+  int64 attacker_role_id = 1;
+  int64 defender_role_id = 2;
+  string combat_type = 3;  // PVP, PVE, ARENA, DUNGEON, TRIAL
+  CombatContext context = 4;
+}
+
+message CombatContext {
+  int32 stage_id = 1;
+  int32 monster_id = 2;
+  map<string, int32> buffs = 3;
+  map<string, int32> debuffs = 4;
+  bool is_boss = 5;
+}
+
+message CombatResponse {
+  bool attacker_wins = 1;
+  int32 rounds = 2;
+  int64 combat_duration_ms = 3;
+  
+  CombatantResult attacker = 4;
+  CombatantResult defender = 5;
+  
+  repeated CombatRound combat_log = 6;
+  common.RewardBundle rewards = 7;
+  common.ResponseStatus status = 8;
+}
+
+message CombatantResult {
+  int64 role_id = 1;
+  int32 damage_dealt = 2;
+  int32 damage_taken = 3;
+  int32 healing_done = 4;
+  int32 final_hp = 5;
+  bool is_alive = 6;
+  repeated SkillUsed skills_used = 7;
+}
+
+message SkillUsed {
+  int32 skill_id = 1;
+  int32 times_used = 2;
+  int32 total_damage = 3;
+}
+
+message CombatRound {
+  int32 round_number = 1;
+  int64 attacker_id = 2;
+  int32 skill_id = 3;
+  int32 damage = 4;
+  bool is_crit = 5;
+  string effect = 6;  // NORMAL, CRIT, MISS, BLOCK, DODGE
+  int32 attacker_hp = 7;
+  int32 defender_hp = 8;
+}
+
+message StartCombatRequest {
+  repeated int64 attacker_role_ids = 1;
+  repeated int64 defender_role_ids = 2;
+  string combat_type = 3;
+  CombatContext context = 4;
+}
+
+message CombatSession {
+  string session_id = 1;
+  int64 start_time = 2;
+  repeated role.RoleResponse attackers = 3;
+  repeated role.RoleResponse defenders = 4;
+  common.ResponseStatus status = 5;
+}
+
+message CombatActionRequest {
+  string session_id = 1;
+  int64 actor_role_id = 2;
+  int32 action_type = 3;  // 1=ATTACK, 2=SKILL, 3=ITEM, 4=DEFEND
+  int32 skill_id = 4;
+  int64 target_role_id = 5;
+}
+
+message CombatActionResponse {
+  string session_id = 1;
+  CombatRound round_result = 2;
+  bool combat_ended = 3;
+  string winner_side = 4;  // ATTACKER, DEFENDER, DRAW
+  common.ResponseStatus status = 5;
+}
+
+message EndCombatRequest {
+  string session_id = 1;
+  string end_reason = 2;  // VICTORY, DEFEAT, TIMEOUT, DISCONNECT
+}
+
+message CombatResult {
+  string session_id = 1;
+  bool attacker_wins = 2;
+  int32 total_rounds = 3;
+  int64 combat_duration_ms = 4;
+  repeated CombatantResult results = 5;
+  common.RewardBundle rewards = 6;
+  common.ResponseStatus status = 7;
+}
+
+message CombatStreamRequest {
+  string session_id = 1;
+}
+
+message CombatEvent {
+  string session_id = 1;
+  int64 timestamp = 2;
+  string event_type = 3;  // ROUND_START, ACTION, ROUND_END, COMBAT_END
+  bytes event_data = 4;
+}
+
+message BatchCombatRequest {
+  repeated CombatRequest combats = 1;
+  bool parallel_execution = 2;
+}
+
+message BatchCombatResponse {
+  repeated CombatResponse results = 1;
+  int64 total_processing_time_ms = 2;
+  common.ResponseStatus status = 3;
+}

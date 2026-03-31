@@ -1,0 +1,15 @@
+# Production profile
+# item-service is STATELESS - no database required
+# Loads item metadata from config-service via Feign
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: ${EUREKA_REGISTER:true}
+    fetch-registry: ${EUREKA_FETCH_REGISTRY:true}
+    service-url:
+      defaultZone: "${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://eureka-server:8761/eureka/}"
+
+item:
+  config:
+    base-url: "${ITEM_CONFIG_BASE_URL:http://config-service:8080}"

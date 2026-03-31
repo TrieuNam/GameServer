@@ -1,0 +1,136 @@
+option java_package = "org.SouthMillion.proto.Msgscene";
+// syntax = "proto3";                                              //!< proto3 必须添加该行
+
+import "cs/msgrole.proto";
+
+//MsgId:1100
+message PB_SCEnterScene {                                  		//!< 协议 进入场景 1100
+		optional  int32 sceneid = 1;					//!< 场景ID
+		optional  int32 obj_id = 2;						//!< 对象在场景中的id
+		optional  int32 is_first = 3;					//!< 是否第一次进入此场景
+		optional  int32 pos_x = 4;						//!< 对象在场景中的位置X
+		optional  int32 pos_y = 5;						//!< 对象在场景中的位置Y
+		optional  int32 scene_key = 6;					//!< 场景key
+}
+
+//MsgId:1101
+message PB_SCLeaveScene {                                    //!< 离开场景通知 1101 \note 暂未使用
+		optional  int32 sceneid = 1 ;						//!< 离开的场景ID
+}
+
+//MsgId:1102
+message PB_SCVisibleObjEnterRole {                               //!< 其他玩家进入视野 1102
+		optional int32 role_id = 1;								//!< 玩家ID
+		optional bytes	role_name = 2;							//!< 玩家名
+		optional int32 obj_id = 3;								//!< 玩家对象ID
+		optional int32 level = 4;								//!< 玩家等级
+		optional PB_Appearance	appearance = 5;					//!< 外观
+		optional int32 move_speed= 6;							//!< 速度
+		optional int32 pos_x= 7;								//!< 在场景中的位置X
+		optional int32 pos_y= 8;								//!< 在场景中的位置Y
+		optional float distance= 9;								//!< 方向距离 (即在当前方向上要走的距离）
+		optional float dir = 10;								//!< 方向 [-PI,-PI]
+		optional int32 scene_id= 11;							//!< 标识这是哪个场景的obj
+		optional int32 behavior_state= 12;						//!< 行为状态 \see RoleStatusManager::ROLE_STATUS
+		optional int32 is_leader= 13;							//!< 是否队长[0:否 1:是]
+		optional int32 is_in_team= 14;							//!< 是否在队内[0:否 1:是]
+		optional int32 move_state= 15;							//!< 保留字-> 移动状态[0-127],参照 RoleStatusManager::ROLE_MOVE_STATUS
+		optional int32 team_id= 16;								//!< 队伍ID
+		optional int32 attach_mask= 17;
+		optional bytes	attach_data= 18;
+}
+
+//MsgId:1112
+message PB_SCChangeAppearanceRole{                          	 //!< 外观改变 1112
+		optional int32  obj_id =1;
+		optional PB_Appearance appearance = 2;					//!< 外观
+}
+
+//MsgId:1109
+message PB_SCVisibleObjEnterNPCMonster {                               //!< 1109 NPC怪物进入视野
+		optional int32  npc_id = 1;							//!< npc_id
+		optional int32 client_show_id = 2;					//!< 客户端显示模型id
+		optional int32 monster_group_id = 3;				//!< 怪物组ID
+		optional int32  battle_mode = 4;					//!< 战斗模式  \see BATTLE_MODE
+		optional int32 npc_seq = 5;							//!< npc_seq   \note 用于标识服务端的NPC
+		optional int32 obj_id = 6;							//!< 对象ID
+		optional int32 speed = 7;							//!< 速度
+		optional int32 pos_x = 8;							//!< 在场景中的位置X
+		optional int32 pos_y = 9;							//!< 在场景中的位置Y
+		optional float distance = 10;						//!< 方向距离 (即在当前方向上要走的距离）
+		optional float dir = 11;							//!< 方向 [-PI,-PI]
+		optional int32 scene_id = 12;						//!< 标识这是哪个场景的obj
+}
+
+//MsgId:1110
+message PB_SCVisibleObjEnterNPCGathers{                           //!< 1110 NPC采集物进入视野
+		optional int32 npc_id = 1;								//!< 用于显示外观
+		optional int32 posi_x = 2;								//!< 在场景中的位置X
+		optional int32 posi_y = 3;								//!< 在场景中的位置y
+		optional int32 obj_id = 4;								//!< 对象ID
+}
+
+//MsgId:1103
+message PB_SCVisibleObjLeave{                          			 //!< 对象离开视野 1103
+		optional int32 obj_id = 1;								//!< 对象ID
+}
+
+//MsgId:1150
+message PB_CSObjMove {                          				 //!< 请求移动 1150
+		optional int32 pos_x = 1;							//!< 玩家角色在客户端中的当前位置X
+		optional int32 pos_y = 2;							//!< 玩家角色在客户端中的当前位置Y
+		optional int32 target_pos_x = 3;					//!< 目标位置X
+		optional int32 target_pos_y = 4;					//!< 目标位置Y
+		optional int32 cur_scene_id = 5;					//!< 客户端当前所在场景ID
+}
+
+//MsgId:1104
+message PB_SCObjMove{                          					 //!< 移动返回 1104	\note 会对一个范围内的每个玩家下发，客户端需要判断好是哪个对象在移动	
+		optional int32 obj_id = 1;			//!< 对象ID
+		optional int32 pos_x = 2;			//!< 对象当前的位置X
+		optional int32 pos_y = 3;			//!< 对象当前的位置Y
+		optional float dir = 4;				//!< 方向[-PI,PI]
+		optional float distance = 5;		//!< 方向距离
+		
+}
+
+//MsgId:1105
+message PB_SCResetPost {                          			 //!< 强设主角位置 1105
+		optional int32 	x = 1;					//!< 强设到当前场景位置X
+		optional int32 	y = 2;					//!< 强设到当前场景位置Y
+		optional int32 	scene_id = 3;			//!< 当前场景ID
+}
+
+
+//MsgId:1106
+message PB_SCChangeSceneNotice {                 //!< 切换场景通知  1106
+		optional int32 	change_scene_reason = 1;
+		optional int32 	target_scene_id = 2;
+}
+
+
+//MsgId:1107
+message PB_CSEnterFB {                          //!< 1107 请求进入副本
+		optional int32 	fb_type = 1;		//!< 副本类型  \see FB_TYPE
+		optional int32 	param_1 = 2;		//!< 参数1
+		optional int32 	param_2 = 3;		//!< 参数2
+}
+
+//MsgId:1108
+message PB_CSLeaveFB {                          //!< 1108 请求离开副本
+}
+
+
+message PB_ObjInfo {                          			
+		optional int32 	pos_x = 1;			//!< 位置x
+		optional int32 	pos_y = 2;			//!< 位置y
+		optional int32 	obj_id = 3;			//!< obj_id
+		optional int32 	obj_type = 4;		//!< obj类型 \see Obj::_ObjType
+}
+
+//MsgId:1116
+message PB_SCSceneObjList {                     //!< 1116 场景中obj位置列表
+		optional int32 	 notify_reason =1 ;	//!< 0:normal   1:add   2:remove
+		optional int32 	 obj_num = 2;			//!< obj数量
+		repeated PB_ObjInfo obj_list = 3;	//!< obj位置列表
+}

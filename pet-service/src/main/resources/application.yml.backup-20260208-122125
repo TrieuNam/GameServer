@@ -1,0 +1,62 @@
+server:
+  port: 8112
+
+spring:
+  application:
+    name: pet-service
+  threads:
+    virtual:
+      enabled: true   # Java 21 Virtual Threads
+  
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+  
+  datasource:
+    $133084/game_pet?useSSL=false&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true
+    username: tpnam
+    password: 121831
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    show-sql: false
+  #   baseline-on-migrate: true
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+app:
+  config:
+    serviceName: config-service
+    pet_auto: gameworld/logicconfig/pet_auto.json
+    pet_cloth_auto: gameworld/logicconfig/pet_cloth_auto.json
+    pet_cloth_game_auto: gameworld/logicconfig/pet_cloth_game_auto.json
+  pet:
+    bagType: 0                 # túi tiêu item EXP
+    wallet:
+      coinItemId: 40001        # id tiền ảo để up level khi không dùng item EXP
+    levelUp:
+      reason:
+        string: PET_LEVEL_UP   # reason string ghi vào Bag.ItemDelta.reason
+        code: 201              # reason code gửi Wallet
+      srcMsgId: 0              # theo hệ thống audit của bạn
+      srcOp: 201               # theo hệ thống audit của bạn
+      idemKeyPrefix: PET_LVUP  # prefix idemKey ví
+    level:
+      max: 300                 # fallback nếu config other.pet_level_max thiếu
+
+logging:
+  level:
+    com.SouthMillion.pet_service: INFO
+    org.hibernate.SQL: INFO

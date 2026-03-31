@@ -1,0 +1,119 @@
+// Crafting Service gRPC definitions
+syntax = "proto3";
+
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "org.SouthMillion.grpc.crafting";
+option java_outer_classname = "CraftingServiceProto";
+
+package crafting;
+
+// Crafting Service Definition
+service CraftingService {
+  // Get available recipes
+  rpc GetRecipes(GetRecipesRequest) returns (RecipesResponse);
+  
+  // Start crafting
+  rpc StartCraft(StartCraftRequest) returns (StartCraftResponse);
+  
+  // Get crafting status
+  rpc GetCraftingStatus(GetCraftingStatusRequest) returns (CraftingStatusResponse);
+  
+  // Claim completed crafting
+  rpc ClaimCrafting(ClaimCraftingRequest) returns (ClaimCraftingResponse);
+  
+  // Cancel crafting
+  rpc CancelCrafting(CancelCraftingRequest) returns (common.ResponseStatus);
+}
+
+// Messages
+message GetRecipesRequest {
+  int64 role_id = 1;
+  int32 level_filter = 2;  // Optional: filter by required level
+  string category = 3;     // Optional: WEAPON, ARMOR, CONSUMABLE, etc.
+  common.PageRequest pagination = 4;
+}
+
+message RecipesResponse {
+  repeated Recipe recipes = 1;
+  common.PageResponse page_info = 2;
+  common.ResponseStatus status = 3;
+}
+
+message Recipe {
+  int32 recipe_id = 1;
+  string recipe_name = 2;
+  int32 result_item_id = 3;
+  int32 result_amount = 4;
+  repeated Material materials = 5;
+  int64 craft_time_seconds = 6;
+  int32 required_level = 7;
+  int64 coin_cost = 8;
+  bool can_craft = 9;
+  string category = 10;
+}
+
+message Material {
+  int32 item_id = 1;
+  int32 required_amount = 2;
+  int32 current_amount = 3;
+}
+
+message StartCraftRequest {
+  int64 role_id = 1;
+  int32 recipe_id = 2;
+  int32 count = 3;  // Number of times to craft
+}
+
+message StartCraftResponse {
+  bool success = 1;
+  int64 crafting_id = 2;
+  int64 start_time = 3;
+  int64 end_time = 4;
+  string message = 5;
+  common.ResponseStatus status = 6;
+}
+
+message GetCraftingStatusRequest {
+  int64 role_id = 1;
+}
+
+message CraftingStatusResponse {
+  repeated CraftingStatus crafting_list = 1;
+  common.ResponseStatus status = 2;
+}
+
+message CraftingStatus {
+  int64 crafting_id = 1;
+  int32 recipe_id = 2;
+  int32 result_item_id = 3;
+  int32 result_amount = 4;
+  int64 start_time = 5;
+  int64 end_time = 6;
+  bool completed = 7;
+  bool can_claim = 8;
+  string status_text = 9;  // IN_PROGRESS, COMPLETED, CLAIMED
+}
+
+message ClaimCraftingRequest {
+  int64 role_id = 1;
+  int64 crafting_id = 2;
+}
+
+message ClaimCraftingResponse {
+  bool success = 1;
+  repeated RewardItem rewards = 2;
+  string message = 3;
+  common.ResponseStatus status = 4;
+}
+
+message RewardItem {
+  int32 item_id = 1;
+  int32 amount = 2;
+}
+
+message CancelCraftingRequest {
+  int64 role_id = 1;
+  int64 crafting_id = 2;
+}

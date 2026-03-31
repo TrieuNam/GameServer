@@ -1,0 +1,402 @@
+{
+  "df_arena_cfg": [
+    {
+      "initial_num": "10",
+      "award_level_min": "50",
+      "daily_rank_num": "100",
+      "weekly_rank_num": "100",
+      "combat_log_max": "50",
+      "refresh_interval_s": "300",
+      "everyday_time": "0000",
+      "jiesuan_tiem": "10000",
+      "refresh_score": "1000",
+      "u_challenge_up_max": "+10",
+      "u_challenge_up_min": "-10",
+      "u_challenge_down_max": "0",
+      "u_challeng_down_min": "-10",
+      "s_challenge_up_max": "+1000",
+      "s_challenge_up_min": "1",
+      "s_challenge_down_max": "0",
+      "s_challeng_down_min": "-1000",
+      "sarena_challenger_id": "40693",
+      "win_score": "10",
+      "lose_score": "-5",
+      "re_win_score": "15",
+      "re_lose_score": "0",
+      "succ": [
+        {
+          "item_id": "61002",
+          "num": "1"
+        },
+        {
+          "item_id": "40000",
+          "num": "2000"
+        }
+      ],
+      "lose": [
+        {
+          "item_id": "40000",
+          "num": "1000"
+        }
+      ],
+      "diamond_expend": "20"
+    }
+  ],
+  "df_everyday_award": [
+    {
+      "seq": "0",
+      "paihang_1": "1",
+      "paihang_2": "1",
+      "item_list": [
+        {
+          "item_id": "40000",
+          "num": "6000"
+        },
+        {
+          "item_id": "40001",
+          "num": "300"
+        },
+        {
+          "item_id": "61002",
+          "num": "5"
+        }
+      ]
+    },
+    {
+      "seq": "1",
+      "paihang_1": "2",
+      "paihang_2": "2",
+      "item_list": [
+        {
+          "item_id": "40000",
+          "num": "5500"
+        },
+        {
+          "item_id": "40001",
+          "num": "200"
+        },
+        {
+          "item_id": "61002",
+          "num": "4"
+        }
+      ]
+    },
+    {
+      "seq": "2",
+      "paihang_1": "3",
+      "paihang_2": "3",
+      "item_list": [
+        {
+          "item_id": "40000",
+          "num": "5000"
+        },
+        {
+          "item_id": "40001",
+          "num": "100"
+        },
+        {
+          "item_id": "61002",
+          "num": "3"
+        }
+      ]
+    },
+    {
+      "seq": "3",
+      "paihang_1": "4",
+      "paihang_2": "10",
+      "item_list": [
+        {
+          "item_id": "40000",
+          "num": "4500"
+        },
+        {
+          "item_id": "40001",
+          "num": "80"
+        },
+        {
+          "item_id": "61002",
+          "num": "2"
+        }
+      ]
+    },
+    {
+      "seq": "4",
+      "paihang_1": "11",
+      "paihang_2": "20",
+      "item_list": [
+        {
+          "item_id": "40000",
+          "num": "4000"
+        },
+        {
+          "item_id": "40001",
+          "num": "50"
+        },
+        {
+          "item_id": "61002",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "seq": "5",
+      "paihang_1": "21",
+      "paihang_2": "50",
+      "item_list": [
+        {
+          "item_id": "40000",
+          "num": "3500"
+        },
+        {
+          "item_id": "40001",
+          "num": "50"
+        }
+      ]
+    },
+    {
+      "seq": "6",
+      "paihang_1": "51",
+      "paihang_2": "100",
+      "item_list": [
+        {
+          "item_id": "40000",
+          "num": "3000"
+        },
+        {
+          "item_id": "40001",
+          "num": "40"
+        }
+      ]
+    },
+    {
+      "seq": "7",
+      "paihang_1": "101",
+      "paihang_2": "99999",
+      "item_list": [
+        {
+          "item_id": "40000",
+          "num": "2500"
+        },
+        {
+          "item_id": "40001",
+          "num": "20"
+        }
+      ]
+    }
+  ],
+  "df_weekly_award": [
+    {
+      "seq": "0",
+      "paihang_1": "1",
+      "paihang_2": "1",
+      "item_list": [
+        {
+          "item_id": "40001",
+          "num": "2000"
+        },
+        {
+          "item_id": "40201",
+          "num": "8"
+        },
+        {
+          "item_id": "61018",
+          "num": "2"
+        },
+        {
+          "item_id": "59023",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "seq": "1",
+      "paihang_1": "2",
+      "paihang_2": "2",
+      "item_list": [
+        {
+          "item_id": "40001",
+          "num": "1500"
+        },
+        {
+          "item_id": "40201",
+          "num": "6"
+        },
+        {
+          "item_id": "61018",
+          "num": "2"
+        }
+      ]
+    },
+    {
+      "seq": "2",
+      "paihang_1": "3",
+      "paihang_2": "3",
+      "item_list": [
+        {
+          "item_id": "40001",
+          "num": "1000"
+        },
+        {
+          "item_id": "40201",
+          "num": "5"
+        },
+        {
+          "item_id": "61018",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "seq": "3",
+      "paihang_1": "4",
+      "paihang_2": "10",
+      "item_list": [
+        {
+          "item_id": "40001",
+          "num": "800"
+        },
+        {
+          "item_id": "40201",
+          "num": "4"
+        },
+        {
+          "item_id": "61008",
+          "num": "3"
+        }
+      ]
+    },
+    {
+      "seq": "4",
+      "paihang_1": "11",
+      "paihang_2": "50",
+      "item_list": [
+        {
+          "item_id": "40001",
+          "num": "600"
+        },
+        {
+          "item_id": "40201",
+          "num": "3"
+        },
+        {
+          "item_id": "61008",
+          "num": "2"
+        }
+      ]
+    },
+    {
+      "seq": "5",
+      "paihang_1": "51",
+      "paihang_2": "100",
+      "item_list": [
+        {
+          "item_id": "40001",
+          "num": "600"
+        },
+        {
+          "item_id": "40201",
+          "num": "2"
+        },
+        {
+          "item_id": "61008",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "seq": "6",
+      "paihang_1": "101",
+      "paihang_2": "500",
+      "item_list": [
+        {
+          "item_id": "40001",
+          "num": "400"
+        },
+        {
+          "item_id": "61002",
+          "num": "8"
+        },
+        {
+          "item_id": "40201",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "seq": "7",
+      "paihang_1": "501",
+      "paihang_2": "1000",
+      "item_list": [
+        {
+          "item_id": "40001",
+          "num": "300"
+        },
+        {
+          "item_id": "61002",
+          "num": "6"
+        },
+        {
+          "item_id": "40201",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "seq": "8",
+      "paihang_1": "1001",
+      "paihang_2": "3000",
+      "item_list": [
+        {
+          "item_id": "40001",
+          "num": "200"
+        },
+        {
+          "item_id": "61002",
+          "num": "4"
+        },
+        {
+          "item_id": "40201",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "seq": "9",
+      "paihang_1": "3001",
+      "paihang_2": "5000",
+      "item_list": [
+        {
+          "item_id": "40001",
+          "num": "150"
+        },
+        {
+          "item_id": "61002",
+          "num": "4"
+        },
+        {
+          "item_id": "40201",
+          "num": "1"
+        }
+      ]
+    },
+    {
+      "seq": "10",
+      "paihang_1": "5001",
+      "paihang_2": "999999999",
+      "item_list": [
+        {
+          "item_id": "40001",
+          "num": "100"
+        },
+        {
+          "item_id": "61002",
+          "num": "4"
+        },
+        {
+          "item_id": "40201",
+          "num": "1"
+        }
+      ]
+    }
+  ]
+}

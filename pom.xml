@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.SouthMillion</groupId>
+    <artifactId>game-server-parent</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+    <name>GameServer Parent</name>
+    <description>Shared dependency management for GameServer microservices</description>
+
+    <!-- ============================================ -->
+    <!-- PROPERTIES                                  -->
+    <!-- ============================================ -->
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>21</java.version>
+        <spring.boot.version>3.5.3</spring.boot.version>
+        <spring-cloud.version>2025.0.0</spring-cloud.version>
+    </properties>
+
+    <!-- ============================================ -->
+    <!-- PARENT DECLARATION (Spring Boot)           -->
+    <!-- ============================================ -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.3</version>
+        <relativePath/>
+    </parent>
+
+    <!-- ============================================ -->
+    <!-- DEPENDENCY MANAGEMENT                       -->
+    <!-- ============================================ -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Cloud BOM -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- ============================================ -->
+    <!-- MODULES (Multi-Module Build) - ALL 51      -->
+    <!-- ============================================ -->
+    <modules>
+        <!-- Common Library -->
+        <module>common-lib</module>
+
+        <!-- ============================================ -->
+        <!-- P0: CORE INFRASTRUCTURE (3 services)       -->
+        <!-- ============================================ -->
+        <module>eureka-server</module>
+        <module>config-service</module>
+        <module>gateway-service</module>
+        <module>webSocket-server</module>
+
+        <!-- ============================================ -->
+        <!-- P1: DATABASE + CORE GAMEPLAY (13 services) -->
+        <!-- ============================================ -->
+        <module>user-service</module>
+        <module>role-service</module>
+        <module>serverInfo-service</module>
+        <module>session-service</module>
+        <module>wallet-service</module>
+        <module>report-service</module>
+        <module>iap-verify-service</module>
+        <module>bag-service</module>
+        <module>equip-service</module>
+        <module>drop-service</module>
+        <module>shop-service</module>
+        <module>gift-service</module>
+        <module>box-service</module>
+
+        <!-- ============================================ -->
+        <!-- P2: COMBAT & WORLD & SOCIAL (11 services)  -->
+        <!-- ============================================ -->
+        <module>arena-service</module>
+        <module>trial-service</module>
+        <module>task-service</module>
+        <module>battleserver-service</module>
+        <module>globalserver-service</module>
+        <module>gameworld-service</module>
+        <module>starmap-service</module>
+        <module>territory-service</module>
+        <module>escort-service</module>
+        <module>world-service</module>
+        <module>chat-service</module>
+        <module>guild-service</module>
+
+        <!-- ============================================ -->
+        <!-- P3: ENHANCEMENT & SUPPORT (15 services)    -->
+        <!-- ============================================ -->
+        <module>friend-service</module>
+        <module>mail-service</module>
+        <module>leaderboard-service</module>
+        <module>pet-service</module>
+        <module>mount-service</module>
+        <module>rune-service</module>
+        <module>item-service</module>
+        <module>angel-service</module>
+        <module>artifact-service</module>
+        <module>analytics-service</module>
+        <module>notification-service</module>
+        <module>moderation-service</module>
+        <module>file-service</module>
+        <module>scheduler-service</module>
+        <module>localization-service</module>
+
+        <!-- ============================================ -->
+        <!-- P4: OPTIONAL FEATURES (2 services)         -->
+        <!-- ============================================ -->
+        <module>main-fb-service</module>
+        <module>anti-cheat-service</module>
+
+        <!-- ============================================ -->
+        <!-- P5: NEW GAMEPLAY SYSTEMS                   -->
+        <!-- ============================================ -->
+        <module>lingzhu-service</module>
+        <module>knights-service</module>
+        <module>pagoda-service</module>
+        <module>scroll-service</module>
+        <module>gem-service</module>
+        <module>activity-service</module>
+        <module>crafting-service</module>
+        <module>dataaccess-service</module>
+        <module>shizhuang-service</module>
+
+        <!-- ============================================ -->
+        <!-- SPECIAL: ADMIN & SUPPORT (2 services)      -->
+        <!-- ============================================ -->
+        <module>admin-service</module>
+        <module>gm-service</module>
+    </modules>
+
+    <!-- ============================================ -->
+    <!-- COMMON DEPENDENCIES (Optional for children) -->
+    <!-- ============================================ -->
+    <dependencies>
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+    <!-- ============================================ -->
+    <!-- BUILD CONFIGURATION                        -->
+    <!-- ============================================ -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>3.5.3</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <release>21</release>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+

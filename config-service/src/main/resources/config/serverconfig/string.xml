@@ -1,0 +1,185 @@
+<!--
+		显示小数点{float_num;%f;%d} 
+			%f->数值(浮点数)
+			%d->此时显示小数点后几位
+			
+	角色信息：{r;rold_id(%d);role_name(%s)}
+				role_id->角色id
+				role_num->角色名
+
+	物品信息：{i;item_id(%d);item_num(%d)}
+				item_id->物品id
+				item_num->物品数量
+				
+	活动状态： {activitystate;id(%d);status(%d)}
+				id->活动id
+				status->活动状态 0:关闭 1：准备中  2：开始
+	
+	活动名字:  {randactivity_notice；%d}
+				%d->活动ID,客户端会显示为该活动的名字 点击可以跳转
+	
+
+-->
+
+<GameString>
+
+  <DuoBao_Reset_Sub>夺宝功能下线</DuoBao_Reset_Sub>
+  <DuoBao_Reset_Text>
+    致各位骑士：&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;很抱歉给您带来不便，目前夺宝功能已经下线，您未使用的夺宝券和坐骑碎片将会以等额钻石发放至您的邮箱，请各位骑士记得查收哦，感谢您的支持和谅解！
+  </DuoBao_Reset_Text>
+
+  <Territory>
+    <report_1_sub>【%s】的领地</report_1_sub>
+    <report_1_text>成功从【%s】的领地采集了【%s】</report_1_text>
+    <report_2_sub>你的领地</report_2_sub>
+    <report_2_text>【%s】趁你不在,成功从你的领地采集了【%s】</report_2_text>
+    <report_3_sub>你的领地</report_3_sub>
+    <report_3_text>出现了【%s】</report_3_text>
+  </Territory>
+  
+  <ShiLianPagoda>
+    <RankRewardSub>试炼之塔</RankRewardSub>
+    <RankRewardText>本期试炼之塔最高层数为%d层，排名第%d，本期试炼之塔奖励已发放，请注意查收。</RankRewardText>
+  </ShiLianPagoda>
+
+  <Role>
+    <InitName>骑士</InitName>
+
+    <buil_block_init_sub>积木系统更新</buil_block_init_sub>
+    <buil_block_init_text>亲爱的玩家，在本次游戏更新中，我们添加了全新的积木系统。现将基础的积木模型通过邮件发送给你</buil_block_init_text>
+
+    <limit_core_reset_sub>限制核心返还</limit_core_reset_sub>
+    <limit_core_reset_text>
+      亲爱的玩家，我们删除了限制核心功能，现已将您拥有和已消耗的限制核心碎片以钻石的形式返还给您
+    </limit_core_reset_text>
+
+    <rune_reset_sub>铭文系统返还</rune_reset_sub>
+    <rune_reset_text>
+      亲爱的玩家，我们对铭文系统进行了修改，将普通铭文等级上限改为30级。所有玩家铭文等级重置，已消耗的道具通过邮件形式予以返还
+    </rune_reset_text>
+
+    <mount_reset_sub2>坐骑消耗返还</mount_reset_sub2>
+    <mount_reset_text2>
+      亲爱的玩家，我们对坐骑系统进行了调整。现已所有坐骑的等级重置，并返还已消耗的道具。
+    </mount_reset_text2>
+    <mount_reset_sub>坐骑消耗返还</mount_reset_sub>
+    <mount_reset_text>
+      亲爱的骑士您好！&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;由于坐骑系统优化调整，您现有的坐骑等级已全部重置为1级，现为您全额返还升级坐骑所消耗的粮草，请查收。&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;给您造成的不便敬请见谅，祝您生活愉快，游戏愉快！&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;更多详细更新内容请查看登录公告。
+    </mount_reset_text>
+    <shi_zhuang_reset_sub>时装消耗返还</shi_zhuang_reset_sub>
+    <shi_zhuang_reset_text>
+      亲爱的骑士您好！&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;由于时装系统优化调整，您现有的时装等级已全部重置为5级，现为您返还超过5级后所消耗的时装道具已转换成等额的钻石，请查收。&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;给您造成的不便敬请见谅，祝您生活愉快，游戏愉快！&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;更多详细更新内容请查看登录公告。
+    </shi_zhuang_reset_text>
+    <angel_reset_sub>法阵幻化消耗返还</angel_reset_sub>
+    <angel_reset_text>
+      亲爱的骑士您好！&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;由于法阵幻化系统优化调整，您现有的法阵幻化等级已全部重置为5级，现为您返还超过5级后所消耗的法阵幻化道具已转换成等额的钻石，请查收。&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;给您造成的不便敬请见谅，祝您生活愉快，游戏愉快！&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;
+      更多详细更新内容请查看登录公告。
+    </angel_reset_text>
+    <box_level_reward_subject>宝箱升级奖励补领</box_level_reward_subject>
+    <box_level_reward_content>骑士您好，您在宝箱升级有漏领的奖励，现给您补上，祝您游戏愉快！</box_level_reward_content>
+    <wa_bao_level_reward_subject>收藏柜升级奖励补领</wa_bao_level_reward_subject>
+    <wa_bao_level_reward_content>骑士您好，您在考古收藏柜升级有漏领的奖励，现给您补上，祝您游戏愉快！</wa_bao_level_reward_content>
+    <gem_drawing_decompose_subject>特殊宝石图纸分解返还</gem_drawing_decompose_subject>
+    <gem_drawing_decompose_content>亲爱的骑士：&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;由于您已有重复的特殊宝石图纸，新的会自动转换为相应的特殊宝石，请您注意查收邮件。</gem_drawing_decompose_content>
+    <reset_box_and_level_subject>基金调整通知</reset_box_and_level_subject>
+    <reset_box_and_level_content>亲爱的玩家，我们整体调整了等级基金与宝箱基金，基金的领取进度已被重置，现在您可以重新领取奖励了</reset_box_and_level_content>
+	<system_notice_subject>宝石消耗返还</system_notice_subject>
+	<gem_adjust_content>亲爱的玩家，我们对宝石系统进行了修改，删除了特殊图纸和特殊宝石。已拥有的特殊图纸和特殊宝石将以钻石的形式进行返还</gem_adjust_content>
+
+
+    <big_star_reset_sub>超星系消耗返还</big_star_reset_sub>
+    <big_star_reset_text>
+      亲爱的骑士您好！&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;由于超星系系统优化调整，您现有的超星系等级已全部重置，现为您全额返还升级超星系所消耗的材料，请查收。&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;给您造成的不便敬请见谅，祝您生活愉快，游戏愉快！&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;
+      更多详细更新内容请查看登录公告。
+    </big_star_reset_text>
+
+  </Role>
+
+  <Arena>
+    <ArenaSubDay>竞技场（每日奖励）</ArenaSubDay>
+    <ArenaSubWeek>竞技场（每周奖励）</ArenaSubWeek>
+    <ArenaDayText>今日竞技场排名为%d名，今日结算奖励已发放，请注意查收。</ArenaDayText>
+    <ArenaWeekText>本周竞技场排名为%d名，本周结算奖励已发放，请注意查收。</ArenaWeekText>
+
+    <CrossArenaSubDay>跨服竞技场（每日奖励）</CrossArenaSubDay>
+    <CrossArenaSubWeek>跨服竞技场（每周奖励）</CrossArenaSubWeek>
+    <CrossArenaDayText>今日跨服竞技场排名为%d名，今日结算奖励已发放，请注意查收。</CrossArenaDayText>
+    <CrossArenaWeekText>本周跨服竞技场排名为%d名，本周结算奖励已发放，请注意查收。</CrossArenaWeekText>
+</Arena>
+
+  <Escort>
+    <escort_sub>远航</escort_sub>
+    <report_escort>你已经开始护航%d级商船。</report_escort>
+    <report_intercept_lose>对%s的拦截行动失败，获得%s。</report_intercept_lose>
+    <report_intercept_win>对%s的拦截行动成功，获得%s。</report_intercept_win>
+    <report_be_intercept_lose>被%s拦截成功，损失%s。</report_be_intercept_lose>
+    <report_be_intercept_win>被%s袭击，防守成功，保护了自己的货物。</report_be_intercept_win>
+    <report_over>护航商船已抵达目的地，共获得%s。</report_over>
+    <rank_mail_0>恭喜你在远航结算中排名为第%d名，排名奖励已通过邮件发放，请查收。</rank_mail_0>
+    <rank_mail_1>恭喜你在远航拦截结算中排名为第%d名，排名奖励已通过邮件发放，请查收。</rank_mail_1>
+  </Escort>
+
+
+  <ChongZhi>
+    <chongzhi_reward_subject>充值回馈</chongzhi_reward_subject>
+    <chongzhi_reward_jade_content>恭喜！您成功充值%d钻石， 获得%d钻石额外奖励，祝您游戏愉快~</chongzhi_reward_jade_content>
+    <chongzhi_reward_gold_content>恭喜！您成功充值%d钻石， 获得%d金币额外奖励，祝您游戏愉快~</chongzhi_reward_gold_content>
+    <chongzhi_reward_coin_content>恭喜！您成功充值%d钻石， 获得%d银币额外奖励，祝您游戏愉快~</chongzhi_reward_coin_content>
+  </ChongZhi>
+  <CmdBuy>
+    <ret_subject>直购商品失败</ret_subject>
+    <ret_content>您购买直购商品失败，在此给您补发对应金额的钻石，请注意查收！</ret_content>
+  </CmdBuy>
+  <RaActivity>
+    <monthcard_subject>月卡奖励补发</monthcard_subject>
+    <monthcard_content>尊敬的玩家，您昨日存在月卡奖励未领取，现通过邮件补发，请您注意查收，注您游戏愉快~</monthcard_content>
+    <chaozhixianli_subject>超值献礼奖励</chaozhixianli_subject>
+    <chaozhixianli_content>您在超值献礼活动中有未领取的奖励，现通过邮件发放，请查收。</chaozhixianli_content>
+    <warorder_subject>无限战令奖励补发</warorder_subject>
+    <warorder_content>亲爱的玩家，附件为您上个战令赛季未领取的奖励，现通过邮件为您补发，请注意查收！</warorder_content>
+    <weekendlianchong_subject>周末连充奖励</weekendlianchong_subject>
+    <weekendlianchong_content>您在周末连充活动中有未领取的奖励，现通过邮件发放，请查收。</weekendlianchong_content>
+
+    <new_server_sub>新服比拼奖励</new_server_sub>
+    
+    <new_server_rank0>您在竞技场大比拼活动中排名第%d，附件为您的排名奖励，请查收。</new_server_rank0>
+    <new_server_rank1>您在法阵魂石大比拼活动中排名第%d，附件为您的排名奖励，请查收。</new_server_rank1>
+    <new_server_rank2>您在角色等级大比拼活动中排名第%d，附件为您的排名奖励，请查收。</new_server_rank2>
+    <new_server_rank3>您在锢魔之塔大比拼活动中排名第%d，附件为您的排名奖励，请查收。</new_server_rank3>
+    <new_server_rank4>您在冒险大比拼活动中排名第%d，附件为您的排名奖励，请查收。</new_server_rank4>
+    <new_server_rank5>您在宠物大比拼活动中排名第%d，附件为您的排名奖励，请查收。</new_server_rank5>
+    <new_server_rank6>您在法阵大比拼活动中排名第%d，附件为您的排名奖励，请查收。</new_server_rank6>
+    <new_server_rank7>您在星图大比拼活动中排名第%d，附件为您的排名奖励，请查收。</new_server_rank7>
+    <new_server_rank8>您在坐骑大比拼活动中排名第%d，附件为您的排名奖励，请查收。</new_server_rank8>
+    <new_server_rank9>您在时装大比拼活动中排名第%d，附件为您的排名奖励，请查收。</new_server_rank9>
+
+    <new_server_reward0>您在竞技场大比拼活动中有未领取的奖励，现通过邮件发放，请查收。</new_server_reward0>
+    <new_server_reward1>您在法阵魂石大比拼活动中有未领取的奖励，现通过邮件发放，请查收。</new_server_reward1>
+    <new_server_reward2>您在角色等级大比拼活动中有未领取的奖励，现通过邮件发放，请查收。</new_server_reward2>
+    <new_server_reward3>您在锢魔之塔大比拼活动中有未领取的奖励，现通过邮件发放，请查收。</new_server_reward3>
+    <new_server_reward4>您在冒险大比拼活动中有未领取的奖励，现通过邮件发放，请查收。</new_server_reward4>
+    <new_server_reward5>您在宠物大比拼活动中有未领取的奖励，现通过邮件发放，请查收。</new_server_reward5>
+    <new_server_reward6>您在法阵大比拼活动中有未领取的奖励，现通过邮件发放，请查收。</new_server_reward6>
+    <new_server_reward7>您在星图大比拼活动中有未领取的奖励，现通过邮件发放，请查收。</new_server_reward7>
+    <new_server_reward8>您在坐骑大比拼活动中有未领取的奖励，现通过邮件发放，请查收。</new_server_reward8>
+    <new_server_reward9>您在时装大比拼活动中有未领取的奖励，现通过邮件发放，请查收。</new_server_reward9>
+
+    <cap_fund_reset_sub>评分基金奖励补发</cap_fund_reset_sub>
+    <cap_fund_reset_text>
+      亲爱的骑士&#xA;&#x20;&#x20;&#x20;&#x20;&#x20;&#x20;新版本移除了评分基金活动，由于您购买了评分基金存在未领取的奖励，我们将以邮件的形式为您补发，请注意查收附件，感谢您对我们游戏支持，祝您游戏愉快！
+    </cap_fund_reset_text>
+  
+</RaActivity>
+
+  <Global>
+    <activity>
+      <activitystate>{activitystate;%d;%d}</activitystate>
+    </activity>
+  </Global>
+
+  <SendItem>
+    <mail_sub>奖励</mail_sub>
+    <item_reward>奖励补发</item_reward>
+  </SendItem>
+
+</GameString>

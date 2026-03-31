@@ -1,0 +1,160 @@
+package com.SouthMillion.webSocket_server.handler.activity;
+
+import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.net.Emitters;
+import com.SouthMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.service.client.ActivityFeign;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.SouthMillion.proto.Msgopenserveractivity.Msgopenserveractivity;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Handles open-server activity operations (新服活动).
+ *
+ * Four sub-systems:
+ *   2160 PB_CSSevenDaySignReq        → 2161 PB_SCSevenDaySignInfo        (七日签到)
+ *   2162 PB_CSLuckUnpackingReq       → 2163 PB_SCLuckUnpackingInfo       (开箱大吉)
+ *   2164 PB_CSNewAreaPreferentialReq → 2165 PB_SCNewAreaPreferentialInfo (新服特惠)
+ *   2166 PB_CSMarketShopReq          → 2167 PB_SCMarketShopInfo          (集市商店)
+ *
+ * opera_type: 1=GET_INFO, 2=CLAIM/BUY, 3=REFRESH (MarketShop only)
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class OpenServerActivityHandler implements MessageHandler {
+
+    private final ActivityFeign activityFeign;
+
+    private static final int OP_GET_INFO = 1;
+    private static final int OP_CLAIM    = 2;
+    private static final int OP_REFRESH  = 3;
+
+    @Override
+    public int[] interests() {
+        return new int[]{2160, 2162, 2164, 2166};
+    }
+
+    @Override
+    public Mono<Void> handle(PlayerSession session, int msgId, byte[] payload) {
+        return Mono.fromRunnable(() -> {
+            try {
+                Long roleId = session.getRoleId();
+                switch (msgId) {
+                    case 2160 -> handleSevenDaySign(session, roleId, payload);
+                    case 2162 -> handleLuckUnpacking(session, roleId, payload);
+                    case 2164 -> handleNewAreaPreferential(session, roleId, payload);
+                    case 2166 -> handleMarketShop(session, roleId, payload);
+                    default   -> log.warn("[OpenActivity] Unknown msgId={}", msgId);
+                }
+            } catch (Exception e) {
+                log.error("[OpenActivity] Error for msgId={}, roleId={}", msgId, session.getRoleId(), e);
+            }
+        });
+    }
+
+    // 2160 → 2161 PB_SCSevenDaySignInfo
+    private void handleSevenDaySign(PlayerSession session, Long roleId, byte[] payload) throws Exception {
+        Msgopenserveractivity.PB_CSSevenDaySignReq req =
+                Msgopenserveractivity.PB_CSSevenDaySignReq.parseFrom(payload);
+        int op     = req.hasOperaType() ? req.getOperaType() : OP_GET_INFO;
+        int param1 = req.hasParam1()    ? req.getParam1()    : 1;
+
+        log.debug("[OpenActivity/SevenDay] op={}, roleId={}", op, roleId);
+
+        Map<String, Object> data = (op == OP_CLAIM)
+                ? activityFeign.claimSevenDay(String.valueOf(roleId), param1)
+                : activityFeign.getSevenDay(String.valueOf(roleId));
+
+        Msgopenserveractivity.PB_SCSevenDaySignInfo.Builder builder =
+                Msgopenserveractivity.PB_SCSevenDaySignInfo.newBuilder();
+        if (data != null) {
+            if (data.get("endTimestamp") instanceof Number n) builder.setEndTimestamp(n.intValue());
+            if (data.get("days") instanceof Number n)         builder.setDays(n.intValue());
+            if (data.get("receiveFlag") instanceof Number n)  builder.setReceiveFlag(n.intValue());
+        }
+        Emitters.emit(session, 2161, builder.build().toByteArray());
+    }
+
+    // 2162 → 2163 PB_SCLuckUnpackingInfo
+    private void handleLuckUnpacking(PlayerSession session, Long roleId, byte[] payload) throws Exception {
+        Msgopenserveractivity.PB_CSLuckUnpackingReq req =
+                Msgopenserveractivity.PB_CSLuckUnpackingReq.parseFrom(payload);
+        int op     = req.hasOperaType() ? req.getOperaType() : OP_GET_INFO;
+        int param1 = req.hasParam1()    ? req.getParam1()    : 0;
+
+        log.debug("[OpenActivity/LuckUnpacking] op={}, roleId={}", op, roleId);
+
+        Map<String, Object> data = (op == OP_CLAIM)
+                ? activityFeign.claimLuck(String.valueOf(roleId), param1)
+                : activityFeign.getLuck(String.valueOf(roleId));
+
+        Msgopenserveractivity.PB_SCLuckUnpackingInfo.Builder builder =
+                Msgopenserveractivity.PB_SCLuckUnpackingInfo.newBuilder();
+        if (data != null) {
+            if (data.get("endTimestamp") instanceof Number n) builder.setEndTimestamp(n.intValue());
+            if (data.get("receiveFlag") instanceof Number n)  builder.setReceiveFlag(n.intValue());
+            if (data.get("openBoxNum") instanceof Number n)   builder.setOpenBoxNum(n.intValue());
+            if (data.get("boxLevel") instanceof Number n)     builder.setBoxLevel(n.intValue());
+        }
+        Emitters.emit(session, 2163, builder.build().toByteArray());
+    }
+
+    // 2164 → 2165 PB_SCNewAreaPreferentialInfo
+    private void handleNewAreaPreferential(PlayerSession session, Long roleId, byte[] payload) throws Exception {
+        Msgopenserveractivity.PB_CSNewAreaPreferentialReq req =
+                Msgopenserveractivity.PB_CSNewAreaPreferentialReq.parseFrom(payload);
+        int op     = req.hasOperaType() ? req.getOperaType() : OP_GET_INFO;
+        int param1 = req.hasParam1()    ? req.getParam1()    : 0;
+
+        log.debug("[OpenActivity/NewArea] op={}, roleId={}", op, roleId);
+
+        Map<String, Object> data = (op == OP_CLAIM)
+                ? activityFeign.buyNewArea(String.valueOf(roleId), param1)
+                : activityFeign.getNewArea(String.valueOf(roleId));
+
+        Msgopenserveractivity.PB_SCNewAreaPreferentialInfo.Builder builder =
+                Msgopenserveractivity.PB_SCNewAreaPreferentialInfo.newBuilder();
+        if (data != null) {
+            if (data.get("endTimestamp") instanceof Number n) builder.setEndTimestamp(n.intValue());
+            // buyTimesJson is stored as JSON string; we just send empty repeated for now
+            // since parsing requires Jackson here — the field is `repeated int32 buy_times`
+        }
+        Emitters.emit(session, 2165, builder.build().toByteArray());
+    }
+
+    // 2166 → 2167 PB_SCMarketShopInfo
+    private void handleMarketShop(PlayerSession session, Long roleId, byte[] payload) throws Exception {
+        Msgopenserveractivity.PB_CSMarketShopReq req =
+                Msgopenserveractivity.PB_CSMarketShopReq.parseFrom(payload);
+        int op     = req.hasOperaType() ? req.getOperaType() : OP_GET_INFO;
+        int param1 = req.hasParam1()    ? req.getParam1()    : 0;
+
+        log.debug("[OpenActivity/MarketShop] op={}, p1={}, roleId={}", op, param1, roleId);
+
+        Map<String, Object> data;
+        if (op == OP_CLAIM) {
+            data = activityFeign.buyMarket(String.valueOf(roleId), param1);
+        } else if (op == OP_REFRESH) {
+            data = activityFeign.refreshMarket(String.valueOf(roleId));
+        } else {
+            data = activityFeign.getMarket(String.valueOf(roleId));
+        }
+
+        Msgopenserveractivity.PB_SCMarketShopInfo.Builder builder =
+                Msgopenserveractivity.PB_SCMarketShopInfo.newBuilder();
+        if (data != null) {
+            if (data.get("endTimestamp") instanceof Number n)      builder.setEndTimestamp(n.intValue());
+            if (data.get("nextFreeRefresh") instanceof Number n)   builder.setNextFreeRefreshTimestamp(n.intValue());
+            if (data.get("nextAutoRefresh") instanceof Number n)   builder.setNextAutoRefreshTimestamp(n.intValue());
+            if (data.get("curShopGroup") instanceof Number n)      builder.setCurShopGroup(n.intValue());
+            if (data.get("randomCnts") instanceof Number n)        builder.setRandomCnts(n.intValue());
+        }
+        Emitters.emit(session, 2167, builder.build().toByteArray());
+    }
+}

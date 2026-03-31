@@ -1,0 +1,73 @@
+option java_package = "org.SouthMillion.proto.Msgguild";
+
+import "cs/msgrole.proto";
+
+message PB_CSGuildReq {							//!< 9640 请求
+	optional int32 req_type = 1;				//!< 请求类型
+	repeated int32 param = 2;					//!< 参数列表
+	optional bytes str_param = 3;				//!< 名字或公告
+}
+
+message PB_SCGuildNode{
+	optional int32 guild_id = 1;
+	optional int32 guild_member_num = 2;//人数
+	optional int32 guild_icon = 3;//图标
+	optional bytes guild_name = 4;//名字
+}
+
+message PB_SCGuildSearchList {					//!< 9641 公会列表
+	repeated PB_SCGuildNode guild_list = 1;
+}
+
+message PB_SCGuildInfo {						//!< 9642 公会信息 登录下发 id为0就是没公会
+	optional int32 guild_id = 1;
+	optional int32 guild_member_num = 2;//人数
+	optional int32 guild_icon = 3;//图标
+	optional bytes guild_name = 4;//名字
+	optional bytes guild_notice = 5;//公告
+	optional int32 app_level = 6;//等级限制
+	optional int32 auto_app = 7;//自动审批
+	optional int32 can_search = 8;//搜索限制
+	optional int32 boss_level = 9;//boss等级 初始化为0 打了seq为0的变成1
+	optional int32 boss_hp_per = 10;//boss血量百分比
+	optional int32 boss_fight_time = 11;//打了几次boss
+	optional int32 m_position = 12;//职位
+}
+
+message PB_SCGuildReportNode{
+	optional int32 type = 1;//类型 根据类型选择性读下列字段
+	optional int64 time = 2;//时间 需要按时间排序
+	
+	optional PB_RoleInfo role_info = 3;
+	optional bytes name_a = 4; 
+	optional bytes name_b = 5;
+	optional int32 param_1 = 6;
+	optional int32 param_2 = 7;
+	optional int32 param_3 = 8;
+	optional int32 param_4 = 9;
+	optional int32 report_key = 10;
+}
+
+message PB_SCGuildReportList {						//!< 9643 互助界面 打开界面请求一下
+	repeated PB_SCGuildReportNode report_list = 1;
+	optional int32 send_type = 2;//0初始化 1帮助后下发一条report_list
+}
+
+message PB_SCGuildMemberNode{
+	optional PB_RoleInfo role_info = 1;
+	optional int32 position = 2;//职位
+}
+
+message PB_SCGuildMemberList {						//!< 9644 团员界面 打开界面请求一下
+	repeated PB_SCGuildMemberNode member_list = 1;
+}
+
+message PB_SCGuildAppList {						//!< 9645 审批列表 打开界面请求一下
+	repeated PB_RoleInfo role_list = 1;
+}
+
+message PB_SCGuildRoleInfo {						//!< 9646 个人公会信息 打开界面请求一下
+	repeated int32 help_param = 1;	//上次请求帮助的宝箱和收藏柜等级
+	repeated int32 exercise_part_level = 2;	//部位等级 0-5普通 6-11高级
+	optional int64 fight_boss_reward_flag = 3;	//通关奖励领取标识
+}

@@ -1,0 +1,145 @@
+{
+  "reward": [
+    {
+      "type": "0",
+      "type_box_num": "1",
+      "type_num": "100",
+      "reward_item": {
+        "item_id": "40002",
+        "num": "4"
+      }
+    },
+    {
+      "type": "1",
+      "type_box_num": "1",
+      "type_num": "200",
+      "reward_item": {
+        "item_id": "40002",
+        "num": "8"
+      }
+    },
+    {
+      "type": "2",
+      "type_box_num": "1",
+      "type_num": "400",
+      "reward_item": {
+        "item_id": "40002",
+        "num": "16"
+      }
+    },
+    {
+      "type": "3",
+      "type_box_num": "1",
+      "type_num": "800",
+      "reward_item": {
+        "item_id": "40002",
+        "num": "32"
+      }
+    },
+    {
+      "type": "4",
+      "type_box_num": "1",
+      "type_num": "1600",
+      "reward_item": {
+        "item_id": "40002",
+        "num": "48"
+      }
+    },
+    {
+      "type": "5",
+      "type_box_num": "1",
+      "type_num": "3200",
+      "reward_item": {
+        "item_id": "40002",
+        "num": "64"
+      }
+    },
+    {
+      "type": "6",
+      "type_box_num": "1",
+      "type_num": "5000",
+      "reward_item": {
+        "item_id": "40002",
+        "num": "100"
+      }
+    },
+    {
+      "type": "7",
+      "type_box_num": "2",
+      "type_num": "2",
+      "reward_item": {
+        "item_id": "40001",
+        "num": "10"
+      }
+    },
+    {
+      "type": "8",
+      "type_box_num": "2",
+      "type_num": "3",
+      "reward_item": {
+        "item_id": "40001",
+        "num": "20"
+      }
+    },
+    {
+      "type": "9",
+      "type_box_num": "2",
+      "type_num": "4",
+      "reward_item": {
+        "item_id": "40001",
+        "num": "30"
+      }
+    },
+    {
+      "type": "10",
+      "type_box_num": "2",
+      "type_num": "5",
+      "reward_item": {
+        "item_id": "40001",
+        "num": "40"
+      }
+    },
+    {
+      "type": "11",
+      "type_box_num": "2",
+      "type_num": "6",
+      "reward_item": {
+        "item_id": "40001",
+        "num": "60"
+      }
+    },
+    {
+      "type": "12",
+      "type_box_num": "2",
+      "type_num": "7",
+      "reward_item": {
+        "item_id": "40001",
+        "num": "80"
+      }
+    },
+    {
+      "type": "13",
+      "type_box_num": "2",
+      "type_num": "8",
+      "reward_item": {
+        "item_id": "40001",
+        "num": "120"
+      }
+    },
+    {
+      "type": "14",
+      "type_box_num": "2",
+      "type_num": "9",
+      "reward_item": {
+        "item_id": "40001",
+        "num": "160"
+      }
+    }
+  ],
+  "other": [
+    {
+      "time": "7",
+      "is_open": "1"
+    }
+  ]
+}

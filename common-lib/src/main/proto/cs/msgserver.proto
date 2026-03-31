@@ -1,0 +1,50 @@
+option java_package = "org.SouthMillion.proto.Msgserver";
+
+// syntax = "proto3";                                              //!< proto3 必须添加该行
+
+//MsgId:1053
+message PB_CSHeartbeatReq {										 //!< 协议 1053 心跳请求
+	optional int32 reserve = 1;                                   //!<  备用  \see 
+}
+
+//MsgId:1003
+message PB_SCHeartbeatResp {									//!< 1003 心跳返回
+	optional int32 reserve = 1;                                   //!<  备用  \see 
+}
+
+//MsgId:9000
+message PB_SCTimeAck {											//!< 9000 服务器时间返回
+	optional uint32 server_time = 1;							//!< 服务器当前时间戳
+	optional uint32 server_real_start_time = 2;					//!< 服务器首次开服时间戳
+	optional int32 open_days = 3;								//!< 服务器已开服天数
+	optional uint32 server_real_combine_time = 4;				//!< 服务器合服时间戳
+}
+
+//MsgId:9001
+message PB_SCDisconnectNotice {                                  //!< 9001 通知客户端断开服务器
+	optional int32 reason = 1;									 // 1:被挤号
+	optional int32 role_id = 2;
+	optional string user_name = 3;
+}
+
+//MsgId:9002
+message PB_SCTimeDateInfo {										 //!< 9002 服务器日期下发
+	optional uint32 time = 1;								
+	optional uint32 year = 2;
+	optional uint32 mon = 3;
+	optional uint32 day = 4;
+	optional uint32 hour = 5;
+	optional uint32 minute = 6;
+	optional uint32 second = 7;
+}
+
+//MsgId:9003
+message PB_SCCrossConnectInfo {                                  //!< 9003 通知客户端断开服务器
+	optional int32 is_connected_cross = 1;						//0: 未连接 1：已连接
+	optional int32 is_cross = 2;									//0: 在原服 1：在跨服
+}
+
+//MsgId:9050
+message PB_CSTimeReq {											//!< 9050 请求时间
+	optional int32 reserve = 1;                                   //!<  备用  \see 
+}

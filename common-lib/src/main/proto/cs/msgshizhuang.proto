@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package msgshizhuang;
+
+option java_package = "org.SouthMillion.proto.Msgshizhuang";
+option java_outer_classname = "Msgshizhuang";
+
+// ==================== Fashion/Costume System Messages ====================
+
+// 客户端请求时装信息
+message PB_CSShiZhuangReq {
+    int32 req_type = 1;          // 请求类型: 1-列表, 2-穿戴, 3-卸下, 4-升级, 5-激活
+    int32 shizhuang_id = 2;      // 时装ID
+    int32 slot = 3;              // 装备槽位: 1-武器, 2-衣服, 3-裤子, 4-鞋子, 5-翅膀
+}
+
+// 单个时装信息
+message PB_ShiZhuangInfo {
+    int32 shizhuang_id = 1;      // 时装ID
+    int32 slot = 2;              // 槽位
+    int32 level = 3;             // 等级
+    int32 star = 4;              // 星级
+    int32 quality = 5;           // 品质: 1-白, 2-绿, 3-蓝, 4-紫, 5-橙, 6-红
+    int32 status = 6;            // 状态: 0-未激活, 1-已激活, 2-已穿戴
+    int64 get_time = 7;          // 获得时间
+    int32 expire_time = 8;       // 过期时间(0-永久)
+}
+
+// 时装属性
+message PB_ShiZhuangAttr {
+    int32 hp = 1;                // 生命值
+    int32 attack = 2;            // 攻击力
+    int32 defense = 3;           // 防御力
+    int32 speed = 4;             // 速度
+    int32 charm = 5;             // 魅力值
+}
+
+// 服务端返回时装操作结果
+message PB_SCShiZhuangOpRet {
+    int32 ret_code = 1;  // 返回码: 0-成功, 其他-失败
+    int32 shizhuang_id = 2;  // 时装ID
+    string msg = 3;  // 返回消息
+    string ret_msg = 4;          // 返回信息(alternative)
+    int32 op_type = 5;           // 操作类型
+    PB_ShiZhuangInfo shizhuang_info = 6;  // 更新后的时装信息
+}
+
+// 服务端返回时装列表
+message PB_SCShiZhuangListInfo {
+    repeated PB_ShiZhuangInfo shizhuang_list = 1;  // 时装列表
+    PB_ShiZhuangAttr total_attr = 2;               // 总属性加成
+    int32 total_charm = 3;                         // 总魅力值
+}
+
+// 服务端返回单个时装信息
+message PB_SCShiZhuangSingleInfo {
+    PB_ShiZhuangInfo shizhuang_info = 1;
+    PB_ShiZhuangAttr attr = 2;
+}
+
+// 当前穿戴的时装信息
+message PB_SCShiZhuangWearInfo {
+    map<int32, int32> wear_map = 1;  // key: slot, value: shizhuang_id
+    PB_ShiZhuangAttr total_attr = 2;
+}
+
+// 时装展示信息(其他玩家)
+message PB_SCShiZhuangShowInfo {
+    int64 role_id = 1;           // 角色ID
+    string role_name = 2;        // 角色名
+    map<int32, int32> wear_map = 3;  // 穿戴信息
+    int32 total_charm = 4;       // 总魅力值
+}
+
+// 时装图鉴
+message PB_ShiZhuangCollection {
+    int32 shizhuang_id = 1;      // 时装ID
+    bool is_collected = 2;       // 是否收集
+    string name = 3;             // 名称
+    string desc = 4;             // 描述
+    int32 quality = 5;           // 品质
+}
+
+// 时装图鉴列表
+message PB_SCShiZhuangCollectionInfo {
+    repeated PB_ShiZhuangCollection collection_list = 1;
+    int32 collected_count = 2;   // 已收集数量
+    int32 total_count = 3;       // 总数量
+}

@@ -1,0 +1,32 @@
+option java_package = "org.SouthMillion.proto.Msgscroll";
+
+//!<MsgId:2170
+message PB_CSScrollReq {//!<2140 操作
+	optional int32	req_type = 1;
+	optional int32	param1 = 2;
+}
+
+message PB_ScrollData{
+	optional int32	index = 1;					//!< 背包下标
+	optional int32	item_id = 2;				//!< 马具ID
+	optional int32	level = 3;					//!< 等级
+	optional int32	wear_mark = 4;				//!< 1：穿戴
+	optional int32	param = 5;					//!< 参数
+}
+
+//!<MsgId:2171
+message PB_SCScrollInfo {						//!<2171 卷轴信息
+	optional int32 free_num = 1;				//!< 每日免费抽奖次数
+	optional int32 bao_di_num = 2;				//!< 保底已抽数量
+}
+
+//!<MsgId:2172
+message PB_SCScrollListInfo {					//!<2172 卷轴列表信息
+	repeated PB_ScrollData scroll_list = 1;		//!< 卷轴列表
+}
+
+//!<MsgId:2173
+message PB_SCScrollOneInfo {					//!<2173 卷轴单个信息
+	optional int32 reason = 1;					//!< 下发理由	0：新增 1：数据改变
+	optional PB_ScrollData scroll_data = 2;		//!< 卷轴单个数据
+}

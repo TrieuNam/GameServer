@@ -1,0 +1,17 @@
+option java_package = "org.SouthMillion.proto.Msgbattle";
+// syntax = "proto3";                                              //!< proto3 必须添加该行
+
+message PB_SCBattleReward{
+	optional int32 item_id = 1;
+	optional int64 item_num = 2;
+}
+
+//MsgId:11003
+message PB_SCBattleReport {            							//!<  11003 战报
+	optional int32 battle_result_type = 1;						//战斗结果 \see FIGHT_RESULT_MAX
+	optional int32 battle_mode_type = 2;						//战斗类型 \see HERO_BATTLE_TYPE_MAX
+	repeated PB_SCBattleReward reward_list = 3;
+	optional string battle_file_name = 4;						//!< 战报名
+	optional int32 score_change = 5;							//积分变化
+	optional int64 total_damage = 6;							//伤害
+}

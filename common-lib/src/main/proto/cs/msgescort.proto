@@ -1,0 +1,55 @@
+option java_package = "org.SouthMillion.proto.Msgescort";
+
+import "cs/msgrole.proto";
+
+message PB_CSEscortReq {//!< 9620 操作
+	optional int32	type = 1;
+	optional int32	p1 = 2;	
+}
+
+message PB_SCEscortRet {//!< 9621 回调
+	optional int32	type = 1;
+	optional int32	p1 = 2;	
+	optional int32	p2 = 3;	
+}
+
+message PB_SCEscortRoleInfo {//!< 9622 个人信息
+	optional int32	ship = 1;//船只等级 
+	optional int32	escort_count = 2;//护送了几次 初始为0
+	optional int32	intercept_count = 3;//拦截了几次 初始为0
+	optional int32	help_count = 4;//灭火了几次 初始为0
+	optional int64	max_damage = 5;//伤害量
+	optional int32	reward_index = 6;//初始为0  领了第一个后变成1 
+}
+
+message PB_SCEscortShipData {
+	optional int32	ship=1;//船只等级
+	optional int32	uid=2;//主人id
+	optional int32	be_intercept=3;//被抢了几次
+	optional uint32	over_time=4;//结束时间
+	optional int32	ship_key=5;
+	optional int32	is_help=6;//初始为0 救火后变成1
+}
+
+message PB_SCEscortShipListInfo {//!< 9623 航道信息
+	repeated PB_SCEscortShipData	my_ship = 1;//我的船
+	repeated PB_SCEscortShipData	ship_list = 2;//一堆船
+}
+
+message PB_SCEscortReportListInfo {//!< 9624 记录列表
+	repeated bytes	report_list = 1;
+	repeated uint32	report_time = 2;
+}
+
+message PB_SCEscortInterceptData {
+	optional PB_RoleInfo	role_info=1;//主人信息
+	optional PB_SCEscortShipData	ship=2;//船的信息
+}
+
+message PB_SCEscortInterceptListInfo {//!< 9625 拦截列表
+		repeated	PB_SCEscortInterceptData list =1;
+}
+
+message PB_SCEscortShipInfo {//!< 9626 船的信息
+		optional	PB_SCEscortInterceptData info =1;
+}
