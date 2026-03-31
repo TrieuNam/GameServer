@@ -1156,9 +1156,9 @@ public class BoxService {
                 .defend(rollRangeOrNull(r.getDefMin(), r.getDefMax()))
                 .speed(rollRangeOrNull(r.getSpeedMin(), r.getSpeedMax()))
                 .attrType1((int) r.getFristAtt())
-                .attrValue1(null)             // secondary attr value computed elsewhere
+                .attrValue1(0)             // Default to 0; computed values can be added later if needed
                 .attrType2((int) r.getSecondAtt())
-                .attrValue2(null)
+                .attrValue2(0)
                 .build()).orElse(null);
     }
 
