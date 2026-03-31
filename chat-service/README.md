@@ -133,6 +133,7 @@ curl -X POST http://localhost:8460/api/chat/mute \
 ## 🚀 Running
 
 ```bash
+cd GameServer/chat-service
 mvn clean install
 mvn spring-boot:run
 ```
