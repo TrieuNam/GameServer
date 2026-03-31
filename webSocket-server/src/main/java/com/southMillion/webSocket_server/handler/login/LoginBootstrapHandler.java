@@ -48,6 +48,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import com.SouthMillion.webSocket_server.utils.FeignTokenHolder;
 import java.lang.reflect.Method;
@@ -74,6 +75,7 @@ public class LoginBootstrapHandler implements MessageHandler {
     // ===== Feign / Registry =====
     private final SessionFeignClient sessionFeign;
     private final RoleFeign roleFeign;
+    private final ActivityFeign activityFeign;
     private final InMemoryPlayerSessionRegistry registry;
     private final AnalyticsHandler analyticsHandler;
     private final LoginSnapshotService loginSnapshotService;
@@ -298,6 +300,10 @@ public class LoginBootstrapHandler implements MessageHandler {
                                    "totalLoginMs", tAck - t0,
                                "newRole",      createdNow.get(),
                                "snapshotStatus", snapshotAssessment.getStatus()));
+
+                    // ── Initialize activity-service data ──────────────────────────────────
+                    initializeActivityData(ps);
+
                     // ── Gửi ACK cho client ──────────────────────────────────────────────
                     Emitters.sendLoginAck(ps, LOGIN_OK, 0);
                     Emitters.sendTimeAck(ps, (int) (System.currentTimeMillis() / 1000L), 0);
@@ -621,5 +627,75 @@ public class LoginBootstrapHandler implements MessageHandler {
 
     private String safeStr(String s) {
         return (s == null || s.isBlank()) ? "" : s;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ACTIVITY SERVICE INITIALIZATION
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Initialize activity-service data on login.
+     * This ensures activity states (SevenDaySign, etc.) are created/initialized
+     * and login events are tracked in the activity system.
+     * Fire-and-forget to avoid blocking the login flow.
+     */
+    private void initializeActivityData(PlayerSession ps) {
+        if (ps.getRoleId() == null) {
+            log.warn("[activity-init] roleId is null, skipping activity initialization");
+            return;
+        }
+
+        final String roleIdStr = String.valueOf(ps.getRoleId());
+        final String token = ps.getSessionId();
+
+        // Fire-and-forget initialization - don't block login flow
+        Mono.fromRunnable(() -> {
+            try {
+                FeignTokenHolder.set(token);
+
+                // Initialize SevenDaySign activity (auto-creates if not exists)
+                try {
+                    var sevenDayData = activityFeign.getSevenDay(roleIdStr);
+                    log.info("[activity-init] SevenDaySign initialized for roleId={}", ps.getRoleId());
+
+                    // Track activity login event
+                    analyticsHandler.track(ps, "ACTIVITY_LOGIN", "GAMEPLAY",
+                            Map.of("roleId", roleIdStr,
+                                   "activityType", "SevenDaySign",
+                                   "sevenDayData", sevenDayData != null ? sevenDayData.toString() : "null"));
+                } catch (Exception e) {
+                    log.warn("[activity-init] Failed to initialize SevenDaySign for roleId={}: {}",
+                            ps.getRoleId(), e.getMessage());
+                }
+
+                // Initialize other key activities that should be auto-created on login
+                try {
+                    activityFeign.getLuck(roleIdStr);
+                    log.debug("[activity-init] LuckUnpacking initialized for roleId={}", ps.getRoleId());
+                } catch (Exception e) {
+                    log.warn("[activity-init] Failed to initialize LuckUnpacking for roleId={}: {}",
+                            ps.getRoleId(), e.getMessage());
+                }
+
+                try {
+                    activityFeign.getNewArea(roleIdStr);
+                    log.debug("[activity-init] NewAreaPreferential initialized for roleId={}", ps.getRoleId());
+                } catch (Exception e) {
+                    log.warn("[activity-init] Failed to initialize NewAreaPreferential for roleId={}: {}",
+                            ps.getRoleId(), e.getMessage());
+                }
+
+                log.info("[activity-init] Activity initialization completed for roleId={}", ps.getRoleId());
+            } catch (Exception e) {
+                log.warn("[activity-init] Unexpected error during activity initialization for roleId={}: {}",
+                        ps.getRoleId(), e.getMessage());
+            } finally {
+                FeignTokenHolder.clear();
+            }
+        }).subscribeOn(Schedulers.boundedElastic()).subscribe(
+                null,
+                e -> log.warn("[activity-init] Activity initialization failed for roleId={}: {}",
+                        ps.getRoleId(), e.getMessage())
+        );
     }
 }
