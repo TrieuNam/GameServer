@@ -25,21 +25,38 @@ public class ItemService {
     public Map<Integer, ItemMetaDTO> batch(List<Integer> ids) {
         Map<Integer, ItemMetaDTO> out = new LinkedHashMap<>();
         List<Integer> missingIds = new ArrayList<>();
+        List<Integer> failedIds = new ArrayList<>();
+
+        if (ids == null || ids.isEmpty()) {
+            return out;
+        }
 
         log.debug("[item.meta.batch] request ids={} size={}", ids, ids == null ? 0 : ids.size());
-        for (int id : ids) {
+        for (Integer rawId : ids) {
+            if (rawId == null) {
+                continue;
+            }
+            int id = rawId;
             try {
                 out.put(id, cache.getOrLoad(id));
             } catch (ItemCache.ItemNotFoundException ignored) {
                 // Best effort for batch API: skip ids that are temporarily unavailable.
                 missingIds.add(id);
+            } catch (Exception ex) {
+                failedIds.add(id);
+                log.warn("[item.meta.batch] failed itemId={} ex={}", id, ex.toString());
             }
         }
 
         if (!missingIds.isEmpty()) {
             log.warn("[item.meta.batch] missing item ids={} (returned {} / {})",
                     missingIds, out.size(), ids.size());
-        } else {
+        }
+        if (!failedIds.isEmpty()) {
+            log.warn("[item.meta.batch] failed item ids={} (returned {} / {})",
+                    failedIds, out.size(), ids.size());
+        }
+        if (missingIds.isEmpty() && failedIds.isEmpty()) {
             log.debug("[item.meta.batch] all ids resolved, returned={}", out.size());
         }
         return out;

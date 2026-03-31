@@ -2,12 +2,21 @@ package com.SouthMillion.box_service.repository;
 
 import com.SouthMillion.box_service.enity.BoxState;
 import jakarta.transaction.Transactional;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import jakarta.persistence.LockModeType;
+
+import java.util.Optional;
+
 public interface BoxStateRepository extends JpaRepository<BoxState, Long> {
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("select b from BoxState b where b.roleId = :roleId")
+	Optional<BoxState> findByRoleIdForUpdate(@Param("roleId") Long roleId);
 
 	@Modifying
 	@Transactional

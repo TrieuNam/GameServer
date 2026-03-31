@@ -53,3 +53,21 @@ feign:
     enabled: false
   httpclient:
     enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+    # Add timeout for Redis health check to avoid long waiting times
+    redis:
+      # Timeout in milliseconds
+      response-timeout: 3000ms

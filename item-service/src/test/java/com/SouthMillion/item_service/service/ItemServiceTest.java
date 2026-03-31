@@ -87,6 +87,20 @@ class ItemServiceTest {
 
             assertThat(result).isEmpty();
         }
+
+        @Test
+        @DisplayName("TC-ITEM-004A [P] Mot item loi runtime khong lam fail ca batch")
+        void batch_runtimeErrorOnOneItem_returnsPartialMap() {
+            ItemMetaDTO dto1 = dto(1, "EQUIP", 1);
+            given(cache.getOrLoad(1)).willReturn(dto1);
+            given(cache.getOrLoad(40420)).willThrow(new IllegalStateException("broken data"));
+
+            Map<Integer, ItemMetaDTO> result = itemService.batch(List.of(1, 40420));
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(1)).isEqualTo(dto1);
+            assertThat(result).doesNotContainKey(40420);
+        }
     }
 
     // =========================================================

@@ -153,7 +153,7 @@ public class BoxService {
         int count = Math.max(1, Math.min(5, req.getCount()));
         boolean isFive = count >= 5;
 
-        var s = getOrCreate(roleId);
+        var s = getOrCreateForUpdate(roleId);
         maybeCompleteLevelUp(s);
         maybeDailyReset(s);
 
@@ -203,9 +203,10 @@ public class BoxService {
                     .build();
         }
 
-        // Fixed step?
+        // Each open request consumes exactly 1 or 5 boxes.
         int step = nextFixedStep(s.getOpenBoxTotal(), isFive);
-        long need = (step > 0) ? step : (isFive ? 5L : 1L);
+        long need = isFive ? 5L : 1L;
+        boolean hitFixedThisOpen = step > 0 && step <= need;
 
         // Consume box item
         BagConsumeReq consumeReq = BagConsumeReq.builder()
@@ -220,7 +221,7 @@ public class BoxService {
         List<Map<String, Object>> bonus = new ArrayList<>();
 
         // ===== 1) Fixed reward theo order
-        if (step > 0) {
+        if (hitFixedThisOpen) {
             int order = s.getOpenBoxTotal() + step;
             int fixedItemId = fixedItemForOrder(order).orElse(0);
 
@@ -441,32 +442,19 @@ public class BoxService {
             }
         }
         int replacedItemId = replaced != null && replaced.getItemId() != null ? replaced.getItemId() : 0;
-        EquipDTOs.WearFromBoxItem replacedWearItem = wearItemFromReplaced(replaced);
-        boolean shouldSwapCompare = replacedItemId > 0 && !sameWearItemSnapshot(replacedWearItem, wearItem);
-
-        if (shouldSwapCompare) {
-            Map<String, Object> replacedPending = replacedWearItem.toPendingMap();
-            replacedPending.put("isNew", false);
-            s.setPendingJson(writePendingJson(replacedPending));
-            boxRepo.save(s);
-
-            BoxDTOs.EquipRolled replacedRolled = wearItemToEquipRolled(replacedWearItem);
-            CurrentEquipLookup equippedAfterWearLookup = findCurrentEquipWithRetry(roleId, wearItem.getEquipType() != null ? wearItem.getEquipType() : 0);
-            BoxDTOs.EquipRolled equippedNow = equippedAfterWearLookup.getEquip() != null
-                    ? equippedAfterWearLookup.getEquip()
-                    : wearItemToEquipRolled(wearItem);
-            int replacedQuality = replacedWearItem.getQuality() != null ? replacedWearItem.getQuality() : 1;
-            int replacedLevel = replacedWearItem.getEquipLevel() != null ? replacedWearItem.getEquipLevel() : 1;
-            saveCompareState(roleId, replacedRolled, equippedNow, replacedQuality, replacedLevel, 0, "BOX_WEAR", "PENDING_COMPARE");
-            log.info("[box] wear swap pending roleId={} candidateItemId={} equippedBeforeItemId={}", roleId, replacedItemId, itemId);
-        } else {
-            s.setPendingJson(null);
-            boxRepo.save(s);
-            compareStateRepo.delete(roleId);
-            if (replacedItemId > 0) {
-                log.warn("[box] skip swap compare because replaced equals candidate roleId={} itemId={}", roleId, itemId);
+        if (replacedItemId > 0 && replacedItemId != itemId) {
+            try {
+                putBackReplacedEquipToBag(roleId, replaced);
+            } catch (Exception ex) {
+                // Best effort only: compare-state/pending must still be cleared to avoid swap loop.
+                log.warn("[box] return replaced to bag failed roleId={} itemId={} ex={}", roleId, replacedItemId, ex.toString());
             }
         }
+
+        s.setPendingJson(null);
+        boxRepo.save(s);
+        compareStateRepo.delete(roleId);
+        log.info("[box] wear finalized roleId={} wornItemId={} replacedItemId={}", roleId, itemId, replacedItemId);
 
         return BoxDTOs.OkResp.builder().ok(true).message("OK").build();
     }
@@ -533,6 +521,21 @@ public class BoxService {
             } catch (Exception e) {
                 log.warn("roleFeign.addExp failed: {}", e.getMessage());
             }
+        }
+
+        try {
+            int sellQuality = activeItem.getQuality() != null ? activeItem.getQuality() : 1;
+            int sellLevel = activeItem.getEquipLevel() != null ? activeItem.getEquipLevel() : 1;
+            saveCompareState(roleId,
+                    wearItemToEquipRolled(activeItem),
+                    null,
+                    sellQuality,
+                    sellLevel,
+                    0,
+                    "REL_SELL",
+                    "SOLD");
+        } catch (Exception e) {
+            log.warn("[box] save REL_SELL state failed roleId={} ex={}", roleId, e.toString());
         }
 
         s.setLastOpenIsFive(false);
@@ -975,6 +978,32 @@ public class BoxService {
                 .orElseThrow(() -> new IllegalStateException("BoxState not found for roleId=" + roleId));
     }
 
+    private BoxState getOrCreateForUpdate(Long roleId) {
+        boxRepo.insertDefaultIfAbsent(roleId);
+        return boxRepo.findByRoleIdForUpdate(roleId)
+                .orElseThrow(() -> new IllegalStateException("BoxState not found for roleId=" + roleId));
+    }
+
+    private void putBackReplacedEquipToBag(Long roleId, EquipDTOs.ReplacedEquip replaced) {
+        if (roleId == null || replaced == null || replaced.getItemId() == null || replaced.getItemId() <= 0) {
+            return;
+        }
+        int quality = replaced.getQuality() != null && replaced.getQuality() > 0 ? replaced.getQuality() : 1;
+        BagAddItemReq addReq = BagAddItemReq.builder()
+                .userId(1L)
+                .roleId(roleId)
+                .items(List.of(BagAddItemReq.Item.builder()
+                        .itemId(replaced.getItemId())
+                        .amount(1)
+                        .quality(quality)
+                        .bagType((int) BAG_EQUIP)
+                        .bound(false)
+                        .build()))
+                .source("BOX_WEAR_RETURN_OLD")
+                .build();
+        bag.add(addReq);
+    }
+
     private void maybeCompleteLevelUp(BoxState s) {
         long now = Instant.now().getEpochSecond();
         if (s.getLevelUpEndEpoch() > 0 && s.getLevelUpEndEpoch() <= now) {
@@ -1385,13 +1414,63 @@ public class BoxService {
                     metaLookup = Map.of();
                 }
                 final Map<Integer, Map<String, Object>> finalMetas = metaLookup;
-                List<BagAddItemReq.Item> bagItems = finalAdd.stream()
-                    .map(d -> buildBagAddItem(
-                        d.getItemId(),
-                        d.getAmount(),
-                        bagType,
-                        finalMetas.get(d.getItemId())))
-                        .toList();
+                Map<Integer, Integer> mergedByItemId = new LinkedHashMap<>();
+                for (BagDTOs.ItemDelta delta : finalAdd) {
+                    if (delta == null || delta.getItemId() == null || delta.getAmount() == null) {
+                        continue;
+                    }
+                    if (delta.getAmount() <= 0) {
+                        continue;
+                    }
+                    mergedByItemId.merge(delta.getItemId(), delta.getAmount(), Integer::sum);
+                }
+
+                Map<Integer, BagDTOs.ItemView> existingByItemId = new HashMap<>();
+                try {
+                    List<BagDTOs.ItemView> existingItems = bag.listItems(String.valueOf(roleId), null);
+                    if (existingItems != null) {
+                        for (BagDTOs.ItemView existing : existingItems) {
+                            if (existing == null || existing.getItemId() == null) {
+                                continue;
+                            }
+                            existingByItemId.putIfAbsent(existing.getItemId(), existing);
+                        }
+                    }
+                } catch (Throwable t) {
+                    log.debug("[box] listItems stack-hint skipped rid={} ex={}", roleId, t.toString());
+                }
+
+                List<BagAddItemReq.Item> bagItems = new ArrayList<>();
+                for (Map.Entry<Integer, Integer> entry : mergedByItemId.entrySet()) {
+                    int itemId = entry.getKey();
+                    int amount = entry.getValue();
+                    if (amount <= 0) {
+                        continue;
+                    }
+
+                    BagDTOs.ItemView existing = existingByItemId.get(itemId);
+                    Integer preferredBagType = existing != null && existing.getBagType() != null
+                            ? existing.getBagType()
+                            : (int) bagType;
+                    Integer preferredQuality = existing != null && existing.getQuality() != null && existing.getQuality() > 0
+                            ? existing.getQuality()
+                            : resolveBagItemQuality(itemId, finalMetas.get(itemId));
+                    Boolean preferredBound = existing != null && existing.getBind() != null
+                            ? existing.getBind() != 0
+                            : Boolean.FALSE;
+
+                    bagItems.add(BagAddItemReq.Item.builder()
+                            .itemId(itemId)
+                            .amount(amount)
+                            .quality(preferredQuality)
+                            .bagType(preferredBagType)
+                            .bound(preferredBound)
+                            .build());
+                }
+
+                if (bagItems.isEmpty()) {
+                    return;
+                }
                 BagAddItemReq addReq = BagAddItemReq.builder()
                         .userId(1L) // audit field
                         .roleId(roleId)

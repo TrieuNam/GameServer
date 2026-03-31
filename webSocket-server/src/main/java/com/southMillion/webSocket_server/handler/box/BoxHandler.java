@@ -241,6 +241,7 @@ public class BoxHandler implements MessageHandler {
             BoxDTOs.SellResp sellResp = boxFeign.sell(req);
 
             if (sellResp != null && sellResp.isOk()) {
+                log.info("[Box] sell success roleId={} sellCoin={} sellExp={}", roleId, sellResp.getSellCoin(), sellResp.getSellExp());
                 // Sell xong thì pending rỗng: đẩy packet rỗng để client đóng BoxEquipView ngay.
                 sendEquipInfo(session, buildEmptyEquipInfo());
                 taskProgressPublisher.publish(roleId, "sell_equip_num", 1, "websocket-box-sell");
@@ -658,30 +659,34 @@ public class BoxHandler implements MessageHandler {
     }
 
     private void pushRoleAttr(PlayerSession session) {
-        try {
-            roleServiceHandler.pushRoleState(session)
-                    .onErrorResume(ex -> {
-                        log.debug("[Box] pushRoleAttr skipped roleId={} ex={}", session.getRoleId(), ex.toString());
-                        return Mono.empty();
-                    })
-                    .block();
-        } catch (Exception e) {
-            log.debug("[Box] pushRoleAttr failed roleId={} ex={}", session.getRoleId(), e.toString());
-        }
+        Thread.ofVirtual().start(() -> {
+            try {
+                roleServiceHandler.pushRoleState(session)
+                        .onErrorResume(ex -> {
+                            log.debug("[Box] pushRoleAttr skipped roleId={} ex={}", session.getRoleId(), ex.toString());
+                            return Mono.empty();
+                        })
+                        .block(Duration.ofSeconds(5));
+            } catch (Exception e) {
+                log.debug("[Box] pushRoleAttr error roleId={} ex={}", session.getRoleId(), e.toString());
+            }
+        });
     }
 
     private void pushWalletBalance(PlayerSession session, Long roleId) {
         if (roleId == null) {
             return;
         }
-        try {
-            WalletDTOs.BalancesResp walletResp = walletHttpClient.info(String.valueOf(roleId));
-            if (walletResp != null && walletResp.balances() != null) {
-                Emitters.sendWalletBalances(session, walletResp.balances());
+        Thread.ofVirtual().start(() -> {
+            try {
+                WalletDTOs.BalancesResp walletResp = walletHttpClient.info(String.valueOf(roleId));
+                if (walletResp != null && walletResp.balances() != null) {
+                    Emitters.sendWalletBalances(session, walletResp.balances());
+                }
+            } catch (Exception e) {
+                log.debug("[Box] pushWalletBalance skipped roleId={} ex={}", roleId, e.toString());
             }
-        } catch (Exception e) {
-            log.debug("[Box] pushWalletBalance skipped roleId={} ex={}", roleId, e.toString());
-        }
+        });
     }
 
     private void refreshRoleAndWalletAfterSell(PlayerSession session, Long roleId) {

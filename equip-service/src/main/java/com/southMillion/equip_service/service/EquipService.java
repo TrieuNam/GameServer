@@ -122,7 +122,7 @@ public class EquipService {
 
             Map<String, Object> meta = metaByItemId.computeIfAbsent(
                     bagItem.getItemId(),
-                    this::getOneMeta
+                    this::getEquipMeta
             );
 
             int equipType = extractEquipType(meta);
