@@ -445,20 +445,34 @@ public class BoxService {
         boolean shouldSwapCompare = replacedItemId > 0 && !sameWearItemSnapshot(replacedWearItem, wearItem);
 
         if (shouldSwapCompare) {
-            Map<String, Object> replacedPending = replacedWearItem.toPendingMap();
-            replacedPending.put("isNew", false);
-            s.setPendingJson(writePendingJson(replacedPending));
-            boxRepo.save(s);
+            // Compare equipment stats to determine optimal choice
+            int comparison = compareEquipmentStats(wearItem, replacedWearItem);
 
-            BoxDTOs.EquipRolled replacedRolled = wearItemToEquipRolled(replacedWearItem);
-            CurrentEquipLookup equippedAfterWearLookup = findCurrentEquipWithRetry(roleId, wearItem.getEquipType() != null ? wearItem.getEquipType() : 0);
-            BoxDTOs.EquipRolled equippedNow = equippedAfterWearLookup.getEquip() != null
-                    ? equippedAfterWearLookup.getEquip()
-                    : wearItemToEquipRolled(wearItem);
-            int replacedQuality = replacedWearItem.getQuality() != null ? replacedWearItem.getQuality() : 1;
-            int replacedLevel = replacedWearItem.getEquipLevel() != null ? replacedWearItem.getEquipLevel() : 1;
-            saveCompareState(roleId, replacedRolled, equippedNow, replacedQuality, replacedLevel, 0, "BOX_WEAR", "PENDING_COMPARE");
-            log.info("[box] wear swap pending roleId={} candidateItemId={} equippedBeforeItemId={}", roleId, replacedItemId, itemId);
+            if (comparison >= 0) {
+                // New equipment is better or equal - keep it equipped, clear pending
+                s.setPendingJson(null);
+                boxRepo.save(s);
+                compareStateRepo.delete(roleId);
+                log.info("[box] wear keep new (optimal) roleId={} newItemId={} oldItemId={} comparison={}",
+                        roleId, itemId, replacedItemId, comparison);
+            } else {
+                // Old equipment is better - swap back and show comparison
+                Map<String, Object> replacedPending = replacedWearItem.toPendingMap();
+                replacedPending.put("isNew", false);
+                s.setPendingJson(writePendingJson(replacedPending));
+                boxRepo.save(s);
+
+                BoxDTOs.EquipRolled replacedRolled = wearItemToEquipRolled(replacedWearItem);
+                CurrentEquipLookup equippedAfterWearLookup = findCurrentEquipWithRetry(roleId, wearItem.getEquipType() != null ? wearItem.getEquipType() : 0);
+                BoxDTOs.EquipRolled equippedNow = equippedAfterWearLookup.getEquip() != null
+                        ? equippedAfterWearLookup.getEquip()
+                        : wearItemToEquipRolled(wearItem);
+                int replacedQuality = replacedWearItem.getQuality() != null ? replacedWearItem.getQuality() : 1;
+                int replacedLevel = replacedWearItem.getEquipLevel() != null ? replacedWearItem.getEquipLevel() : 1;
+                saveCompareState(roleId, replacedRolled, equippedNow, replacedQuality, replacedLevel, 0, "BOX_WEAR", "PENDING_COMPARE");
+                log.info("[box] wear swap pending (old is better) roleId={} candidateItemId={} equippedBeforeItemId={} comparison={}",
+                        roleId, replacedItemId, itemId, comparison);
+            }
         } else {
             s.setPendingJson(null);
             boxRepo.save(s);
@@ -852,6 +866,50 @@ public class BoxService {
                 && Objects.equals(left.getAttrValue1(), right.getAttrValue1())
                 && Objects.equals(left.getAttrType2(), right.getAttrType2())
                 && Objects.equals(left.getAttrValue2(), right.getAttrValue2());
+    }
+
+    /**
+     * Compare two equipment items to determine which is better.
+     * Returns positive if 'candidate' is better than 'current', negative if worse, 0 if equal.
+     * Comparison priority: 1) Primary stats sum, 2) Quality, 3) Level, 4) Attribute values sum
+     */
+    private int compareEquipmentStats(EquipDTOs.WearFromBoxItem candidate, EquipDTOs.WearFromBoxItem current) {
+        if (candidate == null && current == null) return 0;
+        if (candidate == null) return -1;
+        if (current == null) return 1;
+
+        // Compare primary stats (hp, attack, defend, speed)
+        int candidatePrimaryStats = safeInt(candidate.getHp()) + safeInt(candidate.getAttack())
+                + safeInt(candidate.getDefend()) + safeInt(candidate.getSpeed());
+        int currentPrimaryStats = safeInt(current.getHp()) + safeInt(current.getAttack())
+                + safeInt(current.getDefend()) + safeInt(current.getSpeed());
+
+        if (candidatePrimaryStats != currentPrimaryStats) {
+            return candidatePrimaryStats - currentPrimaryStats;
+        }
+
+        // If primary stats are equal, compare quality
+        int candidateQuality = safeInt(candidate.getQuality());
+        int currentQuality = safeInt(current.getQuality());
+        if (candidateQuality != currentQuality) {
+            return candidateQuality - currentQuality;
+        }
+
+        // If quality is equal, compare level
+        int candidateLevel = safeInt(candidate.getEquipLevel());
+        int currentLevel = safeInt(current.getEquipLevel());
+        if (candidateLevel != currentLevel) {
+            return candidateLevel - currentLevel;
+        }
+
+        // If level is equal, compare attribute values
+        int candidateAttrSum = safeInt(candidate.getAttrValue1()) + safeInt(candidate.getAttrValue2());
+        int currentAttrSum = safeInt(current.getAttrValue1()) + safeInt(current.getAttrValue2());
+        return candidateAttrSum - currentAttrSum;
+    }
+
+    private int safeInt(Integer value) {
+        return value != null ? value : 0;
     }
 
     private Map<String, Object> parsePendingJsonSafe(String pendingJson) {
