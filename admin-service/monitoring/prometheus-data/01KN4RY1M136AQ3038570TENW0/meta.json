@@ -1,0 +1,18 @@
+{
+	"ulid": "01KN4RY1M136AQ3038570TENW0",
+	"minTime": 1775044800742,
+	"maxTime": 1775052000000,
+	"stats": {
+		"numSamples": 544325,
+		"numFloatSamples": 544325,
+		"numSeries": 1134,
+		"numChunks": 4552
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01KN4RY1M136AQ3038570TENW0"
+		]
+	},
+	"version": 1
+}

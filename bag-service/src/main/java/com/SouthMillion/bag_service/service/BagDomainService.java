@@ -122,12 +122,14 @@ public class BagDomainService {
     @Transactional
     @CacheEvict(cacheNames = "bag:items", key = "#roleId")
     public void use(Long roleId, BagDTOs.UseItemReq req) {
-        int changed = repo.consume(roleId, req.getItemId(), req.getNum());
-        if (changed <= 0) {
+        long requested = req.getNum() == null ? 0L : req.getNum().longValue();
+        if (requested <= 0) {
+            throw new IllegalStateException("Số lượng sử dụng phải lớn hơn 0.");
+        }
+        long newNum = consumeExactly(roleId, req.getItemId(), requested);
+        if (newNum < 0) {
             throw new IllegalStateException("Không đủ số lượng vật phẩm hoặc không tồn tại.");
         }
-        repo.cleanupZero(roleId, req.getItemId());
-        long newNum = currentNum(roleId, req.getItemId());
         publishBagChanged(UUID.randomUUID().toString(), String.valueOf(roleId), roleId,
                 req.getItemId(), -req.getNum().longValue(), newNum, "use");
     }
@@ -136,13 +138,15 @@ public class BagDomainService {
     @Transactional
     @CacheEvict(cacheNames = "bag:items", key = "#roleId")
     public BagDTOs.SellResult sell(Long roleId, BagDTOs.SellItemReq req) {
-        int changed = repo.consume(roleId, req.getItemId(), req.getNum());
-        if (changed <= 0) {
+        long requested = req.getNum() == null ? 0L : req.getNum().longValue();
+        if (requested <= 0) {
+            throw new IllegalStateException("Số lượng bán phải lớn hơn 0.");
+        }
+        long newNum = consumeExactly(roleId, req.getItemId(), requested);
+        if (newNum < 0) {
             throw new IllegalStateException("Không đủ số lượng vật phẩm để bán.");
         }
-        repo.cleanupZero(roleId, req.getItemId());
-        long newNum = currentNum(roleId, req.getItemId());
-        long gold = Optional.ofNullable(req.getUnitPrice()).orElse(0L) * req.getNum();
+        long gold = Optional.ofNullable(req.getUnitPrice()).orElse(0L) * requested;
         // Credit gold to wallet after selling items
         if (gold > 0 && walletFeign != null) {
             try {
@@ -157,7 +161,7 @@ public class BagDomainService {
             }
         }
         publishBagChanged(UUID.randomUUID().toString(), String.valueOf(roleId), roleId,
-                req.getItemId(), -req.getNum().longValue(), newNum, "sell");
+            req.getItemId(), -requested, newNum, "sell");
         return new BagDTOs.SellResult(gold, req.getNum());
     }
 
@@ -180,11 +184,10 @@ public class BagDomainService {
         // Consume each item (1 unit each); skip if not present
         for (Integer itemId : itemIds) {
             try {
-                int changed = repo.consume(roleId, itemId, 1);
-                if (changed > 0) {
-                    repo.cleanupZero(roleId, itemId);
+                long newNum = consumeExactly(roleId, itemId, 1);
+                if (newNum >= 0) {
                     publishBagChanged(UUID.randomUUID().toString(), String.valueOf(roleId), roleId,
-                            itemId, -1L, currentNum(roleId, itemId), "recycle");
+                            itemId, -1L, newNum, "recycle");
                 }
             } catch (Exception e) {
                 log.warn("[Recycle] Could not consume itemId={} for role={}: {}", itemId, roleId, e.getMessage());
@@ -220,10 +223,45 @@ public class BagDomainService {
     }
 
     private long currentNum(Long roleId, Integer itemId) {
-        return repo.findAllByRoleId(roleId).stream()
-                .filter(item -> itemId != null && itemId.equals(item.getItemId()))
+        return repo.findAllByRoleIdAndItemId(roleId, itemId).stream()
                 .mapToLong(item -> item.getNum() == null ? 0L : item.getNum())
                 .sum();
+    }
+
+    private long consumeExactly(Long roleId, Integer itemId, long requested) {
+        if (itemId == null || requested <= 0) {
+            return -1L;
+        }
+        List<BagItem> stacks = repo.findAllByRoleIdAndItemId(roleId, itemId);
+        long total = stacks.stream().mapToLong(it -> it.getNum() == null ? 0L : it.getNum()).sum();
+        if (total < requested) {
+            return -1L;
+        }
+
+        long remaining = requested;
+        for (BagItem stack : stacks) {
+            if (remaining <= 0) {
+                break;
+            }
+            long current = stack.getNum() == null ? 0L : stack.getNum();
+            if (current <= 0) {
+                continue;
+            }
+            long take = Math.min(current, remaining);
+            long after = current - take;
+            if (after <= 0) {
+                repo.delete(stack);
+            } else {
+                stack.setNum(after);
+                repo.save(stack);
+            }
+            remaining -= take;
+        }
+
+        if (remaining > 0) {
+            throw new IllegalStateException("Consume interrupted due to concurrent update.");
+        }
+        return currentNum(roleId, itemId);
     }
 
     private void publishBagChanged(String eventId, String userId, Long roleId,

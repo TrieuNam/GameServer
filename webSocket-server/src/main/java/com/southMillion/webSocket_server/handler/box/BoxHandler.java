@@ -159,8 +159,7 @@ public class BoxHandler implements MessageHandler {
 
             BoxDTOs.OpenReq req = new BoxDTOs.OpenReq();
             req.setRoleId(String.valueOf(roleId));
-            // Client sends param as mode flag: 0=single, 1=five-open.
-            int count = (param <= 1) ? (param > 0 ? 5 : 1) : Math.max(1, Math.min(param, 5));
+            int count = normalizeOpenCount(param);
             req.setCount(count);
             req.setRoleLevel(fetchRoleLevel(session, roleId));
             BoxDTOs.OpenResp resp = boxFeign.open(req);
@@ -195,6 +194,16 @@ public class BoxHandler implements MessageHandler {
 
     private boolean reportGetEquipTaskProgress(Long roleId, int count) {
         return taskProgressPublisher.publish(roleId, "get_equip", count, "websocket-box-open");
+    }
+
+    private int normalizeOpenCount(int param) {
+        // Compatibility:
+        // - legacy clients often send 0/1 as open-mode flags (single/five)
+        // - some clients send 1/2 as mode indexes (single/five)
+        // - explicit numeric count supports only 5 for multi-open
+        if (param <= 0) return 1;
+        if (param == 2 || param == 5) return 5;
+        return 1;
     }
 
     // req_type=2: equip (wear) item → 1616

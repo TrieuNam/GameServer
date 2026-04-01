@@ -15,6 +15,10 @@ public interface BagItemRepository extends JpaRepository<BagItem, String> {
     @Query("select b from BagItem b where b.roleId = :roleId")
     List<BagItem> findAllByRoleId(@Param("roleId") Long roleId);
 
+    @Query("select b from BagItem b where b.roleId = :roleId and b.itemId = :itemId")
+    List<BagItem> findAllByRoleIdAndItemId(@Param("roleId") Long roleId,
+                                           @Param("itemId") Integer itemId);
+
     @Query("select b from BagItem b where b.roleId=:roleId and b.itemId=:itemId and b.bind=:bind and b.quality=:quality and b.bagType=:bagType and ((:exp is null and b.expireAt is null) or b.expireAt=:exp)")
     Optional<BagItem> findExact(@Param("roleId") Long roleId,
                                 @Param("itemId") Integer itemId,
