@@ -123,6 +123,7 @@ public class BagDomainService {
     @CacheEvict(cacheNames = "bag:items", key = "#roleId")
     public void use(Long roleId, BagDTOs.UseItemReq req) {
         long requested = req.getNum() == null ? 0L : req.getNum().longValue();
+        log.info("[bag.use] roleId={} itemId={} requested={}", roleId, req.getItemId(), requested);
         if (requested <= 0) {
             throw new IllegalStateException("Số lượng sử dụng phải lớn hơn 0.");
         }
@@ -130,6 +131,8 @@ public class BagDomainService {
         if (newNum < 0) {
             throw new IllegalStateException("Không đủ số lượng vật phẩm hoặc không tồn tại.");
         }
+        log.info("[bag.use] roleId={} itemId={} requested={} remaining={}",
+                roleId, req.getItemId(), requested, newNum);
         publishBagChanged(UUID.randomUUID().toString(), String.valueOf(roleId), roleId,
                 req.getItemId(), -req.getNum().longValue(), newNum, "use");
     }
@@ -139,6 +142,8 @@ public class BagDomainService {
     @CacheEvict(cacheNames = "bag:items", key = "#roleId")
     public BagDTOs.SellResult sell(Long roleId, BagDTOs.SellItemReq req) {
         long requested = req.getNum() == null ? 0L : req.getNum().longValue();
+        log.info("[bag.sell] roleId={} itemId={} requested={} unitPrice={}",
+                roleId, req.getItemId(), requested, req.getUnitPrice());
         if (requested <= 0) {
             throw new IllegalStateException("Số lượng bán phải lớn hơn 0.");
         }
@@ -230,11 +235,17 @@ public class BagDomainService {
 
     private long consumeExactly(Long roleId, Integer itemId, long requested) {
         if (itemId == null || requested <= 0) {
+            log.warn("[bag.consume.exact] invalid request roleId={} itemId={} requested={}",
+                    roleId, itemId, requested);
             return -1L;
         }
-        List<BagItem> stacks = repo.findAllByRoleIdAndItemId(roleId, itemId);
+        List<BagItem> stacks = repo.findAllByRoleIdAndItemIdForUpdate(roleId, itemId);
         long total = stacks.stream().mapToLong(it -> it.getNum() == null ? 0L : it.getNum()).sum();
+        log.info("[bag.consume.exact] roleId={} itemId={} requested={} stackCount={} totalBefore={}",
+                roleId, itemId, requested, stacks.size(), total);
         if (total < requested) {
+            log.warn("[bag.consume.exact] insufficient roleId={} itemId={} requested={} totalBefore={} stackCount={}",
+                    roleId, itemId, requested, total, stacks.size());
             return -1L;
         }
 
@@ -249,6 +260,8 @@ public class BagDomainService {
             }
             long take = Math.min(current, remaining);
             long after = current - take;
+            log.info("[bag.consume.exact] roleId={} itemId={} stackId={} before={} take={} after={}",
+                    roleId, itemId, stack.getId(), current, take, after);
             if (after <= 0) {
                 repo.delete(stack);
             } else {
@@ -259,9 +272,14 @@ public class BagDomainService {
         }
 
         if (remaining > 0) {
+            log.error("[bag.consume.exact] interrupted roleId={} itemId={} requested={} remaining={}",
+                    roleId, itemId, requested, remaining);
             throw new IllegalStateException("Consume interrupted due to concurrent update.");
         }
-        return currentNum(roleId, itemId);
+        long currentNum = currentNum(roleId, itemId);
+        log.info("[bag.consume.exact] done roleId={} itemId={} requested={} totalAfter={}",
+                roleId, itemId, requested, currentNum);
+        return currentNum;
     }
 
     private void publishBagChanged(String eventId, String userId, Long roleId,

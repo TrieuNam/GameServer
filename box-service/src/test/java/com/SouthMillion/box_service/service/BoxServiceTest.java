@@ -35,6 +35,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.*;
@@ -65,6 +66,7 @@ class BoxServiceTest {
     @BeforeEach
     void setupDefaults() {
         Mockito.lenient().when(compareStateRepo.find(anyLong())).thenReturn(Optional.empty());
+        Mockito.lenient().when(equipIdx.isEquipId(anyInt())).thenReturn(true);
         Mockito.lenient().when(meterRegistry.counter(anyString())).thenReturn(counter);
         Mockito.lenient().when(meterRegistry.counter(anyString(), any(String[].class))).thenReturn(counter);
     }
@@ -317,39 +319,42 @@ class BoxServiceTest {
             then(compareStateRepo).should().delete(ROLE_ID);
         }
 
-            @Test
-            @DisplayName("TC-BOX-004A1 [P] Replaced item trung itemId nhung khac stats – van phai swap compare")
-            void wear_replacedSameItemIdButDifferentStats_createsSwappedPendingCompare() {
-                BoxState state = buildState();
-                given(boxRepo.findById(ROLE_ID)).willReturn(Optional.of(state));
-                given(compareStateRepo.find(ROLE_ID)).willReturn(Optional.of(buildCompareStateWithBefore(100, 1, 100, 1)));
-                given(equipFeign.wearFromBox(any())).willReturn(
-                    EquipDTOs.WearFromBoxResp.builder()
-                        .replaced(EquipDTOs.ReplacedEquip.builder()
-                            .itemId(100)
-                            .equipType(1)
-                            .quality(4)
-                            .equipLevel(1)
-                            .hp(90)
-                            .attack(45)
-                            .defend(18)
-                            .speed(9)
-                            .attrType1(11)
-                            .attrValue1(90)
-                            .attrType2(12)
-                            .attrValue2(45)
-                            .build())
-                        .build());
+        @Test
+        @DisplayName("TC-BOX-004A1 [P] Replaced item trung itemId nhung khac stats – van mac mon moi va auto-sell mon cu")
+        void wear_replacedSameItemIdButDifferentStats_createsSwappedPendingCompare() {
+            BoxState state = buildState();
+            given(boxRepo.findById(ROLE_ID)).willReturn(Optional.of(state));
+            given(compareStateRepo.find(ROLE_ID)).willReturn(Optional.of(buildCompareStateWithBefore(100, 1, 100, 1)));
+            given(equipFeign.wearFromBox(any())).willReturn(
+                EquipDTOs.WearFromBoxResp.builder()
+                    .replaced(EquipDTOs.ReplacedEquip.builder()
+                        .itemId(100)
+                        .equipType(1)
+                        .quality(4)
+                        .equipLevel(1)
+                        .hp(90)
+                        .attack(45)
+                        .defend(18)
+                        .speed(9)
+                        .attrType1(11)
+                        .attrValue1(90)
+                        .attrType2(12)
+                        .attrValue2(45)
+                        .build())
+                    .build());
+            given(equipFeign.computeSell(any())).willReturn(Map.of("coin", 88L, "exp", 11L));
 
-                BoxDTOs.OkResp result = boxService.wear(ROLE_ID);
+            BoxDTOs.OkResp result = boxService.wear(ROLE_ID);
 
-                assertThat(result.isOk()).isTrue();
-                assertThat(result.getMessage()).isEqualTo("OK");
-                then(compareStateRepo).should(never()).delete(ROLE_ID);
-            }
+            assertThat(result.isOk()).isTrue();
+            assertThat(result.getMessage()).isEqualTo("OK");
+            then(compareStateRepo).should().delete(ROLE_ID);
+            then(walletFeign).should().batchAdd(any());
+            then(roleFeign).should().addExp(any());
+        }
 
         @Test
-        @DisplayName("TC-BOX-004B [P] Replaced item tao pending compare moi thay vi add vao bag")
+        @DisplayName("TC-BOX-004B [P] Replaced item duoc auto-sell sau khi mac mon moi")
         void wear_replacedCreatesSwappedPendingCompare() {
             BoxState state = buildState();
             given(boxRepo.findById(ROLE_ID)).willReturn(Optional.of(state));
@@ -358,65 +363,52 @@ class BoxServiceTest {
                     EquipDTOs.WearFromBoxResp.builder()
                             .replaced(EquipDTOs.ReplacedEquip.builder().itemId(200).equipType(1).build())
                             .build());
+            given(equipFeign.computeSell(any())).willReturn(Map.of("coin", 55L, "exp", 9L));
 
             BoxDTOs.OkResp result = boxService.wear(ROLE_ID);
 
             assertThat(result.isOk()).isTrue();
             assertThat(result.getMessage()).isEqualTo("OK");
             then(bag).should(never()).add(any());
-            then(compareStateRepo).should(never()).delete(ROLE_ID);
+            then(compareStateRepo).should().delete(ROLE_ID);
+            then(walletFeign).should().batchAdd(any());
+            then(roleFeign).should().addExp(any());
         }
 
-            @Test
-            @DisplayName("TC-BOX-004C [P] Swap compare dung stat slot thuc te sau wear")
-            void wear_swapCompareUsesActualEquippedSnapshotAfterWear() {
-                BoxState state = buildState();
-                ArgumentCaptor<BoxDTOs.BoxCompareStateResp> compareCaptor = ArgumentCaptor.forClass(BoxDTOs.BoxCompareStateResp.class);
+        @Test
+        @DisplayName("TC-BOX-004C [P] Mac mon moi thi dong flow compare va auto-sell mon cu")
+        void wear_swapCompareUsesActualEquippedSnapshotAfterWear() {
+            BoxState state = buildState();
 
-                given(boxRepo.findById(ROLE_ID)).willReturn(Optional.of(state));
-                given(compareStateRepo.find(ROLE_ID)).willReturn(Optional.of(buildCompareState(100, 1, true)));
-                given(equipFeign.wearFromBox(any())).willReturn(
-                    EquipDTOs.WearFromBoxResp.builder()
-                        .replaced(EquipDTOs.ReplacedEquip.builder()
-                            .itemId(200)
-                            .equipType(1)
-                            .quality(4)
-                            .equipLevel(1)
-                            .hp(90)
-                            .attack(45)
-                            .defend(18)
-                            .speed(9)
-                            .attrType1(11)
-                            .attrValue1(90)
-                            .attrType2(12)
-                            .attrValue2(45)
-                            .build())
-                        .build());
-                given(equipFeign.list(String.valueOf(ROLE_ID))).willReturn(new EquipDTOs.ListResp(List.of(
-                    buildEquipItem(100, 1, 111, 61, 31, 21, 13, 131, 14, 141))));
+            given(boxRepo.findById(ROLE_ID)).willReturn(Optional.of(state));
+            given(compareStateRepo.find(ROLE_ID)).willReturn(Optional.of(buildCompareState(100, 1, true)));
+            given(equipFeign.wearFromBox(any())).willReturn(
+                EquipDTOs.WearFromBoxResp.builder()
+                    .replaced(EquipDTOs.ReplacedEquip.builder()
+                        .itemId(200)
+                        .equipType(1)
+                        .quality(4)
+                        .equipLevel(1)
+                        .hp(90)
+                        .attack(45)
+                        .defend(18)
+                        .speed(9)
+                        .attrType1(11)
+                        .attrValue1(90)
+                        .attrType2(12)
+                        .attrValue2(45)
+                        .build())
+                    .build());
+            given(equipFeign.computeSell(any())).willReturn(Map.of("coin", 101L, "exp", 22L));
 
-                BoxDTOs.OkResp result = boxService.wear(ROLE_ID);
+            BoxDTOs.OkResp result = boxService.wear(ROLE_ID);
 
-                assertThat(result.isOk()).isTrue();
-                then(compareStateRepo).should().save(compareCaptor.capture());
-                BoxDTOs.BoxCompareStateResp savedState = compareCaptor.getValue();
-                assertThat(savedState.getCandidateEquip()).isNotNull();
-                assertThat(savedState.getCandidateEquip().getItemId()).isEqualTo(200);
-                assertThat(savedState.getCandidateEquip().getHp()).isEqualTo(90);
-                assertThat(savedState.getCandidateEquip().getAttack()).isEqualTo(45);
-                assertThat(savedState.getCandidateEquip().getDefend()).isEqualTo(18);
-                assertThat(savedState.getCandidateEquip().getSpeed()).isEqualTo(9);
-                assertThat(savedState.getEquippedBefore()).isNotNull();
-                assertThat(savedState.getEquippedBefore().getItemId()).isEqualTo(100);
-                assertThat(savedState.getEquippedBefore().getHp()).isEqualTo(111);
-                assertThat(savedState.getEquippedBefore().getAttack()).isEqualTo(61);
-                assertThat(savedState.getEquippedBefore().getDefend()).isEqualTo(31);
-                assertThat(savedState.getEquippedBefore().getSpeed()).isEqualTo(21);
-                assertThat(savedState.getEquippedBefore().getAttrType1()).isEqualTo(13);
-                assertThat(savedState.getEquippedBefore().getAttrValue1()).isEqualTo(131);
-                assertThat(savedState.getEquippedBefore().getAttrType2()).isEqualTo(14);
-                assertThat(savedState.getEquippedBefore().getAttrValue2()).isEqualTo(141);
-            }
+            assertThat(result.isOk()).isTrue();
+            then(compareStateRepo).should().delete(ROLE_ID);
+            then(compareStateRepo).should(never()).save(any());
+            then(walletFeign).should().batchAdd(any());
+            then(roleFeign).should().addExp(any());
+        }
     }
 
     @Nested
@@ -444,7 +436,7 @@ class BoxServiceTest {
         @DisplayName("TC-BOX-026 [P] Open theo flow cu – luu pendingJson va khong tao compare-state")
         void open_legacyFlow_storesPendingWithoutCompareState() {
             BoxState state = buildState();
-            given(boxRepo.findById(ROLE_ID)).willReturn(Optional.of(state));
+            given(boxRepo.findByRoleIdForUpdate(ROLE_ID)).willReturn(Optional.of(state));
             given(boxRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
             given(equipFeign.list(String.valueOf(ROLE_ID)))
                     .willReturn(new EquipDTOs.ListResp(List.of(
@@ -476,7 +468,7 @@ class BoxServiceTest {
         @DisplayName("TC-BOX-027 [P] Open theo flow cu khong con dung snapshot/list current equip de compare")
         void open_legacyFlow_doesNotCreateCompareStateWhenCurrentEquipLookupFails() {
             BoxState state = buildState();
-            given(boxRepo.findById(ROLE_ID)).willReturn(Optional.of(state));
+            given(boxRepo.findByRoleIdForUpdate(ROLE_ID)).willReturn(Optional.of(state));
             given(boxRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
 
             BoxDTOs.OpenReq req = new BoxDTOs.OpenReq();
@@ -494,6 +486,66 @@ class BoxServiceTest {
             assertThat(result.getCompareState().getStatus()).isEqualTo("PENDING_COMPARE_INCOMPLETE");
             assertThat(result.getPending()).isNotNull();
             assertThat(result.getPending().get("itemId")).isEqualTo(100);
+        }
+
+        @Test
+        @DisplayName("TC-BOX-028 [P] Redis compare-state het TTL thi bo stale pendingJson va mo hop moi")
+        void open_expiredCompareState_clearsStalePendingAndContinues() {
+            BoxState state = buildState();
+            state.setPendingJson("{\"kind\":\"equip\",\"itemId\":999,\"equipType\":1,\"quality\":4,\"equipLevel\":1}");
+            given(boxRepo.findByRoleIdForUpdate(ROLE_ID)).willReturn(Optional.of(state));
+            given(boxRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+            given(compareStateRepo.find(ROLE_ID)).willReturn(Optional.empty());
+
+            BoxDTOs.OpenReq req = new BoxDTOs.OpenReq();
+            req.setRoleId(String.valueOf(ROLE_ID));
+            req.setCount(1);
+            req.setRoleLevel(1);
+
+            BoxDTOs.OpenResp result = boxService.open(req);
+
+            assertThat(result).isNotNull();
+            assertThat(result.getOpenEquip()).isNotNull();
+            assertThat(result.getOpenEquip().getItemId()).isEqualTo(100);
+            assertThat(result.getPending()).isNotNull();
+            assertThat(result.getPending().get("itemId")).isEqualTo(100);
+            then(bag).should().consume(any());
+        }
+
+        @Test
+        @DisplayName("TC-BOX-029 [P] Compare-state item loi/stale thi phai tu clear de khong khoa mo box")
+        void open_invalidCompareStateCandidate_clearsStateAndContinues() {
+            BoxState state = buildState();
+            state.setPendingJson("{\"kind\":\"equip\",\"itemId\":1,\"equipType\":1,\"quality\":4,\"equipLevel\":1}");
+            given(boxRepo.findByRoleIdForUpdate(ROLE_ID)).willReturn(Optional.of(state));
+            given(boxRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+            given(compareStateRepo.find(ROLE_ID)).willReturn(Optional.of(
+                    BoxDTOs.BoxCompareStateResp.builder()
+                            .roleId(ROLE_ID)
+                            .status("PENDING_COMPARE")
+                            .candidateEquip(BoxDTOs.BoxCompareSnapshotDTO.builder()
+                                    .itemId(1)
+                                    .equipType(1)
+                                    .quality(4)
+                                    .equipLevel(1)
+                                    .build())
+                            .build()));
+            given(equipIdx.isEquipId(1)).willReturn(false);
+
+            BoxDTOs.OpenReq req = new BoxDTOs.OpenReq();
+            req.setRoleId(String.valueOf(ROLE_ID));
+            req.setCount(1);
+            req.setRoleLevel(1);
+
+            BoxDTOs.OpenResp result = boxService.open(req);
+
+            assertThat(result).isNotNull();
+            assertThat(result.getOpenEquip()).isNotNull();
+            assertThat(result.getOpenEquip().getItemId()).isEqualTo(100);
+            assertThat(result.getPending()).isNotNull();
+            assertThat(result.getPending().get("itemId")).isEqualTo(100);
+            then(compareStateRepo).should().delete(ROLE_ID);
+            then(bag).should().consume(any());
         }
     }
 

@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
@@ -205,9 +206,10 @@ class BagDomainServiceTest {
         @Test
         @DisplayName("TC-BAG-020 [P] Dung item thanh cong – num giam dung")
         void use_success() {
-            given(repo.consume(ROLE_ID, 1001, 3)).willReturn(1);
-            given(repo.cleanupZero(ROLE_ID, 1001)).willReturn(0);
-            given(repo.findAllByRoleId(ROLE_ID)).willReturn(List.of(item("id1", 1001, 2L)));
+            BagItem stack = item("id1", 1001, 5L);
+            given(repo.findAllByRoleIdAndItemIdForUpdate(ROLE_ID, 1001)).willReturn(List.of(stack));
+            given(repo.findAllByRoleIdAndItemId(ROLE_ID, 1001)).willReturn(List.of(stack));
+            given(repo.save(any(BagItem.class))).willAnswer(inv -> inv.getArgument(0));
 
             BagDTOs.UseItemReq req = new BagDTOs.UseItemReq();
             req.setItemId(1001); req.setNum(3);
@@ -215,14 +217,14 @@ class BagDomainServiceTest {
             assertThatCode(() -> bagDomainService.use(ROLE_ID, req))
                     .doesNotThrowAnyException();
 
-            then(repo).should().consume(ROLE_ID, 1001, 3);
-            then(repo).should().cleanupZero(ROLE_ID, 1001);
+            then(repo).should().save(argThat(bi -> "id1".equals(bi.getId()) && bi.getNum() == 2L));
+            then(repo).should(never()).consume(anyLong(), anyInt(), anyInt());
         }
 
         @Test
         @DisplayName("TC-BAG-021 [N] Khong du so luong – nem IllegalStateException")
         void use_insufficientQuantity_throws() {
-            given(repo.consume(ROLE_ID, 1001, 10)).willReturn(0); // 0 = fail
+            given(repo.findAllByRoleIdAndItemIdForUpdate(ROLE_ID, 1001)).willReturn(List.of(item("id1", 1001, 5L)));
 
             BagDTOs.UseItemReq req = new BagDTOs.UseItemReq();
             req.setItemId(1001); req.setNum(10);
@@ -233,18 +235,40 @@ class BagDomainServiceTest {
         }
 
         @Test
-        @DisplayName("TC-BAG-024 [B] Dung het toan bo so luong – cleanupZero duoc goi")
+        @DisplayName("TC-BAG-024 [B] Dung het toan bo so luong – stack bang 0 bi xoa")
         void use_consumeAll_cleanupCalled() {
-            given(repo.consume(ROLE_ID, 1001, 5)).willReturn(1);
-            given(repo.cleanupZero(ROLE_ID, 1001)).willReturn(1); // da xoa 1 row num=0
-            given(repo.findAllByRoleId(ROLE_ID)).willReturn(List.of());
+            BagItem stack = item("id1", 1001, 5L);
+            given(repo.findAllByRoleIdAndItemIdForUpdate(ROLE_ID, 1001)).willReturn(List.of(stack));
+            given(repo.findAllByRoleIdAndItemId(ROLE_ID, 1001)).willReturn(List.of());
 
             BagDTOs.UseItemReq req = new BagDTOs.UseItemReq();
             req.setItemId(1001); req.setNum(5);
 
             bagDomainService.use(ROLE_ID, req);
 
-            then(repo).should().cleanupZero(ROLE_ID, 1001);
+            then(repo).should().delete(stack);
+        }
+
+        @Test
+        @DisplayName("TC-BAG-025 [R] Box split 2 stack, dung 1 chi tru dung 1")
+        void use_splitStacks_consumesExactRequestedOnly() {
+            BagItem stack1 = item("id1", 40004, 1L);
+            BagItem stack2 = item("id2", 40004, 1L);
+            List<BagItem> stacks = new ArrayList<>(List.of(stack1, stack2));
+            given(repo.findAllByRoleIdAndItemIdForUpdate(ROLE_ID, 40004)).willReturn(stacks);
+            given(repo.findAllByRoleIdAndItemId(ROLE_ID, 40004)).willAnswer(inv -> new ArrayList<>(stacks));
+            willAnswer(inv -> {
+                stacks.remove(inv.getArgument(0));
+                return null;
+            }).given(repo).delete(any(BagItem.class));
+
+            BagDTOs.UseItemReq req = new BagDTOs.UseItemReq();
+            req.setItemId(40004); req.setNum(1);
+
+            assertThatCode(() -> bagDomainService.use(ROLE_ID, req)).doesNotThrowAnyException();
+
+            long remaining = stacks.stream().mapToLong(bi -> bi.getNum() == null ? 0L : bi.getNum()).sum();
+            assertThat(remaining).isEqualTo(1L);
         }
     }
 
@@ -258,9 +282,10 @@ class BagDomainServiceTest {
         @Test
         @DisplayName("TC-BAG-030 [P] Ban item thanh cong – gold duoc tinh dung")
         void sell_success() {
-            given(repo.consume(ROLE_ID, 1001, 5)).willReturn(1);
-            given(repo.cleanupZero(ROLE_ID, 1001)).willReturn(0);
-            given(repo.findAllByRoleId(ROLE_ID)).willReturn(List.of(item("id1", 1001, 4L)));
+            BagItem stack = item("id1", 1001, 9L);
+            given(repo.findAllByRoleIdAndItemIdForUpdate(ROLE_ID, 1001)).willReturn(List.of(stack));
+            given(repo.findAllByRoleIdAndItemId(ROLE_ID, 1001)).willReturn(List.of(stack));
+            given(repo.save(any(BagItem.class))).willAnswer(inv -> inv.getArgument(0));
 
             BagDTOs.SellItemReq req = new BagDTOs.SellItemReq();
             req.setItemId(1001); req.setNum(5); req.setUnitPrice(10L);
@@ -269,12 +294,13 @@ class BagDomainServiceTest {
 
             assertThat(result.getItemsSold()).isEqualTo(5);
             assertThat(result.getGoldEarned()).isEqualTo(50L); // 5 * 10
+            then(repo).should().save(argThat(bi -> "id1".equals(bi.getId()) && bi.getNum() == 4L));
         }
 
         @Test
         @DisplayName("TC-BAG-032 [N] Khong du so luong de ban – nem IllegalStateException")
         void sell_insufficientQuantity_throws() {
-            given(repo.consume(ROLE_ID, 1001, 10)).willReturn(0);
+            given(repo.findAllByRoleIdAndItemIdForUpdate(ROLE_ID, 1001)).willReturn(List.of(item("id1", 1001, 5L)));
 
             BagDTOs.SellItemReq req = new BagDTOs.SellItemReq();
             req.setItemId(1001); req.setNum(10); req.setUnitPrice(5L);
@@ -287,9 +313,9 @@ class BagDomainServiceTest {
         @Test
         @DisplayName("TC-BAG-033 [B] Ban item unitPrice=null – gold = 0")
         void sell_nullUnitPrice_goldIsZero() {
-            given(repo.consume(ROLE_ID, 1001, 3)).willReturn(1);
-            given(repo.cleanupZero(ROLE_ID, 1001)).willReturn(0);
-            given(repo.findAllByRoleId(ROLE_ID)).willReturn(List.of());
+            BagItem stack = item("id1", 1001, 3L);
+            given(repo.findAllByRoleIdAndItemIdForUpdate(ROLE_ID, 1001)).willReturn(List.of(stack));
+            given(repo.findAllByRoleIdAndItemId(ROLE_ID, 1001)).willReturn(List.of());
 
             BagDTOs.SellItemReq req = new BagDTOs.SellItemReq();
             req.setItemId(1001); req.setNum(3); req.setUnitPrice(null);
@@ -297,6 +323,7 @@ class BagDomainServiceTest {
             BagDTOs.SellResult result = bagDomainService.sell(ROLE_ID, req);
 
             assertThat(result.getGoldEarned()).isEqualTo(0L);
+            then(repo).should().delete(stack);
         }
     }
 }

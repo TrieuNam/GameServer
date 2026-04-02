@@ -3,6 +3,7 @@ package com.SouthMillion.bag_service.controller;
 import com.SouthMillion.bag_service.service.BagDomainService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagAddItemReq;
 import org.SouthMillion.dto.bag.BagConsumeReq;
 import org.SouthMillion.dto.bag.BagDTOs;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/bag/internal")
 @RequiredArgsConstructor
@@ -58,8 +60,13 @@ public class InternalBagController {
     @PostMapping("/consume")
     public ResponseEntity<Void> consume(@Valid @RequestBody BagConsumeReq req) {
         Long roleId = req.getRoleId();
+        log.info("[bag.consume.api] roleId={} source={} requestItemId={} requestAmount={} costCount={}",
+                roleId, req.getSource(), req.getItemId(), req.getAmount(),
+                req.getCosts() == null ? 0 : req.getCosts().size());
         if (req.getCosts() != null && !req.getCosts().isEmpty()) {
             for (BagConsumeReq.Cost cost : req.getCosts()) {
+                log.info("[bag.consume.api] roleId={} source={} itemId={} amount={} mode=multi-cost",
+                        roleId, req.getSource(), cost.getItemId(), cost.getAmount());
                 BagDTOs.UseItemReq useReq = BagDTOs.UseItemReq.builder()
                         .itemId(cost.getItemId())
                         .num(cost.getAmount())
@@ -67,6 +74,8 @@ public class InternalBagController {
                 svc.use(roleId, useReq);
             }
         } else {
+            log.info("[bag.consume.api] roleId={} source={} itemId={} amount={} mode=single",
+                    roleId, req.getSource(), req.getItemId(), req.getAmount());
             BagDTOs.UseItemReq useReq = BagDTOs.UseItemReq.builder()
                     .itemId(req.getItemId())
                     .num(req.getAmount())

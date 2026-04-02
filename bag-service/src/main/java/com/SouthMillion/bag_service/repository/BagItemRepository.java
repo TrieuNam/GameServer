@@ -1,7 +1,9 @@
 package com.SouthMillion.bag_service.repository;
 
 import com.SouthMillion.bag_service.enity.BagItem;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,6 +20,11 @@ public interface BagItemRepository extends JpaRepository<BagItem, String> {
     @Query("select b from BagItem b where b.roleId = :roleId and b.itemId = :itemId")
     List<BagItem> findAllByRoleIdAndItemId(@Param("roleId") Long roleId,
                                            @Param("itemId") Integer itemId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select b from BagItem b where b.roleId = :roleId and b.itemId = :itemId order by b.num asc, b.id asc")
+    List<BagItem> findAllByRoleIdAndItemIdForUpdate(@Param("roleId") Long roleId,
+                                                    @Param("itemId") Integer itemId);
 
     @Query("select b from BagItem b where b.roleId=:roleId and b.itemId=:itemId and b.bind=:bind and b.quality=:quality and b.bagType=:bagType and ((:exp is null and b.expireAt is null) or b.expireAt=:exp)")
     Optional<BagItem> findExact(@Param("roleId") Long roleId,
