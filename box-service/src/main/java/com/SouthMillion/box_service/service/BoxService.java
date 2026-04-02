@@ -264,12 +264,12 @@ public class BoxService {
                     BoxDTOs.EquipRolled newEquipFixed = buildEquipRolled(resolvedItemId, part);
                     putRolledSnapshot(pending, newEquipFixed);
                     s.setPendingJson(writePendingJson(pending));
-                        CurrentEquipLookup lookupFixed = findCurrentEquipWithRetry(roleId, part);
-                        String statusFixed = lookupFixed.isLookupFailed() ? "PENDING_COMPARE_INCOMPLETE" : "PENDING_COMPARE";
-                        BoxDTOs.BoxCompareStateResp compareStateFixed = saveCompareState(
-                            roleId, newEquipFixed, lookupFixed.getEquip(), quality, equipLevel, 1, "BOX_OPEN", statusFixed);
+                    CurrentEquipLookup lookupFixed = findCurrentEquipWithRetry(roleId, part);
+                    String statusFixed = lookupFixed.isLookupFailed() ? "PENDING_COMPARE_INCOMPLETE" : "PENDING_COMPARE";
+                    BoxDTOs.BoxCompareStateResp compareStateFixed = saveCompareState(
+                        roleId, newEquipFixed, lookupFixed.getEquip(), quality, equipLevel, 1, "BOX_OPEN", statusFixed);
 
-                        s.setOpenBoxTotal(s.getOpenBoxTotal() + (int) need);
+                    s.setOpenBoxTotal(s.getOpenBoxTotal() + (int) need);
                     s.setLastOpenIsFive(need == 5);
                     setSafeLongField(s, "lastOpenEpoch", nowSec + 1);
                     boxRepo.save(s);
