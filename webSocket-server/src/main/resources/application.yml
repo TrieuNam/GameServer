@@ -131,6 +131,30 @@ app:
       block-remove: 0
       block-compose: 73
       formation-level-up: 27
+  # ── Scheduled Config Data Loader ────────────────────────────────────────────
+  # Periodically loads config JSON files from config-service into Redis cache
+  # to ensure data is available before login processing begins
+  config-loader:
+    enabled: true                          # Enable/disable scheduled loading
+    schedule-interval-minutes: 30          # How often to refresh config data (default: 30 minutes)
+    initial-delay-minutes: 5               # Delay before first scheduled run (default: 5 minutes)
+    ttl-hours: 24                          # Redis TTL for cached config data (default: 24 hours)
+    paths:                                 # List of config file paths to load
+      - gameworld/logicconfig/task_cfg.json
+      - gameworld/logicconfig/roleexp.json
+      - gameworld/logicconfig/role_name.json
+      - gameworld/skill/single_skill.json
+      - gameworld/skill/passive_skill.json
+      - gameworld/item/equipment.json
+      - gameworld/item/other.json
+      - gameworld/item/expense.json
+      - gameworld/item/gift.json
+      - gameworld/logicconfig/shop_cfg.json
+      - gameworld/logicconfig/shop_shenmi.json
+      - gameworld/logicconfig/cloth_shop.json
+      - gameworld/logicconfig/unpack.json
+      - gameworld/logicconfig/kaixiangdaji.json
+  # ── Redis Preload (Startup) ─────────────────────────────────────────────────
   redis-preload:
     enabled: true
     ttl-hours: 24

@@ -79,6 +79,7 @@ public class LoginBootstrapHandler implements MessageHandler {
     private final InMemoryPlayerSessionRegistry registry;
     private final AnalyticsHandler analyticsHandler;
     private final LoginSnapshotService loginSnapshotService;
+    private final com.SouthMillion.webSocket_server.config.ScheduledConfigDataLoader scheduledConfigDataLoader;
 
     /**
      * Virtual-thread scheduler — mỗi pushAll() chạy trên VT riêng để thật sự song song.
@@ -174,6 +175,18 @@ public class LoginBootstrapHandler implements MessageHandler {
             analyticsHandler.track(ps, "LOGIN_FAILED_SERVER_NOTREADY", "AUTH");
             return Mono.empty();
         }
+
+        // Check if config data is available in Redis before proceeding
+        if (!scheduledConfigDataLoader.isConfigDataAvailable()) {
+            log.warn("[login] Config data not available in Redis, user={}", ps.getSessionId());
+            // Trigger immediate load if data is missing
+            try {
+                scheduledConfigDataLoader.loadConfigData();
+            } catch (Exception e) {
+                log.warn("[login] Failed to load config data on-demand: {}", e.getMessage());
+            }
+        }
+
         if (!LOGIN_LIMITER.tryAcquire()) {
             log.warn("[login] SERVER_BUSY — semaphore đầy (max=128), user={}", ps.getSessionId());
             Emitters.sendLoginAck(ps, LOGIN_ERR_SERVER_BUSY, 0);
