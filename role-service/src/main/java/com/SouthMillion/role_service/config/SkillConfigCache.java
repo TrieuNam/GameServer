@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,45 +20,43 @@ import org.springframework.util.StringUtils;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * SkillConfigCache
+ * SkillConfigCache - Redis-first skill config loader
  *
- * <p>Nạp & cache:
+ * <p>Loads & caches:
  * <ul>
- *   <li>{@code single_skill.json} — config kỹ năng chủ động (active skill)</li>
- *   <li>{@code passive_skill.json} — config thiên phú kỹ năng (passive / talent skill)</li>
+ *   <li>{@code single_skill.json} — active skill configs</li>
+ *   <li>{@code passive_skill.json} — passive/talent skill configs</li>
  * </ul>
  *
- * <p>Tích hợp với {@code config-service} qua Feign + ETag caching (304 nếu chưa đổi).
+ * <p>Strategy: Check Redis first → Config-service fallback → Cache in Redis
  *
- * <p>Cung cấp:
+ * <p>Provides:
  * <ul>
- *   <li>{@link #isValidSkillId(Integer)} — kiểm tra skillId có trong single_skill.json không</li>
- *   <li>{@link #isValidTalentId(Integer)} — kiểm tra skillId có trong passive_skill.json không</li>
- *   <li>{@link #getSkillMaxLevel(Integer)} — lấy cấp tối đa cho một skill</li>
- *   <li>{@link #getTalentMaxLevel(Integer)} — lấy cấp tối đa cho một talent</li>
- *   <li>{@link #getDefaultSkillMaxLevel()} — fallback max level khi config chưa tải</li>
+ *   <li>{@link #isValidSkillId(Integer)} — validate skillId exists</li>
+ *   <li>{@link #isValidTalentId(Integer)} — validate talentId exists</li>
+ *   <li>{@link #getSkillMaxLevel(Integer)} — get max level for skill</li>
+ *   <li>{@link #getTalentMaxLevel(Integer)} — get max level for talent</li>
  * </ul>
- *
- * <p>Config properties:
- * <pre>
- *   skill.config.single-skill-path: gameworld/skill/single_skill.json
- *   skill.config.passive-skill-path: gameworld/skill/passive_skill.json
- *   skill.config.default-max-level: 20
- *   skill.config.refresh-interval-ms: 60000
- * </pre>
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class SkillConfigCache {
 
-
     private final ConfigFeign configFeign;
+    private final StringRedisTemplate redis;
     private final ObjectMapper om = new ObjectMapper();
+
+    @Value("${skill.config.redis-enabled:true}")
+    private boolean redisEnabled;
+
+    @Value("${skill.config.redis-ttl-hours:24}")
+    private long redisTtlHours;
 
     // ─── Config props ────────────────────────────────────────────────────
     @Value("${skill.config.single-skill-path:gameworld/skill/single_skill.json}")
@@ -119,13 +118,35 @@ public class SkillConfigCache {
 
     private boolean refreshSingleSkill() {
         try {
+            String redisKey = toRedisKey(singleSkillPath);
+            String json = null;
+
+            // 1. Try Redis first (if enabled)
+            if (redisEnabled) {
+                json = redis.opsForValue().get(redisKey);
+                if (json != null && !json.isBlank()) {
+                    log.debug("[SkillConfigCache] Redis HIT path={}", singleSkillPath);
+                    Map<Integer, Integer> maxLevels = parseSingleSkill(json);
+                    singleSkillMaxLevels.set(maxLevels);
+                    return true;
+                }
+                log.debug("[SkillConfigCache] Redis MISS path={}, calling config-service", singleSkillPath);
+            }
+
+            // 2. Redis miss or disabled → call config-service
             ResponseEntity<byte[]> res = configFeign.getFile(singleSkillPath, etagSingle.get());
             if (res.getStatusCode() == HttpStatus.NOT_MODIFIED) return true;
             if (res.getStatusCode().is2xxSuccessful() && res.getBody() != null) {
-                String body = new String(res.getBody(), StandardCharsets.UTF_8);
-                Map<Integer, Integer> maxLevels = parseSingleSkill(body);
+                json = new String(res.getBody(), StandardCharsets.UTF_8);
+                Map<Integer, Integer> maxLevels = parseSingleSkill(json);
                 singleSkillMaxLevels.set(maxLevels);
                 updateEtag(res, etagSingle);
+
+                // 3. Cache in Redis for next time
+                if (redisEnabled && json != null) {
+                    redis.opsForValue().set(redisKey, json, redisTtlHours, TimeUnit.HOURS);
+                }
+
                 log.info("[SkillConfigCache] single_skill.json loaded: {} skill entries, maxLevel examples={}",
                         maxLevels.size(), maxLevels.entrySet().stream().limit(3).toList());
                 return true;
@@ -141,13 +162,35 @@ public class SkillConfigCache {
 
     private boolean refreshPassiveSkill() {
         try {
+            String redisKey = toRedisKey(passiveSkillPath);
+            String json = null;
+
+            // 1. Try Redis first (if enabled)
+            if (redisEnabled) {
+                json = redis.opsForValue().get(redisKey);
+                if (json != null && !json.isBlank()) {
+                    log.debug("[SkillConfigCache] Redis HIT path={}", passiveSkillPath);
+                    Map<Integer, Integer> maxLevels = parsePassiveSkill(json);
+                    passiveSkillMaxLevels.set(maxLevels);
+                    return true;
+                }
+                log.debug("[SkillConfigCache] Redis MISS path={}, calling config-service", passiveSkillPath);
+            }
+
+            // 2. Redis miss or disabled → call config-service
             ResponseEntity<byte[]> res = configFeign.getFile(passiveSkillPath, etagPassive.get());
             if (res.getStatusCode() == HttpStatus.NOT_MODIFIED) return true;
             if (res.getStatusCode().is2xxSuccessful() && res.getBody() != null) {
-                String body = new String(res.getBody(), StandardCharsets.UTF_8);
-                Map<Integer, Integer> maxLevels = parsePassiveSkill(body);
+                json = new String(res.getBody(), StandardCharsets.UTF_8);
+                Map<Integer, Integer> maxLevels = parsePassiveSkill(json);
                 passiveSkillMaxLevels.set(maxLevels);
                 updateEtag(res, etagPassive);
+
+                // 3. Cache in Redis for next time
+                if (redisEnabled && json != null) {
+                    redis.opsForValue().set(redisKey, json, redisTtlHours, TimeUnit.HOURS);
+                }
+
                 log.info("[SkillConfigCache] passive_skill.json loaded: {} talent entries, maxLevel examples={}",
                         maxLevels.size(), maxLevels.entrySet().stream().limit(3).toList());
                 return true;
@@ -291,6 +334,10 @@ public class SkillConfigCache {
     private void updateEtag(ResponseEntity<byte[]> res, AtomicReference<String> etagRef) {
         String et = res.getHeaders().getFirst(HttpHeaders.ETAG);
         if (StringUtils.hasText(et)) etagRef.set(et);
+    }
+
+    private String toRedisKey(String path) {
+        return "cfg:file:" + path.replace('/', ':');
     }
 }
 
