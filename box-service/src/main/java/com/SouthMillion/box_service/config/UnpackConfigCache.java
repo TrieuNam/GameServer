@@ -6,15 +6,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Unpack config cache with Redis-first lookup strategy.
+ * 1. Check Redis cache first
+ * 2. If miss, call config-service
+ * 3. Cache result in Redis for future requests
+ */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class UnpackConfigCache {
@@ -22,9 +33,15 @@ public class UnpackConfigCache {
     private final ConfigFeign cfg;
     private final AppProperties props;
     private final ObjectMapper om = new ObjectMapper();
+    private final StringRedisTemplate redis;
 
     private final AtomicReference<String> etag = new AtomicReference<>();
     @Getter private volatile Map<String, Object> raw = Map.of();
+
+    @Value("${box.config.redis-enabled:true}")
+    private boolean redisEnabled;
+    @Value("${box.config.redis-ttl-hours:24}")
+    private long redisTtlHours;
 
     // ======= Chống spam gọi & TTL refresh =======
     private static final long REFRESH_INTERVAL_MS = 30_000; // tuỳ chỉnh
@@ -109,6 +126,24 @@ public class UnpackConfigCache {
                     "config.unpackPath must not be null"
             );
 
+            // 1. Try Redis first (if enabled and not force reload)
+            if (redisEnabled && force == 0) {
+                String redisKey = toRedisKey(path);
+                String cached = redis.opsForValue().get(redisKey);
+                if (cached != null && !cached.isBlank()) {
+                    log.debug("[UnpackConfigCache] Redis HIT path={}", path);
+                    try {
+                        Map<String, Object> parsed = om.readValue(cached, new TypeReference<Map<String, Object>>() {});
+                        raw = parsed;
+                        return;
+                    } catch (Exception e) {
+                        log.warn("Failed to parse cached JSON from Redis, will reload: {}", e.toString());
+                    }
+                }
+                log.debug("[UnpackConfigCache] Redis MISS path={}", path);
+            }
+
+            // 2. Call config-service
             String ifNoneMatch = (force == 1) ? null : etag.get();
             ResponseEntity<byte[]> resp = cfg.getFile(path, ifNoneMatch);
 
@@ -121,6 +156,13 @@ public class UnpackConfigCache {
                 String newTag = resp.getHeaders().getETag();
                 if (newTag != null) {
                     etag.set(newTag); // LƯU Ý: giữ nguyên định dạng (thường có dấu ")
+                }
+
+                // 3. Cache in Redis
+                if (redisEnabled) {
+                    String redisKey = toRedisKey(path);
+                    redis.opsForValue().set(redisKey, json, redisTtlHours, TimeUnit.HOURS);
+                    log.debug("[UnpackConfigCache] Cached in Redis path={}", path);
                 }
             }
             // 2xx nhưng body null -> giữ cache cũ
@@ -147,5 +189,9 @@ public class UnpackConfigCache {
         etag.set(null);
         raw = Map.of();
         lastCheckMs = 0L;
+    }
+
+    private String toRedisKey(String path) {
+        return "cfg:file:" + path.replace('/', ':');
     }
 }

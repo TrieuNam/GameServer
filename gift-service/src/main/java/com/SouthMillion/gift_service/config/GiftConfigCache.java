@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +18,14 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * Gift config cache with Redis-first lookup strategy.
+ * 1. Check Redis cache first
+ * 2. If miss, call config-service
+ * 3. Cache result in Redis for future requests
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -25,12 +33,18 @@ public class GiftConfigCache {
 
     private final ConfigFeign configFeign;
     private final ObjectMapper om = new ObjectMapper();
+    private final StringRedisTemplate redis;
 
     @Value("${app.gift.cache-seconds:30}")
     private int cacheSeconds;
 
     @Value("${app.gift.config-path:gameworld/item/gift.json}")
     private String giftConfigPath;
+
+    @Value("${gift.config.redis-enabled:true}")
+    private boolean redisEnabled;
+    @Value("${gift.config.redis-ttl-hours:24}")
+    private long redisTtlHours;
 
     private final Cache<String, JsonNode> cache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofSeconds(30))
@@ -44,8 +58,26 @@ public class GiftConfigCache {
     }
 
     private JsonNode getJson(String path) {
-        JsonNode cached = cache.getIfPresent(path);
+        // 1. Try Redis first (if enabled)
+        if (redisEnabled) {
+            String redisKey = toRedisKey(path);
+            String cached = redis.opsForValue().get(redisKey);
+            if (cached != null && !cached.isBlank()) {
+                log.debug("[GiftConfigCache] Redis HIT path={}", path);
+                try {
+                    return om.readTree(cached);
+                } catch (Exception e) {
+                    log.warn("Failed to parse cached JSON from Redis, will reload: {}", e.toString());
+                }
+            }
+            log.debug("[GiftConfigCache] Redis MISS path={}", path);
+        }
+
+        // 2. Try local Caffeine cache
+        JsonNode localCached = cache.getIfPresent(path);
         String etag = etags.get(path);
+
+        // 3. Call config-service with ETag
         try {
             ResponseEntity<byte[]> resp = configFeign.getFile(path, etag);
             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
@@ -53,15 +85,23 @@ public class GiftConfigCache {
                 JsonNode node = om.readTree(json);
                 cache.put(path, node);
                 Optional.ofNullable(resp.getHeaders().getETag()).ifPresent(t -> etags.put(path, t));
+
+                // 4. Cache in Redis
+                if (redisEnabled) {
+                    String redisKey = toRedisKey(path);
+                    redis.opsForValue().set(redisKey, json, redisTtlHours, TimeUnit.HOURS);
+                    log.debug("[GiftConfigCache] Cached in Redis path={}", path);
+                }
+
                 return node;
             }
-            if (resp.getStatusCode().value() == 304 && cached != null) {
-                return cached;
+            if (resp.getStatusCode().value() == 304 && localCached != null) {
+                return localCached;
             }
         } catch (Exception e) {
             log.warn("gift-config fetch failed, fallback cache: {}", e.toString());
         }
-        return cached;
+        return localCached;
     }
 
     // ====== Structures for runtime ======
@@ -123,5 +163,9 @@ public class GiftConfigCache {
             }
         }
         return map;
+    }
+
+    private String toRedisKey(String path) {
+        return "cfg:file:" + path.replace('/', ':');
     }
 }
