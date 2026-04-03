@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 /**
  * RoleConfigCache
@@ -48,7 +50,14 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RoleConfigCache {
 
     private final ConfigFeign configFeign;
+    private final StringRedisTemplate redis;
     private final ObjectMapper om = new ObjectMapper();
+
+    @Value("${role.config.redis-enabled:true}")
+    private boolean redisEnabled;
+
+    @Value("${role.config.redis-ttl-hours:24}")
+    private long redisTtlHours;
 
     @Value("${role.config.startup-retry-count:6}")
     private int startupRetryCount;
@@ -124,16 +133,34 @@ public class RoleConfigCache {
         refreshRoleName(normalizeConfigPath(roleNamePath, "gameworld/logicconfig/role_name.json"));
     }
 
-    /** Nạp roleexp.json (exp_config/base_att/other) */
+    /** Nạp roleexp.json (exp_config/base_att/other) với Redis-first strategy */
     private boolean refreshRoleExp(String path) {
         try {
+            String redisKey = toRedisKey(path);
+            String json = null;
+
+            // 1. Try Redis first (if enabled)
+            if (redisEnabled) {
+                json = redis.opsForValue().get(redisKey);
+                if (json != null && !json.isBlank()) {
+                    log.debug("[RoleConfigCache] Redis HIT path={}", path);
+                    RoleExpBundle bundle = parseRoleExpBundle(json);
+                    levelTableRef.set(bundle.table());
+                    baseAttrRef.set(bundle.baseAttr());
+                    otherRef.set(bundle.other());
+                    return true;
+                }
+                log.debug("[RoleConfigCache] Redis MISS path={}, calling config-service", path);
+            }
+
+            // 2. Redis miss or disabled → call config-service
             ResponseEntity<byte[]> res = configFeign.getFile(path, etagRoleExp.get());
             if (res.getStatusCode() == HttpStatus.NOT_MODIFIED) return true;
 
             if (res.getStatusCode().is2xxSuccessful() && res.getBody() != null) {
-                String body = new String(res.getBody(), StandardCharsets.UTF_8);
+                json = new String(res.getBody(), StandardCharsets.UTF_8);
 
-                RoleExpBundle bundle = parseRoleExpBundle(body);
+                RoleExpBundle bundle = parseRoleExpBundle(json);
 
                 levelTableRef.set(bundle.table());
                 baseAttrRef.set(bundle.baseAttr());
@@ -141,6 +168,11 @@ public class RoleConfigCache {
 
                 String et = res.getHeaders().getFirst(HttpHeaders.ETAG);
                 if (StringUtils.hasText(et)) etagRoleExp.set(et);
+
+                // 3. Cache in Redis for next time
+                if (redisEnabled && json != null) {
+                    redis.opsForValue().set(redisKey, json, redisTtlHours, TimeUnit.HOURS);
+                }
 
                 log.info("[RoleConfigCache] roleexp.json loaded: {} levels, baseAtt(hp={},atk={},def={},spd={}), other(boxId={},boxNum={})",
                         bundle.table().maxLevel(),
@@ -157,19 +189,43 @@ public class RoleConfigCache {
         return false;
     }
 
-    /** Nạp role_name.json (nếu có) */
+    /** Nạp role_name.json (nếu có) với Redis-first strategy */
     private boolean refreshRoleName(String path) {
         try {
+            String redisKey = toRedisKey(path);
+            String json = null;
+
+            // 1. Try Redis first (if enabled)
+            if (redisEnabled) {
+                json = redis.opsForValue().get(redisKey);
+                if (json != null && !json.isBlank()) {
+                    log.debug("[RoleConfigCache] Redis HIT path={}", path);
+                    List<String> names = parseNamePool(json);
+                    if (names != null && !names.isEmpty()) {
+                        namePoolRef.set(names);
+                        return true;
+                    }
+                }
+                log.debug("[RoleConfigCache] Redis MISS path={}, calling config-service", path);
+            }
+
+            // 2. Redis miss or disabled → call config-service
             ResponseEntity<byte[]> res = configFeign.getFile(path, etagRoleName.get());
             if (res.getStatusCode() == HttpStatus.NOT_MODIFIED) return true;
 
             if (res.getStatusCode().is2xxSuccessful() && res.getBody() != null) {
-                String body = new String(res.getBody(), StandardCharsets.UTF_8);
-                List<String> names = parseNamePool(body);
+                json = new String(res.getBody(), StandardCharsets.UTF_8);
+                List<String> names = parseNamePool(json);
                 if (names != null && !names.isEmpty()) {
                     namePoolRef.set(names);
                     String et = res.getHeaders().getFirst(HttpHeaders.ETAG);
                     if (StringUtils.hasText(et)) etagRoleName.set(et);
+
+                    // 3. Cache in Redis for next time
+                    if (redisEnabled && json != null) {
+                        redis.opsForValue().set(redisKey, json, redisTtlHours, TimeUnit.HOURS);
+                    }
+
                     log.info("[RoleConfigCache] role_name.json loaded: {} names", names.size());
                     return true;
                 }
@@ -446,5 +502,13 @@ public class RoleConfigCache {
         } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    /**
+     * Convert config path to Redis key format.
+     * Example: "gameworld/logicconfig/roleexp.json" → "cfg:file:gameworld:logicconfig:roleexp.json"
+     */
+    private String toRedisKey(String path) {
+        return "cfg:file:" + path.replace('/', ':');
     }
 }

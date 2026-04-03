@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +24,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Task definition provider with Redis-first lookup strategy.
+ * 1. Check Redis cache first
+ * 2. If miss, call config-service
+ * 3. Cache result in Redis for future requests
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -44,9 +52,15 @@ public class TaskDefinitionProvider {
 
     private final ConfigServiceClient configServiceClient;
     private final ObjectMapper objectMapper;
+    private final StringRedisTemplate redis;
 
     @Value("${task.config.path:gameworld/logicconfig/task_cfg.json}")
     private String taskConfigPath;
+
+    @Value("${task.config.redis-enabled:true}")
+    private boolean redisEnabled;
+    @Value("${task.config.redis-ttl-hours:24}")
+    private long redisTtlHours;
 
     private final AtomicReference<Map<String, TaskDefinitionConfig>> cacheRef =
         new AtomicReference<>(FALLBACK_TASK_CONFIGS);
@@ -100,6 +114,30 @@ public class TaskDefinitionProvider {
 
     private void refreshFromRemote(boolean force) {
         lastRefreshAtRef.set(Instant.now());
+
+        // 1. Try Redis first (if enabled and not force reload)
+        if (redisEnabled && !force) {
+            String redisKey = toRedisKey(taskConfigPath);
+            String cached = redis.opsForValue().get(redisKey);
+            if (cached != null && !cached.isBlank()) {
+                log.debug("[TaskDefinitionProvider] Redis HIT path={}", taskConfigPath);
+                try {
+                    Map<String, TaskDefinitionConfig> parsedConfigs = parseConfigs(cached);
+                    if (!parsedConfigs.isEmpty()) {
+                        cacheRef.set(Map.copyOf(parsedConfigs));
+                        lastSuccessAtRef.set(Instant.now());
+                        lastSourceRef.set("redis");
+                        lastErrorRef.set(null);
+                        return;
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to parse cached task config from Redis, will reload: {}", e.toString());
+                }
+            }
+            log.debug("[TaskDefinitionProvider] Redis MISS path={}", taskConfigPath);
+        }
+
+        // 2. Call config-service
         try {
             String ifNoneMatch = force ? null : etagRef.get();
             ResponseEntity<byte[]> response = configServiceClient.getFile(taskConfigPath, ifNoneMatch);
@@ -130,6 +168,13 @@ public class TaskDefinitionProvider {
             lastSuccessAtRef.set(Instant.now());
             lastSourceRef.set("config-service");
             lastErrorRef.set(null);
+
+            // 3. Cache in Redis
+            if (redisEnabled) {
+                String redisKey = toRedisKey(taskConfigPath);
+                redis.opsForValue().set(redisKey, payload, redisTtlHours, TimeUnit.HOURS);
+                log.debug("[TaskDefinitionProvider] Cached in Redis path={}", taskConfigPath);
+            }
 
             log.info("Loaded {} task definitions from config-service (path={})", parsedConfigs.size(), taskConfigPath);
         } catch (FeignException.NotFound ex) {
@@ -310,6 +355,10 @@ public class TaskDefinitionProvider {
 
     private String defaultIfBlank(String value, String fallback) {
         return StringUtils.hasText(value) ? value : fallback;
+    }
+
+    private String toRedisKey(String path) {
+        return "cfg:file:" + path.replace('/', ':');
     }
 
     public record TaskConfigStatus(

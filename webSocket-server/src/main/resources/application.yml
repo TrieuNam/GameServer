@@ -136,22 +136,24 @@ app:
     ttl-hours: 24
     p1-async: true
     p1-timeout-ms: 15000
+    # P0: Critical configs needed immediately during login bootstrap (loaded synchronously)
     p0-paths:
-      - gameworld/logicconfig/task_cfg.json
-      - gameworld/logicconfig/roleexp.json
-      - gameworld/logicconfig/role_name.json
-      - gameworld/skill/single_skill.json
-      - gameworld/skill/passive_skill.json
+      - gameworld/logicconfig/task_cfg.json        # Task definitions & conditions
+      - gameworld/logicconfig/roleexp.json         # Level-up exp requirements
+      - gameworld/logicconfig/role_name.json       # Random name pool
+      - gameworld/skill/single_skill.json          # Active skill configs
+      - gameworld/skill/passive_skill.json         # Talent/passive skill configs
+      - gameworld/item/equipment.json              # Equipment templates (stats)
+    # P1: Important configs loaded asynchronously after P0 (can tolerate slight delay)
     p1-paths:
-      - gameworld/item/equipment.json
-      - gameworld/item/other.json
-      - gameworld/item/expense.json
-      - gameworld/item/gift.json
-      - gameworld/logicconfig/shop_cfg.json
-      - gameworld/logicconfig/shop_shenmi.json
-      - gameworld/logicconfig/cloth_shop.json
-      - gameworld/logicconfig/unpack.json
-      - gameworld/logicconfig/kaixiangdaji.json
+      - gameworld/item/other.json                  # Other item definitions
+      - gameworld/item/expense.json                # Consumable item definitions
+      - gameworld/item/gift.json                   # Gift box configs
+      - gameworld/logicconfig/shop_cfg.json        # Common shop items
+      - gameworld/logicconfig/shop_shenmi.json     # Mystery shop configs
+      - gameworld/logicconfig/cloth_shop.json      # Fashion shop configs
+      - gameworld/logicconfig/unpack.json          # Box opening configs (random rewards)
+      - gameworld/logicconfig/kaixiangdaji.json    # Lucky box opening configs
   login-snapshot:
     enabled: true
     rollout-percent: 100

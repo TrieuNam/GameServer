@@ -8,20 +8,39 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * EquipmentConfigCache - Redis-first equipment config loader
+ *
+ * <p>Loads equipment templates from equipment.json with Redis-first strategy:
+ * <ol>
+ *   <li>Check Redis first (preloaded by websocket-server)</li>
+ *   <li>If miss, call config-service</li>
+ *   <li>Cache result in Redis for 24h</li>
+ * </ol>
+ */
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class EquipmentConfigCache {
 
     private final ConfigFeign cfg;
+    private final StringRedisTemplate redis;
     private final ObjectMapper om = new ObjectMapper();
+
+    @Value("${equip.config.redis-enabled:true}")
+    private boolean redisEnabled;
+
+    @Value("${equip.config.redis-ttl-hours:24}")
+    private long redisTtlHours;
 
     private final AtomicReference<String> etag = new AtomicReference<>(null);
     private final AtomicReference<Map<Integer, EquipRow>> byId = new AtomicReference<>(Map.of());
@@ -45,43 +64,70 @@ public class EquipmentConfigCache {
 
     public void ensureLoaded() {
         String cur = etag.get();
+        String json = null;
+
         try {
+            String redisKey = toRedisKey(equipmentPath);
+
+            // 1. Try Redis first (if enabled)
+            if (redisEnabled) {
+                json = redis.opsForValue().get(redisKey);
+                if (json != null && !json.isBlank()) {
+                    log.debug("[EquipmentConfigCache] Redis HIT path={}", equipmentPath);
+                    parseAndCache(json);
+                    return;
+                }
+                log.debug("[EquipmentConfigCache] Redis MISS path={}, calling config-service", equipmentPath);
+            }
+
+            // 2. Redis miss or disabled → call config-service
             ResponseEntity<byte[]> resp = cfg.getFile(equipmentPath, cur);
             if (resp.getStatusCode().is2xxSuccessful() && resp.getBody()!=null) {
-                try {
-                    String json = new String(resp.getBody(), StandardCharsets.UTF_8);
-                    // file có dạng: { "wuqi":[{row}...], "toukui":[{row}...], ... }
-                    Map<String, List<Map<String, Object>>> root = om.readValue(json, new TypeReference<>() {});
-                    Map<Integer, EquipRow> tmp = new HashMap<>();
-                    root.values().forEach(arr -> {
-                        for (var m : arr) {
-                            try {
-                                EquipRow r = new EquipRow();
-                                r.id = parseInt(m.get("id"));
-                                r.part = parseInt(m.get("part"));
-                                r.quality = firstNullableInt(m, "quality", "color", "q");
-                                r.level = firstNullableInt(m, "level", "lv");
-                                r.hp_max = parseInt(m.get("hp_max"));
-                                r.att_max = parseInt(m.get("att_max"));
-                                r.def_max = parseInt(m.get("def_max"));
-                                r.speed_max = parseInt(m.get("speed_max"));
-                                r.frist_att = parseNullableInt(m.get("frist_att"));
-                                r.second_att = parseNullableInt(m.get("second_att"));
-                                if (r.id > 0) tmp.put(r.id, r);
-                            } catch (Exception ignore) {}
-                        }
-                    });
-                    byId.set(Collections.unmodifiableMap(tmp));
-                } catch (Exception ex) {
-                    log.warn("[EquipmentConfigCache] parse equipment config failed: {}", ex.getMessage());
-                }
+                json = new String(resp.getBody(), StandardCharsets.UTF_8);
+                parseAndCache(json);
+
                 if (resp.getHeaders().getETag()!=null) etag.set(resp.getHeaders().getETag());
+
+                // 3. Cache in Redis for next time
+                if (redisEnabled && json != null) {
+                    redis.opsForValue().set(redisKey, json, redisTtlHours, TimeUnit.HOURS);
+                    log.info("[EquipmentConfigCache] Loaded and cached {} equipment templates", byId.get().size());
+                }
             }
         } catch (FeignException ex) {
             if (ex.status() == 304) {
-                return;
+                return; // Not Modified - use existing cache
             }
             throw ex;
+        }
+    }
+
+    private void parseAndCache(String json) {
+        try {
+            // file có dạng: { "wuqi":[{row}...], "toukui":[{row}...], ... }
+            Map<String, List<Map<String, Object>>> root = om.readValue(json, new TypeReference<>() {});
+            Map<Integer, EquipRow> tmp = new HashMap<>();
+            root.values().forEach(arr -> {
+                for (var m : arr) {
+                    try {
+                        EquipRow r = new EquipRow();
+                        r.id = parseInt(m.get("id"));
+                        r.part = parseInt(m.get("part"));
+                        r.quality = firstNullableInt(m, "quality", "color", "q");
+                        r.level = firstNullableInt(m, "level", "lv");
+                        r.hp_max = parseInt(m.get("hp_max"));
+                        r.att_max = parseInt(m.get("att_max"));
+                        r.def_max = parseInt(m.get("def_max"));
+                        r.speed_max = parseInt(m.get("speed_max"));
+                        r.frist_att = parseNullableInt(m.get("frist_att"));
+                        r.second_att = parseNullableInt(m.get("second_att"));
+                        if (r.id > 0) tmp.put(r.id, r);
+                    } catch (Exception ignore) {}
+                }
+            });
+            byId.set(Collections.unmodifiableMap(tmp));
+        } catch (Exception ex) {
+            log.warn("[EquipmentConfigCache] parse equipment config failed: {}", ex.getMessage());
         }
     }
 
@@ -112,5 +158,13 @@ public class EquipmentConfigCache {
             if (v != null) return v;
         }
         return null;
+    }
+
+    /**
+     * Convert config path to Redis key format.
+     * Example: "gameworld/item/equipment.json" → "cfg:file:gameworld:item:equipment.json"
+     */
+    private String toRedisKey(String path) {
+        return "cfg:file:" + path.replace('/', ':');
     }
 }
