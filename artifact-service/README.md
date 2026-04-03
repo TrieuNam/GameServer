@@ -7,22 +7,22 @@
 
 ---
 
-## 📋 Overview
+## 📋 Tổng quan
 
-Artifact Service manages the Divine Artifact/Weapon (ShenQi 神器) system for legendary equipment. Players can unlock, upgrade, and customize powerful divine weapons with multiple progression systems including level, grade, refinement, awakening, blessing tiers, and random attributes. Includes a gacha draw system for acquiring new artifacts.
+Artifact Service quản lý hệ thống Divine Artifact/Weapon (ShenQi 神器) cho trang bị huyền thoại. Người chơi có thể mở khóa, nâng cấp, và tùy chỉnh vũ khí thần thánh mạnh mẽ với nhiều hệ thống tiến hóa bao gồm level, grade, refinement, awakening, blessing tiers, và random attributes. Bao gồm hệ thống gacha draw để thu thập artifacts mới.
 
 ### Core Features
-- ✅ Artifact Management: Unlock, level up, grade up divine weapons
-- ✅ Equipment System: Equip/unequip artifacts
-- ✅ Refinement: Advanced upgrade system (精炼, max level 15)
-- ✅ Awakening: Breakthrough stages (觉醒, max stage 7)
-- ✅ Soul Power: Accumulate soul power for bonuses (魂力)
-- ✅ Divine Essence: Special currency for upgrades (神性精华)
-- ✅ Blessing System: Tier-based blessing upgrades (祝福, max tier 10)
-- ✅ Random Attributes: 4 attribute slots with refresh/lock system
-- ✅ Gacha Draw: Single and 10-pull draws with pity system
-- ✅ Skill System: 3 skill slots with upgrades
-- ✅ Combat Power Calculation
+- ✅ Quản lý Artifact: Mở khóa, nâng level, nâng grade vũ khí thần
+- ✅ Hệ thống Trang bị: Trang bị/tháo artifacts
+- ✅ Refinement: Hệ thống nâng cấp cao cấp (精炼, tối đa level 15)
+- ✅ Awakening: Các giai đoạn đột phá (觉醒, tối đa stage 7)
+- ✅ Soul Power: Tích lũy soul power để nhận bonus (魂力)
+- ✅ Divine Essence: Tiền tệ đặc biệt cho nâng cấp (神性精华)
+- ✅ Hệ thống Blessing: Nâng cấp blessing theo tier (祝福, tối đa tier 10)
+- ✅ Random Attributes: 4 attribute slots với hệ thống refresh/lock
+- ✅ Gacha Draw: Single và 10-pull draws với pity system
+- ✅ Hệ thống Skill: 3 skill slots với nâng cấp
+- ✅ Tính toán Combat Power
 
 ---
 
@@ -151,27 +151,27 @@ POST   /api/artifact/{roleId}/upgrade-skill  - Upgrade skill
 
 ## 📦 API Examples
 
-### Get All Artifacts
+### Lấy Tất Cả Artifacts
 ```bash
 curl http://localhost:8091/api/artifact/player123
 ```
 
-### Unlock Artifact
+### Mở Khóa Artifact
 ```bash
 curl -X POST "http://localhost:8091/api/artifact/player123/unlock?artifactId=3001"
 ```
 
-### Level Up Artifact
+### Nâng Level Artifact
 ```bash
 curl -X POST "http://localhost:8091/api/artifact/player123/levelup?artifactIndex=1"
 ```
 
-### Grade Up Artifact
+### Nâng Grade Artifact
 ```bash
 curl -X POST "http://localhost:8091/api/artifact/player123/gradeup?artifactIndex=1"
 ```
 
-### Equip Artifact
+### Trang Bị Artifact
 ```bash
 curl -X POST "http://localhost:8091/api/artifact/player123/equip?artifactIndex=1"
 ```
@@ -192,12 +192,12 @@ curl -X POST "http://localhost:8091/api/artifact/player123/draw?drawType=1"
 # drawType: 1=single, 10=ten-pull
 ```
 
-### Get Draw Records
+### Lấy Lịch Sử Draw
 ```bash
 curl http://localhost:8091/api/artifact/player123/draw-records
 ```
 
-### Get Combat Power
+### Lấy Combat Power
 ```bash
 curl "http://localhost:8091/api/artifact/player123/1/power"
 ```
@@ -206,64 +206,64 @@ curl "http://localhost:8091/api/artifact/player123/1/power"
 
 ## 🔧 Business Logic
 
-### Level System
+### Hệ Thống Level
 - **Max Level**: 100
-- Increases base stats progressively
-- Requires exp materials to upgrade
-- Higher levels unlock more features
+- Tăng chỉ số cơ bản dần dần
+- Cần exp materials để nâng cấp
+- Level cao hơn mở khóa nhiều tính năng hơn
 
-### Grade System
+### Hệ Thống Grade
 - **Max Grade**: 10
-- Quality tiers with significant stat multipliers
-- Requires rare materials for grade up
-- Each grade substantially boosts power
+- Tầng chất lượng với hệ số nhân chỉ số đáng kể
+- Cần vật liệu hiếm để nâng grade
+- Mỗi grade tăng mạnh sức mạnh
 
-### Refinement System (精炼)
+### Hệ Thống Refinement (精炼)
 - **Max Refinement Level**: 15
-- Advanced upgrade on top of level/grade
-- Each level provides additional stat bonus
-- Requires refinement stones
+- Nâng cấp cao cấp trên level/grade
+- Mỗi level cung cấp bonus chỉ số bổ sung
+- Cần refinement stones
 
-### Awakening System (觉醒)
+### Hệ Thống Awakening (觉醒)
 - **Max Awakening Stage**: 7
-- Breakthrough stages for major power boost
-- Unlocks new abilities and appearances
-- Requires awakening materials
+- Các giai đoạn đột phá cho boost sức mạnh lớn
+- Mở khóa abilities và appearances mới
+- Cần awakening materials
 
-### Blessing System (祝福)
+### Hệ Thống Blessing (祝福)
 - **Max Blessing Tier**: 10
-- Progressive tier-based upgrades
-- Each tier provides cumulative bonuses
-- Requires blessing materials or divine essence
+- Nâng cấp tiến bộ theo tier
+- Mỗi tier cung cấp bonus tích lũy
+- Cần blessing materials hoặc divine essence
 
-### Random Attribute System
-- **4 Attribute Slots**: Each with type and value
-- Refresh system to reroll attributes
-- Lock system to preserve desired attributes
-- Attribute pool based on artifact quality
+### Hệ Thống Random Attribute
+- **4 Attribute Slots**: Mỗi slot có type và value
+- Hệ thống Refresh để reroll attributes
+- Hệ thống Lock để giữ attributes mong muốn
+- Attribute pool dựa trên chất lượng artifact
 
 ### Soul Power (魂力)
-- Accumulated resource from various activities
-- Provides passive bonuses
-- Can be used for special upgrades
-- Never decreases
+- Tài nguyên tích lũy từ nhiều hoạt động
+- Cung cấp bonus thụ động
+- Có thể dùng cho nâng cấp đặc biệt
+- Không bao giờ giảm
 
 ### Divine Essence (神性精华)
-- Premium/special currency for upgrades
-- Used for high-tier operations
-- Can be obtained from events or decomposition
+- Tiền tệ cao cấp/đặc biệt cho nâng cấp
+- Dùng cho các thao tác cấp cao
+- Có thể nhận từ sự kiện hoặc phân rã
 
-### Gacha System
-- **Single Draw**: Draw one artifact
-- **Ten Pull**: Draw 10 artifacts with guaranteed rare+
-- Pity system for guaranteed legendary
-- Quality tiers: Common, Rare, Epic, Legendary, Mythic
-- Draw records tracked for history
+### Hệ Thống Gacha
+- **Single Draw**: Draw một artifact
+- **Ten Pull**: Draw 10 artifacts với đảm bảo rare+
+- Pity system đảm bảo legendary
+- Tầng chất lượng: Common, Rare, Epic, Legendary, Mythic
+- Lịch sử draw được ghi lại
 
-### Skill System
+### Hệ Thống Skill
 - **3 Skill Slots**: skill1, skill2, skill3
-- Each skill upgradable independently
-- Skills provide combat abilities and bonuses
+- Mỗi skill nâng cấp độc lập
+- Skills cung cấp abilities và bonuses trong combat
 
 ---
 

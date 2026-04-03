@@ -7,43 +7,43 @@
 
 ---
 
-## 📋 Overview
+## 📋 Tổng quan
 
-Mail Service manages all in-game mail functionality including system mails, player-to-player mails, reward mails, and mails with attachments (items, gold, gems, exp).
+Mail Service quản lý toàn bộ hệ thống thư trong game bao gồm thư hệ thống, thư giữa người chơi, thư phần thưởng, và thư có đính kèm (items, gold, gems, exp).
 
 ### Core Features
-- ✅ System mail
-- ✅ Player-to-player mail
-- ✅ Reward mail with attachments
-- ✅ Notice mail
-- ✅ Mail with gold/gems/items/exp attachments
-- ✅ Bulk mail sending
-- ✅ Auto-expiration (default 7 days)
-- ✅ Read/Unread status
-- ✅ Attachment claiming system
+- ✅ Thư hệ thống
+- ✅ Thư giữa người chơi
+- ✅ Thư phần thưởng có đính kèm
+- ✅ Thư thông báo
+- ✅ Thư có đính kèm gold/gems/items/exp
+- ✅ Gửi thư hàng loạt
+- ✅ Tự động hết hạn (mặc định 7 ngày)
+- ✅ Trạng thái Đã đọc/Chưa đọc
+- ✅ Hệ thống nhận đính kèm
 
 ---
 
-## 🎯 Mail Types
+## 🎯 Loại Thư
 
-| Type | ID | Description | Features |
+| Type | ID | Mô tả | Tính năng |
 |------|----|----|----------|
-| **System** | 1 | From game system | No sender, official |
-| **Player** | 2 | Player to player | Has sender info |
-| **Reward** | 3 | Rewards/compensation | With attachments |
-| **Notice** | 4 | Announcements | Important notices |
+| **System** | 1 | Từ hệ thống game | Không có người gửi, chính thức |
+| **Player** | 2 | Người chơi gửi cho nhau | Có thông tin người gửi |
+| **Reward** | 3 | Phần thưởng/bồi thường | Có đính kèm |
+| **Notice** | 4 | Thông báo | Thông báo quan trọng |
 
 ---
 
-## 🎁 Attachment Types
+## 🎁 Loại Đính Kèm
 
-| Type | ID | Description | Example |
+| Type | ID | Mô tả | Ví dụ |
 |------|----|----|---------|
-| **Gold** | 1 | In-game currency | 10000 gold |
-| **Gems** | 2 | Premium currency | 500 gems |
-| **Item** | 3 | Regular items | HP Potion x5 |
-| **Equipment** | 4 | Equipment items | Legendary Sword |
-| **EXP** | 5 | Experience points | 5000 EXP |
+| **Gold** | 1 | Tiền tệ trong game | 10000 gold |
+| **Gems** | 2 | Tiền tệ cao cấp | 500 gems |
+| **Item** | 3 | Items thông thường | HP Potion x5 |
+| **Equipment** | 4 | Items trang bị | Legendary Sword |
+| **EXP** | 5 | Điểm kinh nghiệm | 5000 EXP |
 
 ---
 
@@ -101,7 +101,7 @@ GET    /api/mail/health            - Health check
 
 ## 📦 API Examples
 
-### Send System Mail with Reward
+### Gửi Thư Hệ Thống Có Phần Thưởng
 ```bash
 curl -X POST http://localhost:8470/api/mail/send \
   -H "Content-Type: application/json" \
@@ -133,7 +133,7 @@ curl -X POST http://localhost:8470/api/mail/send \
   }'
 ```
 
-### Send Bulk Mail to Multiple Players
+### Gửi Thư Hàng Loạt Cho Nhiều Người Chơi
 ```bash
 curl -X POST http://localhost:8470/api/mail/send-bulk \
   -H "Content-Type: application/json" \
@@ -148,22 +148,22 @@ curl -X POST http://localhost:8470/api/mail/send-bulk \
   }'
 ```
 
-### Get Mail List
+### Lấy Danh Sách Thư
 ```bash
 curl http://localhost:8470/api/mail/list/player123
 ```
 
-### Read Mail
+### Đọc Thư
 ```bash
 curl -X PUT http://localhost:8470/api/mail/123/read
 ```
 
-### Claim Attachments
+### Nhận Đính Kèm
 ```bash
 curl -X POST http://localhost:8470/api/mail/123/claim
 ```
 
-### Delete Mail
+### Xóa Thư
 ```bash
 curl -X DELETE http://localhost:8470/api/mail/123
 ```
@@ -172,21 +172,21 @@ curl -X DELETE http://localhost:8470/api/mail/123
 
 ## 🔧 Business Logic
 
-### Mail Expiration
-- Default: 7 days
-- Configurable: 1-30 days
-- Expired mails auto-deleted by scheduled task
+### Hết Hạn Thư
+- Mặc định: 7 ngày
+- Cấu hình được: 1-30 ngày
+- Thư hết hạn tự động xóa bởi scheduled task
 
-### Attachment Claiming
-- Can only claim once per mail
-- Cannot delete mail with unclaimed attachments
-- Attachments given to player inventory/wallet
-- Integration with: wallet-service, bag-service
+### Nhận Đính Kèm
+- Chỉ có thể nhận một lần mỗi thư
+- Không thể xóa thư có đính kèm chưa nhận
+- Đính kèm được thêm vào inventory/wallet của người chơi
+- Tích hợp với: wallet-service, bag-service
 
-### Security
-- Cannot delete mail with unclaimed attachments
-- Expired mails cannot be read or claimed
-- Bulk mail limited to prevent spam
+### Bảo Mật
+- Không thể xóa thư có đính kèm chưa nhận
+- Thư hết hạn không thể đọc hoặc nhận
+- Gửi thư hàng loạt bị giới hạn để tránh spam
 
 ---
 

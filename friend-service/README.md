@@ -7,52 +7,52 @@
 
 ---
 
-## 📋 Overview
+## 📋 Tổng quan
 
-Friend Service manages all friend-related functionality including friend lists, friend requests, blocking, online status tracking, and gift giving.
+Friend Service quản lý toàn bộ chức năng liên quan đến bạn bè bao gồm danh sách bạn bè, lời mời kết bạn, chặn người chơi, theo dõi trạng thái online, và tặng quà.
 
 ### Core Features
-- ✅ Friend list management (max 100 friends)
-- ✅ Friend request system (send/accept/reject)
-- ✅ Block/unblock players (max 50 blocked)
-- ✅ Online status tracking
-- ✅ Friendship levels (1-5)
-- ✅ Gift giving system
-- ✅ Friend search
+- ✅ Quản lý danh sách bạn bè (tối đa 100 bạn)
+- ✅ Hệ thống lời mời kết bạn (gửi/chấp nhận/từ chối)
+- ✅ Chặn/bỏ chặn người chơi (tối đa 50 người bị chặn)
+- ✅ Theo dõi trạng thái online
+- ✅ Cấp độ tình bạn (1-5)
+- ✅ Hệ thống tặng quà
+- ✅ Tìm kiếm bạn bè
 
 ---
 
-## 🎯 Features
+## 🎯 Tính Năng
 
-### Friend Management
-- **Friend List**: View all friends with online status
-- **Add Friend**: Send friend request with optional message
-- **Remove Friend**: Unfriend a player
-- **Friendship Levels**: 5 levels (1000 points per level)
-- **Friendship Points**: Earned through interaction (chat, gifts, etc.)
+### Quản Lý Bạn Bè
+- **Danh sách bạn bè**: Xem tất cả bạn bè với trạng thái online
+- **Thêm bạn**: Gửi lời mời kết bạn với tin nhắn tùy chọn
+- **Xóa bạn**: Hủy kết bạn với người chơi
+- **Cấp độ tình bạn**: 5 cấp độ (1000 điểm mỗi cấp)
+- **Điểm tình bạn**: Nhận qua tương tác (chat, quà, v.v.)
 
-### Friend Requests
-- **Send Request**: Request to add another player
-- **Auto-Accept**: If both players send requests, auto-accept
-- **View Requests**: See all pending requests
-- **Handle Request**: Approve or reject
-- **Request Expiry**: Auto-expire old requests
+### Lời Mời Kết Bạn
+- **Gửi lời mời**: Gửi yêu cầu kết bạn với người chơi khác
+- **Tự động chấp nhận**: Nếu cả hai người gửi lời mời, tự động chấp nhận
+- **Xem lời mời**: Xem tất cả lời mời đang chờ
+- **Xử lý lời mời**: Chấp nhận hoặc từ chối
+- **Hết hạn lời mời**: Tự động hết hạn các lời mời cũ
 
-### Blocking
-- **Block Player**: Block unwanted players (max 50)
-- **Unblock Player**: Remove from block list
-- **Block List**: View all blocked players
-- **Auto-Unfriend**: Blocking removes friendship
+### Chặn
+- **Chặn người chơi**: Chặn người chơi không mong muốn (tối đa 50)
+- **Bỏ chặn**: Xóa khỏi danh sách chặn
+- **Danh sách chặn**: Xem tất cả người chơi bị chặn
+- **Tự động hủy kết bạn**: Chặn sẽ xóa tình bạn
 
-### Online Status
-- **Track Status**: Real-time online/offline tracking
-- **Last Online**: Track last login/logout time
-- **Friend Notifications**: See when friends come online
+### Trạng Thái Online
+- **Theo dõi trạng thái**: Theo dõi online/offline thời gian thực
+- **Lần cuối online**: Theo dõi thời gian login/logout cuối
+- **Thông báo bạn bè**: Xem khi bạn bè online
 
-### Gift System
-- **Give Gift**: Send items to friends
-- **Friendship Bonus**: Gifting increases friendship points
-- **Daily Limits**: TODO - implement daily gift limits
+### Hệ Thống Quà
+- **Tặng quà**: Gửi items cho bạn bè
+- **Bonus tình bạn**: Tặng quà tăng điểm tình bạn
+- **Giới hạn hàng ngày**: TODO - triển khai giới hạn quà hàng ngày
 
 ---
 
@@ -161,7 +161,7 @@ GET    /api/friend/health
 
 ## 📦 API Examples
 
-### Get Friend List
+### Lấy Danh Sách Bạn Bè
 ```bash
 curl http://localhost:8450/api/friend/list/player123
 
@@ -185,7 +185,7 @@ Response:
 }
 ```
 
-### Send Friend Request
+### Gửi Lời Mời Kết Bạn
 ```bash
 curl -X POST http://localhost:8450/api/friend/request/send \
   -H "Content-Type: application/json" \
@@ -206,7 +206,7 @@ Response:
 }
 ```
 
-### Handle Friend Request
+### Xử Lý Lời Mời Kết Bạn
 ```bash
 curl -X POST http://localhost:8450/api/friend/request/handle \
   -H "Content-Type: application/json" \
@@ -217,7 +217,7 @@ curl -X POST http://localhost:8450/api/friend/request/handle \
   }'
 ```
 
-### Block Player
+### Chặn Người Chơi
 ```bash
 curl -X POST http://localhost:8450/api/friend/block \
   -H "Content-Type: application/json" \
@@ -229,26 +229,26 @@ curl -X POST http://localhost:8450/api/friend/block \
   }'
 ```
 
-### Update Online Status
+### Cập Nhật Trạng Thái Online
 ```bash
 curl -X PUT "http://localhost:8450/api/friend/status?roleId=player123&roleName=Hero&level=50&online=true"
 ```
 
 ---
 
-## 🔗 Integration
+## 🔗 Tích Hợp
 
 ### WebSocket Handler
 **FriendHandler.java** ↔ **friend-service**
 
-All FriendHandler operations call this service via Feign.
+Tất cả thao tác FriendHandler gọi service này qua Feign.
 
-### Related Services
-- **role-service**: Get player power/attributes
-- **chat-service**: Friend chat (future)
-- **mail-service**: Friend mail notifications
-- **item-service**: Gift item validation
-- **bag-service**: Add gift items to receiver
+### Services Liên Quan
+- **role-service**: Lấy power/attributes của người chơi
+- **chat-service**: Chat với bạn bè (tương lai)
+- **mail-service**: Thông báo mail cho bạn bè
+- **item-service**: Xác thực item quà
+- **bag-service**: Thêm items quà cho người nhận
 
 ---
 
@@ -286,30 +286,30 @@ eureka:
 
 ## 📊 Business Logic
 
-### Friend Limits
-- **Max Friends**: 100 per player
-- **Max Blocked**: 50 per player
+### Giới Hạn Bạn Bè
+- **Tối đa bạn bè**: 100 mỗi người chơi
+- **Tối đa bị chặn**: 50 mỗi người chơi
 
-### Friendship Levels
+### Cấp Độ Tình Bạn
 ```
-Level 1: 0-999 points
-Level 2: 1000-1999 points
-Level 3: 2000-2999 points
-Level 4: 3000-3999 points
-Level 5: 4000+ points
+Cấp 1: 0-999 điểm
+Cấp 2: 1000-1999 điểm
+Cấp 3: 2000-2999 điểm
+Cấp 4: 3000-3999 điểm
+Cấp 5: 4000+ điểm
 ```
 
-### Earning Friendship Points
-- Chat with friend: +5 points
-- Give gift: +10 points
-- Play together: +20 points
-- Daily interaction: +50 points
+### Nhận Điểm Tình Bạn
+- Chat với bạn: +5 điểm
+- Tặng quà: +10 điểm
+- Chơi cùng: +20 điểm
+- Tương tác hàng ngày: +50 điểm
 
-### Auto-Accept Logic
+### Logic Tự Động Chấp Nhận
 ```
-If Player A sends request to Player B
-AND Player B sends request to Player A (before A's request is processed)
-THEN Auto-accept both requests and create friendship
+Nếu Player A gửi lời mời cho Player B
+VÀ Player B gửi lời mời cho Player A (trước khi lời mời của A được xử lý)
+THÌ Tự động chấp nhận cả hai lời mời và tạo tình bạn
 ```
 
 ---
