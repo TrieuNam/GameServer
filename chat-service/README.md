@@ -7,31 +7,31 @@
 
 ---
 
-## 📋 Overview
+## 📋 Tổng quan
 
-Chat Service manages all chat functionality including world chat, guild chat, team chat, private messages, system announcements, mute system, and chat history.
+Chat Service quản lý toàn bộ chức năng chat bao gồm world chat, guild chat, team chat, tin nhắn riêng, thông báo hệ thống, hệ thống mute, và lịch sử chat.
 
 ### Core Features
-- ✅ World chat (global)
-- ✅ Guild chat (guild members)
-- ✅ Team chat (party members)
+- ✅ World chat (toàn cầu)
+- ✅ Guild chat (thành viên guild)
+- ✅ Team chat (thành viên nhóm)
 - ✅ Private chat (1-on-1)
-- ✅ System announcements
-- ✅ Chat history
-- ✅ Mute/unmute players
-- ✅ Auto-cleanup old messages
+- ✅ Thông báo hệ thống
+- ✅ Lịch sử chat
+- ✅ Mute/unmute người chơi
+- ✅ Tự động dọn dẹp tin nhắn cũ
 
 ---
 
-## 🎯 Chat Channels
+## 🎯 Kênh Chat
 
-| Channel | ID | Description | Visibility |
+| Channel | ID | Mô tả | Hiển thị |
 |---------|----|----|-----------|
-| **World** | 1 | Global chat | All players |
-| **Guild** | 2 | Guild chat | Guild members only |
-| **Team** | 3 | Party chat | Team members only |
-| **Private** | 4 | Direct message | Sender + Receiver |
-| **System** | 5 | Announcements | All players |
+| **World** | 1 | Chat toàn cầu | Tất cả người chơi |
+| **Guild** | 2 | Chat guild | Chỉ thành viên guild |
+| **Team** | 3 | Chat nhóm | Chỉ thành viên team |
+| **Private** | 4 | Tin nhắn trực tiếp | Người gửi + Người nhận |
+| **System** | 5 | Thông báo | Tất cả người chơi |
 
 ---
 
@@ -80,7 +80,7 @@ GET    /api/chat/health         - Health check
 
 ## 📦 API Examples
 
-### Send World Message
+### Gửi Tin Nhắn World
 ```bash
 curl -X POST http://localhost:8460/api/chat/send \
   -H "Content-Type: application/json" \
@@ -92,7 +92,7 @@ curl -X POST http://localhost:8460/api/chat/send \
   }'
 ```
 
-### Send Private Message
+### Gửi Tin Nhắn Riêng
 ```bash
 curl -X POST http://localhost:8460/api/chat/send \
   -H "Content-Type: application/json" \
@@ -106,7 +106,7 @@ curl -X POST http://localhost:8460/api/chat/send \
   }'
 ```
 
-### Get Chat History
+### Lấy Lịch Sử Chat
 ```bash
 curl -X POST http://localhost:8460/api/chat/history \
   -H "Content-Type: application/json" \
@@ -116,7 +116,7 @@ curl -X POST http://localhost:8460/api/chat/history \
   }'
 ```
 
-### Mute Player
+### Mute Người Chơi
 ```bash
 curl -X POST http://localhost:8460/api/chat/mute \
   -H "Content-Type: application/json" \

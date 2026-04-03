@@ -7,20 +7,20 @@
 
 ---
 
-## 📋 Overview
+## 📋 Tổng quan
 
-Angel Service manages the Angel/Wing companion system for character enhancement and appearance. Players can unlock, level up, grade up, and equip angels that provide stat bonuses and visual customization. The service handles angel progression through multiple systems: levels, grades, stars, evolution, skills, blessing, and appearance upgrades.
+Angel Service quản lý hệ thống Angel/Wing companion để tăng cường sức mạnh và ngoại hình nhân vật. Người chơi có thể mở khóa, nâng cấp level, nâng cấp grade, và trang bị angels để nhận bonus chỉ số và tùy chỉnh ngoại hình. Service xử lý tiến độ angel qua nhiều hệ thống: levels, grades, stars, evolution, skills, blessing, và nâng cấp appearance.
 
 ### Core Features
-- ✅ Angel Management: Unlock, level up, grade up angels
-- ✅ Equipment: Equip/display angels, switch active angel
-- ✅ Skills: 4 skill slots with upgrade system
-- ✅ Star Upgrade: Additional power tier (max 12 stars)
-- ✅ Evolution: Breakthrough stages (max 5 stages)
-- ✅ Blessing System: Accumulate blessing points for bonuses
-- ✅ Appearance: Customizable skins and appearances with upgrade levels
-- ✅ Rename: Custom angel names (costs gold)
-- ✅ Transform: Apply appearance skins
+- ✅ Quản lý Angel: Mở khóa, nâng level, nâng grade angels
+- ✅ Trang bị: Trang bị/hiển thị angels, chuyển đổi angel đang dùng
+- ✅ Skills: 4 skill slots với hệ thống nâng cấp
+- ✅ Nâng cấp Star: Tầng sức mạnh bổ sung (tối đa 12 stars)
+- ✅ Evolution: Các giai đoạn đột phá (tối đa 5 stages)
+- ✅ Hệ thống Blessing: Tích lũy điểm blessing để nhận bonus
+- ✅ Appearance: Skins và appearances tùy chỉnh với các level nâng cấp
+- ✅ Đổi tên: Tên angel tùy chỉnh (tốn gold)
+- ✅ Transform: Áp dụng appearance skins
 
 ---
 
@@ -114,19 +114,19 @@ POST  /api/angel/{roleId}/rename            - Rename angel
 
 ## 📦 API Examples
 
-### Get Angel Data
+### Lấy Dữ Liệu Angel
 ```bash
 curl http://localhost:8090/api/angel/player123
 # Response: {"success": true, "angels": [...]}
 ```
 
-### Unlock New Angel
+### Mở Khóa Angel Mới
 ```bash
 curl -X POST http://localhost:8090/api/angel/player123/activate/101
 # Response: {"success": true, "angelData": {...}}
 ```
 
-### Level Up Angel
+### Nâng Level Angel
 ```bash
 curl -X POST http://localhost:8090/api/angel/player123/levelup \
   -H "Content-Type: application/json" \
@@ -134,19 +134,19 @@ curl -X POST http://localhost:8090/api/angel/player123/levelup \
 # Response: {"success": true, "newLevel": 5, "newExp": 1200}
 ```
 
-### Grade Up Angel
+### Nâng Grade Angel
 ```bash
 curl -X POST http://localhost:8090/api/angel/player123/gradeup/101
 # Response: {"success": true, "newGrade": 2, "angelId": 101}
 ```
 
-### Switch Active Angel
+### Chuyển Đổi Angel Đang Dùng
 ```bash
 curl -X POST http://localhost:8090/api/angel/player123/switch/102
 # Response: {"success": true, "activeAngelId": 102}
 ```
 
-### Upgrade Skill
+### Nâng Cấp Skill
 ```bash
 curl -X POST http://localhost:8090/api/angel/player123/skill/upgrade \
   -H "Content-Type: application/json" \
@@ -154,7 +154,7 @@ curl -X POST http://localhost:8090/api/angel/player123/skill/upgrade \
 # Response: {"success": true, "angelId": 101}
 ```
 
-### Rename Angel
+### Đổi Tên Angel
 ```bash
 curl -X POST http://localhost:8090/api/angel/player123/rename \
   -H "Content-Type: application/json" \
@@ -170,7 +170,7 @@ curl -X POST http://localhost:8090/api/angel/player123/transform \
 # Response: {"success": true, "transformId": 5001}
 ```
 
-### Upgrade Appearance Level
+### Nâng Cấp Appearance Level
 ```bash
 curl -X POST http://localhost:8090/api/angel/player123/appearance-upgrade \
   -H "Content-Type: application/json" \
@@ -182,52 +182,52 @@ curl -X POST http://localhost:8090/api/angel/player123/appearance-upgrade \
 
 ## 🔧 Business Logic
 
-### Level System
+### Hệ Thống Level
 - **Max Level**: 100
-- Increases base stats (HP, ATK, DEF)
-- Requires exp items to level up
-- Higher levels unlock more features
+- Tăng chỉ số cơ bản (HP, ATK, DEF)
+- Cần exp items để nâng level
+- Level cao hơn mở khóa nhiều tính năng hơn
 
-### Grade System
+### Hệ Thống Grade
 - **Max Grade**: 10
-- Quality tier with stat multiplier
-- Requires special materials for grade up
-- Significantly boosts all stats
+- Tầng chất lượng với hệ số nhân chỉ số
+- Cần vật liệu đặc biệt để nâng grade
+- Tăng đáng kể tất cả chỉ số
 
-### Star System
+### Hệ Thống Star
 - **Max Stars**: 12
-- Additional upgrade tier on top of level/grade
-- Each star increases power substantially
-- Requires rare materials
+- Tầng nâng cấp bổ sung trên level/grade
+- Mỗi star tăng sức mạnh đáng kể
+- Cần vật liệu hiếm
 
-### Evolution System
+### Hệ Thống Evolution
 - **Max Stages**: 5
-- Breakthrough stages for major power boost
-- Unlocks new appearances and skills
-- Requires evolution stones
+- Các giai đoạn đột phá cho boost sức mạnh lớn
+- Mở khóa appearances và skills mới
+- Cần evolution stones
 
-### Skill System
+### Hệ Thống Skill
 - **Slots**: 4 skills (3 active + 1 passive)
 - **Max Skill Level**: 10
-- Each skill provides unique abilities and stat bonuses
-- Upgrade costs increase with level
+- Mỗi skill cung cấp khả năng độc đáo và bonus chỉ số
+- Chi phí nâng cấp tăng theo level
 
-### Blessing System
-- Accumulate blessing points over time
-- Provides continuous passive bonuses
-- Can be boosted through events
-- Points never decrease
+### Hệ Thống Blessing
+- Tích lũy điểm blessing theo thời gian
+- Cung cấp bonus thụ động liên tục
+- Có thể tăng qua sự kiện
+- Điểm không bao giờ giảm
 
-### Appearance System
-- Customizable skins (transform)
-- Appearance level provides additional stats
-- Multiple appearance options per angel
-- Visual customization independent of power
+### Hệ Thống Appearance
+- Skins tùy chỉnh (transform)
+- Appearance level cung cấp chỉ số bổ sung
+- Nhiều tùy chọn appearance mỗi angel
+- Tùy chỉnh ngoại hình độc lập với sức mạnh
 
-### Naming System
-- Custom names cost 10,000 gold
-- Max 32 characters
-- Can rename multiple times
+### Hệ Thống Đổi Tên
+- Tên tùy chỉnh tốn 10,000 gold
+- Tối đa 32 ký tự
+- Có thể đổi tên nhiều lần
 
 ---
 

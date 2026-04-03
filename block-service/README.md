@@ -7,18 +7,18 @@
 
 ---
 
-## 📋 Overview
+## 📋 Tổng quan
 
-Block Service manages the building block system for legacy Msg 2180/2181 parity. Players can place, remove, compose, activate, and wear building blocks on different maps. This service tracks block placement positions, colors, and activation states for each player.
+Block Service quản lý hệ thống building block để tương thích với legacy Msg 2180/2181. Người chơi có thể đặt, xóa, compose, kích hoạt, và wear building blocks trên các map khác nhau. Service này theo dõi vị trí đặt block, màu sắc, và trạng thái kích hoạt cho mỗi người chơi.
 
 ### Core Features
-- ✅ Block placement (inlay) on maps
-- ✅ Block removal
-- ✅ Block composition from multiple blocks
-- ✅ Block activation sequence management
-- ✅ Block map wearing system
-- ✅ Per-role block state tracking
-- ✅ Position-based block placement (X/Y coordinates)
+- ✅ Đặt block (inlay) trên maps
+- ✅ Xóa block
+- ✅ Compose block từ nhiều blocks
+- ✅ Quản lý activation sequence của block
+- ✅ Hệ thống wear block map
+- ✅ Theo dõi trạng thái block theo role
+- ✅ Đặt block theo vị trí (tọa độ X/Y)
 
 ---
 
@@ -100,12 +100,12 @@ POST  /api/block/wear           - Wear a block map
 
 ## 📦 API Examples
 
-### Get Block Info
+### Lấy Thông Tin Block
 ```bash
 curl "http://localhost:8335/api/block/info?roleId=player123"
 ```
 
-### Place Block (Inlay)
+### Đặt Block (Inlay)
 ```bash
 curl -X POST http://localhost:8335/api/block/inlay \
   -H "Content-Type: application/json" \
@@ -118,7 +118,7 @@ curl -X POST http://localhost:8335/api/block/inlay \
   }'
 ```
 
-### Remove Block
+### Xóa Block
 ```bash
 curl -X POST http://localhost:8335/api/block/remove \
   -H "Content-Type: application/json" \
@@ -140,7 +140,7 @@ curl -X POST http://localhost:8335/api/block/compose \
   }'
 ```
 
-### Activate Block Sequence
+### Kích Hoạt Block Sequence
 ```bash
 curl -X POST http://localhost:8335/api/block/activate \
   -H "Content-Type: application/json" \
@@ -164,24 +164,24 @@ curl -X POST http://localhost:8335/api/block/wear \
 
 ## 🔧 Business Logic
 
-### Block Placement
-- Each block has unique position (posX, posY) on a map
-- Blocks are identified by blockIndex within a map
-- Color attribute stored per block for customization
-- Unique constraint: `role_id + map_id + block_index`
+### Đặt Block
+- Mỗi block có vị trí độc nhất (posX, posY) trên map
+- Blocks được xác định bằng blockIndex trong map
+- Thuộc tính color được lưu cho mỗi block để tùy chỉnh
+- Ràng buộc unique: `role_id + map_id + block_index`
 
-### Block State Management
-- Each role has one `role_block_state` record
-- Tracks current wearing map ID
-- Maintains activation sequence number
-- Auto-increments next block index
+### Quản Lý Trạng Thái Block
+- Mỗi role có một bản ghi `role_block_state`
+- Theo dõi map ID đang wear hiện tại
+- Duy trì số thứ tự activation
+- Tự động tăng next block index
 
-### Block Operations
-- **Inlay**: Place block at specific coordinates
-- **Remove**: Delete block from map by index
-- **Compose**: Combine multiple blocks into composite block
-- **Activate**: Progress activation sequence
-- **Wear**: Switch to different block map
+### Thao Tác Block
+- **Inlay**: Đặt block tại tọa độ cụ thể
+- **Remove**: Xóa block khỏi map theo index
+- **Compose**: Kết hợp nhiều blocks thành composite block
+- **Activate**: Tiến hành activation sequence
+- **Wear**: Chuyển sang block map khác
 
 ---
 
