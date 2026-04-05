@@ -3,6 +3,8 @@ package com.SouthMillion.battleserver_service.grpc;
 import com.SouthMillion.battleserver_service.dto.*;
 import com.SouthMillion.battleserver_service.publisher.CombatEventPublisher;
 import com.SouthMillion.battleserver_service.service.CombatService;
+import com.SouthMillion.battleserver_service.service.MonsterStatsService;
+import com.SouthMillion.battleserver_service.service.RoleStatsService;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,8 @@ public class CombatServiceGrpcImpl extends CombatServiceGrpc.CombatServiceImplBa
 
     private final CombatService combatService;
     private final CombatEventPublisher eventPublisher;
+    private final RoleStatsService roleStatsService;
+    private final MonsterStatsService monsterStatsService;
         private final Map<String, CombatSessionState> sessions = new ConcurrentHashMap<>();
         private final Map<String, CopyOnWriteArrayList<StreamObserver<org.SouthMillion.grpc.combat.CombatEvent>>> streamObservers = new ConcurrentHashMap<>();
 
@@ -130,8 +134,8 @@ public class CombatServiceGrpcImpl extends CombatServiceGrpc.CombatServiceImplBa
             Long attackerId = request.getAttackerRoleIds(0);
             Long defenderId = request.getDefenderRoleIds(0);
             CombatSessionState state = new CombatSessionState(sessionId,
-                    createDefaultStats(attackerId),
-                    createDefaultStats(defenderId),
+                    createCombatantStats(attackerId, request.getContext(), false, request.getCombatType()),
+                    createCombatantStats(defenderId, request.getContext(), true, request.getCombatType()),
                     request.getCombatType());
             sessions.put(sessionId, state);
             
@@ -330,32 +334,18 @@ public class CombatServiceGrpcImpl extends CombatServiceGrpc.CombatServiceImplBa
     private com.SouthMillion.battleserver_service.dto.CombatRequest convertToInternalRequest(
             org.SouthMillion.grpc.combat.CombatRequest protoRequest) {
         
-        // Create default player stats (in real scenario, fetch from role-service)
-        PlayerStats attacker = PlayerStats.builder()
-                .playerId(protoRequest.getAttackerRoleId())
-                .hp(1000)
-                .maxHp(1000)
-                .attack(150)
-                .defense(50)
-                .speed(100)
-                .critRate(15)
-                .critDamage(200)
-                .level(50)
-                .fightPower(5000)
-                .build();
-        
-        PlayerStats defender = PlayerStats.builder()
-                .playerId(protoRequest.getDefenderRoleId())
-                .hp(1000)
-                .maxHp(1000)
-                .attack(120)
-                .defense(60)
-                .speed(90)
-                .critRate(10)
-                .critDamage(180)
-                .level(45)
-                .fightPower(4500)
-                .build();
+        PlayerStats attacker = createCombatantStats(
+                protoRequest.getAttackerRoleId(),
+                protoRequest.getContext(),
+                false,
+                protoRequest.getCombatType()
+        );
+        PlayerStats defender = createCombatantStats(
+                protoRequest.getDefenderRoleId(),
+                protoRequest.getContext(),
+                true,
+                protoRequest.getCombatType()
+        );
         
         return com.SouthMillion.battleserver_service.dto.CombatRequest.builder()
                 .attackerId(protoRequest.getAttackerRoleId())
@@ -405,11 +395,12 @@ public class CombatServiceGrpcImpl extends CombatServiceGrpc.CombatServiceImplBa
                         org.SouthMillion.grpc.combat.CombatRound.newBuilder()
                                 .setRoundNumber(round.getRound())
                                 .setAttackerId(round.getAttackerId())
-                                .setSkillId(Integer.parseInt(round.getSkillId().replaceAll("[^0-9]", "1")))
+                                .setSkillId(parseSkillId(round.getSkillId()))
                                 .setDamage(round.getDamage())
                                 .setIsCrit(round.getCritical() != null && round.getCritical())
-                                .setEffect(round.getDodged() != null && round.getDodged() ? "DODGE" : 
-                                          (round.getCritical() != null && round.getCritical() ? "CRIT" : "NORMAL"))
+                                .setEffect(round.getDodged() != null && round.getDodged() ? "DODGE" :
+                                          (round.getStunned() != null && round.getStunned() ? "STUN" :
+                                          (round.getCritical() != null && round.getCritical() ? "CRIT" : "NORMAL")))
                                 .setAttackerHp(round.getTargetRemainingHp())
                                 .setDefenderHp(round.getTargetRemainingHp())
                                 .build();
@@ -526,7 +517,8 @@ public class CombatServiceGrpcImpl extends CombatServiceGrpc.CombatServiceImplBa
                                                         .setDamage(round.getDamage() != null ? round.getDamage() : 0)
                                                         .setIsCrit(round.getCritical() != null && round.getCritical())
                                                         .setEffect(round.getDodged() != null && round.getDodged() ? "DODGE" :
-                                                                        (round.getCritical() != null && round.getCritical() ? "CRIT" : "NORMAL"))
+                                                                        (round.getStunned() != null && round.getStunned() ? "STUN" :
+                                                                        (round.getCritical() != null && round.getCritical() ? "CRIT" : "NORMAL")))
                                                         .setAttackerHp(0)
                                                         .setDefenderHp(round.getTargetRemainingHp() != null ? round.getTargetRemainingHp() : 0)
                                                         .build();
@@ -580,18 +572,30 @@ public class CombatServiceGrpcImpl extends CombatServiceGrpc.CombatServiceImplBa
         }
 
         private PlayerStats createDefaultStats(Long roleId) {
-                return PlayerStats.builder()
-                                .playerId(roleId)
-                                .hp(1000)
-                                .maxHp(1000)
-                                .attack(150)
-                                .defense(50)
-                                .speed(100)
-                                .critRate(15)
-                                .critDamage(200)
-                                .level(50)
-                                .fightPower(5000)
-                                .build();
+                return createCombatantStats(roleId, null, false, null);
+        }
+
+        private PlayerStats createCombatantStats(Long roleId,
+                                                 CombatContext context,
+                                                 boolean defenderSide,
+                                                 String combatType) {
+                if (defenderSide && shouldUseMonsterStats(context, combatType)) {
+                        return monsterStatsService.getMonsterStats(
+                                        roleId,
+                                        context.getMonsterId(),
+                                        context.getStageId(),
+                                        context.getIsBoss());
+                }
+                return roleStatsService.getPlayerStats(roleId);
+        }
+
+        private boolean shouldUseMonsterStats(CombatContext context, String combatType) {
+                if (context == null || context.getMonsterId() <= 0) {
+                        return false;
+                }
+
+                String normalizedType = combatType == null ? "" : combatType.trim().toUpperCase();
+                return !normalizedType.contains("PVP") && !normalizedType.contains("ARENA");
         }
 
         private static class CombatSessionState {

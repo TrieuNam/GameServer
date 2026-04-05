@@ -1,0 +1,20 @@
+{
+  "serviceName" : "config-service",
+  "displayName" : "Config Service",
+  "phase" : "P0",
+  "port" : 8888,
+  "serviceStatus" : "RUNNING",
+  "doctorStatus" : "STARTED",
+  "watched" : false,
+  "approvalRequired" : false,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : null,
+  "lastErrorSummary" : "Service is running normally",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:31:08.376+07:00  INFO 42964 --- [config-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true", "2026-04-05T23:31:08.376+07:00  INFO 42964 --- [config-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Application version is -1: true", "2026-04-05T23:31:08.376+07:00  INFO 42964 --- [config-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server", "2026-04-05T23:31:08.452+07:00  INFO 42964 --- [config-service] [beatExecutor-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_CONFIG-SERVICE/WINDOWS-JQ9M1AH.lan:config-service:8888 - Re-registering apps/CONFIG-SERVICE", "2026-04-05T23:31:08.452+07:00  INFO 42964 --- [config-service] [beatExecutor-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_CONFIG-SERVICE/WINDOWS-JQ9M1AH.lan:config-service:8888: registering service...", "2026-04-05T23:31:08.468+07:00  INFO 42964 --- [config-service] [beatExecutor-%d] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_CONFIG-SERVICE/WINDOWS-JQ9M1AH.lan:config-service:8888 - registration status: 204", "2026-04-05T23:31:08.475+07:00  INFO 42964 --- [config-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : The response status is 200", "2026-04-05T23:34:27.735+07:00  INFO 42964 --- [config-service] [omcat-handler-0] o.a.c.c.C.[Tomcat-1].[localhost].[/]     : Initializing Spring DispatcherServlet 'dispatcherServletRegistration'", "2026-04-05T23:34:27.741+07:00  INFO 42964 --- [config-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServletRegistration'", "2026-04-05T23:34:27.744+07:00  INFO 42964 --- [config-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms", "2026-04-05T23:35:36.965+07:00  INFO 42964 --- [config-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-05T23:40:36.971+07:00  INFO 42964 --- [config-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-05T23:42:57.7008383"
+}

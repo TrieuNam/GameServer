@@ -39,44 +39,69 @@ public class LuckUnpackConfigCache {
     private boolean redisEnabled;
     @Value("${box.luck.redis-ttl-hours:24}")
     private long redisTtlHours;
+    @Value("${box.luck.allow-remote-fallback-on-miss:false}")
+    private boolean allowRemoteFallbackOnMiss;
 
     public void ensureLoaded() {
         String path = props.getConfig().getKaixiangPath();
-
-        // 1. Try Redis first (if enabled)
-        if (redisEnabled) {
-            String redisKey = toRedisKey(path);
-            String cached = redis.opsForValue().get(redisKey);
-            if (cached != null && !cached.isBlank()) {
-                log.debug("[LuckUnpackConfigCache] Redis HIT path={}", path);
-                try {
-                    raw = om.readValue(cached, new TypeReference<>() {});
-                    return;
-                } catch (Exception e) {
-                    log.warn("Failed to parse cached JSON from Redis, will reload: {}", e.toString());
-                }
-            }
-            log.debug("[LuckUnpackConfigCache] Redis MISS path={}", path);
+        if (path == null || path.isBlank()) {
+            return;
         }
 
-        // 2. Call config-service with ETag
-        String cur = etag.get();
-        ResponseEntity<byte[]> resp = cfg.getFile(path, cur);
-        if (resp.getStatusCode().is2xxSuccessful() && resp.getBody()!=null) {
+        String redisKey = toRedisKey(path);
+
+        // 1. Try Redis first (cache-aside read path)
+        if (redisEnabled) {
             try {
+                String cached = redis.opsForValue().get(redisKey);
+                if (cached != null && !cached.isBlank()) {
+                    log.debug("[LuckUnpackConfigCache] Redis HIT path={}", path);
+                    raw = om.readValue(cached, new TypeReference<>() {});
+                    touchRedisKey(redisKey);
+                    return;
+                }
+                log.debug("[LuckUnpackConfigCache] Redis MISS path={}", path);
+            } catch (Exception e) {
+                log.warn("Failed to read cached JSON from Redis, will reload: {}", e.toString());
+                try {
+                    redis.delete(redisKey);
+                } catch (Exception ignored) {
+                    // ignore corrupt-cache cleanup failure
+                }
+            }
+        }
+
+        if (!allowRemoteFallbackOnMiss) {
+            if (!raw.isEmpty()) {
+                log.warn("[LuckUnpackConfigCache] Redis miss for path={} but remote fallback is disabled; keep last in-memory snapshot", path);
+                return;
+            }
+            throw new IllegalStateException("kaixiangdaji.json missing from Redis while box.luck.allow-remote-fallback-on-miss=false");
+        }
+
+        // 2. Cache miss -> call config-service and repopulate Redis
+        try {
+            String cur = etag.get();
+            ResponseEntity<byte[]> resp = cfg.getFile(path, cur);
+            if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
                 String json = new String(resp.getBody(), StandardCharsets.UTF_8);
                 raw = om.readValue(json, new TypeReference<>() {});
+                if (resp.getHeaders().getETag() != null) {
+                    etag.set(resp.getHeaders().getETag());
+                }
 
-                // 3. Cache in Redis
                 if (redisEnabled) {
-                    String redisKey = toRedisKey(path);
                     redis.opsForValue().set(redisKey, json, redisTtlHours, TimeUnit.HOURS);
                     log.debug("[LuckUnpackConfigCache] Cached in Redis path={}", path);
                 }
-            } catch (Exception ignore) {}
-            if (resp.getHeaders().getETag()!=null) etag.set(resp.getHeaders().getETag());
-        } else if (resp.getStatusCode().value() == 304) {
-            return;
+            }
+        } catch (feign.FeignException ex) {
+            if (ex.status() != 304) {
+                log.warn("[LuckUnpackConfigCache] config fetch failed path={} status={} ex={}",
+                        path, ex.status(), ex.getMessage());
+            }
+        } catch (Exception e) {
+            log.warn("[LuckUnpackConfigCache] unexpected reload failure path={} ex={}", path, e.toString());
         }
     }
 
@@ -89,6 +114,30 @@ public class LuckUnpackConfigCache {
     public List<Map<String,String>> other() {
         ensureLoaded();
         return (List<Map<String,String>>) raw.getOrDefault("other", List.of());
+    }
+
+    public void clear() {
+        String path = props.getConfig().getKaixiangPath();
+        if (redisEnabled && path != null && !path.isBlank()) {
+            try {
+                redis.delete(toRedisKey(path));
+            } catch (Exception e) {
+                log.debug("[LuckUnpackConfigCache] redis clear failed path={} ex={}", path, e.toString());
+            }
+        }
+        etag.set(null);
+        raw = Map.of();
+    }
+
+    private void touchRedisKey(String redisKey) {
+        if (!redisEnabled || redisKey == null || redisKey.isBlank() || redisTtlHours <= 0) {
+            return;
+        }
+        try {
+            redis.expire(redisKey, redisTtlHours, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.debug("[LuckUnpackConfigCache] redis ttl touch failed key={} ex={}", redisKey, e.toString());
+        }
     }
 
     private String toRedisKey(String path) {

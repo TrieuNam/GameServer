@@ -50,6 +50,8 @@ app:
 eureka:
   instance:
     prefer-ip-address: true
+    metadata-map:
+      management.port: ${MANAGEMENT_PORT:${management.server.port:${server.port}}}
   client:
     fetchRegistry: true
     registerWithEureka: true

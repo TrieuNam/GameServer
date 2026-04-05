@@ -1,0 +1,20 @@
+{
+  "serviceName" : "drop-service",
+  "displayName" : "Drop Service",
+  "phase" : "P1",
+  "port" : 8250,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-05T23:42:52.628+07:00  INFO 30148 --- [drop-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:33:01.577+07:00  INFO 30148 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-05T23:33:01.577+07:00  INFO 30148 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-05T23:33:01.577+07:00  INFO 30148 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-05T23:33:01.577+07:00  INFO 30148 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-05T23:33:01.577+07:00  INFO 30148 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-05T23:33:01.577+07:00  INFO 30148 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-05T23:33:01.577+07:00  INFO 30148 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-05T23:33:01.577+07:00  INFO 30148 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-05T23:33:07.099+07:00  INFO 30148 --- [drop-service] [           main] c.S.d.config.DropConfigRedisPreloader    : [drop-preload] done source=startup forceRefresh=false hits=714 warmed=0 failed=0 total=714", "2026-04-05T23:33:07.112+07:00  INFO 30148 --- [drop-service] [           main] c.S.d.config.DropConfigRedisPreloader    : [drop-preload] redis-ready cachedCount=714 knownDropCount=714", "2026-04-05T23:37:52.609+07:00  INFO 30148 --- [drop-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-05T23:42:52.628+07:00  INFO 30148 --- [drop-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-05T23:42:58.148716"
+}

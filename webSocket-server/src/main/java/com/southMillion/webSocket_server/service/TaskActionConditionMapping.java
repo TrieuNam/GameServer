@@ -256,6 +256,7 @@ public class TaskActionConditionMapping {
         if (conditionId == null || conditionId <= 0) {
             return null;
         }
-        return "condition_" + conditionId;
+        TaskCondition condition = TaskCondition.fromId(conditionId);
+        return condition != null ? condition.taskKey() : "condition_" + conditionId;
     }
 }

@@ -1,16 +1,20 @@
 package com.SouthMillion.webSocket_server.handler.box;
 
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.handler.bag.BagHandler;
 import com.SouthMillion.webSocket_server.handler.role.RoleServiceHandler;
 import com.SouthMillion.webSocket_server.handler.task.TaskHandler;
 import com.SouthMillion.webSocket_server.net.Emitters;
+import com.SouthMillion.webSocket_server.service.BagUpdateGate;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.net.MsgIds;
+import com.SouthMillion.webSocket_server.service.TaskCondition;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.client.BoxFeign;
 import com.SouthMillion.webSocket_server.service.client.EquipHttpClient;
 import com.SouthMillion.webSocket_server.service.client.RoleFeign;
 import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
+import com.SouthMillion.webSocket_server.utils.FeignTokenHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.box.BoxDTOs;
@@ -18,12 +22,19 @@ import org.SouthMillion.dto.equip.EquipDTOs;
 import org.SouthMillion.dto.role.other.OtherRoleDTOs;
 import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.SouthMillion.proto.Msgbox.Msgbox;
+import org.SouthMillion.proto.Msgknapsack.Msgknapsack;
 import org.SouthMillion.proto.Msgequip.Msgequip;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 /**
  * Handles treasure chest / box (宝箱) operations.
@@ -46,11 +57,13 @@ public class BoxHandler implements MessageHandler {
 
     private final BoxFeign boxFeign;
     private final EquipHttpClient equipHttpClient;
+    private final BagHandler bagHandler;
     private final RoleServiceHandler roleServiceHandler;
     private final RoleFeign roleFeign;
     private final TaskHandler taskHandler;
     private final TaskProgressPublisher taskProgressPublisher;
     private final WalletHttpClient walletHttpClient;
+    private final BagUpdateGate bagUpdateGate;
 
     private static final int REQ_OPEN     = 1;
     private static final int REQ_EQUIP    = 2;
@@ -60,6 +73,10 @@ public class BoxHandler implements MessageHandler {
     private static final int REQ_QUICKEN  = 6;
     private static final int REQ_DECOMPOSE = 7;
     private static final int REQ_LEVEL_REWARD = 8;
+
+    /** Box UI refresh calls are best-effort and must not stall open/wear/sell flows. */
+    @Value("${box.ws.fetch-timeout-ms:200}")
+    private long boxFetchTimeoutMs = 200L;
 
     @Override
     public int[] interests() {
@@ -71,9 +88,11 @@ public class BoxHandler implements MessageHandler {
         Long roleId = session.getRoleId();
         if (roleId == null) return Mono.empty();
         return Mono.fromRunnable(() -> {
-            sendPendingEquipInfo(session, roleId, 0);
+            // Ưu tiên đẩy 1616/1617 trước để UI box hiện ngay sau login;
+            // compare/pending equip có thể chậm hơn vì cần thêm remote lookups.
             sendCurrentInfo(session, roleId);
             sendCurrentSetting(session, roleId);
+            sendPendingEquipInfo(session, roleId, 0);
         });
     }
 
@@ -150,10 +169,26 @@ public class BoxHandler implements MessageHandler {
 
     // req_type=1: open box → maybe 1615 (equip) + 1616 (info)
     private void handleOpen(PlayerSession session, Long roleId, int param) {
+        long startedAt = System.currentTimeMillis();
         try {
+            log.info("[Box.open.ws] roleId={} param={} begin", roleId, param);
+
             // Nếu còn pending từ lần open trước thì không open mới để tránh trừ số lần mở thêm.
-            if (sendPendingEquipInfo(session, roleId, 0)) {
+            // Re-emit it as `isNew=1` so the legacy client reopens the compare popup
+            // instead of staying stuck in UNCLICKABLE state after the user taps open again.
+            long pendingStartedAt = System.currentTimeMillis();
+            boolean hadPending = sendPendingEquipInfo(session, roleId, 1);
+            log.info("[Box.open.ws] roleId={} step=pendingCheck elapsedMs={} hadPending={}",
+                    roleId,
+                    System.currentTimeMillis() - pendingStartedAt,
+                    hadPending);
+            if (hadPending) {
+                long refreshStartedAt = System.currentTimeMillis();
                 sendCurrentInfo(session, roleId);
+                log.info("[Box.open.ws] roleId={} branch=blocked-pending refreshInfoMs={} totalMs={}",
+                        roleId,
+                        System.currentTimeMillis() - refreshStartedAt,
+                        System.currentTimeMillis() - startedAt);
                 return;
             }
 
@@ -161,8 +196,27 @@ public class BoxHandler implements MessageHandler {
             req.setRoleId(String.valueOf(roleId));
             int count = normalizeOpenCount(param);
             req.setCount(count);
-            req.setRoleLevel(fetchRoleLevel(session, roleId));
+            long roleLevelStartedAt = System.currentTimeMillis();
+            int roleLevel = fetchRoleLevel(session, roleId);
+            req.setRoleLevel(roleLevel);
+            log.info("[Box.open.ws] roleId={} step=fetchRoleLevel elapsedMs={} roleLevel={}",
+                    roleId,
+                    System.currentTimeMillis() - roleLevelStartedAt,
+                    roleLevel);
+
+            long openCallStartedAt = System.currentTimeMillis();
             BoxDTOs.OpenResp resp = boxFeign.open(req);
+            long openCallElapsedMs = System.currentTimeMillis() - openCallStartedAt;
+            String compareStatus = resp != null && resp.getCompareState() != null ? resp.getCompareState().getStatus() : "NONE";
+            log.info("[Box.open.ws] roleId={} step=openCall elapsedMs={} hasOpenEquip={} hasPending={} bonusCount={} compareStatus={} openBoxTotal={} lastOpenIsFive={}",
+                    roleId,
+                    openCallElapsedMs,
+                    resp != null && resp.getOpenEquip() != null,
+                    resp != null && resp.getPending() != null,
+                    resp != null && resp.getBonusItems() != null ? resp.getBonusItems().size() : 0,
+                    compareStatus,
+                    resp != null ? resp.getOpenBoxTotal() : -1,
+                    resp != null && resp.isLastOpenIsFive());
             if (!reportOpenBoxTaskProgress(roleId, count)) {
                 taskHandler.pushCurrentTaskProgress(session);
             }
@@ -179,9 +233,21 @@ public class BoxHandler implements MessageHandler {
                     int isNew = equipInfo.getIsNew() != null ? equipInfo.getIsNew() : 1;
                     sendEquipInfo(session, buildEquipInfo(equipInfo.getEquipInfo(), isNew));
                 }
+            } else {
+                // Some opens grant direct rewards/items instead of a compare popup.
+                // Emit a generic 1507 reward notice so the client shows a visible reward popup
+                // instead of looking like the box count was deducted with no result.
+                sendEquipInfo(session, buildEmptyEquipInfo());
+                sendBonusItemNotice(session, resp != null ? resp.getBonusItems() : null);
             }
 
+            refreshBagAfterOpen(session, roleId);
+            long refreshInfoStartedAt = System.currentTimeMillis();
             sendCurrentInfo(session, roleId);
+            log.info("[Box.open.ws] roleId={} step=refreshInfo elapsedMs={} totalMs={}",
+                    roleId,
+                    System.currentTimeMillis() - refreshInfoStartedAt,
+                    System.currentTimeMillis() - startedAt);
         } catch (Exception e) {
             log.error("[Box] handleOpen error", e);
             sendBoxInfo(session, Msgbox.PB_SCBoxInfo.newBuilder().build());
@@ -189,11 +255,101 @@ public class BoxHandler implements MessageHandler {
     }
 
     private boolean reportOpenBoxTaskProgress(Long roleId, int count) {
-        return taskProgressPublisher.publish(roleId, "condition_3", count, "websocket-box-open");
+        return taskProgressPublisher.publish(roleId, TaskCondition.OPEN_BOX.taskKey(), count, "websocket-box-open");
     }
 
     private boolean reportGetEquipTaskProgress(Long roleId, int count) {
-        return taskProgressPublisher.publish(roleId, "get_equip", count, "websocket-box-open");
+        return taskProgressPublisher.publish(roleId, TaskCondition.GET_EQUIP.taskKey(), count, "websocket-box-open");
+    }
+
+    private void reportBoxWearQualityTaskProgress(PlayerSession session, Long roleId, Integer quality) {
+        if (roleId == null || quality == null || quality <= 0) {
+            return;
+        }
+
+        boolean anyFailed = false;
+        for (TaskCondition condition : TaskCondition.equipQualityConditions(quality)) {
+            boolean published = taskProgressPublisher.publish(roleId, condition.taskKey(), 1, "websocket-box-wear");
+            anyFailed = anyFailed || !published;
+        }
+        if (anyFailed) {
+            taskHandler.pushCurrentTaskProgress(session);
+        }
+    }
+
+    private Integer resolvePendingEquipQuality(Long roleId) {
+        if (roleId == null) {
+            return null;
+        }
+
+        try {
+            BoxDTOs.BoxCompareStateResp compareState = boxFeign.getCompareState(roleId);
+            if (compareState != null && compareState.getCandidateEquip() != null) {
+                Integer quality = compareState.getCandidateEquip().getQuality();
+                if (quality != null && quality > 0) {
+                    return quality;
+                }
+            }
+        } catch (Exception e) {
+            log.debug("[Box] resolve compare-state quality skipped roleId={} ex={}", roleId, e.toString());
+        }
+
+        try {
+            BoxDTOs.InfoResp info = boxFeign.info(roleId);
+            return extractPendingEquipQuality(info != null ? info.getPending() : null);
+        } catch (Exception e) {
+            log.debug("[Box] resolve pending quality skipped roleId={} ex={}", roleId, e.toString());
+            return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Integer extractPendingEquipQuality(Map<String, Object> pending) {
+        if (pending == null || pending.isEmpty()) {
+            return null;
+        }
+
+        Integer directQuality = parsePositiveInt(pending.get("quality"), pending.get("color"), pending.get("q"));
+        if (directQuality != null) {
+            return directQuality;
+        }
+
+        Object nested = pending.get("equip");
+        if (nested instanceof Map<?, ?> nestedMap) {
+            return parsePositiveInt(
+                    nestedMap.get("quality"),
+                    nestedMap.get("color"),
+                    nestedMap.get("q")
+            );
+        }
+        return null;
+    }
+
+    private Integer parsePositiveInt(Object... values) {
+        if (values == null) {
+            return null;
+        }
+        for (Object value : values) {
+            if (value == null) {
+                continue;
+            }
+            if (value instanceof Number number) {
+                int parsed = number.intValue();
+                if (parsed > 0) {
+                    return parsed;
+                }
+                continue;
+            }
+            try {
+                int parsed = Integer.parseInt(String.valueOf(value).trim());
+                if (parsed > 0) {
+                    return parsed;
+                }
+            } catch (Exception ignored) {
+                // ignore invalid quality field and continue trying fallbacks
+            }
+        }
+        return null;
     }
 
     private int normalizeOpenCount(int param) {
@@ -209,26 +365,18 @@ public class BoxHandler implements MessageHandler {
     // req_type=2: equip (wear) item → 1616
     private void handleEquip(PlayerSession session, Long roleId) {
         try {
+            Integer pendingQuality = resolvePendingEquipQuality(roleId);
+
             BoxDTOs.WearReq req = new BoxDTOs.WearReq();
             req.setRoleId(String.valueOf(roleId));
             BoxDTOs.OkResp wearResp = boxFeign.wear(req);
 
             if (wearResp != null && wearResp.isOk()) {
-                // Compare flow: if wear produced replaced pending item, keep popup with swapped old/new state.
-                boolean hasPendingAfterWear = sendPendingEquipInfo(session, roleId, 0);
-                if (!hasPendingAfterWear) {
-                    try {
-                        boxFeign.clearCompareState(roleId);
-                    } catch (Exception e) {
-                        log.debug("[Box] clearCompareState skipped roleId={} ex={}", roleId, e.toString());
-                    }
-                    sendEquipInfo(session, buildEmptyEquipInfo());
-                    sendEquipList(session, roleId);
-                } else {
-                    // Keep compare popup authoritative while swapping old/new.
-                    // Sending full equip-list here can make legacy clients overwrite compare panel by itemId.
-                    log.debug("[Box] skip equip-list refresh while compare pending roleId={}", roleId);
-                }
+                reportBoxWearQualityTaskProgress(session, roleId, pendingQuality);
+                // Wear thành công phải đóng compare popup ngay để tránh render lại stale compare-state.
+                clearCompareStateSafely(roleId, "wear success");
+                sendEquipInfo(session, buildEmptyEquipInfo());
+                sendEquipList(session, roleId);
                 // Equip từ Box đã cộng/trừ stat ở backend -> push lại role attrs để client refresh chỉ số ngay.
                 pushRoleAttr(session);
             } else {
@@ -253,10 +401,10 @@ public class BoxHandler implements MessageHandler {
                 log.info("[Box] sell success roleId={} sellCoin={} sellExp={}", roleId, sellResp.getSellCoin(), sellResp.getSellExp());
                 // Sell xong thì pending rỗng: đẩy packet rỗng để client đóng BoxEquipView ngay.
                 sendEquipInfo(session, buildEmptyEquipInfo());
-                taskProgressPublisher.publish(roleId, "sell_equip_num", 1, "websocket-box-sell");
+                taskProgressPublisher.publish(roleId, TaskCondition.SELL_EQUIP_NUM.taskKey(), 1, "websocket-box-sell");
                 int sellCoinDelta = clampPositiveInt(sellResp.getSellCoin());
                 if (sellCoinDelta > 0) {
-                    taskProgressPublisher.publish(roleId, "sell_equip_gold", sellCoinDelta, "websocket-box-sell");
+                    taskProgressPublisher.publish(roleId, TaskCondition.SELL_EQUIP_GOLD.taskKey(), sellCoinDelta, "websocket-box-sell");
                 }
                 // Đồng bộ role/wallet theo 2 nhịp để tránh race khi service cập nhật chậm hơn 1 tick.
                 refreshRoleAndWalletAfterSell(session, roleId);
@@ -302,8 +450,8 @@ public class BoxHandler implements MessageHandler {
             BoxDTOs.SimpleReq req = new BoxDTOs.SimpleReq();
             req.setRoleId(String.valueOf(roleId));
             boxFeign.levelUp(req);
-            taskProgressPublisher.publish(roleId, "condition_38", 1, "websocket-box-upgrade");
-            taskProgressPublisher.publish(roleId, "condition_5", 1, "websocket-box-level");
+            taskProgressPublisher.publish(roleId, TaskCondition.BOX_UPGRADE_ACCUMULATE.taskKey(), 1, "websocket-box-upgrade");
+            taskProgressPublisher.publish(roleId, TaskCondition.BOX_LEVEL.taskKey(), 1, "websocket-box-level");
             sendCurrentInfo(session, roleId);
         } catch (Exception e) {
             log.error("[Box] handleUpgrade error", e);
@@ -363,7 +511,7 @@ public class BoxHandler implements MessageHandler {
     // Fetch current state and send 1616
     private void sendCurrentInfo(PlayerSession session, Long roleId) {
         try {
-            BoxDTOs.InfoResp info = boxFeign.info(roleId);
+            BoxDTOs.InfoResp info = bestEffortFetch(() -> boxFeign.info(roleId), roleId, "info");
             Msgbox.PB_SCBoxInfo.Builder b = Msgbox.PB_SCBoxInfo.newBuilder();
             if (info != null) {
                 b.setBoxLevel(info.getBoxLevel());
@@ -392,53 +540,110 @@ public class BoxHandler implements MessageHandler {
 
     private int fetchRoleLevel(PlayerSession session, Long roleId) {
         int fallbackLevel = 1;
-        try {
-            if (session.getUserId() == null || roleId == null) {
-                return fallbackLevel;
-            }
+        if (session.getUserId() == null || roleId == null) {
+            return fallbackLevel;
+        }
+
+        Integer resolvedLevel = bestEffortFetch(() -> {
             OtherRoleDTOs.OtherRoleInfo role = roleFeign.getOtherRole(session.getUserId(), String.valueOf(roleId));
             if (role != null && role.attributes() != null && role.attributes().level() > 0) {
                 return role.attributes().level();
             }
-        } catch (Exception e) {
-            log.debug("[Box] fetchRoleLevel fallback roleId={} ex={}", roleId, e.toString());
-        }
-        return fallbackLevel;
+            return fallbackLevel;
+        }, roleId, "fetchRoleLevel");
+        return resolvedLevel != null && resolvedLevel > 0 ? resolvedLevel : fallbackLevel;
     }
 
     private boolean sendPendingEquipInfo(PlayerSession session, Long roleId, int defaultIsNew) {
         try {
-            BoxDTOs.BoxCompareStateResp compareState = null;
-            try {
-                compareState = boxFeign.getCompareState(roleId);
-            } catch (Exception ex) {
-                log.debug("[Box] getCompareState skipped roleId={} ex={}", roleId, ex.toString());
-            }
+            BoxDTOs.BoxCompareStateResp compareState = bestEffortFetch(() -> boxFeign.getCompareState(roleId), roleId, "getCompareState");
             if (compareState != null) {
                 BoxDTOs.EquipInfo compareEquipInfo = BoxDTOs.equipInfoFromCompareState(compareState, defaultIsNew);
-                if (compareEquipInfo != null
-                        && compareEquipInfo.getEquipInfo() != null
-                        && compareEquipInfo.getEquipInfo().getItemId() != null
-                        && compareEquipInfo.getEquipInfo().getItemId() > 0) {
+                if (hasUsablePendingEquip(compareEquipInfo)) {
                     int isNew = compareEquipInfo.getIsNew() != null ? compareEquipInfo.getIsNew() : defaultIsNew;
                     sendEquipInfo(session, buildEquipInfo(compareEquipInfo.getEquipInfo(), isNew), compareState);
                     return true;
                 }
+                if (isInvalidPendingEquip(compareEquipInfo)) {
+                    Integer itemId = compareEquipInfo.getEquipInfo().getItemId();
+                    log.warn("[Box] ignore stale compare equip roleId={} itemId={}", roleId, itemId);
+                    clearCompareStateSafely(roleId, "invalid compare itemId=" + itemId);
+                    compareState = null;
+                }
             }
 
-            BoxDTOs.EquipInfo equipInfo = boxFeign.equipInfo(roleId);
-            if (equipInfo != null
-                    && equipInfo.getEquipInfo() != null
-                    && equipInfo.getEquipInfo().getItemId() != null
-                    && equipInfo.getEquipInfo().getItemId() > 0) {
+            BoxDTOs.EquipInfo equipInfo = bestEffortFetch(() -> boxFeign.equipInfo(roleId), roleId, "equipInfo");
+            if (hasUsablePendingEquip(equipInfo)) {
                 int isNew = equipInfo.getIsNew() != null ? equipInfo.getIsNew() : defaultIsNew;
                 sendEquipInfo(session, buildEquipInfo(equipInfo.getEquipInfo(), isNew), compareState);
                 return true;
+            }
+            if (isInvalidPendingEquip(equipInfo)) {
+                Integer itemId = equipInfo.getEquipInfo().getItemId();
+                log.warn("[Box] ignore stale pending equip roleId={} itemId={}", roleId, itemId);
+                clearCompareStateSafely(roleId, "invalid pending itemId=" + itemId);
+                sendEquipInfo(session, buildEmptyEquipInfo());
             }
         } catch (Exception e) {
             log.debug("[Box] pending equip fetch skipped roleId={} ex={}", roleId, e.toString());
         }
         return false;
+    }
+
+    private boolean hasUsablePendingEquip(BoxDTOs.EquipInfo equipInfo) {
+        return equipInfo != null
+                && equipInfo.getEquipInfo() != null
+                && equipInfo.getEquipInfo().getItemId() != null
+                && equipInfo.getEquipInfo().getItemId() > 1;
+    }
+
+    private boolean isInvalidPendingEquip(BoxDTOs.EquipInfo equipInfo) {
+        return equipInfo != null
+                && equipInfo.getEquipInfo() != null
+                && equipInfo.getEquipInfo().getItemId() != null
+                && equipInfo.getEquipInfo().getItemId() > 0
+                && equipInfo.getEquipInfo().getItemId() <= 1;
+    }
+
+    private void clearCompareStateSafely(Long roleId, String reason) {
+        if (roleId == null) {
+            return;
+        }
+        try {
+            boxFeign.clearCompareState(roleId);
+        } catch (Exception e) {
+            log.debug("[Box] clearCompareState skipped roleId={} reason={} ex={}", roleId, reason, e.toString());
+        }
+    }
+
+    private Msgbox.PB_SCBoxEquipInfo sanitizeClientEquipInfo(Long roleId,
+                                                             Msgbox.PB_SCBoxEquipInfo info,
+                                                             String source) {
+        if (info == null || !info.hasEquipInfo()) {
+            return info;
+        }
+        int itemId = info.getEquipInfo().getItemId();
+        if (itemId > 0 && itemId <= 1) {
+            log.warn("[Box] suppress invalid equip payload roleId={} source={} itemId={}", roleId, source, itemId);
+            clearCompareStateSafely(roleId, source + " invalid equip itemId=" + itemId);
+            return buildEmptyEquipInfo();
+        }
+        return info;
+    }
+
+    private BoxDTOs.BoxCompareStateResp sanitizeClientCompareState(Long roleId,
+                                                                   BoxDTOs.BoxCompareStateResp compareState,
+                                                                   String source) {
+        if (compareState == null || compareState.getCandidateEquip() == null) {
+            return compareState;
+        }
+        Integer itemId = compareState.getCandidateEquip().getItemId();
+        if (itemId != null && itemId > 0 && itemId <= 1) {
+            log.warn("[Box] suppress invalid compare payload roleId={} source={} itemId={}", roleId, source, itemId);
+            clearCompareStateSafely(roleId, source + " invalid compare itemId=" + itemId);
+            return null;
+        }
+        return compareState;
     }
 
     private Msgbox.PB_SCBoxEquipInfo buildEquipInfo(BoxDTOs.EquipRolled rolled, int isNew) {
@@ -502,11 +707,16 @@ public class BoxHandler implements MessageHandler {
                                Msgbox.PB_SCBoxEquipInfo info,
                                BoxDTOs.BoxCompareStateResp compareState) {
         try {
-            Msgbox.PB_SCBoxEquipInfo payload1615 = info;
+            Long roleId = session.getRoleId();
+            Msgbox.PB_SCBoxEquipInfo payload1615 = sanitizeClientEquipInfo(roleId, info, "sendEquipInfo");
+            compareState = sanitizeClientCompareState(roleId, compareState, "sendEquipInfo");
             if (compareState != null && compareState.getCandidateEquip() != null) {
                 BoxDTOs.EquipRolled candidateRolled = compareState.getCandidateEquip().toEquipRolled();
-                int isNew = compareState.getIsNew() != null ? compareState.getIsNew() : (info != null ? info.getIsNew() : 0);
-                payload1615 = buildEquipInfo(candidateRolled, isNew);
+                int isNew = compareState.getIsNew() != null ? compareState.getIsNew() : (payload1615 != null ? payload1615.getIsNew() : 0);
+                payload1615 = sanitizeClientEquipInfo(roleId, buildEquipInfo(candidateRolled, isNew), "compare candidate");
+            }
+            if (payload1615 == null) {
+                payload1615 = buildEmptyEquipInfo();
             }
             // Legacy clients still rely on 1615 to open/close equip popup.
             Emitters.emit(session, 1615, payload1615.toByteArray());
@@ -640,6 +850,42 @@ public class BoxHandler implements MessageHandler {
         }
     }
 
+    private void sendBonusItemNotice(PlayerSession session, List<Map<String, Object>> bonusItems) {
+        if (session == null || bonusItems == null || bonusItems.isEmpty()) {
+            return;
+        }
+
+        Msgknapsack.PB_SCGetItemNotice.Builder notice = Msgknapsack.PB_SCGetItemNotice.newBuilder()
+                .setGetType(0);
+        int addedCount = 0;
+        for (Map<String, Object> bonusItem : bonusItems) {
+            if (bonusItem == null || bonusItem.isEmpty()) {
+                continue;
+            }
+            int itemId = safeInt(bonusItem.get("itemId"), safeInt(bonusItem.get("item_id"), 0));
+            long num = safeLong(bonusItem.get("num"), safeLong(bonusItem.get("amount"), 0L));
+            if (itemId <= 0 || num <= 0L) {
+                continue;
+            }
+            notice.addItemList(Msgknapsack.PB_ItemData.newBuilder()
+                    .setItemId(itemId)
+                    .setNum(num)
+                    .build());
+            addedCount++;
+        }
+
+        if (addedCount <= 0) {
+            return;
+        }
+
+        try {
+            Emitters.emit(session, MsgIds.SC_GET_ITEM_NOTICE, notice.build().toByteArray());
+            log.info("[Box] emitted bonus notice roleId={} itemCount={}", session.getRoleId(), addedCount);
+        } catch (Exception e) {
+            log.error("[Box] sendBonusItemNotice failed roleId={}", session.getRoleId(), e);
+        }
+    }
+
     // Đồng bộ danh sách trang bị sau khi wear từ box để client refresh trạng thái đang mặc.
     private void sendEquipList(PlayerSession session, Long roleId) {
         try {
@@ -711,10 +957,120 @@ public class BoxHandler implements MessageHandler {
                 });
     }
 
+    private void refreshBagAfterOpen(PlayerSession session, Long roleId) {
+        if (session == null || roleId == null) {
+            return;
+        }
+
+        // Arm a one-shot gate: allow exactly one UI bag update for this open flow.
+        // If the first push succeeds, the later duplicate bag-changed update is skipped.
+        // If the first push fails, the fallback update is still allowed through.
+        if (bagUpdateGate != null) {
+            bagUpdateGate.arm(roleId);
+        }
+
+        // Keep the rescue retry, but only when the first immediate push actually failed.
+        // If the first push succeeds, a blind delayed second 1505 can arrive late and overwrite
+        // the fresher 1506 from BagChangedConsumer, which is what caused the box count rollback.
+        boolean immediatePushSucceeded = pushBagSnapshot(session, roleId, "initial");
+        if (!immediatePushSucceeded) {
+            Mono.delay(Duration.ofMillis(300))
+                    .onErrorResume(ex -> Mono.empty())
+                    .subscribe(ignored -> pushBagSnapshotAsync(session, roleId));
+        }
+    }
+
+    private boolean pushBagSnapshot(PlayerSession session, Long roleId, String phase) {
+        AtomicBoolean success = new AtomicBoolean(true);
+        try {
+            bagHandler.pushAll(session)
+                    .doOnError(ex -> success.set(false))
+                    .onErrorResume(ex -> {
+                        log.debug("[Box] refreshBagAfterOpen {} skipped roleId={} ex={}", phase, roleId, ex.toString());
+                        return Mono.empty();
+                    })
+                    .block(Duration.ofSeconds(2));
+            boolean delivered = success.get();
+            if (delivered && bagUpdateGate != null) {
+                bagUpdateGate.markDelivered(roleId);
+            }
+            return delivered;
+        } catch (Exception e) {
+            log.debug("[Box] refreshBagAfterOpen {} failed roleId={} ex={}", phase, roleId, e.toString());
+            return false;
+        }
+    }
+
+    private void pushBagSnapshotAsync(PlayerSession session, Long roleId) {
+        Thread.ofVirtual().start(() -> pushBagSnapshot(session, roleId, "retry"));
+    }
+
     private int clampPositiveInt(long value) {
         if (value <= 0L) {
             return 0;
         }
         return (int) Math.min(Integer.MAX_VALUE, value);
+    }
+
+    private int safeInt(Object value, int defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        if (value instanceof Number number) {
+            return number.intValue();
+        }
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    private long safeLong(Object value, long defaultValue) {
+        if (value == null) {
+            return defaultValue;
+        }
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
+        try {
+            return Long.parseLong(String.valueOf(value));
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+
+    private <T> T bestEffortFetch(Supplier<T> supplier, Long roleId, String operation) {
+        long timeoutMs = Math.max(50L, boxFetchTimeoutMs);
+        long startedAt = System.currentTimeMillis();
+        String token = FeignTokenHolder.get();
+        try {
+            T result = Mono.fromCallable(() -> {
+                        if (token != null && !token.isBlank()) {
+                            FeignTokenHolder.set(token);
+                        }
+                        try {
+                            return supplier.get();
+                        } finally {
+                            FeignTokenHolder.clear();
+                        }
+                    })
+                    .subscribeOn(Schedulers.boundedElastic())
+                    .timeout(Duration.ofMillis(timeoutMs))
+                    .onErrorResume(ex -> {
+                        log.debug("[Box] {} skipped roleId={} timeoutMs={} ex={}", operation, roleId, timeoutMs, ex.toString());
+                        return Mono.empty();
+                    })
+                    .block();
+            long elapsedMs = System.currentTimeMillis() - startedAt;
+            if (elapsedMs > 80L) {
+                log.info("[Box.fetch] roleId={} operation={} elapsedMs={} timeoutMs={} hasResult={}",
+                        roleId, operation, elapsedMs, timeoutMs, result != null);
+            }
+            return result;
+        } catch (Exception e) {
+            log.debug("[Box] {} failed roleId={} timeoutMs={} ex={}", operation, roleId, timeoutMs, e.toString());
+            return null;
+        }
     }
 }

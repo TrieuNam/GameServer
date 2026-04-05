@@ -1,10 +1,12 @@
-package com.southMillion.webSocket_server.handler.task;
+package com.SouthMillion.webSocket_server.handler.task;
 
 import com.SouthMillion.webSocket_server.constant.MessageIds;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.handler.task.TaskHandler;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
+import com.SouthMillion.webSocket_server.service.client.BagFeign;
 import com.SouthMillion.webSocket_server.service.client.TaskFeign;
+import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
 import org.SouthMillion.dto.task.TaskDTO;
 import org.SouthMillion.dto.task.TaskListResp;
 import org.SouthMillion.dto.task.TaskStatus;
@@ -36,7 +38,9 @@ import static org.mockito.Mockito.*;
 class TaskHandlerTest {
 
     @Mock private TaskFeign taskFeign;
-        @Mock private TaskProgressPublisher taskProgressPublisher;
+    @Mock private TaskProgressPublisher taskProgressPublisher;
+    @Mock private BagFeign bagFeign;
+    @Mock private WalletHttpClient walletHttpClient;
     @InjectMocks private TaskHandler taskHandler;
 
     private PlayerSession playerSession;
@@ -44,8 +48,7 @@ class TaskHandlerTest {
     @BeforeEach
     void setUp() {
         playerSession = mock(PlayerSession.class);
-        when(playerSession.getRoleId()).thenReturn(2001L);
-        when(playerSession.getUsername()).thenReturn("testUser");
+        lenient().when(playerSession.getRoleId()).thenReturn(2001L);
     }
 
     // ─── interests ────────────────────────────────────────────────────────────
@@ -132,6 +135,50 @@ class TaskHandlerTest {
     }
 
     @Test
+    @DisplayName("condition 1 level task uses binary 0/1 client progress")
+    void toClientProgress_levelTaskUsesBinaryDisplay() {
+        TaskDTO inProgress = TaskDTO.builder()
+                .taskKey("8")
+                .legacyConditionType(1)
+                .targetValue(3)
+                .currentProgress(2)
+                .status(TaskStatus.IN_PROGRESS)
+                .build();
+        TaskDTO completed = TaskDTO.builder()
+                .taskKey("8")
+                .legacyConditionType(1)
+                .targetValue(3)
+                .currentProgress(3)
+                .status(TaskStatus.COMPLETED)
+                .build();
+
+        assertEquals(0, taskHandler.toClientProgress(inProgress));
+        assertEquals(1, taskHandler.toClientProgress(completed));
+    }
+
+    @Test
+    @DisplayName("non-level tasks keep their real numeric client progress")
+    void toClientProgress_nonLevelTaskKeepsNumericProgress() {
+        TaskDTO inProgress = TaskDTO.builder()
+                .taskKey("37")
+                .legacyConditionType(37)
+                .targetValue(5)
+                .currentProgress(2)
+                .status(TaskStatus.IN_PROGRESS)
+                .build();
+        TaskDTO completed = TaskDTO.builder()
+                .taskKey("37")
+                .legacyConditionType(37)
+                .targetValue(5)
+                .currentProgress(5)
+                .status(TaskStatus.COMPLETED)
+                .build();
+
+        assertEquals(2, taskHandler.toClientProgress(inProgress));
+        assertEquals(5, taskHandler.toClientProgress(completed));
+    }
+
+    @Test
     @DisplayName("All tasks claimed (taskId >= tasks.size) → sends last index progress=0")
     void pushCurrentTaskProgress_allTasksDone_sendsZeroProgress() {
         TaskDTO task = TaskDTO.builder().taskKey("daily_login").targetValue(1)
@@ -175,22 +222,67 @@ class TaskHandlerTest {
     @Test
     @DisplayName("Claim on COMPLETED task → advanceTask called, new task pushed")
     void handle_completedTask_advancesAndPushesNewTask() {
-        // advanceTask returns index 1 (advanced)
         when(taskFeign.advanceTask("2001")).thenReturn(1);
 
-        // After advance, task at index 1 is NOT_STARTED
-        TaskDTO done = TaskDTO.builder().taskKey("daily_login").targetValue(1)
+        TaskDTO completed = TaskDTO.builder().taskKey("daily_login").targetValue(1)
+                .currentProgress(1).status(TaskStatus.COMPLETED).build();
+        TaskDTO claimed = TaskDTO.builder().taskKey("daily_login").targetValue(1)
                 .currentProgress(1).status(TaskStatus.CLAIMED).build();
         TaskDTO next = TaskDTO.builder().taskKey("kill_monster").targetValue(10)
                 .currentProgress(0).status(TaskStatus.NOT_STARTED).build();
-        when(taskFeign.getTaskList("2001")).thenReturn(
-                TaskListResp.builder().tasks(List.of(done, next)).claimedTasks(1).totalTasks(2).build());
+        TaskListResp before = TaskListResp.builder()
+                .tasks(List.of(completed, next))
+                .claimedTasks(0)
+                .totalTasks(2)
+                .build();
+        TaskListResp after = TaskListResp.builder()
+                .tasks(List.of(claimed, next))
+                .claimedTasks(1)
+                .totalTasks(2)
+                .build();
+        when(taskFeign.getTaskList("2001")).thenReturn(before, after, after);
+        when(bagFeign.list("2001")).thenReturn(List.of());
+        when(walletHttpClient.info("2001")).thenReturn(null);
 
         assertDoesNotThrow(() ->
                 taskHandler.handle(playerSession, MessageIds.CS_FETCH_TASK_REWARD_REQ, new byte[0]).block());
 
         verify(taskFeign).advanceTask("2001");
-        verify(taskFeign).getTaskList("2001");
+        verify(taskFeign, atLeastOnce()).getTaskList("2001");
+        verify(bagFeign, atLeastOnce()).list("2001");
+        verify(walletHttpClient, atLeastOnce()).info("2001");
+    }
+
+    @Test
+    @DisplayName("Claimed reward still refreshes bag/wallet when next task id does not increase")
+    void handle_claimedReward_sameTaskIdButClaimCountIncreased_refreshesBagAndWallet() {
+        when(taskFeign.advanceTask("2001")).thenReturn(1);
+
+        TaskDTO done = TaskDTO.builder().taskKey("daily_login").targetValue(1)
+                .currentProgress(1).status(TaskStatus.CLAIMED).build();
+        TaskDTO next = TaskDTO.builder().taskKey("kill_monster").targetValue(10)
+                .currentProgress(0).status(TaskStatus.NOT_STARTED).build();
+        TaskListResp before = TaskListResp.builder()
+                .tasks(List.of(done, next))
+                .claimedTasks(1)
+                .totalTasks(2)
+                .build();
+        TaskListResp after = TaskListResp.builder()
+                .tasks(List.of(done, next))
+                .claimedTasks(2)
+                .totalTasks(2)
+                .build();
+        when(taskFeign.getTaskList("2001")).thenReturn(before, after, after);
+        when(bagFeign.list("2001")).thenReturn(List.of());
+        when(walletHttpClient.info("2001")).thenReturn(null);
+
+        assertDoesNotThrow(() ->
+                taskHandler.handle(playerSession, MessageIds.CS_FETCH_TASK_REWARD_REQ, new byte[0]).block());
+
+        verify(taskFeign).advanceTask("2001");
+        verify(taskFeign, atLeastOnce()).getTaskList("2001");
+        verify(bagFeign, atLeastOnce()).list("2001");
+        verify(walletHttpClient, atLeastOnce()).info("2001");
     }
 
     @Test
@@ -208,7 +300,9 @@ class TaskHandlerTest {
                 taskHandler.handle(playerSession, MessageIds.CS_FETCH_TASK_REWARD_REQ, new byte[0]).block());
 
         verify(taskFeign).advanceTask("2001");
-        verify(taskFeign).getTaskList("2001");
+        verify(taskFeign, atLeastOnce()).getTaskList("2001");
+        verify(bagFeign, never()).list(anyString());
+        verify(walletHttpClient, never()).info(anyString());
     }
 
     @Test

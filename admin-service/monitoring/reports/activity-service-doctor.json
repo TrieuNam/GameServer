@@ -1,0 +1,20 @@
+{
+  "serviceName" : "activity-service",
+  "displayName" : "Activity Service",
+  "phase" : "P3",
+  "port" : 8382,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-05T23:39:50.914+07:00  INFO 12716 --- [activity-service] [    virtual-110] o.s.web.servlet.DispatcherServlet        : Completed initialization in 4 ms",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:38:56.915+07:00  INFO 12716 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENTRYPOINT java $JAVA_OPTS -jar app.jar", "2026-04-05T23:38:56.915+07:00  INFO 12716 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-05T23:38:56.915+07:00  INFO 12716 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-05T23:38:56.915+07:00  INFO 12716 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-05T23:38:56.915+07:00  INFO 12716 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-05T23:38:56.915+07:00  INFO 12716 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-05T23:38:56.915+07:00  INFO 12716 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-05T23:38:56.915+07:00  INFO 12716 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-05T23:38:56.915+07:00  INFO 12716 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-05T23:39:50.908+07:00  INFO 12716 --- [activity-service] [    virtual-110] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'", "2026-04-05T23:39:50.910+07:00  INFO 12716 --- [activity-service] [    virtual-110] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'", "2026-04-05T23:39:50.914+07:00  INFO 12716 --- [activity-service] [    virtual-110] o.s.web.servlet.DispatcherServlet        : Completed initialization in 4 ms" ],
+  "lastUpdated" : "2026-04-05T23:42:59.0519985"
+}

@@ -3,6 +3,7 @@ package com.SouthMillion.webSocket_server.handler.starmap;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.service.TaskCondition;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.grpc.StarMapGrpcClient;
 import lombok.RequiredArgsConstructor;
@@ -89,7 +90,7 @@ public class StarMapHandler implements MessageHandler {
         int starId = req.hasParam1() ? req.getParam1() : 0;
         ActivateStarResponse r = starMapGrpcClient.activateStar(roleId, starId);
         if (r.hasStatus() && r.getStatus().getSuccess()) {
-            taskProgressPublisher.publish(roleId, "condition_35", 1, "websocket-starmap-activate");
+            taskProgressPublisher.publish(roleId, TaskCondition.STARMAP_ACTIVATE.taskKey(), 1, "websocket-starmap-activate");
         }
         sendOpRet(session, OP_ACTIVATE, r.getStatus().getCode());
     }

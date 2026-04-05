@@ -10,7 +10,14 @@ public record TaskDefinitionConfig(
     String itemRewards,
     Integer legacyConditionType,
     Integer legacyParam1,
-    String nextTaskKey
+    String nextTaskKey,
+    /**
+     * Explicit progress mode override. When set, takes precedence over the condition-type default.
+     * Use "SNAPSHOT_MAX" when the reporter sends the player's absolute value (e.g. current level).
+     * Use "ACCUMULATE" when the reporter sends increments (e.g. delta=1 per event).
+     * Leave null to use the condition-type default from TaskConditionRegistry.
+     */
+    TaskConditionRegistry.ProgressMode progressMode
 ) {
 
     public TaskDefinitionConfig(
@@ -22,7 +29,7 @@ public record TaskDefinitionConfig(
         int expReward,
         String itemRewards
     ) {
-        this(key, name, description, targetValue, goldReward, expReward, itemRewards, null, null, null);
+        this(key, name, description, targetValue, goldReward, expReward, itemRewards, null, null, null, null);
     }
 }
 

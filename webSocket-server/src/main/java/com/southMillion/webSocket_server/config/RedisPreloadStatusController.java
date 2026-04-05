@@ -4,6 +4,7 @@ import com.SouthMillion.webSocket_server.service.ConfigSnapshotLookupService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -25,5 +26,16 @@ public class RedisPreloadStatusController {
     @GetMapping("/config")
     public Map<String, Object> config(@RequestParam("path") String path) {
         return configLookup.inspect(path);
+    }
+
+    @PostMapping("/refresh")
+    public Map<String, Object> refresh(@RequestParam("path") String path) {
+        return configLookup.refreshFromRemote(path);
+    }
+
+    @PostMapping("/reload")
+    public Map<String, Object> reload() {
+        preloader.reloadNow();
+        return preloader.statusSnapshot();
     }
 }

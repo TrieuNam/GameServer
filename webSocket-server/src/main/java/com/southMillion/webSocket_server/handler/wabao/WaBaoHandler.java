@@ -3,6 +3,7 @@ package com.SouthMillion.webSocket_server.handler.wabao;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.service.TaskCondition;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.client.BoxFeign;
 import lombok.RequiredArgsConstructor;
@@ -146,7 +147,7 @@ public class WaBaoHandler implements MessageHandler {
             req.setCount(Math.max(1, Math.min(count > 0 ? count : 1, 5)));
             req.setRoleLevel(1);
             BoxDTOs.OpenResp resp = boxFeign.open(req);
-            reportTaskProgress(roleId, "open_box", req.getCount());
+            reportTaskProgress(roleId, TaskCondition.OPEN_BOX.taskKey(), req.getCount());
 
             Msgwabao.PB_SCWaBaoItemInfo itemInfo;
             if (resp != null && resp.getOpenEquip() != null) {

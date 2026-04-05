@@ -1,0 +1,20 @@
+{
+  "serviceName" : "leaderboard-service",
+  "displayName" : "Leaderboard Service",
+  "phase" : "P3",
+  "port" : 8480,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-05T23:42:48.901+07:00  INFO 3132 --- [leaderboard-service] [   scheduling-1] c.S.l.service.LeaderboardService         : All leaderboards refreshed!",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:42:48.881+07:00  INFO 3132 --- [leaderboard-service] [   scheduling-1] c.S.l.service.LeaderboardService         : Cache cleared for ranking type: 3", "Hibernate: select re1_0.id,re1_0.current_rank,re1_0.guild_name,re1_0.previous_rank,re1_0.ranking_type,re1_0.role_id,re1_0.role_level,re1_0.role_name,re1_0.score,re1_0.updated_at from ranking_entry re1_0 where re1_0.ranking_type=? order by re1_0.score desc,re1_0.updated_at limit ?", "2026-04-05T23:42:48.885+07:00  INFO 3132 --- [leaderboard-service] [   scheduling-1] c.S.l.service.LeaderboardService         : Cache cleared for ranking type: 4", "Hibernate: select re1_0.id,re1_0.current_rank,re1_0.guild_name,re1_0.previous_rank,re1_0.ranking_type,re1_0.role_id,re1_0.role_level,re1_0.role_name,re1_0.score,re1_0.updated_at from ranking_entry re1_0 where re1_0.ranking_type=? order by re1_0.score desc,re1_0.updated_at limit ?", "2026-04-05T23:42:48.889+07:00  INFO 3132 --- [leaderboard-service] [   scheduling-1] c.S.l.service.LeaderboardService         : Cache cleared for ranking type: 5", "Hibernate: select re1_0.id,re1_0.current_rank,re1_0.guild_name,re1_0.previous_rank,re1_0.ranking_type,re1_0.role_id,re1_0.role_level,re1_0.role_name,re1_0.score,re1_0.updated_at from ranking_entry re1_0 where re1_0.ranking_type=? order by re1_0.score desc,re1_0.updated_at limit ?", "2026-04-05T23:42:48.893+07:00  INFO 3132 --- [leaderboard-service] [   scheduling-1] c.S.l.service.LeaderboardService         : Cache cleared for ranking type: 6", "Hibernate: select re1_0.id,re1_0.current_rank,re1_0.guild_name,re1_0.previous_rank,re1_0.ranking_type,re1_0.role_id,re1_0.role_level,re1_0.role_name,re1_0.score,re1_0.updated_at from ranking_entry re1_0 where re1_0.ranking_type=? order by re1_0.score desc,re1_0.updated_at limit ?", "2026-04-05T23:42:48.897+07:00  INFO 3132 --- [leaderboard-service] [   scheduling-1] c.S.l.service.LeaderboardService         : Cache cleared for ranking type: 7", "Hibernate: select re1_0.id,re1_0.current_rank,re1_0.guild_name,re1_0.previous_rank,re1_0.ranking_type,re1_0.role_id,re1_0.role_level,re1_0.role_name,re1_0.score,re1_0.updated_at from ranking_entry re1_0 where re1_0.ranking_type=? order by re1_0.score desc,re1_0.updated_at limit ?", "2026-04-05T23:42:48.901+07:00  INFO 3132 --- [leaderboard-service] [   scheduling-1] c.S.l.service.LeaderboardService         : Cache cleared for ranking type: 8", "2026-04-05T23:42:48.901+07:00  INFO 3132 --- [leaderboard-service] [   scheduling-1] c.S.l.service.LeaderboardService         : All leaderboards refreshed!" ],
+  "lastUpdated" : "2026-04-05T23:42:58.7274288"
+}

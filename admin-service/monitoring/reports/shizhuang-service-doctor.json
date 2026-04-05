@@ -1,0 +1,20 @@
+{
+  "serviceName" : "shizhuang-service",
+  "displayName" : "Shizhuang Service",
+  "phase" : "P3",
+  "port" : 8350,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-05T23:40:59.654+07:00  WARN 50036 --- [shizhuang-service] [l-1:housekeeper] com.zaxxer.hikari.pool.PoolBase          : HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@6853a6d6 (No...",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:38:40.299+07:00  INFO 50036 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ðŸ³ Dockerfile example:", "2026-04-05T23:38:40.300+07:00  INFO 50036 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENV JAVA_OPTS=\"<arguments above>\"", "2026-04-05T23:38:40.300+07:00  INFO 50036 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENTRYPOINT java $JAVA_OPTS -jar app.jar", "2026-04-05T23:38:40.300+07:00  INFO 50036 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-05T23:38:40.300+07:00  INFO 50036 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-05T23:38:40.300+07:00  INFO 50036 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-05T23:38:40.300+07:00  INFO 50036 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-05T23:38:40.300+07:00  INFO 50036 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-05T23:38:40.300+07:00  INFO 50036 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-05T23:38:40.301+07:00  INFO 50036 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-05T23:38:40.301+07:00  INFO 50036 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-05T23:40:59.654+07:00  WARN 50036 --- [shizhuang-service] [l-1:housekeeper] com.zaxxer.hikari.pool.PoolBase          : HikariPool-1 - Failed to validate connection com.mysql.cj.jdbc.ConnectionImpl@6853a6d6 (No operations allowed after connection closed.). Possibly consider using a shorter maxLifetime value." ],
+  "lastUpdated" : "2026-04-05T23:42:58.8074918"
+}

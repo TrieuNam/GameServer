@@ -42,6 +42,8 @@ public class UnpackConfigCache {
     private boolean redisEnabled;
     @Value("${box.config.redis-ttl-hours:24}")
     private long redisTtlHours;
+    @Value("${box.config.allow-remote-fallback-on-miss:false}")
+    private boolean allowRemoteFallbackOnMiss;
 
     // ======= Chống spam gọi & TTL refresh =======
     private static final long REFRESH_INTERVAL_MS = 30_000; // tuỳ chỉnh
@@ -135,12 +137,26 @@ public class UnpackConfigCache {
                     try {
                         Map<String, Object> parsed = om.readValue(cached, new TypeReference<Map<String, Object>>() {});
                         raw = parsed;
+                        touchRedisKey(redisKey);
                         return;
                     } catch (Exception e) {
                         log.warn("Failed to parse cached JSON from Redis, will reload: {}", e.toString());
+                        try {
+                            redis.delete(redisKey);
+                        } catch (Exception ignored) {
+                            // ignore corrupt-cache cleanup failure
+                        }
                     }
                 }
                 log.debug("[UnpackConfigCache] Redis MISS path={}", path);
+            }
+
+            if (force == 0 && !allowRemoteFallbackOnMiss) {
+                if (!raw.isEmpty()) {
+                    log.warn("[UnpackConfigCache] Redis miss for path={} but remote fallback is disabled; keep last in-memory snapshot", path);
+                    return;
+                }
+                throw new IllegalStateException("unpack.json missing from Redis while box.config.allow-remote-fallback-on-miss=false");
             }
 
             // 2. Call config-service
@@ -186,9 +202,28 @@ public class UnpackConfigCache {
 
     /** Xoá cache & ETag (tuỳ chọn, nếu cần). */
     public void clear() {
+        String path = props.getConfig().getUnpackPath();
+        if (redisEnabled && path != null && !path.isBlank()) {
+            try {
+                redis.delete(toRedisKey(path));
+            } catch (Exception e) {
+                log.debug("[UnpackConfigCache] redis clear failed path={} ex={}", path, e.toString());
+            }
+        }
         etag.set(null);
         raw = Map.of();
         lastCheckMs = 0L;
+    }
+
+    private void touchRedisKey(String redisKey) {
+        if (!redisEnabled || redisKey == null || redisKey.isBlank() || redisTtlHours <= 0) {
+            return;
+        }
+        try {
+            redis.expire(redisKey, redisTtlHours, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.debug("[UnpackConfigCache] redis ttl touch failed key={} ex={}", redisKey, e.toString());
+        }
     }
 
     private String toRedisKey(String path) {

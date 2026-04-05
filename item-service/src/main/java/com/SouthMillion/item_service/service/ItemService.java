@@ -40,6 +40,11 @@ public class ItemService {
             try {
                 out.put(id, cache.getOrLoad(id));
             } catch (ItemCache.ItemNotFoundException ignored) {
+                // Reserved/system ids like 1 (gold) may not have item meta and should not spam warnings.
+                if (id <= 1) {
+                    log.debug("[item.meta.batch] skip reserved/system itemId={}", id);
+                    continue;
+                }
                 // Best effort for batch API: skip ids that are temporarily unavailable.
                 missingIds.add(id);
             } catch (Exception ex) {

@@ -67,7 +67,10 @@ app:
   bootstrap:
     readiness:
       enabled: true
-      required-services: role-service,world-service,bag-service
+      required-services: role-service,world-service,bag-service,config-service,drop-service
+      check-health-endpoints: true
+      health-timeout-ms: 1500
+      health-path: /actuator/health
       max-attempts: 8
       initial-delay-ms: 400
       max-delay-ms: 3000
@@ -134,6 +137,9 @@ app:
   redis-preload:
     enabled: true
     ttl-hours: 24
+    allow-remote-fallback-on-miss: false
+    fetch-attempts: 3
+    fetch-backoff-ms: 1000
     p1-async: true
     p1-timeout-ms: 15000
     # P0: Critical configs needed immediately during login bootstrap (loaded synchronously)
@@ -152,6 +158,8 @@ app:
       - gameworld/logicconfig/shop_cfg.json        # Common shop items
       - gameworld/logicconfig/shop_shenmi.json     # Mystery shop configs
       - gameworld/logicconfig/cloth_shop.json      # Fashion shop configs
+      - gameworld/logicconfig/model_clothes.json   # Fashion master configs
+      - gameworld/logicconfig/angel.json           # Angel configs
       - gameworld/logicconfig/unpack.json          # Box opening configs (random rewards)
       - gameworld/logicconfig/kaixiangdaji.json    # Lucky box opening configs
   login-snapshot:

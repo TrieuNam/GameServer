@@ -1,0 +1,13 @@
+{
+  "description": "Starter registry for Service Doctor monitoring and future Copilot CLI repair flow.",
+  "services": [
+    {
+      "serviceName": "admin-service",
+      "workingDirectory": "D:/project/serverGame/GameServer/admin-service",
+      "buildCommand": "mvn -DskipTests compile",
+      "startCommand": "mvn spring-boot:run",
+      "logSource": "in-memory-service-manager",
+      "enabled": true
+    }
+  ]
+}

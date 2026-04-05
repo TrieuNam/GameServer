@@ -44,9 +44,8 @@ public class PetServiceImpl implements PetService {
     public PetAllInfoResponse getAllPetInfo(String userId) {
         log.debug("Getting all pet info for user: {}", userId);
 
-        // Get fight indices
-        PetFightIndex fightIndex = fightIndexRepository.findByUserId(userId)
-            .orElse(new PetFightIndex(userId, 0, 0, null));
+        // Only use a persisted fight index row; do not synthesize a default 0/0 active pet for new users.
+        PetFightIndex fightIndex = fightIndexRepository.findByUserId(userId).orElse(null);
 
         // Get all pets
         List<Pet> pets = petRepository.findByUserId(userId);
@@ -66,8 +65,18 @@ public class PetServiceImpl implements PetService {
             .map(this::convertToClothDataDTO)
             .collect(Collectors.toList());
 
+        List<Integer> fightPetIndices = new ArrayList<>();
+        if (fightIndex != null) {
+            if (fightIndex.getFightPetIndex() != null) {
+                fightPetIndices.add(fightIndex.getFightPetIndex());
+            }
+            if (fightIndex.getFightPetIndex2() != null) {
+                fightPetIndices.add(fightIndex.getFightPetIndex2());
+            }
+        }
+
         PetAllInfoResponse response = new PetAllInfoResponse();
-        response.setFightPetIndex(List.of(fightIndex.getFightPetIndex(), fightIndex.getFightPetIndex2()));
+        response.setFightPetIndex(fightPetIndices);
         response.setPetList(petDataList);
         response.setTsGemList(tsGemDataList);
         response.setClothList(clothDataList);

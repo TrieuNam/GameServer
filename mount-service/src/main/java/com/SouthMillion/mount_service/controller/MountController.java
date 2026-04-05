@@ -37,9 +37,64 @@ public class MountController {
         log.info("[MountController] Get mount data - roleId: {}", roleId);
         try {
             List<Mount> mounts = mountService.getAllMounts(roleId);
+            List<com.SouthMillion.mount_service.model.entity.MountHarness> harnesses = mountHarnessService.getAllHarness(roleId);
+            boolean hasData = !mounts.isEmpty() || !harnesses.isEmpty();
+
+            List<Map<String, Object>> mountList = mounts.stream().map(mount -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("mountId", mount.getMountId());
+                item.put("index", mount.getMountIndex());
+                item.put("level", mount.getLevel() != null ? mount.getLevel() : 0);
+                item.put("grade", mount.getGrade() != null ? mount.getGrade() : 0);
+                item.put("lastExploreTime", mount.getExploreProgress() != null ? mount.getExploreProgress() : 0L);
+                return item;
+            }).toList();
+
+            List<Map<String, Object>> harnessList = harnesses.stream().map(harness -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("index", harness.getHarnessIndex());
+                item.put("itemId", harness.getItemId());
+                item.put("wearingMark", 0);
+                int attrNum = 0;
+                if (harness.getEntry1Type() != null && harness.getEntry1Type() > 0) attrNum++;
+                if (harness.getEntry2Type() != null && harness.getEntry2Type() > 0) attrNum++;
+                if (harness.getEntry3Type() != null && harness.getEntry3Type() > 0) attrNum++;
+                if (harness.getEntry4Type() != null && harness.getEntry4Type() > 0) attrNum++;
+                if (harness.getEntry5Type() != null && harness.getEntry5Type() > 0) attrNum++;
+                if (harness.getEntry6Type() != null && harness.getEntry6Type() > 0) attrNum++;
+                if (harness.getEntry7Type() != null && harness.getEntry7Type() > 0) attrNum++;
+                if (harness.getEntry8Type() != null && harness.getEntry8Type() > 0) attrNum++;
+                item.put("attrNum", attrNum);
+                item.put("lockFlag", harness.getLockFlag() != null ? harness.getLockFlag() : 0);
+                return item;
+            }).toList();
+
+            Integer appearanceId = mounts.stream()
+                    .filter(mount -> Boolean.TRUE.equals(mount.getIsEquipped()))
+                    .map(Mount::getAppearanceId)
+                    .filter(id -> id != null && id > 0)
+                    .findFirst()
+                    .orElse(0);
+
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
+            response.put("hasData", hasData);
             response.put("mounts", mounts);
+            response.put("mountList", mountList);
+            response.put("harnessList", harnessList);
+            response.put("pifuList", mounts.stream()
+                    .map(Mount::getSkinId)
+                    .filter(id -> id != null && id > 0)
+                    .distinct()
+                    .toList());
+            if (appearanceId > 0) {
+                response.put("appearanceId", appearanceId);
+            }
+            response.put("freeTime", 0);
+            response.put("refresh1Num", 0);
+            response.put("refresh2Num", 0);
+            response.put("buyFlag", 0);
+            response.put("buySeqList", List.of());
             return response;
         } catch (Exception e) {
             log.error("[MountController] Failed to get mount data - roleId: {}", roleId, e);

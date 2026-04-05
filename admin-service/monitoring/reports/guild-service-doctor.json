@@ -1,0 +1,20 @@
+{
+  "serviceName" : "guild-service",
+  "displayName" : "Guild Service",
+  "phase" : "P2",
+  "port" : 8440,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-05 23:40:45 [AsyncResolver-bootstrap-executor-%d] INFO  c.n.d.s.r.aws.ConfigClusterResolver - Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "        gm1_0.online,", "        gm1_0.power,", "        gm1_0.rank,", "        gm1_0.role_id,", "        gm1_0.role_level,", "        gm1_0.role_name,", "        gm1_0.updated_at ", "    from", "        guild_member gm1_0 ", "    where", "        gm1_0.role_id=?", "2026-04-05 23:40:45 [AsyncResolver-bootstrap-executor-%d] INFO  c.n.d.s.r.aws.ConfigClusterResolver - Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-05T23:42:58.5794126"
+}

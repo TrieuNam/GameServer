@@ -3,6 +3,8 @@ package com.SouthMillion.webSocket_server.handler.arena;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
+import com.SouthMillion.webSocket_server.service.client.BagFeign;
+import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
 import com.SouthMillion.webSocket_server.service.grpc.ArenaGrpcClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,8 +14,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
 import java.util.Map;
 
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -27,6 +31,10 @@ class ArenaHandlerTest {
     private TaskProgressPublisher taskProgressPublisher;
     @Mock
     private TaskActionConditionMapping taskActionConditionMapping;
+    @Mock
+    private BagFeign bagFeign;
+    @Mock
+    private WalletHttpClient walletHttpClient;
 
     @InjectMocks
     private ArenaHandler arenaHandler;
@@ -35,8 +43,8 @@ class ArenaHandlerTest {
 
     @BeforeEach
     void setUp() {
-        playerSession = new PlayerSession();
-        playerSession.setRoleId(2001L);
+        playerSession = org.mockito.Mockito.mock(PlayerSession.class);
+        when(playerSession.getRoleId()).thenReturn(2001L);
     }
 
     @Test
@@ -56,5 +64,18 @@ class ArenaHandlerTest {
         ReflectionTestUtils.invokeMethod(arenaHandler, "handleChallenge", playerSession, 88);
 
         verify(taskProgressPublisher, never()).publish(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyString());
+    }
+
+    @Test
+    void handleClaimRewards_refreshesBagAndWallet() {
+        when(arenaGrpcClient.claimRewards(2001L, "DAILY")).thenReturn(Map.of("success", true));
+        when(arenaGrpcClient.getArenaInfo(2001L)).thenReturn(Map.of());
+        when(bagFeign.list("2001")).thenReturn(List.of());
+        when(walletHttpClient.info("2001")).thenReturn(null);
+
+        ReflectionTestUtils.invokeMethod(arenaHandler, "handleClaimRewards", playerSession);
+
+        verify(bagFeign, atLeastOnce()).list("2001");
+        verify(walletHttpClient, atLeastOnce()).info("2001");
     }
 }

@@ -75,12 +75,19 @@ management:
 
 # Box service config (fallback khi config-service chưa sẵn sàng)
 box:
-  # Fallback unpack_item_id nếu config-service chưa load kịp.
+  config:
+    redis-enabled: true
+    redis-ttl-hours: 24
+    allow-remote-fallback-on-miss: false
+  luck:
+    redis-enabled: true
+    redis-ttl-hours: 24
+    allow-remote-fallback-on-miss: false  # Fallback unpack_item_id nếu config-service chưa load kịp.
   # Giá trị thực tế là 40004 (lấy từ unpack.json -> other -> unpack_item_id).
   # Thông thường config-service sẽ trả về giá trị này tự động.
   unpack-item-id: 40004
   compare:
-    ttl-minutes: 15
+    ttl-minutes: 1440
   arena-ticket:
     item-id: -1
 

@@ -1,6 +1,7 @@
 package com.SouthMillion.webSocket_server.handler.shizhuang;
 
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.handler.role.RoleServiceHandler;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.net.MsgIds;
@@ -33,6 +34,7 @@ public class ShiZhuangHandler implements MessageHandler {
 
     private final ShiZhuangFeign shiZhuangFeign;
     private final EquipFumoFeign equipFumoFeign;
+    private final RoleServiceHandler roleServiceHandler;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;
 
@@ -143,6 +145,7 @@ public class ShiZhuangHandler implements MessageHandler {
 
             sendSingleShiZhuangResponse(session, clothesId, 1);
             handleGetEquipsList(session, roleId);
+            roleServiceHandler.pushRoleState(session).subscribe();
             publishTaskProgress(roleId, taskActionConditionMapping.shizhuangEquipTaskKey(), "websocket-shizhuang-equip");
             log.info("[ShiZhuang] Equipped/wore clothes {}", clothesId);
         } catch (Exception e) {
@@ -152,9 +155,15 @@ public class ShiZhuangHandler implements MessageHandler {
 
     private void handleUnequipItem(PlayerSession session, Long roleId, int clothesId) {
         try {
-            // shizhuang-service currently has no unequip endpoint; avoid calling wear() here because it causes opposite behavior.
+            FeignCall.withToken(
+                    session.getSessionId(),
+                    "shizhuang.unwear",
+                    () -> { shiZhuangFeign.unwearFashion(String.valueOf(roleId), clothesId); return null; }
+            ).block();
+
             sendSingleShiZhuangResponse(session, clothesId, 0);
             handleGetEquipsList(session, roleId);
+            roleServiceHandler.pushRoleState(session).subscribe();
             log.info("[ShiZhuang] Unequipped item {}", clothesId);
         } catch (Exception e) {
             log.error("[ShiZhuang] Error unequipping item {}: {}", clothesId, e.getMessage(), e);
@@ -171,6 +180,7 @@ public class ShiZhuangHandler implements MessageHandler {
 
             sendSingleShiZhuangResponse(session, fashionId, 1);
             handleGetEquipsList(session, roleId);
+            roleServiceHandler.pushRoleState(session).subscribe();
             publishTaskProgress(roleId, taskActionConditionMapping.shizhuangEquipTaskKey(), "websocket-shizhuang-wear");
             log.info("[ShiZhuang] Wore fashion {}", fashionId);
         } catch (Exception e) {

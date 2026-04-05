@@ -1,6 +1,7 @@
 package com.SouthMillion.webSocket_server.handler.box;
 
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.handler.bag.BagHandler;
 import com.SouthMillion.webSocket_server.handler.role.RoleServiceHandler;
 import com.SouthMillion.webSocket_server.handler.task.TaskHandler;
 import com.SouthMillion.webSocket_server.net.PacketCodec;
@@ -11,10 +12,12 @@ import com.SouthMillion.webSocket_server.service.client.RoleFeign;
 import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
 import org.SouthMillion.dto.box.BoxDTOs;
 import org.SouthMillion.proto.Msgbox.Msgbox;
+import org.SouthMillion.proto.Msgknapsack.Msgknapsack;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -43,6 +46,7 @@ class BoxHandlerTest {
 
     @Mock private BoxFeign boxFeign;
     @Mock private EquipHttpClient equipHttpClient;
+    @Mock private BagHandler bagHandler;
     @Mock private RoleServiceHandler roleServiceHandler;
     @Mock private RoleFeign roleFeign;
     @Mock private TaskProgressPublisher taskProgressPublisher;
@@ -66,6 +70,7 @@ class BoxHandlerTest {
         when(playerSession.getOutbound()).thenReturn(outbound);
         Mockito.lenient().when(outbound.tryEmitNext(any())).thenReturn(Sinks.EmitResult.OK);
         Mockito.lenient().when(taskProgressPublisher.publish(any(), any(), any(Integer.class), any())).thenReturn(true);
+        Mockito.lenient().when(bagHandler.pushAll(any())).thenReturn(Mono.empty());
         Mockito.lenient().when(roleServiceHandler.pushRoleState(any())).thenReturn(Mono.empty());
         Mockito.lenient().when(roleFeign.getOtherRole(any(), any())).thenReturn(null);
         Mockito.lenient().when(boxFeign.info(any())).thenReturn(BoxDTOs.InfoResp.builder()
@@ -90,7 +95,7 @@ class BoxHandlerTest {
 
         assertDoesNotThrow(() -> boxHandler.handle(playerSession, 1610, req.toByteArray()).block());
 
-        verify(taskProgressPublisher).publish(2001L, "condition_3", 1, "websocket-box-open");
+        verify(taskProgressPublisher).publish(2001L, "open_box", 1, "websocket-box-open");
         verify(taskProgressPublisher).publish(2001L, "get_equip", 1, "websocket-box-open");
         verify(taskHandler, never()).pushCurrentTaskProgress(playerSession);
 
@@ -102,9 +107,134 @@ class BoxHandlerTest {
     }
 
     @Test
+    @DisplayName("Open box without compare reward still refreshes the bag")
+    void handleOpen_directRewardRefreshesBag() {
+        when(boxFeign.open(any())).thenReturn(BoxDTOs.OpenResp.builder()
+                .bonusItems(java.util.List.of(java.util.Map.of("itemId", 4001, "num", 1)))
+                .build());
+
+        Msgbox.PB_CSBoxReq req = Msgbox.PB_CSBoxReq.newBuilder()
+                .setReqType(1)
+                .setParam(0)
+                .build();
+
+        assertDoesNotThrow(() -> boxHandler.handle(playerSession, 1610, req.toByteArray()).block());
+
+        verify(boxFeign).open(any());
+        verify(bagHandler).pushAll(playerSession);
+    }
+
+    @Test
+    @DisplayName("Open box should not send a delayed second bag snapshot that can roll the box count back")
+    void handleOpen_doesNotSendDelayedSecondBagSnapshot() throws Exception {
+        when(boxFeign.open(any())).thenReturn(BoxDTOs.OpenResp.builder().build());
+
+        Msgbox.PB_CSBoxReq req = Msgbox.PB_CSBoxReq.newBuilder()
+                .setReqType(1)
+                .setParam(0)
+                .build();
+
+        assertDoesNotThrow(() -> boxHandler.handle(playerSession, 1610, req.toByteArray()).block());
+        Thread.sleep(450L);
+
+        verify(bagHandler, times(1)).pushAll(playerSession);
+    }
+
+    @Test
+    @DisplayName("Open box retries bag refresh once when the first immediate push fails")
+    void handleOpen_retriesBagRefreshWhenImmediatePushFails() throws Exception {
+        when(boxFeign.open(any())).thenReturn(BoxDTOs.OpenResp.builder().build());
+        when(bagHandler.pushAll(playerSession))
+                .thenReturn(Mono.error(new RuntimeException("bag temporarily unavailable")))
+                .thenReturn(Mono.empty());
+
+        Msgbox.PB_CSBoxReq req = Msgbox.PB_CSBoxReq.newBuilder()
+                .setReqType(1)
+                .setParam(0)
+                .build();
+
+        assertDoesNotThrow(() -> boxHandler.handle(playerSession, 1610, req.toByteArray()).block());
+        Thread.sleep(450L);
+
+        verify(bagHandler, times(2)).pushAll(playerSession);
+    }
+
+    @Test
+    @DisplayName("Bonus-only open emits visible get-item notice so the client does not look like a silent consume")
+    void handleOpen_bonusOnlyReward_emitsGetItemNotice() throws Exception {
+        when(boxFeign.open(any())).thenReturn(BoxDTOs.OpenResp.builder()
+                .bonusItems(java.util.List.of(java.util.Map.of("itemId", 4001, "num", 1, "tag", "arenaTicket")))
+                .build());
+
+        Msgbox.PB_CSBoxReq req = Msgbox.PB_CSBoxReq.newBuilder()
+                .setReqType(1)
+                .setParam(0)
+                .build();
+
+        assertDoesNotThrow(() -> boxHandler.handle(playerSession, 1610, req.toByteArray()).block());
+
+        ArgumentCaptor<byte[]> frameCaptor = ArgumentCaptor.forClass(byte[].class);
+        verify(outbound, atLeastOnce()).tryEmitNext(frameCaptor.capture());
+
+        Msgknapsack.PB_SCGetItemNotice notice = frameCaptor.getAllValues().stream()
+                .map(PacketCodec::decode)
+                .filter(java.util.Objects::nonNull)
+                .filter(decoded -> decoded.msgId() == 1507)
+                .findFirst()
+                .map(decoded -> {
+                    try {
+                        return Msgknapsack.PB_SCGetItemNotice.parseFrom(decoded.payload());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .orElseThrow(() -> new AssertionError("Expected SC 1507 get-item notice packet"));
+
+        assertEquals(0, notice.getGetType());
+        assertEquals(1, notice.getItemListCount());
+        assertEquals(4001, notice.getItemList(0).getItemId());
+        assertEquals(1L, notice.getItemList(0).getNum());
+    }
+
+    @Test
+    @DisplayName("Open box stays responsive when best-effort fetches are slow")
+    void handleOpen_slowBestEffortFetches_doNotBlockOpenFlow() {
+        ReflectionTestUtils.setField(boxHandler, "boxFetchTimeoutMs", 20L);
+        when(boxFeign.open(any())).thenReturn(BoxDTOs.OpenResp.builder().build());
+        when(boxFeign.getCompareState(2001L)).thenAnswer(inv -> {
+            Thread.sleep(250L);
+            return null;
+        });
+        when(boxFeign.equipInfo(2001L)).thenAnswer(inv -> {
+            Thread.sleep(250L);
+            return BoxDTOs.EquipInfo.builder().build();
+        });
+        when(boxFeign.info(2001L)).thenAnswer(inv -> {
+            Thread.sleep(250L);
+            return BoxDTOs.InfoResp.builder().boxLevel(1).boxBuyTimes(0).openBoxTotal(0).levelFetchFlag(0).build();
+        });
+        when(roleFeign.getOtherRole(any(), any())).thenAnswer(inv -> {
+            Thread.sleep(250L);
+            return null;
+        });
+
+        Msgbox.PB_CSBoxReq req = Msgbox.PB_CSBoxReq.newBuilder()
+                .setReqType(1)
+                .setParam(0)
+                .build();
+
+        long startedAt = System.currentTimeMillis();
+        assertDoesNotThrow(() -> boxHandler.handle(playerSession, 1610, req.toByteArray()).block());
+        long elapsedMs = System.currentTimeMillis() - startedAt;
+
+        verify(boxFeign).open(any());
+        assertTrue(elapsedMs < 500L, "Expected open flow to remain responsive despite slow best-effort lookups");
+    }
+
+    @Test
     @DisplayName("Open box pushes immediate task snapshot when publish fails")
     void handleOpen_publishFails_pushesImmediateTaskSnapshot() {
-        when(taskProgressPublisher.publish(eq(2001L), eq("condition_3"), eq(1), eq("websocket-box-open")))
+        when(taskProgressPublisher.publish(eq(2001L), eq("open_box"), eq(1), eq("websocket-box-open")))
                 .thenReturn(false);
         when(taskProgressPublisher.publish(eq(2001L), eq("get_equip"), eq(1), eq("websocket-box-open")))
                 .thenReturn(false);
@@ -142,6 +272,25 @@ class BoxHandlerTest {
         verify(boxFeign, atLeastOnce()).equipInfo(2001L);
         verify(boxFeign, atLeastOnce()).info(2001L);
         verify(boxFeign).getSetting(2001L);
+    }
+
+    @Test
+    @DisplayName("Wear success publishes green-quality task progress for box-equip flow")
+    void handleEquip_success_publishesGreenQualityTaskProgress() {
+        when(boxFeign.getCompareState(2001L)).thenReturn(BoxDTOs.BoxCompareStateResp.builder()
+                .candidateEquip(BoxDTOs.BoxCompareSnapshotDTO.builder()
+                        .itemId(40001)
+                        .equipType(1)
+                        .quality(2)
+                        .build())
+                .build());
+        when(boxFeign.wear(any())).thenReturn(BoxDTOs.OkResp.builder().ok(true).message("OK").build());
+
+        Msgbox.PB_CSBoxReq wearReq = Msgbox.PB_CSBoxReq.newBuilder().setReqType(2).build();
+
+        assertDoesNotThrow(() -> boxHandler.handle(playerSession, 1610, wearReq.toByteArray()).block());
+
+        verify(taskProgressPublisher).publish(2001L, "condition_19", 1, "websocket-box-wear");
     }
 
     @Test

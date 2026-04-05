@@ -19,4 +19,6 @@ public class PlayerClothesDTO {
     private Integer clothesId;
 
     private Integer level;
+
+    private Boolean wearing;
 }

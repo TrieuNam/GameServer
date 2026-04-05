@@ -2,17 +2,25 @@ package com.SouthMillion.webSocket_server.handler.role;
 
 import com.google.protobuf.ByteString;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.handler.task.TaskHandler;
 import com.SouthMillion.webSocket_server.net.*;
 import com.SouthMillion.webSocket_server.service.InMemoryPlayerSessionRegistry;
+import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
+import com.SouthMillion.webSocket_server.service.client.MountFeign;
 import com.SouthMillion.webSocket_server.service.client.RoleFeign;
+import com.SouthMillion.webSocket_server.service.client.ShiZhuangFeign;
+import com.SouthMillion.webSocket_server.service.grpc.AngelGrpcClient;
 import com.SouthMillion.webSocket_server.utils.FeignCall;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.role.RoleDTOs;
 import org.SouthMillion.dto.role.other.OtherRoleDTOs;
 import org.SouthMillion.dto.role.settings.SettingsDTOs;
 import org.SouthMillion.proto.Msgother.Msgother;
 import org.SouthMillion.proto.Msgrole.Msgrole;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -30,7 +38,15 @@ import java.util.Objects;
 public class RoleServiceHandler implements MessageHandler {
 
     private final RoleFeign roleFeign;
+    private final ShiZhuangFeign shiZhuangFeign;
+    private final MountFeign mountFeign;
+    private final AngelGrpcClient angelGrpcClient;
     private final InMemoryPlayerSessionRegistry registry;
+    private final TaskProgressPublisher taskProgressPublisher;
+
+    /** Setter injection with @Lazy to break the potential construction-order coupling. */
+    @Setter(onMethod_ = {@Autowired, @Lazy})
+    private TaskHandler taskHandler;
 
     @Override
     public int[] interests() {
@@ -73,7 +89,7 @@ public class RoleServiceHandler implements MessageHandler {
                     RoleDTOs.RoleResp role = selectCurrentRole(list, ps.getRoleId());
                     if (role == null) return;
 
-                    Emitters.sendRoleInfoAck(ps, role);
+                    emitRoleInfoAck(ps, role);
 
                     long curExp = role.getCurExp() != null ? role.getCurExp() : 0L;
                     int level = role.getLevel() != null ? role.getLevel() : 1;
@@ -138,7 +154,7 @@ public class RoleServiceHandler implements MessageHandler {
                         .doOnNext(after -> {
                             // bind lại & emit RoleInfo
                             registry.bindRoleToSession(ps, after.getRoleId() != null ? Long.parseLong(after.getRoleId()) : null, after.getUserId(), after.getName());
-                            Emitters.emit(ps, MsgIds.SC_ROLE_INFO_ACK, buildRoleInfoAck(after));
+                            emitRoleInfoAck(ps, after);
                             // emit thay đổi EXP/LEVEL nếu có
                             emitExpChangeIfAny(ps, (RoleDTOs.RoleResp) before, after);
                             emitLevelChangeIfAny(ps, (RoleDTOs.RoleResp) before, after);
@@ -324,7 +340,7 @@ public class RoleServiceHandler implements MessageHandler {
         Emitters.emit(ps, MsgIds.SC_ROLE_EXP_CHANGE, out);
     }
 
-    /** LEVEL thay đổi → phát 1403 (level, exp). */
+    /** LEVEL thay đổi → phát 1403 (level, exp) + cập nhật task level_up. */
     private void emitLevelChangeIfAny(PlayerSession ps, RoleDTOs.RoleResp before, RoleDTOs.RoleResp after) {
         Integer bl = (before != null) ? before.getLevel() : null;
         Integer al = (after  != null) ? after.getLevel()  : null;
@@ -338,36 +354,154 @@ public class RoleServiceHandler implements MessageHandler {
                 .build();
 
         Emitters.emit(ps, MsgIds.SC_ROLE_LEVEL_CHANGE, out);
+
+        // Report level_up task progress and push 1452 with animation for each level gained.
+        // taskHandler may be null during early startup (lazy-init); guard accordingly.
+        if (taskHandler != null) {
+            try {
+                taskHandler.pushLevelUpProgress(ps, bl, al);
+            } catch (Exception e) {
+                log.debug("[role] pushLevelUpProgress failed roleId={} ex={}", ps.getRoleId(), e.toString());
+            }
+        } else {
+            try {
+                taskProgressPublisher.publish(ps.getRoleId(), "level_up", al, "role-level-change");
+            } catch (Exception e) {
+                log.debug("[role] taskProgressPublisher level_up failed roleId={} ex={}", ps.getRoleId(), e.toString());
+            }
+        }
     }
 
     /* ======================= helpers ======================= */
 
-    private Msgrole.PB_SCRoleInfoAck buildRoleInfoAck(RoleDTOs.RoleResp role) {
-        int roleId = safeInt(role.getRoleId());
-        String name = role.getName() != null ? role.getName() : "Player";
-        int level = role.getLevel() != null ? role.getLevel() : 1;
-        long curExp = role.getCurExp() != null ? role.getCurExp() : 0L;
-        String headChar = role.getHeadChar() != null ? role.getHeadChar() : "";
+    public void emitRoleInfoAck(PlayerSession ps, RoleDTOs.RoleResp role) {
+        if (ps == null || role == null) {
+            return;
+        }
+        Emitters.sendRoleInfoAck(ps, role, buildAppearance(role));
+    }
 
+    private Msgrole.PB_SCRoleInfoAck buildRoleInfoAck(RoleDTOs.RoleResp role) {
         Msgrole.PB_RoleInfo.Builder base = Msgrole.PB_RoleInfo.newBuilder()
-                .setRoleId(roleId)
-                .setName(ByteString.copyFrom(name.getBytes(StandardCharsets.UTF_8)))
-                .setLevel(level)
-                .setCap(0L) // nếu cần: map từ DTO
-                .setHeadPicId(0)
-                .setTitleId(0)
-                .setGuildName(ByteString.EMPTY)
-                .setKnightLevel(0)
-                .setHeadChar(ByteString.copyFrom(headChar.getBytes(StandardCharsets.UTF_8)));
+                .setRoleId(parseInt(role.getRoleId(), 0))
+                .setName(ByteString.copyFromUtf8(firstNonBlank(role.getName(), role.getNickname(), role.getRoleName(), "Player")))
+                .setLevel(role.getLevel() != null ? role.getLevel() : 1)
+                .setCap(parseLong(role.getCap(), 0L))
+                .setHeadPicId(parseInt(role.getHeadPicId(), 0))
+                .setTitleId(parseInt(role.getTitleId(), 0))
+                .setGuildName(ByteString.copyFromUtf8(firstNonBlank(role.getGuildName())))
+                .setKnightLevel(parseInt(role.getKnightLevel(), 0))
+                .setHeadChar(ByteString.copyFromUtf8(firstNonBlank(role.getHeadChar())));
 
         return Msgrole.PB_SCRoleInfoAck.newBuilder()
-                .setCurExp(curExp)
-                .setCreateTime(0)
-                .setRoleinfo(base)
-                .setAppearance(Msgrole.PB_Appearance.newBuilder().build())
+                .setCurExp(parseLong(role.getCurExp(), 0L))
+                .setCreateTime(parseLong(role.getCreateTimeEpochSec(), 0L))
+                .setRoleinfo(base.build())
+                .setAppearance(buildAppearance(role))
                 .build();
     }
 
+    private Msgrole.PB_Appearance buildAppearance(RoleDTOs.RoleResp role) {
+        Msgrole.PB_Appearance.Builder appearance = Msgrole.PB_Appearance.newBuilder()
+                .setSurfaceMount(-1)
+                .setSurfaceAngel(-1);
+
+        long roleId = parseLong(role != null ? role.getRoleId() : null, 0L);
+        if (roleId <= 0L) {
+            return appearance.build();
+        }
+
+        try {
+            Map<String, Object> fashion = shiZhuangFeign.getCurrentAppearance(String.valueOf(roleId));
+            applyAppearanceValue(appearance, fashion, "surfaceWeapon");
+            applyAppearanceValue(appearance, fashion, "surfaceShield");
+            applyAppearanceValue(appearance, fashion, "surfaceHead");
+            applyAppearanceValue(appearance, fashion, "surfaceBody");
+        } catch (Exception e) {
+            log.debug("[role-appearance] shizhuang lookup skipped roleId={} ex={}", roleId, e.toString());
+        }
+
+        try {
+            Map<String, Object> mountData = mountFeign.getMountData(String.valueOf(roleId));
+            if (mountData != null && mountData.containsKey("appearanceId")) {
+                appearance.setSurfaceMount(parseInt(mountData.get("appearanceId"), -1));
+            }
+        } catch (Exception e) {
+            log.debug("[role-appearance] mount lookup skipped roleId={} ex={}", roleId, e.toString());
+        }
+
+        try {
+            var angels = angelGrpcClient.getUserAngels(String.valueOf(roleId));
+            appearance.setSurfaceAngel(resolveAngelAppearance(angels));
+        } catch (Exception e) {
+            log.debug("[role-appearance] angel lookup skipped roleId={} ex={}", roleId, e.toString());
+        }
+
+        return appearance.build();
+    }
+
+    private void applyAppearanceValue(Msgrole.PB_Appearance.Builder appearance, Map<String, Object> source, String key) {
+        if (appearance == null || source == null || !source.containsKey(key)) {
+            return;
+        }
+        int value = parseInt(source.get(key), 0);
+        switch (key) {
+            case "surfaceWeapon" -> appearance.setSurfaceWeapon(value);
+            case "surfaceShield" -> appearance.setSurfaceShield(value);
+            case "surfaceHead" -> appearance.setSurfaceHead(value);
+            case "surfaceBody" -> appearance.setSurfaceBody(value);
+            case "surfaceMount" -> appearance.setSurfaceMount(value);
+            case "surfaceAngel" -> appearance.setSurfaceAngel(value);
+            default -> {
+            }
+        }
+    }
+
+    private int resolveAngelAppearance(org.SouthMillion.proto.angel.GetUserAngelsResponse response) {
+        if (response == null || (response.hasStatus() && !response.getStatus().getSuccess()) || response.getAngelsCount() == 0) {
+            return -1;
+        }
+        for (var angel : response.getAngelsList()) {
+            if (angel.getIsEquipped()) {
+                return angel.getAppearanceId();
+            }
+        }
+        return -1;
+    }
+
+    private int parseInt(Object value, int def) {
+        if (value == null) {
+            return def;
+        }
+        try {
+            return Integer.parseInt(String.valueOf(value));
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    private long parseLong(Object value, long def) {
+        if (value == null) {
+            return def;
+        }
+        try {
+            return Long.parseLong(String.valueOf(value));
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    private String firstNonBlank(String... values) {
+        if (values == null) {
+            return "";
+        }
+        for (String value : values) {
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        return "";
+    }
 
     private boolean blank(String s) { return s == null || s.isBlank(); }
 

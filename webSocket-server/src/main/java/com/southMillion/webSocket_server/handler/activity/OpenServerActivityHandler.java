@@ -10,7 +10,6 @@ import org.SouthMillion.proto.Msgopenserveractivity.Msgopenserveractivity;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,6 +39,21 @@ public class OpenServerActivityHandler implements MessageHandler {
         return new int[]{2160, 2162, 2164, 2166};
     }
 
+    /** Push initial open-server activity snapshots right after login bootstrap. */
+    public Mono<Void> pushAll(PlayerSession session) {
+        Long roleId = session.getRoleId();
+        if (roleId == null) {
+            return Mono.empty();
+        }
+        return Mono.fromRunnable(() -> {
+            String roleIdStr = String.valueOf(roleId);
+            pushSafely("SevenDay", roleId, () -> emitSevenDayInfo(session, activityFeign.getSevenDay(roleIdStr)));
+            pushSafely("LuckUnpacking", roleId, () -> emitLuckUnpackingInfo(session, activityFeign.getLuck(roleIdStr)));
+            pushSafely("NewArea", roleId, () -> emitNewAreaPreferentialInfo(session, activityFeign.getNewArea(roleIdStr)));
+            pushSafely("MarketShop", roleId, () -> emitMarketShopInfo(session, activityFeign.getMarket(roleIdStr)));
+        });
+    }
+
     @Override
     public Mono<Void> handle(PlayerSession session, int msgId, byte[] payload) {
         return Mono.fromRunnable(() -> {
@@ -58,6 +72,59 @@ public class OpenServerActivityHandler implements MessageHandler {
         });
     }
 
+    private void pushSafely(String activityName, Long roleId, Runnable action) {
+        try {
+            action.run();
+        } catch (Exception e) {
+            log.warn("[OpenActivity/{}] bootstrap skipped roleId={} ex={}", activityName, roleId, e.toString());
+        }
+    }
+
+    private void emitSevenDayInfo(PlayerSession session, Map<String, Object> data) {
+        Msgopenserveractivity.PB_SCSevenDaySignInfo.Builder builder =
+                Msgopenserveractivity.PB_SCSevenDaySignInfo.newBuilder();
+        if (data != null) {
+            if (data.get("endTimestamp") instanceof Number n) builder.setEndTimestamp(n.intValue());
+            if (data.get("days") instanceof Number n)         builder.setDays(n.intValue());
+            if (data.get("receiveFlag") instanceof Number n)  builder.setReceiveFlag(n.intValue());
+        }
+        Emitters.emit(session, 2161, builder.build().toByteArray());
+    }
+
+    private void emitLuckUnpackingInfo(PlayerSession session, Map<String, Object> data) {
+        Msgopenserveractivity.PB_SCLuckUnpackingInfo.Builder builder =
+                Msgopenserveractivity.PB_SCLuckUnpackingInfo.newBuilder();
+        if (data != null) {
+            if (data.get("endTimestamp") instanceof Number n) builder.setEndTimestamp(n.intValue());
+            if (data.get("receiveFlag") instanceof Number n)  builder.setReceiveFlag(n.intValue());
+            if (data.get("openBoxNum") instanceof Number n)   builder.setOpenBoxNum(n.intValue());
+            if (data.get("boxLevel") instanceof Number n)     builder.setBoxLevel(n.intValue());
+        }
+        Emitters.emit(session, 2163, builder.build().toByteArray());
+    }
+
+    private void emitNewAreaPreferentialInfo(PlayerSession session, Map<String, Object> data) {
+        Msgopenserveractivity.PB_SCNewAreaPreferentialInfo.Builder builder =
+                Msgopenserveractivity.PB_SCNewAreaPreferentialInfo.newBuilder();
+        if (data != null && data.get("endTimestamp") instanceof Number n) {
+            builder.setEndTimestamp(n.intValue());
+        }
+        Emitters.emit(session, 2165, builder.build().toByteArray());
+    }
+
+    private void emitMarketShopInfo(PlayerSession session, Map<String, Object> data) {
+        Msgopenserveractivity.PB_SCMarketShopInfo.Builder builder =
+                Msgopenserveractivity.PB_SCMarketShopInfo.newBuilder();
+        if (data != null) {
+            if (data.get("endTimestamp") instanceof Number n)      builder.setEndTimestamp(n.intValue());
+            if (data.get("nextFreeRefresh") instanceof Number n)   builder.setNextFreeRefreshTimestamp(n.intValue());
+            if (data.get("nextAutoRefresh") instanceof Number n)   builder.setNextAutoRefreshTimestamp(n.intValue());
+            if (data.get("curShopGroup") instanceof Number n)      builder.setCurShopGroup(n.intValue());
+            if (data.get("randomCnts") instanceof Number n)        builder.setRandomCnts(n.intValue());
+        }
+        Emitters.emit(session, 2167, builder.build().toByteArray());
+    }
+
     // 2160 → 2161 PB_SCSevenDaySignInfo
     private void handleSevenDaySign(PlayerSession session, Long roleId, byte[] payload) throws Exception {
         Msgopenserveractivity.PB_CSSevenDaySignReq req =
@@ -70,15 +137,7 @@ public class OpenServerActivityHandler implements MessageHandler {
         Map<String, Object> data = (op == OP_CLAIM)
                 ? activityFeign.claimSevenDay(String.valueOf(roleId), param1)
                 : activityFeign.getSevenDay(String.valueOf(roleId));
-
-        Msgopenserveractivity.PB_SCSevenDaySignInfo.Builder builder =
-                Msgopenserveractivity.PB_SCSevenDaySignInfo.newBuilder();
-        if (data != null) {
-            if (data.get("endTimestamp") instanceof Number n) builder.setEndTimestamp(n.intValue());
-            if (data.get("days") instanceof Number n)         builder.setDays(n.intValue());
-            if (data.get("receiveFlag") instanceof Number n)  builder.setReceiveFlag(n.intValue());
-        }
-        Emitters.emit(session, 2161, builder.build().toByteArray());
+        emitSevenDayInfo(session, data);
     }
 
     // 2162 → 2163 PB_SCLuckUnpackingInfo
@@ -93,16 +152,7 @@ public class OpenServerActivityHandler implements MessageHandler {
         Map<String, Object> data = (op == OP_CLAIM)
                 ? activityFeign.claimLuck(String.valueOf(roleId), param1)
                 : activityFeign.getLuck(String.valueOf(roleId));
-
-        Msgopenserveractivity.PB_SCLuckUnpackingInfo.Builder builder =
-                Msgopenserveractivity.PB_SCLuckUnpackingInfo.newBuilder();
-        if (data != null) {
-            if (data.get("endTimestamp") instanceof Number n) builder.setEndTimestamp(n.intValue());
-            if (data.get("receiveFlag") instanceof Number n)  builder.setReceiveFlag(n.intValue());
-            if (data.get("openBoxNum") instanceof Number n)   builder.setOpenBoxNum(n.intValue());
-            if (data.get("boxLevel") instanceof Number n)     builder.setBoxLevel(n.intValue());
-        }
-        Emitters.emit(session, 2163, builder.build().toByteArray());
+        emitLuckUnpackingInfo(session, data);
     }
 
     // 2164 → 2165 PB_SCNewAreaPreferentialInfo
@@ -117,15 +167,7 @@ public class OpenServerActivityHandler implements MessageHandler {
         Map<String, Object> data = (op == OP_CLAIM)
                 ? activityFeign.buyNewArea(String.valueOf(roleId), param1)
                 : activityFeign.getNewArea(String.valueOf(roleId));
-
-        Msgopenserveractivity.PB_SCNewAreaPreferentialInfo.Builder builder =
-                Msgopenserveractivity.PB_SCNewAreaPreferentialInfo.newBuilder();
-        if (data != null) {
-            if (data.get("endTimestamp") instanceof Number n) builder.setEndTimestamp(n.intValue());
-            // buyTimesJson is stored as JSON string; we just send empty repeated for now
-            // since parsing requires Jackson here — the field is `repeated int32 buy_times`
-        }
-        Emitters.emit(session, 2165, builder.build().toByteArray());
+        emitNewAreaPreferentialInfo(session, data);
     }
 
     // 2166 → 2167 PB_SCMarketShopInfo
@@ -145,16 +187,6 @@ public class OpenServerActivityHandler implements MessageHandler {
         } else {
             data = activityFeign.getMarket(String.valueOf(roleId));
         }
-
-        Msgopenserveractivity.PB_SCMarketShopInfo.Builder builder =
-                Msgopenserveractivity.PB_SCMarketShopInfo.newBuilder();
-        if (data != null) {
-            if (data.get("endTimestamp") instanceof Number n)      builder.setEndTimestamp(n.intValue());
-            if (data.get("nextFreeRefresh") instanceof Number n)   builder.setNextFreeRefreshTimestamp(n.intValue());
-            if (data.get("nextAutoRefresh") instanceof Number n)   builder.setNextAutoRefreshTimestamp(n.intValue());
-            if (data.get("curShopGroup") instanceof Number n)      builder.setCurShopGroup(n.intValue());
-            if (data.get("randomCnts") instanceof Number n)        builder.setRandomCnts(n.intValue());
-        }
-        Emitters.emit(session, 2167, builder.build().toByteArray());
+        emitMarketShopInfo(session, data);
     }
 }

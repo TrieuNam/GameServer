@@ -1,0 +1,20 @@
+{
+  "serviceName" : "analytics-service",
+  "displayName" : "Analytics Service",
+  "phase" : "P3",
+  "port" : 8510,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-05T23:42:25.483+07:00  INFO 13292 --- [analytics-service] [    virtual-202] c.S.a.service.AnalyticsService           : Tracked event: WS_DISCONNECT for player: 2",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:41:15.510+07:00  INFO 13292 --- [analytics-service] [ntainer#5-0-C-1] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-analytics-service-group-8, groupId=analytics-service-group] Group coordinator localhost:29092 (id: 2147483646 rack: null) is unavailable or invalid due to cause: coordinator unavailable. isDisconnected: false. Rediscovery will be attempted.", "2026-04-05T23:41:15.510+07:00  INFO 13292 --- [analytics-service] [ntainer#5-0-C-1] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-analytics-service-group-8, groupId=analytics-service-group] Requesting disconnect from last known coordinator localhost:29092 (id: 2147483646 rack: null)", "2026-04-05T23:41:15.522+07:00  INFO 13292 --- [analytics-service] [tainer#12-0-C-1] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-analytics-service-group-10, groupId=analytics-service-group] Discovered group coordinator localhost:29092 (id: 2147483646 rack: null)", "2026-04-05T23:41:15.557+07:00  INFO 13292 --- [analytics-service] [ntainer#6-0-C-1] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-analytics-service-group-1, groupId=analytics-service-group] Discovered group coordinator localhost:29092 (id: 2147483646 rack: null)", "2026-04-05T23:41:15.564+07:00  INFO 13292 --- [analytics-service] [tainer#13-0-C-1] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-analytics-service-group-14, groupId=analytics-service-group] Discovered group coordinator localhost:29092 (id: 2147483646 rack: null)", "2026-04-05T23:41:15.579+07:00  INFO 13292 --- [analytics-service] [ntainer#0-0-C-1] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-analytics-service-group-11, groupId=analytics-service-group] Discovered group coordinator localhost:29092 (id: 2147483646 rack: null)", "2026-04-05T23:41:15.622+07:00  INFO 13292 --- [analytics-service] [ntainer#5-0-C-1] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-analytics-service-group-8, groupId=analytics-service-group] Discovered group coordinator localhost:29092 (id: 2147483646 rack: null)", "2026-04-05T23:41:15.633+07:00  INFO 13292 --- [analytics-service] [ntainer#2-0-C-1] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-analytics-service-group-5, groupId=analytics-service-group] Discovered group coordinator localhost:29092 (id: 2147483646 rack: null)", "2026-04-05T23:41:15.637+07:00  INFO 13292 --- [analytics-service] [ntainer#8-0-C-1] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-analytics-service-group-3, groupId=analytics-service-group] Discovered group coordinator localhost:29092 (id: 2147483646 rack: null)", "2026-04-05T23:41:15.822+07:00  INFO 13292 --- [analytics-service] [ntainer#9-0-C-1] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-analytics-service-group-4, groupId=analytics-service-group] Discovered group coordinator localhost:29092 (id: 2147483646 rack: null)", "2026-04-05T23:42:23.855+07:00  INFO 13292 --- [analytics-service] [    virtual-201] c.S.a.service.AnalyticsService           : Tracked event: MSG_DISPATCH for player: 2", "2026-04-05T23:42:25.483+07:00  INFO 13292 --- [analytics-service] [    virtual-202] c.S.a.service.AnalyticsService           : Tracked event: WS_DISCONNECT for player: 2" ],
+  "lastUpdated" : "2026-04-05T23:42:58.8800488"
+}

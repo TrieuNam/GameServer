@@ -409,6 +409,23 @@ class BoxServiceTest {
             then(walletFeign).should().batchAdd(any());
             then(roleFeign).should().addExp(any());
         }
+
+        @Test
+        @DisplayName("TC-BOX-004D [P] Redis compare-state miss nhung DB con pendingJson hop le thi van mac duoc")
+        void wear_missingCompareState_usesPendingJsonFromDb() {
+            BoxState state = buildState();
+            state.setPendingJson("{\"kind\":\"equip\",\"itemId\":100,\"equipType\":1,\"quality\":4,\"equipLevel\":1,\"hp\":100,\"attack\":50,\"defend\":20,\"speed\":10,\"isNew\":true}");
+            given(boxRepo.findById(ROLE_ID)).willReturn(Optional.of(state));
+            given(compareStateRepo.find(ROLE_ID)).willReturn(Optional.empty());
+            given(equipFeign.wearFromBox(any())).willReturn(EquipDTOs.WearFromBoxResp.builder().build());
+
+            BoxDTOs.OkResp result = boxService.wear(ROLE_ID);
+
+            assertThat(result.isOk()).isTrue();
+            assertThat(result.getMessage()).isEqualTo("OK");
+            assertThat(state.getPendingJson()).isNull();
+            then(compareStateRepo).should().delete(ROLE_ID);
+        }
     }
 
     @Nested
@@ -418,18 +435,18 @@ class BoxServiceTest {
         @BeforeEach
         void setupOpenDefaults() {
             ReflectionTestUtils.setField(boxService, "unpackItemIdFallback", 5000);
-            given(bag.consume(any())).willReturn(org.SouthMillion.dto.bag.BagOkResp.builder().succeeded(true).build());
-            given(unpackCfg.other()).willReturn(List.of(Map.of("unpack_item_id", "5000")));
-            given(unpackCfg.fixedReward()).willReturn(List.of(Map.of("box_oder", "11", "item_id", "100")));
+            Mockito.lenient().when(bag.consume(any())).thenReturn(org.SouthMillion.dto.bag.BagOkResp.builder().succeeded(true).build());
+            Mockito.lenient().when(unpackCfg.other()).thenReturn(List.of(Map.of("unpack_item_id", "5000")));
+            Mockito.lenient().when(unpackCfg.fixedReward()).thenReturn(List.of(Map.of("box_oder", "11", "item_id", "100")));
             Mockito.lenient().when(unpackCfg.shizhuangRate()).thenReturn(List.of());
-            given(equipIdx.isEquipId(100)).willReturn(true);
-            given(equipIdx.findPQLById(100)).willReturn(Optional.of(new int[]{1, 4}));
-            given(equipIdx.resolve(1, 4, 1)).willReturn(Optional.of(100));
-            given(equipIdx.rowOf(100)).willReturn(Optional.of(buildEquipRow(100, 1, 4, 1)));
-            given(equipIdx.statsJsonOf(100)).willReturn(Optional.empty());
-            given(equipIdx.allFieldsCanonicalOf(100)).willReturn(Optional.empty());
-            given(equipIdx.allFieldsRawStringsOf(100)).willReturn(Optional.empty());
-            given(equipIdx.getIdxPreferred()).willReturn(Map.of());
+            Mockito.lenient().when(equipIdx.isEquipId(100)).thenReturn(true);
+            Mockito.lenient().when(equipIdx.findPQLById(100)).thenReturn(Optional.of(new int[]{1, 4}));
+            Mockito.lenient().when(equipIdx.resolve(1, 4, 1)).thenReturn(Optional.of(100));
+            Mockito.lenient().when(equipIdx.rowOf(100)).thenReturn(Optional.of(buildEquipRow(100, 1, 4, 1)));
+            Mockito.lenient().when(equipIdx.statsJsonOf(100)).thenReturn(Optional.empty());
+            Mockito.lenient().when(equipIdx.allFieldsCanonicalOf(100)).thenReturn(Optional.empty());
+            Mockito.lenient().when(equipIdx.allFieldsRawStringsOf(100)).thenReturn(Optional.empty());
+            Mockito.lenient().when(equipIdx.getIdxPreferred()).thenReturn(Map.of());
         }
 
         @Test
@@ -465,6 +482,79 @@ class BoxServiceTest {
         }
 
         @Test
+        @DisplayName("TC-BOX-026A [P] Open phai uu tien snapshot nhanh va khong goi list full-equip neu snapshot da co du lieu")
+        void open_prefersSnapshotAndSkipsListWhenAvailable() {
+            BoxState state = buildState();
+            given(boxRepo.findByRoleIdForUpdate(ROLE_ID)).willReturn(Optional.of(state));
+            given(boxRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+            given(equipFeign.snapshot(ROLE_ID, 1)).willReturn(buildEquipItem(200, 1));
+
+            BoxDTOs.OpenReq req = new BoxDTOs.OpenReq();
+            req.setRoleId(String.valueOf(ROLE_ID));
+            req.setCount(1);
+            req.setRoleLevel(1);
+
+            BoxDTOs.OpenResp result = boxService.open(req);
+
+            assertThat(result).isNotNull();
+            assertThat(result.getCompareState()).isNotNull();
+            assertThat(result.getCompareState().getEquippedBefore()).isNotNull();
+            assertThat(result.getCompareState().getEquippedBefore().getItemId()).isEqualTo(200);
+            then(equipFeign).should(never()).list(String.valueOf(ROLE_ID));
+        }
+
+        @Test
+        @DisplayName("TC-BOX-026B [P] Open phai dung hinted roleLevel, khong goi role-service detail tren hot path")
+        void open_usesHintedRoleLevelWithoutCallingRoleService() {
+            BoxState state = buildState();
+            given(boxRepo.findByRoleIdForUpdate(ROLE_ID)).willReturn(Optional.of(state));
+            given(boxRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+            Mockito.lenient().when(roleFeign.detail(String.valueOf(ROLE_ID)))
+                    .thenThrow(new AssertionError("role.detail should not be called when roleLevel hint is present"));
+
+            BoxDTOs.OpenReq req = new BoxDTOs.OpenReq();
+            req.setRoleId(String.valueOf(ROLE_ID));
+            req.setCount(1);
+            req.setRoleLevel(7);
+
+            BoxDTOs.OpenResp result = boxService.open(req);
+
+            assertThat(result).isNotNull();
+            then(roleFeign).should(never()).detail(String.valueOf(ROLE_ID));
+        }
+
+        @Test
+        @DisplayName("TC-BOX-026C [P] Compare lookup cham thi open van tiep tuc voi trang thai incomplete")
+        void open_slowCompareLookupFallsBackWithoutBlocking() {
+            BoxState state = buildState();
+            ReflectionTestUtils.setField(boxService, "compareLookupTimeoutMs", 10L);
+            given(boxRepo.findByRoleIdForUpdate(ROLE_ID)).willReturn(Optional.of(state));
+            given(boxRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+            given(equipFeign.snapshot(ROLE_ID, 1)).willAnswer(inv -> {
+                try {
+                    Thread.sleep(80L);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+                return buildEquipItem(200, 1);
+            });
+
+            BoxDTOs.OpenReq req = new BoxDTOs.OpenReq();
+            req.setRoleId(String.valueOf(ROLE_ID));
+            req.setCount(1);
+            req.setRoleLevel(1);
+
+            long startedAt = System.currentTimeMillis();
+            BoxDTOs.OpenResp result = boxService.open(req);
+            long elapsedMs = System.currentTimeMillis() - startedAt;
+
+            assertThat(result).isNotNull();
+            assertThat(result.getCompareState()).isNotNull();
+            assertThat(result.getCompareState().getStatus()).isEqualTo("PENDING_COMPARE_INCOMPLETE");
+            assertThat(elapsedMs).isLessThan(500L);
+        }
+
+        @Test
         @DisplayName("TC-BOX-027 [P] Open theo flow cu khong con dung snapshot/list current equip de compare")
         void open_legacyFlow_doesNotCreateCompareStateWhenCurrentEquipLookupFails() {
             BoxState state = buildState();
@@ -489,10 +579,10 @@ class BoxServiceTest {
         }
 
         @Test
-        @DisplayName("TC-BOX-028 [P] Redis compare-state het TTL thi bo stale pendingJson va mo hop moi")
-        void open_expiredCompareState_clearsStalePendingAndContinues() {
+        @DisplayName("TC-BOX-028 [P] Redis compare-state miss thi fallback sang DB pendingJson, khong nuot pending va khong mo hop moi")
+        void open_missingCompareState_usesPendingJsonFromDb() {
             BoxState state = buildState();
-            state.setPendingJson("{\"kind\":\"equip\",\"itemId\":999,\"equipType\":1,\"quality\":4,\"equipLevel\":1}");
+            state.setPendingJson("{\"kind\":\"equip\",\"itemId\":100,\"equipType\":1,\"quality\":4,\"equipLevel\":1,\"hp\":100,\"attack\":50,\"defend\":20,\"speed\":10,\"isNew\":true}");
             given(boxRepo.findByRoleIdForUpdate(ROLE_ID)).willReturn(Optional.of(state));
             given(boxRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
             given(compareStateRepo.find(ROLE_ID)).willReturn(Optional.empty());
@@ -505,11 +595,10 @@ class BoxServiceTest {
             BoxDTOs.OpenResp result = boxService.open(req);
 
             assertThat(result).isNotNull();
-            assertThat(result.getOpenEquip()).isNotNull();
-            assertThat(result.getOpenEquip().getItemId()).isEqualTo(100);
+            assertThat(result.getOpenEquip()).isNull();
             assertThat(result.getPending()).isNotNull();
             assertThat(result.getPending().get("itemId")).isEqualTo(100);
-            then(bag).should().consume(any());
+            then(bag).should(never()).consume(any());
         }
 
         @Test
@@ -530,8 +619,6 @@ class BoxServiceTest {
                                     .equipLevel(1)
                                     .build())
                             .build()));
-            given(equipIdx.isEquipId(1)).willReturn(false);
-
             BoxDTOs.OpenReq req = new BoxDTOs.OpenReq();
             req.setRoleId(String.valueOf(ROLE_ID));
             req.setCount(1);
@@ -546,6 +633,31 @@ class BoxServiceTest {
             assertThat(result.getPending().get("itemId")).isEqualTo(100);
             then(compareStateRepo).should().delete(ROLE_ID);
             then(bag).should().consume(any());
+        }
+
+        @Test
+        @DisplayName("TC-BOX-029A [P] getCompareState phai reject itemId=1 du index tra nham la equip")
+        void getCompareState_itemIdOneAlwaysClearsAsInvalid() {
+            BoxState state = buildState();
+            state.setPendingJson("{\"kind\":\"equip\",\"itemId\":1,\"equipType\":1,\"quality\":4,\"equipLevel\":1}");
+            given(boxRepo.findById(ROLE_ID)).willReturn(Optional.of(state));
+            given(boxRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+            given(compareStateRepo.find(ROLE_ID)).willReturn(Optional.of(
+                    BoxDTOs.BoxCompareStateResp.builder()
+                            .roleId(ROLE_ID)
+                            .status("PENDING_COMPARE")
+                            .candidateEquip(BoxDTOs.BoxCompareSnapshotDTO.builder()
+                                    .itemId(1)
+                                    .equipType(1)
+                                    .quality(4)
+                                    .equipLevel(1)
+                                    .build())
+                            .build()));
+            BoxDTOs.BoxCompareStateResp result = boxService.getCompareState(ROLE_ID);
+
+            assertThat(result).isNull();
+            assertThat(state.getPendingJson()).isNull();
+            then(compareStateRepo).should().delete(ROLE_ID);
         }
     }
 

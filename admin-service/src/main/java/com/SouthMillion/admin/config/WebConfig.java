@@ -31,5 +31,6 @@ public class WebConfig implements WebMvcConfigurer, Ordered {
     public void addViewControllers(ViewControllerRegistry registry) {
         // Forward root to control-panel.html
         registry.addViewController("/").setViewName("forward:/control-panel.html");
+        registry.addViewController("/doctor").setViewName("forward:/doctor.html");
     }
 }

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping(value = "/internal/equip", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = {"/internal/equip", "/api/equip/internal"}, produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 public class InternalEquipController {
 

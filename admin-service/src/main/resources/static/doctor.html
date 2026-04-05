@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Doctor Dashboard</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .hero {
+            background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+        }
+        .hero h1 { margin: 0 0 8px; }
+        .hero p { margin: 0; opacity: 0.9; }
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 18px 0;
+        }
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-primary { background: #22c55e; color: #052e16; }
+        .btn-secondary { background: #334155; color: white; }
+        .btn-approve { background: #facc15; color: #422006; }
+        .btn-reject { background: #fb7185; color: white; }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .stat-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 14px;
+            padding: 14px;
+        }
+        .stat-card .value { font-size: 28px; font-weight: 800; }
+        .card {
+            background: #111827;
+            border-radius: 16px;
+            border: 1px solid #1f2937;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+        table {
+            width: 100%;
+            min-width: 1180px;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        th, td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #1f2937;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #0b1220;
+            color: #93c5fd;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        tr:hover td { background: #0b1220; }
+        .badge {
+            display: inline-block;
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .IDLE, .STOPPED { background: #334155; color: #e2e8f0; }
+        .WAITING, .STARTING, .STOPPING { background: #f59e0b; color: #111827; }
+        .STARTED, .RUNNING, .VERIFIED { background: #22c55e; color: #052e16; }
+        .ERROR, .FAILED { background: #ef4444; color: white; }
+        .NEEDS_APPROVAL { background: #fb7185; color: white; }
+        .APPROVED { background: #38bdf8; color: #082f49; }
+        .REJECTED { background: #94a3b8; color: #111827; }
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-width: 220px;
+        }
+        .summary-text {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        th:nth-child(1), td:nth-child(1) { width: 180px; }
+        th:nth-child(2), td:nth-child(2) { width: 72px; }
+        th:nth-child(3), td:nth-child(3) { width: 95px; }
+        th:nth-child(4), td:nth-child(4) { width: 46%; }
+        th:nth-child(5), td:nth-child(5) { width: 120px; }
+        th:nth-child(6), td:nth-child(6) { width: 240px; }
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+        .log-box {
+            margin-top: 18px;
+            background: #020617;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            padding: 12px;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #cbd5e1;
+            font-family: Consolas, monospace;
+            font-size: 12px;
+        }
+        .muted { color: #94a3b8; }
+        a { color: #93c5fd; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="hero">
+        <h1>🩺 Service Doctor Dashboard</h1>
+        <p>Giám sát log service real-time, cảnh báo lỗi startup/runtime (kể cả khi service vẫn RUNNING), hỗ trợ bật/tắt auto approval và chạy auto fix + restart nhanh hơn.</p>
+    </div>
+
+    <div class="toolbar">
+        <button class="btn btn-primary" onclick="loadSessions()">Refresh now</button>
+        <button class="btn btn-secondary" id="autoApprovalButton" onclick="toggleAutoApproval()">Auto Approval: OFF</button>
+        <button class="btn btn-secondary" onclick="window.location.href='/control-panel.html'">Open Control Panel</button>
+        <span class="muted" id="autoApprovalHint">Manual approval mode.</span>
+        <span class="muted">Auto refresh mỗi 5 giây.</span>
+    </div>
+
+    <div class="status-grid">
+        <div class="stat-card"><div class="muted">Total services</div><div class="value" id="totalCount">0</div></div>
+        <div class="stat-card"><div class="muted">Errors</div><div class="value" id="errorCount">0</div></div>
+        <div class="stat-card"><div class="muted">Waiting</div><div class="value" id="waitingCount">0</div></div>
+        <div class="stat-card"><div class="muted">Need approval</div><div class="value" id="approvalCount">0</div></div>
+        <div class="stat-card"><div class="muted">Healthy</div><div class="value" id="healthyCount">0</div></div>
+    </div>
+
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>Service</th>
+                <th>Phase</th>
+                <th>Status</th>
+                <th>Last error / summary</th>
+                <th>Updated</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody id="doctorRows">
+            <tr><td colspan="6" class="muted">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="log-box">
+        <div style="margin-bottom:8px;font-weight:700;">Recent logs</div>
+        <pre id="logOutput">Select a service to view recent logs.</pre>
+    </div>
+</div>
+
+<script>
+    let latestSessions = [];
+    let autoApprovalEnabled = false;
+
+    function badgeClass(status) {
+        return status || 'IDLE';
+    }
+
+    function escapeHtml(value) {
+        return (value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    async function postJson(url, body) {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: body ? JSON.stringify(body) : null
+        });
+        if (!response.ok) {
+            throw new Error('Request failed: ' + response.status);
+        }
+        return response.json();
+    }
+
+    function renderAutoApproval() {
+        const button = document.getElementById('autoApprovalButton');
+        const hint = document.getElementById('autoApprovalHint');
+        if (!button || !hint) {
+            return;
+        }
+
+        button.textContent = `Auto Approval: ${autoApprovalEnabled ? 'ON' : 'OFF'}`;
+        button.className = autoApprovalEnabled ? 'btn btn-approve' : 'btn btn-secondary';
+        hint.textContent = autoApprovalEnabled
+            ? 'Auto approval is ON. The doctor may continue auto fix / restart flows without waiting for per-service approval.'
+            : 'Manual approval mode.';
+    }
+
+    async function loadSessions() {
+        const tbody = document.getElementById('doctorRows');
+        try {
+            const [settingsResponse, sessionsResponse] = await Promise.all([
+                fetch('/api/doctor/sessions/settings'),
+                fetch('/api/doctor/sessions')
+            ]);
+            const settings = await settingsResponse.json();
+            autoApprovalEnabled = !!settings.autoApprovalEnabled;
+            renderAutoApproval();
+
+            latestSessions = await sessionsResponse.json();
+            renderSessions(latestSessions);
+        } catch (error) {
+            tbody.innerHTML = `<tr><td colspan="6">Failed to load sessions: ${escapeHtml(error.message)}</td></tr>`;
+        }
+    }
+
+    function renderSessions(sessions) {
+        const tbody = document.getElementById('doctorRows');
+        document.getElementById('totalCount').innerText = sessions.length;
+        document.getElementById('errorCount').innerText = sessions.filter(s => ['ERROR', 'FAILED', 'NEEDS_APPROVAL'].includes(s.doctorStatus)).length;
+        document.getElementById('waitingCount').innerText = sessions.filter(s => ['WAITING'].includes(s.doctorStatus)).length;
+        document.getElementById('approvalCount').innerText = sessions.filter(s => s.approvalRequired).length;
+        document.getElementById('healthyCount').innerText = sessions.filter(s => ['STARTED', 'VERIFIED'].includes(s.doctorStatus)).length;
+
+        if (!sessions.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="muted">No services found.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = sessions.map(session => `
+            <tr>
+                <td>
+                    <strong>${escapeHtml(session.displayName || session.serviceName)}</strong><br>
+                    <span class="muted">${escapeHtml(session.serviceName)}:${session.port ?? '-'}</span>
+                </td>
+                <td>${escapeHtml(session.phase || '-')}</td>
+                <td>
+                    <div><span class="badge ${badgeClass(session.serviceStatus)}">${escapeHtml(session.serviceStatus)}</span></div>
+                    <div style="margin-top:6px;"><span class="badge ${badgeClass(session.doctorStatus)}">${escapeHtml(session.doctorStatus)}</span></div>
+                </td>
+                <td>
+                    <div class="summary-text"><strong>${escapeHtml(session.lastErrorType || 'No issue')}</strong></div>
+                    <div class="muted summary-text">${escapeHtml(session.lastErrorSummary || 'Service is idle')}</div>
+                    ${session.decisionNote ? `<div class="summary-text" style="margin-top:6px;color:#fcd34d;">${escapeHtml(session.decisionNote)}</div>` : ''}
+                    ${session.promptFile ? `<div class="muted summary-text" style="margin-top:6px;">Prompt: ${escapeHtml(session.promptFile)}</div>` : ''}
+                    ${session.reportFile ? `<div class="muted summary-text">Artifact: ${escapeHtml(session.reportFile)}</div>` : ''}
+                    ${session.lastCommand ? `<div class="muted summary-text">Cmd: ${escapeHtml(session.lastCommand)}</div>` : ''}
+                </td>
+                <td>${escapeHtml(session.lastUpdated || '-')}</td>
+                <td>
+                    <div class="actions">
+                        <button class="btn btn-secondary" onclick="watchService('${session.serviceName}')">Watch</button>
+                        <button class="btn btn-secondary" onclick="showLogs('${session.serviceName}')">Logs</button>
+                        <button class="btn btn-approve" ${session.approvalRequired && !session.autoApprovalEnabled ? '' : 'disabled'} onclick="approveService('${session.serviceName}')">Approve Once</button>
+                        <button class="btn btn-primary" ${session.autoApprovalEnabled || session.copilotReady ? '' : (session.approvalRequired ? 'disabled' : '')} onclick="runAutoFix('${session.serviceName}')">Auto Fix & Restart</button>
+                        <button class="btn btn-primary" ${session.copilotReady ? '' : 'disabled'} onclick="prepareFix('${session.serviceName}')">Prepare Copilot</button>
+                        <button class="btn btn-secondary" onclick="retryBuild('${session.serviceName}')">Build Verify</button>
+                        <button class="btn btn-reject" onclick="rejectService('${session.serviceName}')">Reject</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    async function watchService(serviceName) {
+        await postJson(`/api/doctor/sessions/${serviceName}/watch`);
+        await loadSessions();
+        showLogs(serviceName);
+    }
+
+    async function toggleAutoApproval() {
+        const enabled = !autoApprovalEnabled;
+        await postJson('/api/doctor/sessions/settings/auto-approval', { enabled });
+        autoApprovalEnabled = enabled;
+        renderAutoApproval();
+        await loadSessions();
+    }
+
+    async function approveService(serviceName) {
+        const notes = prompt(`Approval note for ${serviceName}:`, 'Approved from Service Doctor UI');
+        await postJson(`/api/doctor/sessions/${serviceName}/approve`, { notes });
+        await loadSessions();
+        showLogs(serviceName);
+    }
+
+    async function runAutoFix(serviceName) {
+        const notes = prompt(`Auto fix note for ${serviceName}:`, 'Auto fix, build verify, and restart from Service Doctor UI');
+        const session = latestSessions.find(item => item.serviceName === serviceName);
+        await postJson(`/api/doctor/sessions/${serviceName}/auto-fix`, {
+            notes,
+            errorType: session?.lastErrorType || null,
+            errorSummary: session?.lastErrorSummary || null,
+            errorLogs: session?.recentLogs || []
+        });
+        await loadSessions();
+        showLogs(serviceName);
+    }
+
+    async function rejectService(serviceName) {
+        const notes = prompt(`Reject note for ${serviceName}:`, 'Rejected from Service Doctor UI');
+        await postJson(`/api/doctor/sessions/${serviceName}/reject`, { notes });
+        await loadSessions();
+        showLogs(serviceName);
+    }
+
+    async function prepareFix(serviceName) {
+        const notes = prompt(`Copilot preparation note for ${serviceName}:`, 'Prepare Copilot prompt from Service Doctor UI');
+        await postJson(`/api/doctor/sessions/${serviceName}/prepare-fix`, { notes });
+        await loadSessions();
+        showLogs(serviceName);
+    }
+
+    async function retryBuild(serviceName) {
+        const notes = prompt(`Build verification note for ${serviceName}:`, 'Run build verification from Service Doctor UI');
+        await postJson(`/api/doctor/sessions/${serviceName}/retry-build`, { notes });
+        await loadSessions();
+        showLogs(serviceName);
+    }
+
+    function showLogs(serviceName) {
+        const session = latestSessions.find(item => item.serviceName === serviceName);
+        const logs = session?.recentLogs?.length ? session.recentLogs.join('\n') : 'No recent logs captured for this service yet.';
+        document.getElementById('logOutput').textContent = `[${serviceName}]\n\n${logs}`;
+    }
+
+    loadSessions();
+    setInterval(loadSessions, 5000);
+</script>
+</body>
+</html>

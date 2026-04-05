@@ -57,12 +57,14 @@ public class BagDomainService {
 
     // ====== Grant/Add ======
     @Transactional
+    @CacheEvict(cacheNames = "bag:items", key = "#roleId")
     public List<BagDTOs.ItemView> grant(String userId, Long roleId,
                                         List<BagDTOs.GrantItem> items, String eventId) {
         return grant(userId, roleId, items, eventId, true);
     }
 
     @Transactional
+    @CacheEvict(cacheNames = "bag:items", key = "#roleId")
     public List<BagDTOs.ItemView> grant(String userId, Long roleId,
                                         List<BagDTOs.GrantItem> items, String eventId,
                                         boolean publishChangedEvent) {

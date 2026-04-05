@@ -127,8 +127,16 @@ public class SkillConfigCache {
                 if (json != null && !json.isBlank()) {
                     log.debug("[SkillConfigCache] Redis HIT path={}", singleSkillPath);
                     Map<Integer, Integer> maxLevels = parseSingleSkill(json);
-                    singleSkillMaxLevels.set(maxLevels);
-                    return true;
+                    if (!maxLevels.isEmpty()) {
+                        singleSkillMaxLevels.set(maxLevels);
+                        touchRedisKey(redisKey);
+                        return true;
+                    }
+                    try {
+                        redis.delete(redisKey);
+                    } catch (Exception ignored) {
+                        // ignore invalid-cache cleanup failure
+                    }
                 }
                 log.debug("[SkillConfigCache] Redis MISS path={}, calling config-service", singleSkillPath);
             }
@@ -171,8 +179,16 @@ public class SkillConfigCache {
                 if (json != null && !json.isBlank()) {
                     log.debug("[SkillConfigCache] Redis HIT path={}", passiveSkillPath);
                     Map<Integer, Integer> maxLevels = parsePassiveSkill(json);
-                    passiveSkillMaxLevels.set(maxLevels);
-                    return true;
+                    if (!maxLevels.isEmpty()) {
+                        passiveSkillMaxLevels.set(maxLevels);
+                        touchRedisKey(redisKey);
+                        return true;
+                    }
+                    try {
+                        redis.delete(redisKey);
+                    } catch (Exception ignored) {
+                        // ignore invalid-cache cleanup failure
+                    }
                 }
                 log.debug("[SkillConfigCache] Redis MISS path={}, calling config-service", passiveSkillPath);
             }
@@ -334,6 +350,17 @@ public class SkillConfigCache {
     private void updateEtag(ResponseEntity<byte[]> res, AtomicReference<String> etagRef) {
         String et = res.getHeaders().getFirst(HttpHeaders.ETAG);
         if (StringUtils.hasText(et)) etagRef.set(et);
+    }
+
+    private void touchRedisKey(String redisKey) {
+        if (!redisEnabled || redisKey == null || redisKey.isBlank() || redisTtlHours <= 0) {
+            return;
+        }
+        try {
+            redis.expire(redisKey, redisTtlHours, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.debug("[SkillConfigCache] redis ttl touch failed key={} ex={}", redisKey, e.toString());
+        }
     }
 
     private String toRedisKey(String path) {

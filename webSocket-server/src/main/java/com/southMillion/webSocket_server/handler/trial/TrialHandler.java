@@ -6,13 +6,19 @@ import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.grpc.TrialGrpcClient;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
+import com.SouthMillion.webSocket_server.service.client.BagFeign;
+import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.SouthMillion.dto.bag.BagDTOs;
+import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,6 +35,8 @@ public class TrialHandler implements MessageHandler {
     private final ObjectMapper objectMapper;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;
+    private final BagFeign bagFeign;
+    private final WalletHttpClient walletHttpClient;
 
     // Trial operation constants
     private static final int OP_GET_DATA = 0;           // Get trial data
@@ -84,7 +92,7 @@ public class TrialHandler implements MessageHandler {
 
                 case OP_CLAIM_REWARD:
                     int stageId = parseStageId(payload);
-                    result = handleClaimReward(roleId, trialId, stageId);
+                    result = handleClaimReward(session, roleId, trialId, stageId);
                     break;
 
                 case OP_RESET_PROGRESS:
@@ -216,12 +224,15 @@ public class TrialHandler implements MessageHandler {
     /**
      * OP5: Claim reward for a stage
      */
-    private Map<String, Object> handleClaimReward(Long roleId, Integer trialId, Integer stageId) {
+    private Map<String, Object> handleClaimReward(PlayerSession session, Long roleId, Integer trialId, Integer stageId) {
         try {
             log.debug("[trial] Claiming reward: roleId={}, trialId={}, stageId={}", roleId, trialId, stageId);
             Map<String, Object> result = trialGrpcClient.claimReward(roleId, trialId, stageId);
             if (result == null) {
                 return Map.of("success", false, "error", "Claim reward failed");
+            }
+            if (rewardClaimed(result)) {
+                syncPostClaimState(session, roleId);
             }
             return result;
         } catch (Exception e) {
@@ -264,6 +275,64 @@ public class TrialHandler implements MessageHandler {
             log.error("[trial] Error getting best record", e);
             return Map.of("success", false, "error", e.getMessage());
         }
+    }
+
+    private void syncPostClaimState(PlayerSession session, Long roleId) {
+        pushBagState(session, roleId);
+        pushWalletBalance(session, roleId);
+
+        Mono.delay(Duration.ofMillis(250))
+                .onErrorResume(ex -> Mono.empty())
+                .subscribe(ignored -> {
+                    pushBagState(session, roleId);
+                    pushWalletBalance(session, roleId);
+                });
+    }
+
+    private void pushBagState(PlayerSession session, Long roleId) {
+        if (roleId == null) {
+            return;
+        }
+        try {
+            List<BagDTOs.ItemView> list = bagFeign.list(String.valueOf(roleId));
+            Emitters.sendKnapsackAllInfo(session, list);
+        } catch (Exception e) {
+            log.warn("[trial] Failed to push bag state for roleId={}: {}", roleId, e.getMessage());
+        }
+    }
+
+    private void pushWalletBalance(PlayerSession session, Long roleId) {
+        if (roleId == null) {
+            return;
+        }
+        try {
+            WalletDTOs.BalancesResp walletResp = walletHttpClient.info(String.valueOf(roleId));
+            if (walletResp != null && walletResp.balances() != null) {
+                Emitters.sendWalletBalances(session, walletResp.balances());
+            }
+        } catch (Exception e) {
+            log.warn("[trial] Failed to push wallet balance for roleId={}: {}", roleId, e.getMessage());
+        }
+    }
+
+    private boolean rewardClaimed(Map<String, Object> result) {
+        if (result == null) {
+            return false;
+        }
+        Object success = result.get("success");
+        if (success instanceof Boolean ok) {
+            return ok;
+        }
+        Object claimed = result.get("claimed");
+        if (claimed instanceof Boolean ok) {
+            return ok;
+        }
+        Object code = result.get("code");
+        if (code instanceof Number number) {
+            int value = number.intValue();
+            return value == 0 || value == 200;
+        }
+        return true;
     }
 
     // Helper methods for parsing payload

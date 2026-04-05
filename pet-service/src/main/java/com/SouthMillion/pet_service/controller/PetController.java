@@ -8,7 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Pet REST Controller
@@ -31,9 +33,23 @@ public class PetController {
      * Called on user login
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<PetAllInfoResponse> getAllPetInfo(@PathVariable String userId) {
+    public ResponseEntity<Map<String, Object>> getAllPetInfo(@PathVariable String userId) {
         log.debug("GET /api/pet/{}", userId);
-        PetAllInfoResponse response = petService.getAllPetInfo(userId);
+        PetAllInfoResponse info = petService.getAllPetInfo(userId);
+
+        List<PetDataDTO> petList = info.getPetList() != null ? info.getPetList() : List.of();
+        List<Integer> fightPetIndex = info.getFightPetIndex() != null ? info.getFightPetIndex() : List.of();
+        List<TSGemDataDTO> tsGemList = info.getTsGemList() != null ? info.getTsGemList() : List.of();
+        List<ClothDataDTO> clothList = info.getClothList() != null ? info.getClothList() : List.of();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("hasData", !petList.isEmpty() || !tsGemList.isEmpty() || !clothList.isEmpty());
+        response.put("fightPetIndex", fightPetIndex);
+        response.put("petList", petList);
+        response.put("pets", petList);
+        response.put("tsGemList", tsGemList);
+        response.put("clothList", clothList);
         return ResponseEntity.ok(response);
     }
 

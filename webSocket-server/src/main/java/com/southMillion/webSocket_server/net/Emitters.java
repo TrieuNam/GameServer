@@ -101,6 +101,13 @@ public class Emitters {
      * Role bootstrap (tối thiểu)
      * ========================================================= */
     public static void sendRoleInfoAck(PlayerSession ps, RoleDTOs.RoleResp r) {
+        sendRoleInfoAck(ps, r, Msgrole.PB_Appearance.newBuilder()
+                .setSurfaceMount(-1)
+                .setSurfaceAngel(-1)
+                .build());
+    }
+
+    public static void sendRoleInfoAck(PlayerSession ps, RoleDTOs.RoleResp r, Msgrole.PB_Appearance appearance) {
         if (r == null) return;
 
         var role = Msgrole.PB_RoleInfo.newBuilder()
@@ -119,7 +126,9 @@ public class Emitters {
                 .setCurExp(safeParseLong(r.getCurExp(), 0L))
                 .setCreateTime(safeParseLong(r.getCreateTimeEpochSec(), 0L))
                 .setRoleinfo(role)
-                // Appearance có thể để trống (optional)
+                .setAppearance(appearance != null
+                        ? appearance
+                        : Msgrole.PB_Appearance.newBuilder().setSurfaceMount(-1).setSurfaceAngel(-1).build())
                 .build();
 
         emit(ps, MsgIds.SC_ROLE_INFO_ACK, ack.toByteArray());

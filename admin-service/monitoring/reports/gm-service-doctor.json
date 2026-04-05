@@ -1,0 +1,20 @@
+{
+  "serviceName" : "gm-service",
+  "displayName" : "GM Service",
+  "phase" : "SPECIAL",
+  "port" : 9093,
+  "serviceStatus" : "STOPPED",
+  "doctorStatus" : "IDLE",
+  "watched" : false,
+  "approvalRequired" : false,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : null,
+  "lastErrorSummary" : "Service is currently stopped",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ ],
+  "lastUpdated" : "2026-04-05T23:42:59.0745047"
+}

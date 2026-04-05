@@ -20,11 +20,28 @@ class CombatServiceTest {
         PlayerStats s = new PlayerStats();
         s.setPlayerId(id);
         s.setHp(hp);
+        s.setMaxHp(hp);
         s.setAttack(atk);
         s.setDefense(def);
         s.setCritRate(critRate);
         s.setCritDamage(critDmg);
         s.setSpeed(speed);
+        s.setVampiric(0);
+        s.setVampiricImmunity(0);
+        s.setCounter(0);
+        s.setCounterImmunity(0);
+        s.setCombo(0);
+        s.setComboImmunity(0);
+        s.setEvasion(0);
+        s.setEvasionImmunity(0);
+        s.setCriticalImmunity(0);
+        s.setStun(0);
+        s.setStunImmunity(0);
+        s.setTyranny(0);
+        s.setBenevolence(0);
+        s.setMuddy(0);
+        s.setInterdiction(0);
+        s.setRejuvenation(0);
         return s;
     }
 
@@ -128,6 +145,164 @@ class CombatServiceTest {
             CombatResult result = combatService.calculateCombat(req);
 
             assertThat(result.getTotalRounds()).isLessThanOrEqualTo(10);
+        }
+
+        @Test
+        @DisplayName("TC-COMBAT-011 [P] Evasion attr cao – doi thu ne don danh")
+        void calculateCombat_highEvasion_marksDodgedRound() {
+            PlayerStats attacker = stats(10L, 500, 120, 10, 0, 200, 0);
+            PlayerStats defender = stats(11L, 500, 50, 10, 0, 200, 0);
+            defender.setEvasion(100);
+
+            CombatRequest req = new CombatRequest();
+            req.setAttackerId(10L);
+            req.setDefenderId(11L);
+            req.setAttacker(attacker);
+            req.setDefender(defender);
+
+            CombatResult result = combatService.calculateCombat(req);
+
+            assertThat(result.getCombatRounds())
+                    .anySatisfy(round -> {
+                        assertThat(round.getDodged()).isTrue();
+                        assertThat(round.getDamage()).isZero();
+                    });
+        }
+
+        @Test
+        @DisplayName("TC-COMBAT-012 [P] Vampiric attr – hoi mau theo sat thuong")
+        void calculateCombat_vampiricAttacker_healsAfterDamage() {
+            PlayerStats attacker = stats(12L, 400, 300, 0, 0, 200, 0);
+            attacker.setMaxHp(1000);
+            attacker.setVampiric(100);
+            PlayerStats defender = stats(13L, 200, 10, 0, 0, 200, 0);
+
+            CombatRequest req = new CombatRequest();
+            req.setAttackerId(12L);
+            req.setDefenderId(13L);
+            req.setAttacker(attacker);
+            req.setDefender(defender);
+
+            CombatResult result = combatService.calculateCombat(req);
+
+            assertThat(result.getAttackerFinalHp()).isGreaterThan(400);
+        }
+
+        @Test
+        @DisplayName("TC-COMBAT-013 [P] Stun attr – chan don phan cong ngay lap tuc")
+        void calculateCombat_stunSkipsImmediateCounter() {
+            PlayerStats attacker = stats(14L, 1000, 60, 0, 0, 200, 0);
+            attacker.setStun(100);
+            PlayerStats defender = stats(15L, 100, 500, 0, 0, 200, 0);
+
+            CombatRequest req = new CombatRequest();
+            req.setAttackerId(14L);
+            req.setDefenderId(15L);
+            req.setAttacker(attacker);
+            req.setDefender(defender);
+
+            CombatResult result = combatService.calculateCombat(req);
+
+            assertThat(result.getAttackerFinalHp()).isEqualTo(1000);
+        }
+
+        @Test
+        @DisplayName("TC-COMBAT-014 [P] Combo attr cao – ha muc tieu trong mot vong")
+        void calculateCombat_comboChainsFinishInOneRound() {
+            PlayerStats attacker = stats(16L, 1000, 100, 0, 0, 200, 50);
+            PlayerStats defender = stats(17L, 250, 10, 0, 0, 200, 10);
+
+            CombatRequest noComboReq = new CombatRequest();
+            noComboReq.setAttackerId(16L);
+            noComboReq.setDefenderId(17L);
+            noComboReq.setAttacker(attacker);
+            noComboReq.setDefender(defender);
+
+            CombatResult withoutCombo = combatService.calculateCombat(noComboReq);
+
+            attacker.setCombo(100);
+            CombatRequest comboReq = new CombatRequest();
+            comboReq.setAttackerId(16L);
+            comboReq.setDefenderId(17L);
+            comboReq.setAttacker(attacker);
+            comboReq.setDefender(stats(17L, 250, 10, 0, 0, 200, 10));
+
+            CombatResult withCombo = combatService.calculateCombat(comboReq);
+
+            assertThat(withoutCombo.getTotalRounds()).isGreaterThan(1);
+            assertThat(withCombo.getTotalRounds()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("TC-COMBAT-015 [P] Counter attr chi xuat hien khi co phan cong that")
+        void calculateCombat_counterOnlyAppearsWhenTriggered() {
+            PlayerStats attacker = stats(18L, 300, 60, 0, 0, 200, 20);
+            PlayerStats defender = stats(19L, 500, 40, 0, 0, 200, 20);
+
+            CombatRequest noCounterReq = new CombatRequest();
+            noCounterReq.setAttackerId(18L);
+            noCounterReq.setDefenderId(19L);
+            noCounterReq.setAttacker(attacker);
+            noCounterReq.setDefender(defender);
+
+            CombatResult withoutCounter = combatService.calculateCombat(noCounterReq);
+
+            defender.setCounter(100);
+            CombatRequest counterReq = new CombatRequest();
+            counterReq.setAttackerId(18L);
+            counterReq.setDefenderId(19L);
+            counterReq.setAttacker(stats(18L, 300, 60, 0, 0, 200, 20));
+            counterReq.setDefender(defender);
+
+            CombatResult withCounter = combatService.calculateCombat(counterReq);
+
+            assertThat(withoutCounter.getCombatRounds())
+                    .noneMatch(round -> "counter_attack".equals(round.getSkillId()));
+            assertThat(withCounter.getCombatRounds())
+                    .anyMatch(round -> "counter_attack".equals(round.getSkillId()));
+        }
+
+        @Test
+        @DisplayName("TC-COMBAT-016 [P] Rejuvenation attr – hoi mau vao vong 5")
+        void calculateCombat_rejuvenationHealsOnRoundFive() {
+            PlayerStats attacker = stats(20L, 1000, 50, 0, 0, 200, 50);
+            attacker.setRejuvenation(50);
+            PlayerStats defender = stats(21L, 1000, 50, 0, 0, 200, 50);
+
+            CombatRequest req = new CombatRequest();
+            req.setAttackerId(20L);
+            req.setDefenderId(21L);
+            req.setAttacker(attacker);
+            req.setDefender(defender);
+
+            CombatResult result = combatService.calculateCombat(req);
+
+            assertThat(result.getAttackerFinalHp()).isGreaterThan(500);
+        }
+
+        @Test
+        @DisplayName("TC-COMBAT-017 [P] Muddy attr – giam toc doi thu va doi ket qua")
+        void calculateCombat_muddyChangesFastTargetOutcome() {
+            PlayerStats attacker = stats(22L, 100, 120, 0, 0, 200, 50);
+            PlayerStats defender = stats(23L, 90, 200, 0, 0, 200, 300);
+
+            CombatRequest noMuddyReq = new CombatRequest();
+            noMuddyReq.setAttackerId(22L);
+            noMuddyReq.setDefenderId(23L);
+            noMuddyReq.setAttacker(attacker);
+            noMuddyReq.setDefender(defender);
+            CombatResult withoutMuddy = combatService.calculateCombat(noMuddyReq);
+
+            attacker.setMuddy(100);
+            CombatRequest muddyReq = new CombatRequest();
+            muddyReq.setAttackerId(22L);
+            muddyReq.setDefenderId(23L);
+            muddyReq.setAttacker(attacker);
+            muddyReq.setDefender(stats(23L, 90, 200, 0, 0, 200, 300));
+            CombatResult withMuddy = combatService.calculateCombat(muddyReq);
+
+            assertThat(withoutMuddy.getWinnerId()).isEqualTo(23L);
+            assertThat(withMuddy.getWinnerId()).isEqualTo(22L);
         }
     }
 

@@ -33,21 +33,41 @@ public class ConfigSnapshotLookupService {
     @Value("${app.redis-preload.ttl-hours:24}")
     private long ttlHours;
 
+    @Value("${app.redis-preload.allow-remote-fallback-on-miss:false}")
+    private boolean allowRemoteFallbackOnMiss;
+
     public LookupResult getRaw(String path) {
         String key = toRedisFileKey(path);
         String cached = redis.opsForValue().get(key);
         if (cached != null && !cached.isBlank()) {
+            touchRedisKey(key);
             return new LookupResult(path, "REDIS", cached, true);
         }
 
+        if (!allowRemoteFallbackOnMiss) {
+            throw new IllegalStateException("Config not preloaded in Redis path=" + path);
+        }
+
+        return loadFromConfigService(path, key);
+    }
+
+    public LookupResult warmFromRemote(String path) {
+        return loadFromConfigService(path, toRedisFileKey(path));
+    }
+
+    private LookupResult cacheAndBuildResult(String path, String key, String source, String json, boolean cached) {
+        redis.opsForValue().set(key, json, ttlHours, TimeUnit.HOURS);
+        return new LookupResult(path, source, json, cached);
+    }
+
+    private LookupResult loadFromConfigService(String path, String key) {
         ResponseEntity<byte[]> resp = configFeign.getFile(path, null);
         if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) {
             throw new IllegalStateException("Cannot fetch config path=" + path + " status=" + resp.getStatusCode());
         }
 
         String json = new String(resp.getBody(), StandardCharsets.UTF_8);
-        redis.opsForValue().set(key, json, ttlHours, TimeUnit.HOURS);
-        return new LookupResult(path, "CONFIG_SERVICE", json, false);
+        return cacheAndBuildResult(path, key, "CONFIG_SERVICE", json, false);
     }
 
     public JsonNode getJson(String path) {
@@ -59,14 +79,36 @@ public class ConfigSnapshotLookupService {
     }
 
     public Map<String, Object> inspect(String path) {
-        LookupResult result = getRaw(path);
+        String key = toRedisFileKey(path);
+        String cached = redis.opsForValue().get(key);
         Map<String, Object> out = new HashMap<>();
-        out.put("path", result.path());
-        out.put("source", result.source());
-        out.put("cached", result.cached());
-        out.put("size", result.payload() == null ? 0 : result.payload().length());
-        out.put("redisKey", toRedisFileKey(path));
+        out.put("path", path);
+        out.put("source", (cached != null && !cached.isBlank()) ? "REDIS" : "MISS");
+        out.put("cached", cached != null && !cached.isBlank());
+        out.put("size", cached == null ? 0 : cached.length());
+        out.put("redisKey", key);
+        out.put("remoteFallbackOnMiss", allowRemoteFallbackOnMiss);
         return out;
+    }
+
+    public Map<String, Object> refreshFromRemote(String path) {
+        LookupResult result = warmFromRemote(path);
+        Map<String, Object> out = inspect(path);
+        out.put("source", result.source());
+        out.put("size", result.payload() == null ? 0 : result.payload().length());
+        out.put("cached", true);
+        return out;
+    }
+
+    private void touchRedisKey(String key) {
+        if (key == null || key.isBlank() || ttlHours <= 0) {
+            return;
+        }
+        try {
+            redis.expire(key, ttlHours, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.debug("[ConfigSnapshotLookupService] redis ttl touch failed key={} ex={}", key, e.toString());
+        }
     }
 
     private String toRedisFileKey(String path) {

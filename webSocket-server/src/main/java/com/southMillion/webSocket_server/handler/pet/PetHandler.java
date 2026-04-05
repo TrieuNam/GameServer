@@ -4,6 +4,7 @@ import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
+import com.SouthMillion.webSocket_server.service.TaskCondition;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.client.PetFeign;
 import lombok.RequiredArgsConstructor;
@@ -31,11 +32,11 @@ public class PetHandler implements MessageHandler {
         return new int[]{2110, 2105}; // PB_CSRolePetReq + PB_CSPetOneKeyUpLevelGemReq
     }
 
-    /** Gọi sau login: đẩy toàn bộ danh sách pet về client (2101). */
+    /** Gọi sau login: chỉ đẩy pet snapshot khi DB thực sự có pet/module data. */
     public Mono<Void> pushAll(PlayerSession session) {
         Long roleId = session.getRoleId();
         if (roleId == null) return Mono.empty();
-        return Mono.fromRunnable(() -> handleGetPets(session, roleId));
+        return Mono.fromRunnable(() -> pushLoginPetSnapshot(session, roleId));
     }
 
     @Override
@@ -79,21 +80,41 @@ public class PetHandler implements MessageHandler {
     private void handleGetPets(PlayerSession session, Long roleId) {
         try {
             Map<String, Object> result = petFeign.getRolePets(String.valueOf(roleId));
-            Msgpet.PB_SCRolePetAllInfo.Builder response = Msgpet.PB_SCRolePetAllInfo.newBuilder();
-            if (result != null && Boolean.TRUE.equals(result.get("success"))) {
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> pets = (List<Map<String, Object>>) result.get("pets");
-                if (pets != null) {
-                    for (Map<String, Object> pet : pets) {
-                        response.addPetList(buildPetData(pet));
-                    }
-                }
-            }
-            sendResponse(session, response.build());
+            sendPetListSnapshot(session, result);
         } catch (Exception e) {
             log.error("[Pet] Error in handleGetPets", e);
             sendErrorResponse(session);
         }
+    }
+
+    private void pushLoginPetSnapshot(PlayerSession session, Long roleId) {
+        try {
+            Map<String, Object> result = petFeign.getRolePets(String.valueOf(roleId));
+            if (!hasAnyPetData(result)) {
+                log.debug("[Pet] skip pushAll because no pet rows for roleId={}", roleId);
+                return;
+            }
+            sendPetListSnapshot(session, result);
+        } catch (Exception e) {
+            log.error("[Pet] Error in pushLoginPetSnapshot roleId={}", roleId, e);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void sendPetListSnapshot(PlayerSession session, Map<String, Object> result) {
+        Msgpet.PB_SCRolePetAllInfo.Builder response = Msgpet.PB_SCRolePetAllInfo.newBuilder();
+        Object petList = result != null ? result.get("pets") : null;
+        if (!(petList instanceof List<?>)) {
+            petList = result != null ? result.get("petList") : null;
+        }
+        if (petList instanceof List<?> pets) {
+            for (Object pet : pets) {
+                if (pet instanceof Map<?, ?> petMap) {
+                    response.addPetList(buildPetData((Map<String, Object>) petMap));
+                }
+            }
+        }
+        sendResponse(session, response.build());
     }
 
     /**
@@ -129,7 +150,7 @@ public class PetHandler implements MessageHandler {
             body.put("materialIds", materialIds);
             Map<String, Object> result = petFeign.upgradePet(String.valueOf(roleId), body);
             publishTaskProgress(roleId, result, taskActionConditionMapping.petUpgradeTaskKey(), "websocket-pet-upgrade");
-            publishDirectConditionProgress(roleId, result, "condition_47", "websocket-pet-levelup");
+            publishDirectConditionProgress(roleId, result, TaskCondition.PET_LEVEL_UP.taskKey(), "websocket-pet-levelup");
             sendPetResponse(session, result);
         } catch (Exception e) {
             log.error("[Pet] Error in handleUpgradePet", e);
@@ -186,12 +207,35 @@ public class PetHandler implements MessageHandler {
 
     private Msgpet.PB_SCRolePetData buildPetData(Map<String, Object> pet) {
         return Msgpet.PB_SCRolePetData.newBuilder()
-                .setPetId(((Number) pet.getOrDefault("petId", 0)).intValue())
-                .setPetIndex(((Number) pet.getOrDefault("petIndex", 0)).intValue())
-                .setPetLevel(((Number) pet.getOrDefault("level", 1)).intValue())
-                .setPetExp(((Number) pet.getOrDefault("petExp", 0)).intValue())
-                .setPetOrder(((Number) pet.getOrDefault("petStar", 1)).intValue())
+                .setPetId(readInt(pet, "petId", null, 0))
+                .setPetIndex(readInt(pet, "petIndex", null, 0))
+                .setPetLevel(readInt(pet, "level", "petLevel", 1))
+                .setPetExp(readInt(pet, "petExp", null, 0))
+                .setPetOrder(readInt(pet, "petStar", "petOrder", 1))
                 .build();
+    }
+
+    private int readInt(Map<String, Object> pet, String key, String fallbackKey, int defaultValue) {
+        Object value = pet.get(key);
+        if (!(value instanceof Number) && fallbackKey != null) {
+            value = pet.get(fallbackKey);
+        }
+        return value instanceof Number ? ((Number) value).intValue() : defaultValue;
+    }
+
+    private boolean hasAnyPetData(Map<String, Object> result) {
+        if (result == null) {
+            return false;
+        }
+        Object hasData = result.get("hasData");
+        if (hasData instanceof Boolean b) {
+            return b;
+        }
+        Object pets = result.get("pets");
+        if (!(pets instanceof List<?>)) {
+            pets = result.get("petList");
+        }
+        return pets instanceof List<?> list && !list.isEmpty();
     }
 
     private void sendResponse(PlayerSession session, Msgpet.PB_SCRolePetAllInfo response) {
@@ -231,7 +275,7 @@ public class PetHandler implements MessageHandler {
                 }
             }
             if (successCount > 0) {
-                taskProgressPublisher.publish(roleId, "condition_48", successCount, "websocket-pet-gem-upgrade");
+                taskProgressPublisher.publish(roleId, TaskCondition.PET_GEM_UPGRADE.taskKey(), successCount, "websocket-pet-gem-upgrade");
             }
             handleGetPets(session, roleId);
         } catch (Exception e) {

@@ -3,18 +3,24 @@ package com.SouthMillion.webSocket_server.handler.task;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.service.TaskCondition;
 import com.SouthMillion.webSocket_server.service.TaskConditionRegistry;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
+import com.SouthMillion.webSocket_server.service.client.BagFeign;
 import com.SouthMillion.webSocket_server.service.client.TaskFeign;
+import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.SouthMillion.dto.bag.BagDTOs;
 import org.SouthMillion.dto.task.TaskDTO;
 import org.SouthMillion.dto.task.TaskListResp;
 import org.SouthMillion.dto.task.TaskStatus;
+import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.SouthMillion.proto.Msgrole.Msgrole;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,6 +50,8 @@ public class TaskHandler implements MessageHandler {
 
     private final TaskFeign taskFeign;
     private final TaskProgressPublisher taskProgressPublisher;
+    private final BagFeign bagFeign;
+    private final WalletHttpClient walletHttpClient;
     private final ConcurrentHashMap<Long, TaskProgressSnapshot> lastKnownProgress = new ConcurrentHashMap<>();
 
     private static final int MSGID_CLAIM_TASK_REWARD_REQ = 1451;  // PB_CSFetchTaskRewardReq
@@ -120,13 +128,20 @@ public class TaskHandler implements MessageHandler {
                 log.warn("[Task] Failed to parse PB_CSFetchTaskRewardReq: {}", e.toString());
             }
 
+            int claimedBefore = fetchClaimedTaskCount(roleId);
             try {
                 log.info("[Task] Claim task reward — roleId={}", roleId);
 
                 // Advance to next task (claim current only if it is COMPLETED + grant rewards).
                 // If task is NOT COMPLETED, advanceTask returns the same index without changing state.
                 Integer newTaskId = taskFeign.advanceTask(String.valueOf(roleId));
-                log.info("[Task] advanceTask returned newTaskId={} for roleId={}", newTaskId, roleId);
+                int claimedAfter = fetchClaimedTaskCount(roleId);
+                boolean rewardClaimed = claimedAfter > claimedBefore;
+                log.info("[Task] advanceTask returned newTaskId={} for roleId={} (claimedBefore={} claimedAfter={} rewardClaimed={})",
+                        newTaskId, roleId, claimedBefore, claimedAfter, rewardClaimed);
+                if (rewardClaimed) {
+                    syncPostClaimState(session, roleId);
+                }
 
             } catch (Exception e) {
                 log.error("[Task] advanceTask failed — roleId={}: {}", roleId, e.toString());
@@ -144,9 +159,10 @@ public class TaskHandler implements MessageHandler {
      * Query task-service and push the correct progress for the player's current task.
      *
      * Progress rules (prevents false "task complete" on client):
-     *   COMPLETED    → targetValue   (claim button visible)
-     *   IN_PROGRESS  → currentProgress (real value, < targetValue)
-     *   NOT_STARTED  → 0
+     *   condition 1 / level reach → binary 0 or 1 (avoid misleading 0/3, 0/10, ...)
+     *   other COMPLETED tasks     → targetValue   (claim button visible)
+     *   other IN_PROGRESS tasks   → currentProgress (real value, < targetValue)
+     *   NOT_STARTED               → 0
      *   All tasks done / task-service down → fallback progress=0
      */
     public void pushCurrentTaskProgress(PlayerSession session) {
@@ -168,13 +184,7 @@ public class TaskHandler implements MessageHandler {
                     if (currentIndex >= 0 && currentIndex < tasks.size()) {
                         TaskDTO current = tasks.get(currentIndex);
                         taskId = parseLegacyTaskId(current.getTaskKey()).orElse(currentIndex);
-                        TaskStatus status = current.getStatus();
-
-                        if (status == TaskStatus.COMPLETED) {
-                            progress = current.getTargetValue() != null ? current.getTargetValue() : 1;
-                        } else {
-                            progress = current.getCurrentProgress() != null ? current.getCurrentProgress() : 0;
-                        }
+                        progress = toClientProgress(current);
                     }
                 }
             }
@@ -195,6 +205,68 @@ public class TaskHandler implements MessageHandler {
         }
 
         sendProgress(session, taskId, progress);
+    }
+
+    /**
+     * Report a level-up event to task-service and push the updated progress to the client.
+     * Uses SNAPSHOT_MAX semantics (task-service stores the max level seen). For legacy
+     * condition 1 tasks the client now shows a binary 0/1 bar, so we skip the old per-level
+     * sweep and push the authoritative state instead of a misleading 0/3, 0/10, ... animation.
+     *
+     * @param session   player session
+     * @param oldLevel  level before the change
+     * @param newLevel  level after the change
+     */
+    public void pushLevelUpProgress(PlayerSession session, int oldLevel, int newLevel) {
+        Long roleId = session.getRoleId();
+        if (roleId == null || newLevel <= oldLevel) return;
+
+        // Report final level to task-service (SNAPSHOT_MAX: stores max(current, newLevel))
+        taskProgressPublisher.publish(roleId, TaskCondition.LEVEL_UP.taskKey(), newLevel, "role-level-change");
+
+        // Resolve current task so we can send intermediate 1452 packets for bar animation
+        try {
+            TaskListResp resp = taskFeign.getTaskList(String.valueOf(roleId));
+            if (resp == null || resp.getTasks() == null) {
+                pushCurrentTaskProgress(session);
+                return;
+            }
+            int currentIndex = findCurrentTaskIndex(resp.getTasks());
+            if (currentIndex < 0 || currentIndex >= resp.getTasks().size()) {
+                pushCurrentTaskProgress(session);
+                return;
+            }
+            TaskDTO current = resp.getTasks().get(currentIndex);
+
+            // Only animate if the current task is a level_up condition.
+            // Legacy condition 1 is now displayed as a binary 0/1 bar on the client,
+            // so we skip the old per-level sweep and just push the authoritative state.
+            TaskCondition cond = TaskCondition.fromTaskKey(current.getTaskKey());
+            if (cond != TaskCondition.LEVEL_UP || usesBinaryClientProgress(current)) {
+                pushCurrentTaskProgress(session);
+                return;
+            }
+
+            int taskId = parseLegacyTaskId(current.getTaskKey()).orElse(currentIndex);
+            int target = current.getTargetValue() != null ? current.getTargetValue() : newLevel;
+
+            // Send one 1452 per intermediate level so the client bar sweeps smoothly.
+            // Cap at 10 intermediate steps to avoid flooding the socket on large level gaps.
+            int steps = Math.min(newLevel - oldLevel - 1, 10);
+            if (steps > 0) {
+                double step = (double)(newLevel - oldLevel) / (steps + 1);
+                for (int i = 1; i <= steps; i++) {
+                    int midLevel = oldLevel + (int) Math.round(step * i);
+                    if (midLevel >= target) break;
+                    sendProgress(session, taskId, midLevel);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("[Task] pushLevelUpProgress animation skipped roleId={} ex={}", roleId, e.toString());
+        }
+
+        // Push the authoritative final state
+        pushCurrentTaskProgress(session);
     }
 
     public void pushCurrentTaskProgressIfRelevant(PlayerSession session, String reportedTaskKey) {
@@ -254,6 +326,93 @@ public class TaskHandler implements MessageHandler {
         } catch (NumberFormatException ignored) {
             return OptionalInt.empty();
         }
+    }
+
+    private int fetchClaimedTaskCount(Long roleId) {
+        if (roleId == null) {
+            return 0;
+        }
+        try {
+            TaskListResp resp = taskFeign.getTaskList(String.valueOf(roleId));
+            return resp != null && resp.getClaimedTasks() != null ? resp.getClaimedTasks() : 0;
+        } catch (Exception e) {
+            log.debug("[Task] fetchClaimedTaskCount fallback roleId={} ex={}", roleId, e.toString());
+            return 0;
+        }
+    }
+
+    private void syncPostClaimState(PlayerSession session, Long roleId) {
+        // Wallet is updated synchronously by task-service, so push it right away.
+        pushWalletBalance(session, roleId);
+
+        // Bag rewards can still race with the async grant flow. Try one immediate full-bag push first.
+        // If that first push succeeds, do not schedule a blind second UI refresh.
+        // If it fails, keep the fallback retry so the later update can still recover the UI state.
+        boolean immediateBagPushSucceeded = pushBagState(session, roleId);
+        if (immediateBagPushSucceeded) {
+            return;
+        }
+
+        Mono.delay(Duration.ofMillis(1500))
+                .onErrorResume(ex -> Mono.empty())
+                .subscribe(ignored -> {
+                    pushBagState(session, roleId);
+                    pushWalletBalance(session, roleId);
+                });
+    }
+
+    private boolean pushBagState(PlayerSession session, Long roleId) {
+        if (roleId == null) {
+            return false;
+        }
+        try {
+            List<BagDTOs.ItemView> list = bagFeign.list(String.valueOf(roleId));
+            Emitters.sendKnapsackAllInfo(session, list);
+            return true;
+        } catch (Exception e) {
+            log.warn("[Task] Failed to push bag state for roleId={}: {}", roleId, e.getMessage());
+            return false;
+        }
+    }
+
+    private void pushWalletBalance(PlayerSession session, Long roleId) {
+        if (roleId == null) {
+            return;
+        }
+        try {
+            WalletDTOs.BalancesResp walletResp = walletHttpClient.info(String.valueOf(roleId));
+            if (walletResp != null && walletResp.balances() != null) {
+                Emitters.sendWalletBalances(session, walletResp.balances());
+            }
+        } catch (Exception e) {
+            log.warn("[Task] Failed to push wallet balance for roleId={}: {}", roleId, e.getMessage());
+        }
+    }
+
+    int toClientProgress(TaskDTO current) {
+        if (current == null) {
+            return 0;
+        }
+
+        int target = current.getTargetValue() != null ? Math.max(current.getTargetValue(), 1) : 1;
+        int currentProgress = current.getCurrentProgress() != null ? Math.max(current.getCurrentProgress(), 0) : 0;
+
+        if (usesBinaryClientProgress(current)) {
+            return currentProgress >= target || current.getStatus() == TaskStatus.COMPLETED ? 1 : 0;
+        }
+
+        return current.getStatus() == TaskStatus.COMPLETED ? target : currentProgress;
+    }
+
+    private boolean usesBinaryClientProgress(TaskDTO current) {
+        if (current == null) {
+            return false;
+        }
+        Integer conditionType = current.getLegacyConditionType();
+        if (conditionType == null) {
+            conditionType = TaskConditionRegistry.resolveConditionType(current.getTaskKey());
+        }
+        return conditionType != null && conditionType == TaskCondition.LEVEL_UP.id();
     }
 
     private boolean matchesCurrentTask(TaskListResp resp, String reportedTaskKey) {

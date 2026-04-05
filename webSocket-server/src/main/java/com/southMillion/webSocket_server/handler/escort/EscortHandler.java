@@ -5,13 +5,20 @@ import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
+import com.SouthMillion.webSocket_server.service.client.BagFeign;
+import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
 import com.SouthMillion.webSocket_server.service.grpc.EscortGrpcClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.SouthMillion.dto.bag.BagDTOs;
+import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.SouthMillion.grpc.escort.*;
 import org.SouthMillion.proto.Msgescort.Msgescort;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
+
+import java.time.Duration;
+import java.util.List;
 
 /**
  * Escort Handler — CS:9620 PB_CSEscortReq
@@ -25,6 +32,8 @@ public class EscortHandler implements MessageHandler {
     private final EscortGrpcClient escortGrpcClient;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;
+    private final BagFeign bagFeign;
+    private final WalletHttpClient walletHttpClient;
 
     private static final int OP_GET_INFO      = 1;
     private static final int OP_GET_SHIP_LIST = 2;
@@ -129,6 +138,7 @@ public class EscortHandler implements MessageHandler {
             sendRet(session, OP_COMPLETE, resp.getSuccess() ? 0 : -1, resp.getP1());
             if (resp.getSuccess()) {
                 publishTaskProgress(roleId, taskActionConditionMapping.escortCompleteTaskKey(), "websocket-escort-complete");
+                syncPostClaimState(session, roleId);
                 handleGetInfo(session, roleId);
             }
         } catch (Exception e) {
@@ -218,6 +228,44 @@ public class EscortHandler implements MessageHandler {
             Emitters.emit(session, 9621, ret.toByteArray());
         } catch (Exception e) {
             log.error("[Escort] sendRet failed", e);
+        }
+    }
+
+    private void syncPostClaimState(PlayerSession session, Long roleId) {
+        pushBagState(session, roleId);
+        pushWalletBalance(session, roleId);
+
+        Mono.delay(Duration.ofMillis(250))
+                .onErrorResume(ex -> Mono.empty())
+                .subscribe(ignored -> {
+                    pushBagState(session, roleId);
+                    pushWalletBalance(session, roleId);
+                });
+    }
+
+    private void pushBagState(PlayerSession session, Long roleId) {
+        if (roleId == null) {
+            return;
+        }
+        try {
+            List<BagDTOs.ItemView> list = bagFeign.list(String.valueOf(roleId));
+            Emitters.sendKnapsackAllInfo(session, list);
+        } catch (Exception e) {
+            log.warn("[Escort] Failed to push bag state for roleId={}: {}", roleId, e.getMessage());
+        }
+    }
+
+    private void pushWalletBalance(PlayerSession session, Long roleId) {
+        if (roleId == null) {
+            return;
+        }
+        try {
+            WalletDTOs.BalancesResp walletResp = walletHttpClient.info(String.valueOf(roleId));
+            if (walletResp != null && walletResp.balances() != null) {
+                Emitters.sendWalletBalances(session, walletResp.balances());
+            }
+        } catch (Exception e) {
+            log.warn("[Escort] Failed to push wallet balance for roleId={}: {}", roleId, e.getMessage());
         }
     }
 

@@ -3,10 +3,13 @@ package com.SouthMillion.equip_service.service;
 import com.SouthMillion.equip_service.config.EquipProperties;
 import com.SouthMillion.equip_service.config.EquipmentConfigCache;
 import com.SouthMillion.equip_service.entity.EquipSlotEntity;
+import com.SouthMillion.equip_service.repository.EquipSnapshotRepository;
 import com.SouthMillion.equip_service.repository.EquipSlotRepository;
 import com.SouthMillion.equip_service.service.client.BagInternalFeign;
 import com.SouthMillion.equip_service.service.client.BagPublicFeign;
 import com.SouthMillion.equip_service.service.client.ItemMetaFeign;
+import com.SouthMillion.equip_service.service.client.RoleFeign;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.SouthMillion.dto.bag.*;
 import org.SouthMillion.dto.equip.EquipDTOs;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +20,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -29,6 +34,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("EquipService Tests")
 class EquipServiceTest {
 
@@ -49,6 +55,15 @@ class EquipServiceTest {
 
     @Mock
     private EquipmentConfigCache equipmentConfigCache;
+
+    @Mock
+    private RoleFeign roleFeign;
+
+    @Mock
+    private EquipSnapshotRepository snapshotRepo;
+
+    @Mock
+    private MeterRegistry meterRegistry;
 
     @InjectMocks
     private EquipService equipService;
@@ -154,6 +169,39 @@ class EquipServiceTest {
 
             assertThat(resp.ok()).isTrue();
             then(slotRepo).should().save(argThat(s -> s.getItemId() == ITEM_ID));
+        }
+
+        @Test
+        @DisplayName("TC-EQP-012A [P] frist_att/second_att duoc resolve thanh attr thuc te khi mac")
+        void equip_resolvesAttrGroupsFromConfig() {
+            EquipmentConfigCache.EquipRow row = new EquipmentConfigCache.EquipRow();
+            row.id = ITEM_ID;
+            row.part = EQUIP_TYPE;
+            row.hp_max = 120;
+            row.att_max = 45;
+            row.def_max = 18;
+            row.speed_max = 9;
+            row.frist_att = 4;
+            row.second_att = 5;
+
+            given(equipmentConfigCache.find(ITEM_ID)).willReturn(Optional.of(row));
+            given(equipmentConfigCache.resolveColorAttr(4))
+                    .willReturn(Optional.of(new EquipmentConfigCache.ColorAttrBonus(4, 11, 200)));
+            given(equipmentConfigCache.resolveColorAttr(5))
+                    .willReturn(Optional.of(new EquipmentConfigCache.ColorAttrBonus(5, 25, 1)));
+            given(bagFeign.consume(any(BagConsumeReq.class)))
+                    .willReturn(ResponseEntity.noContent().build());
+            given(slotRepo.findByRoleIdAndEquipType(ROLE_ID, EQUIP_TYPE)).willReturn(Optional.empty());
+            given(slotRepo.save(any(EquipSlotEntity.class))).willAnswer(inv -> inv.getArgument(0));
+
+            EquipDTOs.OkResp resp = equipService.equip(equipReq(ROLE_ID, ITEM_ID));
+
+            assertThat(resp.ok()).isTrue();
+            then(slotRepo).should().save(argThat(s -> s.getItemId() == ITEM_ID
+                    && s.getAttrType1() == 11
+                    && s.getAttrValue1() == 200
+                    && s.getAttrType2() == 25
+                    && s.getAttrValue2() == 1));
         }
 
         @Test

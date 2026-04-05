@@ -341,7 +341,7 @@ public class EquipService {
 
         long businessman = asLong(req.get("businessmanPermyriad"), 0L); // optional
 
-        var meta = getEquipMeta(itemId);
+        var meta = getOneMeta(itemId);
         long baseCoin = firstNonZeroL(
                 asLong(meta.get("sell_price"), 0L),
                 asLong(meta.get("price_sell"), 0L),
@@ -379,7 +379,7 @@ public class EquipService {
         int quality    = asInt(item.get("quality"), 1);
         int equipLevel = asInt(item.get("equipLevel"), 1);
 
-        var meta = getEquipMeta(itemId);
+        var meta = getOneMeta(itemId);
 
         int itemOut = firstNonZero(
                 asInt(meta.get("decompose_item_id"), 0),
@@ -555,8 +555,24 @@ public class EquipService {
         out.put("attack", row.att_max);
         out.put("defend", row.def_max);
         out.put("speed", row.speed_max);
-        if (row.frist_att != null) out.put("attrType1", row.frist_att);
-        if (row.second_att != null) out.put("attrType2", row.second_att);
+
+        var firstBonusOpt = equipmentConfigCache.resolveColorAttr(row.frist_att);
+        var firstBonus = firstBonusOpt != null ? firstBonusOpt.orElse(null) : null;
+        if (firstBonus != null) {
+            out.put("attrType1", firstBonus.getAttrType());
+            out.put("attrValue1", firstBonus.getAttrValue());
+        } else if (row.frist_att != null) {
+            out.put("attrType1", row.frist_att);
+        }
+
+        var secondBonusOpt = equipmentConfigCache.resolveColorAttr(row.second_att);
+        var secondBonus = secondBonusOpt != null ? secondBonusOpt.orElse(null) : null;
+        if (secondBonus != null) {
+            out.put("attrType2", secondBonus.getAttrType());
+            out.put("attrValue2", secondBonus.getAttrValue());
+        } else if (row.second_att != null) {
+            out.put("attrType2", row.second_att);
+        }
         return out;
     }
 

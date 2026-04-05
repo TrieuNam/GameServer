@@ -29,6 +29,19 @@ public interface ShiZhuangFeign {
                      @RequestParam("clothesId") Integer clothesId);
 
     /**
+     * Clear the currently worn state for a fashion item.
+     */
+    @PostMapping("/api/shizhuang/unwear")
+    void unwearFashion(@RequestParam("roleId") String roleId,
+                       @RequestParam("clothesId") Integer clothesId);
+
+    /**
+     * Get the active appearance snapshot owned by shizhuang-service.
+     */
+    @GetMapping("/api/shizhuang/appearance/{roleId}")
+    Map<String, Object> getCurrentAppearance(@PathVariable("roleId") String roleId);
+
+    /**
      * Level-up a fashion item.
      */
     @PostMapping("/api/shizhuang/levelup")

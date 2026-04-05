@@ -1,0 +1,20 @@
+{
+  "serviceName" : "angel-service",
+  "displayName" : "Angel Service",
+  "phase" : "P3",
+  "port" : 8090,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â...",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:38:41.494+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ðŸ³ Dockerfile example:", "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENV JAVA_OPTS=\"<arguments above>\"", "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENTRYPOINT java $JAVA_OPTS -jar app.jar", "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-05T23:38:41.495+07:00  INFO 39984 --- [angel-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•" ],
+  "lastUpdated" : "2026-04-05T23:42:58.8251848"
+}

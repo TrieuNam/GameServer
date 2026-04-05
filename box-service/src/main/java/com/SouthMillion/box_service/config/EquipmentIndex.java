@@ -5,22 +5,36 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.box.BoxDTOs;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class EquipmentIndex {
 
+    private static final String EQUIPMENT_PATH = "gameworld/item/equipment.json";
+
     private final UnpackConfigCache unpackCfg; // optional (để dành nếu bạn muốn dùng sau)
-    private final com.SouthMillion.box_service.service.client.ConfigFeign configFeign;
+    private final ConfigFeign configFeign;
+    private final StringRedisTemplate redis;
+
+    @Value("${box.config.redis-enabled:true}")
+    private boolean redisEnabled;
+    @Value("${box.config.redis-ttl-hours:24}")
+    private long redisTtlHours;
+    @Value("${box.config.allow-remote-fallback-on-miss:false}")
+    private boolean allowRemoteFallbackOnMiss;
 
     private final AtomicReference<String> etag = new AtomicReference<>(null);
 
@@ -68,67 +82,41 @@ public class EquipmentIndex {
     private void loadIfNeeded() {
         if (idxPref.get() != null && idxAll.get() != null && allEquipIds.get() != null && metaById.get() != null) return;
 
-        String ifNoneMatch = etag.get();
-        ResponseEntity<byte[]> resp = configFeign.getFile("gameworld/item/equipment.json", ifNoneMatch);
+        String redisKey = toRedisKey(EQUIPMENT_PATH);
+        if (redisEnabled) {
+            try {
+                String cached = redis.opsForValue().get(redisKey);
+                if (cached != null && !cached.isBlank()) {
+                    publishIndexes(cached);
+                    touchRedisKey(redisKey);
+                    log.debug("[EquipmentIndex] Redis HIT path={}", EQUIPMENT_PATH);
+                    return;
+                }
+                log.debug("[EquipmentIndex] Redis MISS path={}", EQUIPMENT_PATH);
+            } catch (Exception e) {
+                log.warn("[EquipmentIndex] redis read failed path={} ex={}", EQUIPMENT_PATH, e.toString());
+                try {
+                    redis.delete(redisKey);
+                } catch (Exception ignored) {
+                    // ignore corrupt-cache cleanup failure
+                }
+            }
+        }
 
-        if (resp.getStatusCode().is2xxSuccessful()) {
+        if (!allowRemoteFallbackOnMiss) {
+            throw new IllegalStateException("equipment.json missing from Redis while box.config.allow-remote-fallback-on-miss=false");
+        }
+
+        String ifNoneMatch = etag.get();
+        ResponseEntity<byte[]> resp = configFeign.getFile(EQUIPMENT_PATH, ifNoneMatch);
+
+        if (resp.getStatusCode().is2xxSuccessful() && resp.getBody() != null) {
             try {
                 String json = new String(resp.getBody(), StandardCharsets.UTF_8);
-                Map<String, List<Map<String, String>>> root = om.readValue(json, new TypeReference<>() {});
-
-                Map<Integer, Map<Integer, Map<Integer, Integer>>> pref = new HashMap<>();
-                Map<Integer, Map<Integer, Map<Integer, List<Integer>>>> all = new HashMap<>();
-                Map<Integer, BoxDTOs.EquipRow> byId = new HashMap<>();
-                Set<Integer> ids = new HashSet<>();
-
-                root.values().forEach(arr -> {
-                    for (var m : arr) {
-                        BoxDTOs.EquipRow r = parseRow(m);
-                        if (r.getId() <= 0 || r.getPart() < 0 || r.getLevel() <= 0 || r.getQuality() <= 0) continue;
-
-                        // idxAll: list ids cho (p,q,l)
-                        all.computeIfAbsent(r.getPart(), _k -> new HashMap<>())
-                                .computeIfAbsent(r.getQuality(), _k -> new HashMap<>())
-                                .computeIfAbsent(r.getLevel(), _k -> new ArrayList<>())
-                                .add(r.getId());
-
-                        // idxPref: nếu có trùng (p,q,l) → ưu tiên is_special=0
-                        Map<Integer, Map<Integer, Integer>> byPart = pref.computeIfAbsent(r.getPart(), _k -> new HashMap<>());
-                        Map<Integer, Integer> byQ = byPart.computeIfAbsent(r.getQuality(), _k -> new HashMap<>());
-                        Integer existing = byQ.get(r.getLevel());
-                        if (existing == null) {
-                            byQ.put(r.getLevel(), r.getId());
-                        } else {
-                            // Nếu existing trùng là special mà bản mới là thường → thay thế
-                            BoxDTOs.EquipRow existRow = byId.get(existing);
-                            if (existRow != null && existRow.getIsSpecial() == 1 && r.getIsSpecial() == 0) {
-                                byQ.put(r.getLevel(), r.getId());
-                            }
-                        }
-
-                        byId.put(r.getId(), r);
-                        ids.add(r.getId());
-                    }
-                });
-
-                // Freeze (unmodifiable)
-                pref.replaceAll((p, qMap) -> {
-                    qMap.replaceAll((q, lvMap) -> Collections.unmodifiableMap(lvMap));
-                    return Collections.unmodifiableMap(qMap);
-                });
-                all.replaceAll((p, qMap) -> {
-                    qMap.replaceAll((q, lvMap) -> {
-                        lvMap.replaceAll((lv, list) -> List.copyOf(list));
-                        return Collections.unmodifiableMap(lvMap);
-                    });
-                    return Collections.unmodifiableMap(qMap);
-                });
-
-                idxPref.set(Collections.unmodifiableMap(pref));
-                idxAll.set(Collections.unmodifiableMap(all));
-                allEquipIds.set(Collections.unmodifiableSet(ids));
-                metaById.set(Collections.unmodifiableMap(byId));
-
+                publishIndexes(json);
+                if (redisEnabled) {
+                    redis.opsForValue().set(redisKey, json, redisTtlHours, TimeUnit.HOURS);
+                }
             } catch (Exception e) {
                 throw new RuntimeException("Parse equipment.json failed", e);
             }
@@ -143,6 +131,78 @@ public class EquipmentIndex {
                 throw new IllegalStateException("Cannot load equipment.json (status " + resp.getStatusCode() + ")");
             }
         }
+    }
+
+    private void publishIndexes(String json) throws Exception {
+        Map<String, List<Map<String, String>>> root = om.readValue(json, new TypeReference<>() {});
+
+        Map<Integer, Map<Integer, Map<Integer, Integer>>> pref = new HashMap<>();
+        Map<Integer, Map<Integer, Map<Integer, List<Integer>>>> all = new HashMap<>();
+        Map<Integer, BoxDTOs.EquipRow> byId = new HashMap<>();
+        Set<Integer> ids = new HashSet<>();
+
+        root.values().forEach(arr -> {
+            for (var m : arr) {
+                BoxDTOs.EquipRow r = parseRow(m);
+                if (r.getId() <= 0 || r.getPart() < 0 || r.getLevel() <= 0 || r.getQuality() <= 0) continue;
+
+                // idxAll: list ids cho (p,q,l)
+                all.computeIfAbsent(r.getPart(), _k -> new HashMap<>())
+                        .computeIfAbsent(r.getQuality(), _k -> new HashMap<>())
+                        .computeIfAbsent(r.getLevel(), _k -> new ArrayList<>())
+                        .add(r.getId());
+
+                // idxPref: nếu có trùng (p,q,l) → ưu tiên is_special=0
+                Map<Integer, Map<Integer, Integer>> byPart = pref.computeIfAbsent(r.getPart(), _k -> new HashMap<>());
+                Map<Integer, Integer> byQ = byPart.computeIfAbsent(r.getQuality(), _k -> new HashMap<>());
+                Integer existing = byQ.get(r.getLevel());
+                if (existing == null) {
+                    byQ.put(r.getLevel(), r.getId());
+                } else {
+                    // Nếu existing trùng là special mà bản mới là thường → thay thế
+                    BoxDTOs.EquipRow existRow = byId.get(existing);
+                    if (existRow != null && existRow.getIsSpecial() == 1 && r.getIsSpecial() == 0) {
+                        byQ.put(r.getLevel(), r.getId());
+                    }
+                }
+
+                byId.put(r.getId(), r);
+                ids.add(r.getId());
+            }
+        });
+
+        // Freeze (unmodifiable)
+        pref.replaceAll((p, qMap) -> {
+            qMap.replaceAll((q, lvMap) -> Collections.unmodifiableMap(lvMap));
+            return Collections.unmodifiableMap(qMap);
+        });
+        all.replaceAll((p, qMap) -> {
+            qMap.replaceAll((q, lvMap) -> {
+                lvMap.replaceAll((lv, list) -> List.copyOf(list));
+                return Collections.unmodifiableMap(lvMap);
+            });
+            return Collections.unmodifiableMap(qMap);
+        });
+
+        idxPref.set(Collections.unmodifiableMap(pref));
+        idxAll.set(Collections.unmodifiableMap(all));
+        allEquipIds.set(Collections.unmodifiableSet(ids));
+        metaById.set(Collections.unmodifiableMap(byId));
+    }
+
+    private void touchRedisKey(String redisKey) {
+        if (!redisEnabled || redisKey == null || redisKey.isBlank() || redisTtlHours <= 0) {
+            return;
+        }
+        try {
+            redis.expire(redisKey, redisTtlHours, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.debug("[EquipmentIndex] redis ttl touch failed key={} ex={}", redisKey, e.toString());
+        }
+    }
+
+    private String toRedisKey(String path) {
+        return "cfg:file:" + path.replace('/', ':');
     }
 
     public void ensureLoaded() { loadIfNeeded(); }

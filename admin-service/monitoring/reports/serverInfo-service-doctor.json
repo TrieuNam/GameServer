@@ -1,0 +1,20 @@
+{
+  "serviceName" : "serverInfo-service",
+  "displayName" : "Server Info Service",
+  "phase" : "P1",
+  "port" : 8095,
+  "serviceStatus" : "RUNNING",
+  "doctorStatus" : "STARTED",
+  "watched" : false,
+  "approvalRequired" : false,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : null,
+  "lastErrorSummary" : "Service is running normally",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:32:21.065+07:00  INFO 49396 --- [serverInfo-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-05T23:32:21.065+07:00  INFO 49396 --- [serverInfo-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-05T23:32:21.065+07:00  INFO 49396 --- [serverInfo-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-05T23:32:21.066+07:00  INFO 49396 --- [serverInfo-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-05T23:32:21.066+07:00  INFO 49396 --- [serverInfo-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-05T23:32:21.066+07:00  INFO 49396 --- [serverInfo-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-05T23:32:21.066+07:00  INFO 49396 --- [serverInfo-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-05T23:32:21.320+07:00  INFO 49396 --- [serverInfo-service] [     virtual-99] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'", "2026-04-05T23:32:21.324+07:00  INFO 49396 --- [serverInfo-service] [     virtual-99] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'", "2026-04-05T23:32:21.333+07:00  INFO 49396 --- [serverInfo-service] [     virtual-99] o.s.web.servlet.DispatcherServlet        : Completed initialization in 7 ms", "2026-04-05T23:37:12.668+07:00  INFO 49396 --- [serverInfo-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-05T23:42:12.714+07:00  INFO 49396 --- [serverInfo-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-05T23:42:57.9572135"
+}

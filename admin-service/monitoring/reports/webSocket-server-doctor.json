@@ -1,0 +1,20 @@
+{
+  "serviceName" : "webSocket-server",
+  "displayName" : "WebSocket Server",
+  "phase" : "P0",
+  "port" : 8094,
+  "serviceStatus" : "RUNNING",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "WebSocketRuntime",
+  "lastErrorSummary" : "2026-04-05T23:41:15.450+07:00  INFO 34844 --- [websocket-server] [ntainer#1-0-C-1] o.a.k.c.c.internals.ConsumerCoordinator  : [Consumer clientId=consumer-websocket-server-4, groupId=websocket-server] Group coordinator...",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:42:29.957+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] world-service has no actuator health endpoint at http://192.168.1.23:8370/actuator/health, treating discovered instance as reachable", "2026-04-05T23:42:29.988+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] config-service has no actuator health endpoint at http://192.168.1.23:8888/actuator/health, treating discovered instance as reachable", "2026-04-05T23:42:35.043+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] world-service has no actuator health endpoint at http://192.168.1.23:8370/actuator/health, treating discovered instance as reachable", "2026-04-05T23:42:35.073+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] config-service has no actuator health endpoint at http://192.168.1.23:8888/actuator/health, treating discovered instance as reachable", "2026-04-05T23:42:40.125+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] world-service has no actuator health endpoint at http://192.168.1.23:8370/actuator/health, treating discovered instance as reachable", "2026-04-05T23:42:40.149+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] config-service has no actuator health endpoint at http://192.168.1.23:8888/actuator/health, treating discovered instance as reachable", "2026-04-05T23:42:45.231+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] world-service has no actuator health endpoint at http://192.168.1.23:8370/actuator/health, treating discovered instance as reachable", "2026-04-05T23:42:45.271+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] config-service has no actuator health endpoint at http://192.168.1.23:8888/actuator/health, treating discovered instance as reachable", "2026-04-05T23:42:50.326+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] world-service has no actuator health endpoint at http://192.168.1.23:8370/actuator/health, treating discovered instance as reachable", "2026-04-05T23:42:50.344+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] config-service has no actuator health endpoint at http://192.168.1.23:8888/actuator/health, treating discovered instance as reachable", "2026-04-05T23:42:55.397+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] world-service has no actuator health endpoint at http://192.168.1.23:8370/actuator/health, treating discovered instance as reachable", "2026-04-05T23:42:55.415+07:00 DEBUG 34844 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] config-service has no actuator health endpoint at http://192.168.1.23:8888/actuator/health, treating discovered instance as reachable" ],
+  "lastUpdated" : "2026-04-05T23:42:57.8157608"
+}

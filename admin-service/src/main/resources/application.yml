@@ -78,3 +78,13 @@ logging:
     root: INFO
     de.codecentric.boot.admin: DEBUG
     com.southMillion.admin: DEBUG
+
+doctor:
+  report-dir: monitoring/reports
+  refresh-interval-ms: 5000
+  auto-approval-enabled: false
+  copilot:
+    enabled: true
+    command-template: "$prompt = Get-Content -Raw '{promptFile}'; gh copilot -p $prompt"
+  build:
+    command: "mvn -DskipTests compile"

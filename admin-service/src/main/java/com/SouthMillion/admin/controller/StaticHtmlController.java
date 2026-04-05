@@ -28,6 +28,11 @@ public class StaticHtmlController {
         return serveStaticFile("static/process-manager.html");
     }
 
+    @GetMapping("/doctor.html")
+    public ResponseEntity<String> doctorDashboard() throws IOException {
+        return serveStaticFile("static/doctor.html");
+    }
+
     private ResponseEntity<String> serveStaticFile(String path) throws IOException {
         Resource resource = new ClassPathResource(path);
         if (!resource.exists()) {

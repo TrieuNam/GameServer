@@ -1,0 +1,20 @@
+{
+  "serviceName" : "friend-service",
+  "displayName" : "Friend Service",
+  "phase" : "P3",
+  "port" : 8450,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-05T23:42:02.488+07:00  INFO 66952 --- [friend-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:37:12.053+07:00  INFO 66952 --- [friend-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-05T23:37:12.053+07:00  INFO 66952 --- [friend-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-05T23:37:12.056+07:00  INFO 66952 --- [friend-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-05T23:37:12.223+07:00  INFO 66952 --- [friend-service] [    virtual-109] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'", "2026-04-05T23:37:12.228+07:00  INFO 66952 --- [friend-service] [    virtual-109] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'", "2026-04-05T23:37:12.241+07:00  INFO 66952 --- [friend-service] [    virtual-109] o.s.web.servlet.DispatcherServlet        : Completed initialization in 11 ms", "2026-04-05T23:39:53.498+07:00  INFO 66952 --- [friend-service] [    virtual-123] c.S.f.controller.FriendController        : REST API: Get friend list - roleId=2", "2026-04-05T23:39:53.538+07:00  INFO 66952 --- [friend-service] [    virtual-123] c.S.f.service.FriendService              : Getting friend list: roleId=2", "2026-04-05T23:39:53.935+07:00  INFO 66952 --- [friend-service] [    virtual-123] c.S.f.service.FriendService              : Friend list retrieved: roleId=2, count=0", "2026-04-05T23:39:54.001+07:00  INFO 66952 --- [friend-service] [    virtual-130] c.S.f.controller.FriendController        : REST API: Get received requests - roleId=2", "2026-04-05T23:39:54.006+07:00  INFO 66952 --- [friend-service] [    virtual-130] c.S.f.service.FriendService              : Getting received requests: roleId=2", "2026-04-05T23:42:02.488+07:00  INFO 66952 --- [friend-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-05T23:42:58.6017152"
+}

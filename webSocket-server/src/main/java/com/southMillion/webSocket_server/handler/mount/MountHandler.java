@@ -2,6 +2,7 @@ package com.SouthMillion.webSocket_server.handler.mount;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.SouthMillion.proto.Msgmount.Msgmount;
+import com.SouthMillion.webSocket_server.handler.role.RoleServiceHandler;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
@@ -23,6 +24,7 @@ import reactor.core.publisher.Mono;
 public class MountHandler implements MessageHandler {
 
     private final MountFeign mountFeign;
+    private final RoleServiceHandler roleServiceHandler;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;
 
@@ -46,15 +48,20 @@ public class MountHandler implements MessageHandler {
         return new int[]{2140}; // PB_CSMountReq
     }
 
-    /** Gọi sau login: đẩy info mount (2141) và danh sách harness (2143) về client. */
+    /** Gọi sau login: chỉ đẩy mount info/harness list khi DB thực sự có dữ liệu sở hữu. */
     public Mono<Void> pushAll(PlayerSession session) {
         Long roleIdStr = session.getRoleId();
         if (roleIdStr == null) return Mono.empty();
         return Mono.fromRunnable(() -> {
             try {
                 Long roleId = roleIdStr;
-                sendMountInfo(session, roleId);
-                sendMountList(session, roleId);
+                java.util.Map<String, Object> mountData = mountFeign.getMountData(String.valueOf(roleId));
+                if (!hasOwnedMountData(mountData)) {
+                    log.debug("[Mount] skip pushAll because no mount/harness rows for roleId={}", roleId);
+                    return;
+                }
+                sendMountInfo(session, mountData);
+                sendMountList(session, mountData);
             } catch (NumberFormatException e) {
                 log.warn("[Mount] pushAll: roleId không hợp lệ={}", roleIdStr);
             }
@@ -152,6 +159,9 @@ public class MountHandler implements MessageHandler {
                 if (operation == OP_WEAR || operation == OP_DECOMPOSE || operation == OP_UNLOCK) {
                     sendHarnessOneInfo(session, result);
                 }
+                if (operation == OP_SET_APPEARANCE || operation == OP_SET_PIFU) {
+                    roleServiceHandler.pushRoleState(session).subscribe();
+                }
             }
 
         } catch (InvalidProtocolBufferException e) {
@@ -183,63 +193,65 @@ public class MountHandler implements MessageHandler {
      */
     private void sendMountInfo(PlayerSession session, Long roleId) {
         try {
-            // 从服务获取最新的Mount信息
-            java.util.Map<String, Object> mountData = mountFeign.getMountData(String.valueOf(roleId));
-            if (mountData == null) {
-                return;
-            }
-
-            Msgmount.PB_SCMountInfo.Builder builder = Msgmount.PB_SCMountInfo.newBuilder();
-
-            // Parse appearanceId
-            Object appId = mountData.get("appearanceId");
-            if (appId instanceof Number) builder.setAppearanceId(((Number) appId).intValue());
-
-            // Parse mount_list
-            Object mountList = mountData.get("mountList");
-            if (mountList instanceof java.util.List<?> list) {
-                for (Object item : list) {
-                    if (item instanceof java.util.Map<?, ?> m) {
-                        Msgmount.PB_MountData.Builder md = Msgmount.PB_MountData.newBuilder();
-                        Object lv = m.get("level");
-                        if (lv instanceof Number) md.setLevel(((Number) lv).intValue());
-                        Object gr = m.get("grade");
-                        if (gr instanceof Number) md.setGrade(((Number) gr).intValue());
-                        Object et = m.get("lastExploreTime");
-                        if (et instanceof Number) md.setLastExploreTime(((Number) et).longValue());
-                        builder.addMountList(md.build());
-                    }
-                }
-            }
-
-            // Parse pifu_list
-            Object pifuList = mountData.get("pifuList");
-            if (pifuList instanceof java.util.List<?> pl) {
-                for (Object p : pl) {
-                    if (p instanceof Number) builder.addPifuList(((Number) p).intValue());
-                }
-            }
-
-            // Parse shop/timing fields
-            Object freeTime = mountData.get("freeTime");
-            if (freeTime instanceof Number) builder.setFreeTime(((Number) freeTime).intValue());
-            Object r1 = mountData.get("refresh1Num");
-            if (r1 instanceof Number) builder.setRefresh1Num(((Number) r1).intValue());
-            Object r2 = mountData.get("refresh2Num");
-            if (r2 instanceof Number) builder.setRefresh2Num(((Number) r2).intValue());
-            Object bf = mountData.get("buyFlag");
-            if (bf instanceof Number) builder.setBuyFlag(((Number) bf).intValue());
-            Object bsl = mountData.get("buySeqList");
-            if (bsl instanceof java.util.List<?> bslList) {
-                for (Object b : bslList) {
-                    if (b instanceof Number) builder.addBuySeqList(((Number) b).intValue());
-                }
-            }
-
-            Emitters.emit(session, 2141, builder.build().toByteArray());
+            sendMountInfo(session, mountFeign.getMountData(String.valueOf(roleId)));
         } catch (Exception e) {
             log.error("Failed to send mount info", e);
         }
+    }
+
+    private void sendMountInfo(PlayerSession session, java.util.Map<String, Object> mountData) {
+        if (mountData == null || Boolean.FALSE.equals(mountData.get("success"))) {
+            return;
+        }
+
+        Msgmount.PB_SCMountInfo.Builder builder = Msgmount.PB_SCMountInfo.newBuilder();
+
+        // Parse appearanceId
+        Object appId = mountData.get("appearanceId");
+        if (appId instanceof Number) builder.setAppearanceId(((Number) appId).intValue());
+
+        // Parse mount_list
+        Object mountList = mountData.get("mountList");
+        if (mountList instanceof java.util.List<?> list) {
+            for (Object item : list) {
+                if (item instanceof java.util.Map<?, ?> m) {
+                    Msgmount.PB_MountData.Builder md = Msgmount.PB_MountData.newBuilder();
+                    Object lv = m.get("level");
+                    if (lv instanceof Number) md.setLevel(((Number) lv).intValue());
+                    Object gr = m.get("grade");
+                    if (gr instanceof Number) md.setGrade(((Number) gr).intValue());
+                    Object et = m.get("lastExploreTime");
+                    if (et instanceof Number) md.setLastExploreTime(((Number) et).longValue());
+                    builder.addMountList(md.build());
+                }
+            }
+        }
+
+        // Parse pifu_list
+        Object pifuList = mountData.get("pifuList");
+        if (pifuList instanceof java.util.List<?> pl) {
+            for (Object p : pl) {
+                if (p instanceof Number) builder.addPifuList(((Number) p).intValue());
+            }
+        }
+
+        // Parse shop/timing fields
+        Object freeTime = mountData.get("freeTime");
+        if (freeTime instanceof Number) builder.setFreeTime(((Number) freeTime).intValue());
+        Object r1 = mountData.get("refresh1Num");
+        if (r1 instanceof Number) builder.setRefresh1Num(((Number) r1).intValue());
+        Object r2 = mountData.get("refresh2Num");
+        if (r2 instanceof Number) builder.setRefresh2Num(((Number) r2).intValue());
+        Object bf = mountData.get("buyFlag");
+        if (bf instanceof Number) builder.setBuyFlag(((Number) bf).intValue());
+        Object bsl = mountData.get("buySeqList");
+        if (bsl instanceof java.util.List<?> bslList) {
+            for (Object b : bslList) {
+                if (b instanceof Number) builder.addBuySeqList(((Number) b).intValue());
+            }
+        }
+
+        Emitters.emit(session, 2141, builder.build().toByteArray());
     }
 
     /**
@@ -247,37 +259,56 @@ public class MountHandler implements MessageHandler {
      */
     public void sendMountList(PlayerSession session, Long roleId) {
         try {
-            java.util.Map<String, Object> mountData = mountFeign.getMountData(String.valueOf(roleId));
-            if (mountData == null) {
-                return;
-            }
-
-            Msgmount.PB_SCMountHarnessListInfo.Builder builder = Msgmount.PB_SCMountHarnessListInfo.newBuilder();
-
-            Object harnessList = mountData.get("harnessList");
-            if (harnessList instanceof java.util.List<?> hl) {
-                for (Object item : hl) {
-                    if (item instanceof java.util.Map<?, ?> hm) {
-                        Msgmount.PB_HarnessData.Builder hd = Msgmount.PB_HarnessData.newBuilder();
-                        Object idx = hm.get("index");
-                        if (idx instanceof Number) hd.setIndex(((Number) idx).intValue());
-                        Object iid = hm.get("itemId");
-                        if (iid instanceof Number) hd.setItemId(((Number) iid).intValue());
-                        Object wm = hm.get("wearingMark");
-                        if (wm instanceof Number) hd.setWearingMark(((Number) wm).intValue());
-                        Object an = hm.get("attrNum");
-                        if (an instanceof Number) hd.setAttrNum(((Number) an).intValue());
-                        Object lf = hm.get("lockFlag");
-                        if (lf instanceof Number) hd.setLockFlag(((Number) lf).intValue());
-                        builder.addHarnessList(hd.build());
-                    }
-                }
-            }
-
-            Emitters.emit(session, 2143, builder.build().toByteArray());
+            sendMountList(session, mountFeign.getMountData(String.valueOf(roleId)));
         } catch (Exception e) {
             log.error("Failed to send mount list", e);
         }
+    }
+
+    private void sendMountList(PlayerSession session, java.util.Map<String, Object> mountData) {
+        if (mountData == null || Boolean.FALSE.equals(mountData.get("success"))) {
+            return;
+        }
+
+        Msgmount.PB_SCMountHarnessListInfo.Builder builder = Msgmount.PB_SCMountHarnessListInfo.newBuilder();
+
+        Object harnessList = mountData.get("harnessList");
+        if (harnessList instanceof java.util.List<?> hl) {
+            for (Object item : hl) {
+                if (item instanceof java.util.Map<?, ?> hm) {
+                    Msgmount.PB_HarnessData.Builder hd = Msgmount.PB_HarnessData.newBuilder();
+                    Object idx = hm.get("index");
+                    if (idx instanceof Number) hd.setIndex(((Number) idx).intValue());
+                    Object iid = hm.get("itemId");
+                    if (iid instanceof Number) hd.setItemId(((Number) iid).intValue());
+                    Object wm = hm.get("wearingMark");
+                    if (wm instanceof Number) hd.setWearingMark(((Number) wm).intValue());
+                    Object an = hm.get("attrNum");
+                    if (an instanceof Number) hd.setAttrNum(((Number) an).intValue());
+                    Object lf = hm.get("lockFlag");
+                    if (lf instanceof Number) hd.setLockFlag(((Number) lf).intValue());
+                    builder.addHarnessList(hd.build());
+                }
+            }
+        }
+
+        Emitters.emit(session, 2143, builder.build().toByteArray());
+    }
+
+    private boolean hasOwnedMountData(java.util.Map<String, Object> mountData) {
+        if (mountData == null || Boolean.FALSE.equals(mountData.get("success"))) {
+            return false;
+        }
+        Object hasData = mountData.get("hasData");
+        if (hasData instanceof Boolean b) {
+            return b;
+        }
+        Object mountList = mountData.get("mountList");
+        if (mountList instanceof java.util.List<?> list && !list.isEmpty()) {
+            return true;
+        }
+        Object harnessList = mountData.get("harnessList");
+        return harnessList instanceof java.util.List<?> list && !list.isEmpty();
     }
 
     /**

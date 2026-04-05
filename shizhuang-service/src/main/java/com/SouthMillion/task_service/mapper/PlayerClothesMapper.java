@@ -10,7 +10,8 @@ public class PlayerClothesMapper {
                 entity.getId(),
                 entity.getPlayerId() != null ? String.valueOf(entity.getPlayerId()) : null,
                 entity.getClothesId(),
-                entity.getLevel()
+                entity.getLevel(),
+                entity.getWearing()
         );
     }
 
@@ -21,6 +22,7 @@ public class PlayerClothesMapper {
                 .playerId(dto.getPlayerId() != null ? Long.parseLong(dto.getPlayerId()) : null)
                 .clothesId(dto.getClothesId())
                 .level(dto.getLevel())
+                .wearing(Boolean.TRUE.equals(dto.getWearing()))
                 .build();
     }
 }

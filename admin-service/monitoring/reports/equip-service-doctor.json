@@ -1,0 +1,20 @@
+{
+  "serviceName" : "equip-service",
+  "displayName" : "Equip Service",
+  "phase" : "P1",
+  "port" : 8240,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-05T23:39:52.049+07:00  INFO 42700 --- [equip-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:33:13.473+07:00  INFO 42700 --- [equip-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-05T23:33:13.473+07:00  INFO 42700 --- [equip-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-05T23:33:13.473+07:00  INFO 42700 --- [equip-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-05T23:33:13.474+07:00  INFO 42700 --- [equip-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-05T23:33:13.474+07:00  INFO 42700 --- [equip-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-05T23:33:13.474+07:00  INFO 42700 --- [equip-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-05T23:33:13.475+07:00  INFO 42700 --- [equip-service] [           main] EquipServiceApplication$CacheInitializer : Initializing EquipmentConfigCache on startup...", "2026-04-05T23:33:14.856+07:00  INFO 42700 --- [equip-service] [           main] EquipServiceApplication$CacheInitializer : EquipmentConfigCache initialized successfully", "2026-04-05T23:38:06.269+07:00  INFO 42700 --- [equip-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-05T23:39:52.046+07:00  INFO 42700 --- [equip-service] [omcat-handler-0] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'", "2026-04-05T23:39:52.046+07:00  INFO 42700 --- [equip-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'", "2026-04-05T23:39:52.049+07:00  INFO 42700 --- [equip-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms" ],
+  "lastUpdated" : "2026-04-05T23:42:58.1327162"
+}

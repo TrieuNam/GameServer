@@ -1,0 +1,20 @@
+{
+  "serviceName" : "starmap-service",
+  "displayName" : "Starmap Service",
+  "phase" : "P2",
+  "port" : 8092,
+  "serviceStatus" : "STOPPED",
+  "doctorStatus" : "STARTED",
+  "watched" : false,
+  "approvalRequired" : false,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : null,
+  "lastErrorSummary" : "Service is running normally",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:35:38.970+07:00  INFO 53260 --- [starmap-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENTRYPOINT java $JAVA_OPTS -jar app.jar", "2026-04-05T23:35:38.970+07:00  INFO 53260 --- [starmap-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-05T23:35:38.970+07:00  INFO 53260 --- [starmap-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-05T23:35:38.970+07:00  INFO 53260 --- [starmap-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-05T23:35:38.970+07:00  INFO 53260 --- [starmap-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-05T23:35:38.971+07:00  INFO 53260 --- [starmap-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-05T23:35:38.971+07:00  INFO 53260 --- [starmap-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-05T23:35:38.971+07:00  INFO 53260 --- [starmap-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-05T23:35:38.972+07:00  INFO 53260 --- [starmap-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-05T23:39:55.915+07:00 DEBUG 53260 --- [starmap-service] [ault-executor-0] org.hibernate.SQL                        : select s1_0.id,s1_0.created_at,s1_0.energy,s1_0.is_active,s1_0.level,s1_0.star_id,s1_0.updated_at,s1_0.user_id from star s1_0 where s1_0.user_id=?", "2026-04-05T23:39:56.138+07:00 DEBUG 53260 --- [starmap-service] [ault-executor-0] org.hibernate.SQL                        : select c1_0.id,c1_0.constellation_id,c1_0.created_at,c1_0.is_completed,c1_0.is_unlocked,c1_0.level,c1_0.power,c1_0.stars_activated,c1_0.total_stars,c1_0.updated_at,c1_0.user_id from constellation c1_0 where c1_0.user_id=?", "2026-04-05T23:40:28.395+07:00  INFO 53260 --- [starmap-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-05T23:42:58.4763051"
+}

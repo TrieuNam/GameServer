@@ -2,6 +2,7 @@ package com.SouthMillion.webSocket_server.handler.login;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.SouthMillion.webSocket_server.handler.activity.OpenServerActivityHandler;
 import com.SouthMillion.webSocket_server.handler.analytics.AnalyticsHandler;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
@@ -59,7 +60,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 import reactor.util.retry.Retry;
@@ -102,6 +105,7 @@ public class LoginBootstrapHandler implements MessageHandler {
     private final MailHandler mailHandler;
     private final GuildHandler guildHandler;
     private final BoxHandler boxHandler;
+    private final OpenServerActivityHandler openServerActivityHandler;
     private final BlockHandler blockHandler;
     private final TaskHandler taskHandler;
     private final RoleServiceHandler roleServiceHandler;
@@ -131,6 +135,15 @@ public class LoginBootstrapHandler implements MessageHandler {
     private static final long SLOW_WARN_MS  = 3_000;
     /** Log ERROR nếu 1 service bootstrap mất hơn mức này (gần timeout) */
     private static final long SLOW_ERROR_MS = 8_000;
+    /** Guard để client retry/reconnect không bắn full bootstrap trùng ngay sau 1450 đầu tiên. */
+    private static final long BOOTSTRAP_REPLAY_GUARD_MS = 1_500;
+    /** Fallback cho client cũ không gửi 1450: tự bootstrap nhẹ sau login ACK. */
+    private static final long ALL_INFO_FALLBACK_DELAY_MS = 1_200;
+
+    private final ConcurrentHashMap<Long, AtomicBoolean> bootstrapInFlight = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, AtomicLong> bootstrapLastStartMs = new ConcurrentHashMap<>();
+    /** Freshly created roles should skip the first deferred non-core/cosmetic bootstrap wave. */
+    private final ConcurrentHashMap<Long, Boolean> skipFreshRoleDeferredModulesOnce = new ConcurrentHashMap<>();
 
     // ===== Result codes (match client) =====
     private static final int LOGIN_OK                    = 0;
@@ -150,11 +163,11 @@ public class LoginBootstrapHandler implements MessageHandler {
     @Override
     public Mono<Void> handle(PlayerSession ps, int msgId, byte[] payload) {
         if (msgId == MsgIds.CS_ALL_INFO_REQ) {
-            // Client gửi 1450 sau login để yêu cầu full data push (theo C++ protocol).
-            // Re-trigger bootstrap nếu session đã đăng nhập.
+            // Theo flow client gốc, 1450 mới là tín hiệu yêu cầu fan-out full info.
+            // Không bootstrap full ngay trong ACK login để tránh load 2 lần toàn bộ services.
             if (ps.isLoggedIn() && ps.getRoleId() != null) {
-                log.info("[1450] CS_ALL_INFO_REQ roleId={} — re-pushing bootstrap", ps.getRoleId());
-                pushBootstrap(ps);
+                log.info("[1450] CS_ALL_INFO_REQ roleId={} — starting core-first bootstrap", ps.getRoleId());
+                triggerBootstrapOnAllInfo(ps, "CS_ALL_INFO_REQ");
             } else {
                 log.warn("[1450] CS_ALL_INFO_REQ ignored — session not logged in ws={}", ps.getWs().getId());
             }
@@ -301,18 +314,19 @@ public class LoginBootstrapHandler implements MessageHandler {
                                "newRole",      createdNow.get(),
                                "snapshotStatus", snapshotAssessment.getStatus()));
 
-                    // ── Initialize activity-service data ──────────────────────────────────
-                    initializeActivityData(ps);
-
                     // ── Gửi ACK cho client ──────────────────────────────────────────────
                     Emitters.sendLoginAck(ps, LOGIN_OK, 0);
                     Emitters.sendTimeAck(ps, (int) (System.currentTimeMillis() / 1000L), 0);
-                    Emitters.sendRoleInfoAck(ps, role);
+                    roleServiceHandler.emitRoleInfoAck(ps, role);
                     if (createdNow.get()) {
-                        log.info("[login] created new role for user {}", ps.getUserId());
+                        skipFreshRoleDeferredModulesOnce.put(ps.getRoleId(), Boolean.TRUE);
+                        log.info("[login] created new role for user {} — skip first deferred non-core gameplay bootstrap", ps.getUserId());
                     }
-                    // ── Bootstrap data: FIRE-AND-FORGET ─────────────────────────────────
-                    pushBootstrap(ps);
+                    // Giữ ACK login thật nhẹ: client chuẩn sẽ gửi 1450 ngay sau đó để lấy full data.
+                    // Nếu client cũ không gửi 1450, fallback timer bên dưới sẽ tự kích hoạt bootstrap một lần.
+                    log.debug("[login] waiting for CS_ALL_INFO_REQ before full bootstrap roleId={}", ps.getRoleId());
+                    initializeActivityData(ps);
+                    scheduleBootstrapFallback(ps);
                     return Mono.empty();
                 })
                 .onErrorResume(e -> {
@@ -363,75 +377,135 @@ public class LoginBootstrapHandler implements MessageHandler {
     // BOOTSTRAP — hoàn toàn độc lập, mỗi service là 1 virtual thread riêng
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Đẩy toàn bộ game data về client sau khi login ACK.
-     *
-     * <p>Isolation guarantee: mỗi service chạy trên virtual thread độc lập.
-     * Service A down/timeout KHÔNG ảnh hưởng service B — safe() đảm bảo:
-     * <ul>
-     *   <li>Mono.defer(supplier) — synchronous throw trong pushAll() cũng được wrap,
-     *       không bao giờ escape ra ngoài Mono chain</li>
-     *   <li>subscribeOn(feignScheduler) — mỗi service = 1 virtual thread riêng</li>
-     *   <li>timeout(12s) — service TREO (không throw, không respond) vẫn bị cut sau 12s</li>
-     *   <li>onErrorResume — MỌI lỗi đều bị nuốt, chỉ log WARN</li>
-     * </ul>
-     * Kết quả: Mono.when() bên trong KHÔNG BAO GIỜ error dù N service cùng down.
-     */
-    private void pushBootstrap(PlayerSession ps) {
-        final long t0Bootstrap = System.currentTimeMillis();
-        log.info("[bootstrap] START userId={} roleId={} — 26 services", ps.getUserId(), ps.getRoleId());
+    private void scheduleBootstrapFallback(PlayerSession ps) {
+        Long roleId = ps.getRoleId();
+        if (roleId == null) {
+            return;
+        }
 
-        Mono.when(
-                // ── P1 ────────────────────────────────────────────────────────────────
-                safe(() -> roleServiceHandler.pushAll(ps), "role",       ps, t0Bootstrap),
-                safe(() -> bagHandler.pushAll(ps),         "bag",        ps, t0Bootstrap),
-                safe(() -> equipHandler.pushAll(ps),       "equip",      ps, t0Bootstrap),
-                safe(() -> boxHandler.pushAll(ps),         "box",        ps, t0Bootstrap),
-                safe(() -> blockHandler.pushAll(ps),       "block",      ps, t0Bootstrap),
-                safe(() -> waBaoHandler.pushAll(ps),       "wabao",      ps, t0Bootstrap),
-                // ── P5 ────────────────────────────────────────────────────────────────
-                safe(() -> shiZhuangHandler.pushAll(ps),   "shizhuang",  ps, t0Bootstrap),
-                safe(() -> gemHandler.pushAll(ps),         "gem",        ps, t0Bootstrap),
-                safe(() -> scrollHandler.pushAll(ps),      "scroll",     ps, t0Bootstrap),
-                safe(() -> pagodaHandler.pushAll(ps),      "pagoda",     ps, t0Bootstrap),
-                safe(() -> lingZhuHandler.pushAll(ps),     "lingzhu",    ps, t0Bootstrap),
-                // ── P3 ────────────────────────────────────────────────────────────────
-                safe(() -> runeHandler.pushAll(ps),        "rune",       ps, t0Bootstrap),
-                safe(() -> shenQiHandler.pushAll(ps),      "shenqi",     ps, t0Bootstrap),
-                safe(() -> petHandler.pushAll(ps),         "pet",        ps, t0Bootstrap),
-                safe(() -> angelHandler.pushAll(ps),       "angel",      ps, t0Bootstrap),
-                safe(() -> mountHandler.pushAll(ps),       "mount",      ps, t0Bootstrap),
-                safe(() -> friendHandler.pushAll(ps),      "friend",     ps, t0Bootstrap),
-                safe(() -> mailHandler.pushAll(ps),        "mail",       ps, t0Bootstrap),
-                // ── P2 ────────────────────────────────────────────────────────────────
-                safe(() -> starMapHandler.pushAll(ps),     "starmap",    ps, t0Bootstrap),
-                safe(() -> arenaHandler.pushAll(ps),       "arena",      ps, t0Bootstrap),
-                safe(() -> escortHandler.pushAll(ps),      "escort",     ps, t0Bootstrap),
-                safe(() -> territoryHandler.pushAll(ps),   "territory",  ps, t0Bootstrap),
-                safe(() -> taskHandler.reportDailyLogin(ps), "task-daily-login", ps, t0Bootstrap),
-                safe(() -> taskHandler.pushAll(ps),        "task",       ps, t0Bootstrap),
-                safe(() -> guildHandler.pushAll(ps),       "guild",      ps, t0Bootstrap),
-                // ── P4 ────────────────────────────────────────────────────────────────
-                safe(() -> mainFbHandler.pushAll(ps),      "mainfb",     ps, t0Bootstrap),
-                // ── P3 (skill / talent) ───────────────────────────────────────────────
-                safe(() -> skillHandler.pushAll(ps),       "skill",      ps, t0Bootstrap)
-        ).doOnSuccess(v -> {
-                long elapsed = System.currentTimeMillis() - t0Bootstrap;
-                log.info("[bootstrap] ALL DONE userId={} roleId={} totalMs={}",
-                        ps.getUserId(), ps.getRoleId(), elapsed);
-            loginSnapshotService.writeBootstrapSnapshot(ps.getRoleId(), elapsed);
-                analyticsHandler.track(ps, "BOOTSTRAP_COMPLETE", "SYSTEM",
-                        Map.of("totalMs", elapsed));
-        }).subscribe(
-                null,
-                e -> {
-                    log.warn("[bootstrap] unexpected error userId={}: {}", ps.getUserId(), e.getMessage());
-                    analyticsHandler.track(ps, "BOOTSTRAP_ERROR", "ERROR",
-                            Map.of("error", e.getClass().getSimpleName(),
-                                   "msg",   e.getMessage() != null ? e.getMessage() : ""));
-                }
+        log.debug("[login] scheduling fallback bootstrap in {}ms roleId={}",
+                ALL_INFO_FALLBACK_DELAY_MS, roleId);
+
+        Mono.delay(Duration.ofMillis(ALL_INFO_FALLBACK_DELAY_MS), Schedulers.parallel())
+                .subscribe(ignored -> {
+                    if (!ps.isLoggedIn() || ps.getRoleId() == null) {
+                        log.debug("[login] skip fallback bootstrap because session closed or role missing ws={}",
+                                ps.getWs().getId());
+                        return;
+                    }
+                    triggerBootstrapOnAllInfo(ps, "LOGIN_ACK_FALLBACK");
+                }, err -> log.debug("[login] fallback bootstrap timer error roleId={}: {}",
+                        roleId, err.toString()));
+    }
+
+    /**
+     * Client chính thống sẽ gửi `1450 / CS_ALL_INFO_REQ` sau khi login OK để yêu cầu full info.
+     * Vì vậy bootstrap full được dời sang 1450 và chia làm 2 wave:
+     * - CORE: role/bag/equip → authoritative snapshot + inventory/equipment cần sớm
+     * - DEFERRED: box/task/skill và các module gameplay khác tải sau nền, tránh đẩy nhầm "game data" như role-core
+     *
+     * Các service có static JSON nặng (task/equip/skill/box) phải ưu tiên đi qua Redis-preload
+     * đã warm ở startup; `StartupDependencyReadiness` chỉ mở login khi phần preload này sẵn sàng.
+     */
+    private void triggerBootstrapOnAllInfo(PlayerSession ps, String trigger) {
+        Long roleId = ps.getRoleId();
+        if (roleId == null) {
+            log.warn("[bootstrap] ignore trigger={} because roleId is null", trigger);
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        AtomicLong lastStart = bootstrapLastStartMs.computeIfAbsent(roleId, k -> new AtomicLong(0));
+        long previous = lastStart.get();
+        if (previous > 0 && (now - previous) < BOOTSTRAP_REPLAY_GUARD_MS) {
+            log.info("[bootstrap] skip duplicate trigger={} roleId={} deltaMs={}",
+                    trigger, roleId, now - previous);
+            return;
+        }
+
+        AtomicBoolean inFlight = bootstrapInFlight.computeIfAbsent(roleId, k -> new AtomicBoolean(false));
+        if (!inFlight.compareAndSet(false, true)) {
+            log.info("[bootstrap] already running trigger={} roleId={}", trigger, roleId);
+            return;
+        }
+
+        lastStart.set(now);
+        pushBootstrap(ps, trigger, inFlight);
+    }
+
+    private void pushBootstrap(PlayerSession ps, String trigger, AtomicBoolean inFlight) {
+        final long t0Bootstrap = System.currentTimeMillis();
+        log.info("[bootstrap] START trigger={} userId={} roleId={} — core-first + deferred",
+                trigger, ps.getUserId(), ps.getRoleId());
+
+        buildCoreBootstrap(ps, t0Bootstrap)
+                .doOnSuccess(v -> log.info("[bootstrap] CORE DONE trigger={} userId={} roleId={} coreMs={}",
+                        trigger, ps.getUserId(), ps.getRoleId(), System.currentTimeMillis() - t0Bootstrap))
+                .then(buildDeferredBootstrap(ps, t0Bootstrap))
+                .doOnSuccess(v -> {
+                    long elapsed = System.currentTimeMillis() - t0Bootstrap;
+                    log.info("[bootstrap] ALL DONE trigger={} userId={} roleId={} totalMs={}",
+                            trigger, ps.getUserId(), ps.getRoleId(), elapsed);
+                    loginSnapshotService.writeBootstrapSnapshot(ps.getRoleId(), elapsed);
+                    analyticsHandler.track(ps, "BOOTSTRAP_COMPLETE", "SYSTEM",
+                            Map.of("trigger", trigger, "totalMs", elapsed));
+                })
+                .doFinally(sig -> inFlight.set(false))
+                .subscribe(
+                        null,
+                        e -> {
+                            log.warn("[bootstrap] unexpected error trigger={} userId={}: {}",
+                                    trigger, ps.getUserId(), e.getMessage());
+                            analyticsHandler.track(ps, "BOOTSTRAP_ERROR", "ERROR",
+                                    Map.of("trigger", trigger,
+                                           "error", e.getClass().getSimpleName(),
+                                           "msg",   e.getMessage() != null ? e.getMessage() : ""));
+                        }
+                );
+        log.debug("[bootstrap] subscribed trigger={} userId={} roleId={}",
+                trigger, ps.getUserId(), ps.getRoleId());
+    }
+
+    private Mono<Void> buildCoreBootstrap(PlayerSession ps, long t0Bootstrap) {
+        return Mono.when(
+                safe(() -> roleServiceHandler.pushAll(ps), "role", ps, t0Bootstrap),
+                safe(() -> bagHandler.pushAll(ps), "bag", ps, t0Bootstrap),
+                safe(() -> equipHandler.pushAll(ps), "equip", ps, t0Bootstrap)
         );
-        log.debug("[bootstrap] subscribed userId={} roleId={}", ps.getUserId(), ps.getRoleId());
+    }
+
+    private Mono<Void> buildDeferredBootstrap(PlayerSession ps, long t0Bootstrap) {
+        boolean skipFreshRoleDeferredModules = consumeSkipFreshRoleDeferredModules(ps.getRoleId());
+        if (skipFreshRoleDeferredModules) {
+            log.info("[bootstrap] skip initial non-core visual/progression bootstrap for freshly created roleId={}", ps.getRoleId());
+        }
+
+        return Mono.when(
+                safe(() -> boxHandler.pushAll(ps), "box", ps, t0Bootstrap),
+                safe(() -> taskHandler.reportDailyLogin(ps).then(taskHandler.pushAll(ps)), "task", ps, t0Bootstrap),
+                safe(() -> skillHandler.pushAll(ps), "skill", ps, t0Bootstrap),
+                safe(() -> openServerActivityHandler.pushAll(ps), "activity", ps, t0Bootstrap),
+                safe(() -> blockHandler.pushAll(ps), "block", ps, t0Bootstrap),
+                safe(() -> waBaoHandler.pushAll(ps), "wabao", ps, t0Bootstrap),
+                maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> shiZhuangHandler.pushAll(ps), "shizhuang", ps, t0Bootstrap),
+                maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> gemHandler.pushAll(ps), "gem", ps, t0Bootstrap),
+                maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> scrollHandler.pushAll(ps), "scroll", ps, t0Bootstrap),
+                maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> pagodaHandler.pushAll(ps), "pagoda", ps, t0Bootstrap),
+                maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> lingZhuHandler.pushAll(ps), "lingzhu", ps, t0Bootstrap),
+                maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> runeHandler.pushAll(ps), "rune", ps, t0Bootstrap),
+                maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> shenQiHandler.pushAll(ps), "shenqi", ps, t0Bootstrap),
+                maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> petHandler.pushAll(ps), "pet", ps, t0Bootstrap),
+                maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> angelHandler.pushAll(ps), "angel", ps, t0Bootstrap),
+                maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> mountHandler.pushAll(ps), "mount", ps, t0Bootstrap),
+                safe(() -> friendHandler.pushAll(ps), "friend", ps, t0Bootstrap),
+                safe(() -> mailHandler.pushAll(ps), "mail", ps, t0Bootstrap),
+                safe(() -> starMapHandler.pushAll(ps), "starmap", ps, t0Bootstrap),
+                safe(() -> arenaHandler.pushAll(ps), "arena", ps, t0Bootstrap),
+                safe(() -> escortHandler.pushAll(ps), "escort", ps, t0Bootstrap),
+                safe(() -> territoryHandler.pushAll(ps), "territory", ps, t0Bootstrap),
+                safe(() -> guildHandler.pushAll(ps), "guild", ps, t0Bootstrap),
+                safe(() -> mainFbHandler.pushAll(ps), "mainfb", ps, t0Bootstrap)
+        );
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -627,6 +701,23 @@ public class LoginBootstrapHandler implements MessageHandler {
 
     private String safeStr(String s) {
         return (s == null || s.isBlank()) ? "" : s;
+    }
+
+    private Mono<Void> maybeSkipFreshRoleDeferredModule(boolean skipFreshRoleDeferredModules,
+                                                        Supplier<Mono<Void>> supplier,
+                                                        String name,
+                                                        PlayerSession ps,
+                                                        long t0Bootstrap) {
+        if (!skipFreshRoleDeferredModules) {
+            return safe(supplier, name, ps, t0Bootstrap);
+        }
+        log.debug("[bootstrap] {} skipped on first deferred wave for freshly created roleId={}",
+                name, ps.getRoleId());
+        return Mono.empty();
+    }
+
+    private boolean consumeSkipFreshRoleDeferredModules(Long roleId) {
+        return roleId != null && skipFreshRoleDeferredModulesOnce.remove(roleId) != null;
     }
 
     // ─────────────────────────────────────────────────────────────────────────

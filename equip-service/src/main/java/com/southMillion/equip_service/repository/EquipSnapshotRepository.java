@@ -54,11 +54,18 @@ public class EquipSnapshotRepository {
             }
             EquipDTOs.EquipItem snapshot = objectMapper.readValue(payload, EquipDTOs.EquipItem.class);
             if (snapshot == null || snapshot.getItemId() <= 0) {
+                redis.delete(key);
                 return Optional.empty();
             }
+            touch(key);
             return Optional.of(snapshot);
         } catch (Exception e) {
             log.debug("[equip] snapshot load failed roleId={} equipType={} ex={}", roleId, equipType, e.toString());
+            try {
+                redis.delete(key);
+            } catch (Exception ignored) {
+                // ignore corrupt-cache cleanup failure
+            }
             return Optional.empty();
         }
     }
@@ -89,6 +96,17 @@ public class EquipSnapshotRepository {
         } catch (Exception e) {
             log.debug("[equip] snapshot delete-by-role failed roleId={} ex={}", roleId, e.toString());
             return 0;
+        }
+    }
+
+    private void touch(String key) {
+        if (key == null || key.isBlank() || ttlSeconds <= 0) {
+            return;
+        }
+        try {
+            redis.expire(key, ttlSeconds, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.debug("[equip] snapshot touch ttl failed key={} ex={}", key, e.toString());
         }
     }
 

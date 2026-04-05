@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,11 +30,14 @@ class TaskDefinitionProviderTest {
     @Mock
     private ConfigServiceClient configServiceClient;
 
+    @Mock
+    private StringRedisTemplate stringRedisTemplate;
+
     private TaskDefinitionProvider provider;
 
     @BeforeEach
     void setUp() {
-        provider = new TaskDefinitionProvider(configServiceClient, new ObjectMapper());
+        provider = new TaskDefinitionProvider(configServiceClient, new ObjectMapper(), stringRedisTemplate);
         ReflectionTestUtils.setField(provider, "taskConfigPath", "gameworld/logicconfig/task_cfg.json");
     }
 

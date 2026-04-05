@@ -3,6 +3,7 @@ package com.SouthMillion.webSocket_server.handler.equip;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.service.TaskCondition;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.client.EquipHttpClient;
 import lombok.RequiredArgsConstructor;
@@ -104,7 +105,7 @@ public class EquipHandler implements MessageHandler {
 
         try {
             equipHttpClient.wear(String.valueOf(roleId), target.itemId());
-            reportTaskProgress(roleId, "get_equip", 1);
+            reportTaskProgress(roleId, TaskCondition.GET_EQUIP.taskKey(), 1);
             reportQualityConditionProgress(roleId, target.quality());
             invalidateBagSlotsCache(roleId);
         } catch (Exception e) {
@@ -119,7 +120,7 @@ public class EquipHandler implements MessageHandler {
     private void handleBagSell(PlayerSession session, Long roleId, int indexOrItemId) {
         try {
             equipHttpClient.bagSell(Map.of("roleId", String.valueOf(roleId), "equipType", indexOrItemId));
-            reportTaskProgress(roleId, "sell_equip_num", 1);
+            reportTaskProgress(roleId, TaskCondition.SELL_EQUIP_NUM.taskKey(), 1);
             invalidateBagSlotsCache(roleId);
         } catch (Exception e) {
             log.warn("[Equip] bagSell failed roleId={}: {}", roleId, e.getMessage());
@@ -132,24 +133,9 @@ public class EquipHandler implements MessageHandler {
     }
 
     private void reportQualityConditionProgress(Long roleId, int quality) {
-        int conditionType = mapQualityToConditionType(quality);
-        if (conditionType <= 0) {
-            return;
+        for (TaskCondition condition : TaskCondition.equipQualityConditions(quality)) {
+            reportTaskProgress(roleId, condition.taskKey(), 1);
         }
-        reportTaskProgress(roleId, "condition_" + conditionType, 1);
-    }
-
-    private int mapQualityToConditionType(int quality) {
-        if (quality >= 5) {
-            return 21;
-        }
-        if (quality == 4) {
-            return 20;
-        }
-        if (quality == 3) {
-            return 19;
-        }
-        return 0;
     }
 
     private void handleFuMo(PlayerSession session, Long roleId, int equipType) {

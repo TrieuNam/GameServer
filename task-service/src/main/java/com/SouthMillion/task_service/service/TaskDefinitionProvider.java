@@ -128,10 +128,17 @@ public class TaskDefinitionProvider {
                         lastSuccessAtRef.set(Instant.now());
                         lastSourceRef.set("redis");
                         lastErrorRef.set(null);
+                        touchRedisKey(redisKey);
                         return;
                     }
+                    redis.delete(redisKey);
                 } catch (Exception e) {
                     log.warn("Failed to parse cached task config from Redis, will reload: {}", e.toString());
+                    try {
+                        redis.delete(redisKey);
+                    } catch (Exception ignored) {
+                        // ignore invalid-cache cleanup failure
+                    }
                 }
             }
             log.debug("[TaskDefinitionProvider] Redis MISS path={}", taskConfigPath);
@@ -258,6 +265,8 @@ public class TaskDefinitionProvider {
         if (!StringUtils.hasText(itemRewards)) {
             itemRewards = parseRewardArray(node.get("reward"));
         }
+        TaskConditionRegistry.ProgressMode progressMode = parseProgressMode(
+            text(node, "progressMode", "progress_mode"));
 
         out.put(key, new TaskDefinitionConfig(
             key,
@@ -269,7 +278,8 @@ public class TaskDefinitionProvider {
             defaultIfBlank(itemRewards, ""),
             legacyConditionType,
             legacyParam1,
-            defaultIfBlank(nextTaskKey, null)
+            defaultIfBlank(nextTaskKey, null),
+            progressMode
         ));
     }
 
@@ -353,8 +363,31 @@ public class TaskDefinitionProvider {
         return joiner.toString();
     }
 
+    private TaskConditionRegistry.ProgressMode parseProgressMode(String value) {
+        if (!StringUtils.hasText(value)) {
+            return null;
+        }
+        try {
+            return TaskConditionRegistry.ProgressMode.valueOf(value.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            log.warn("[TaskDefinitionProvider] Unknown progressMode '{}', ignored", value);
+            return null;
+        }
+    }
+
     private String defaultIfBlank(String value, String fallback) {
         return StringUtils.hasText(value) ? value : fallback;
+    }
+
+    private void touchRedisKey(String redisKey) {
+        if (!redisEnabled || redisKey == null || redisKey.isBlank() || redisTtlHours <= 0) {
+            return;
+        }
+        try {
+            redis.expire(redisKey, redisTtlHours, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.debug("[TaskDefinitionProvider] redis ttl touch failed key={} ex={}", redisKey, e.toString());
+        }
     }
 
     private String toRedisKey(String path) {

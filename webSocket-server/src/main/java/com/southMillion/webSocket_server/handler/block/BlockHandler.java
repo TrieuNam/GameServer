@@ -5,6 +5,7 @@ import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
+import com.SouthMillion.webSocket_server.service.TaskCondition;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.client.BlockFeign;
 import lombok.RequiredArgsConstructor;
@@ -155,7 +156,7 @@ public class BlockHandler implements MessageHandler {
         sendBlockInfo(ps, result, RET_INLAY);
         if (isOperationSuccess(result, RET_INLAY)) {
             publishTaskProgress(roleId, taskActionConditionMapping.blockInlayTaskKey(), "websocket-block-inlay");
-            publishTaskProgress(roleId, "condition_70", "websocket-block-receive");
+            publishTaskProgress(roleId, TaskCondition.BLOCK_RECEIVE.taskKey(), "websocket-block-receive");
         }
         log.info("[block] Inlay done, roleId={}, mapId={}, blockIndex={}", roleId, params.get(0), params.get(1));
     }
@@ -233,7 +234,7 @@ public class BlockHandler implements MessageHandler {
         Map<String, Object> result = blockFeign.wear(req);
         sendBlockInfo(ps, result, RET_MAP_WEAR);
         if (isOperationSuccess(result, RET_MAP_WEAR)) {
-            publishTaskProgress(roleId, "condition_72", "websocket-block-design-change");
+            publishTaskProgress(roleId, TaskCondition.BLOCK_DESIGN_CHANGE.taskKey(), "websocket-block-design-change");
         }
         log.info("[block] MapWear done, roleId={}, mapId={}", roleId, params.get(0));
     }

@@ -16,5 +16,7 @@ public class CombatRound {
     private Integer damage;
     private Boolean critical;
     private Boolean dodged;
+    private Boolean stunned;
+    private Integer healingDone;
     private Integer targetRemainingHp;
 }

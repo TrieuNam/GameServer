@@ -4,6 +4,7 @@ import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
+import com.SouthMillion.webSocket_server.service.TaskCondition;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.grpc.TerritoryGrpcClient;
 import lombok.RequiredArgsConstructor;
@@ -84,7 +85,7 @@ public class TerritoryHandler implements MessageHandler {
                     case OP_BUY               -> handleBuyBot(session, roleId);        // mua bot — stub riêng
                     case OP_LEVEL_UP          -> handleDispatch(session, roleId, 2);   // gRPC action=2 level_up
                     case OP_GET_BOT           -> handleGetBot(session, roleId);
-                    case OP_REFRESH_NEIGHBOUR -> { handleGetNeighbour(session, roleId); taskProgressPublisher.publish(roleId, "condition_63", 1, "websocket-territory-refresh-neighbour"); }
+                    case OP_REFRESH_NEIGHBOUR -> { handleGetNeighbour(session, roleId); taskProgressPublisher.publish(roleId, TaskCondition.TERRITORY_REFRESH_NEIGHBOUR.taskKey(), 1, "websocket-territory-refresh-neighbour"); }
                     case OP_GET_REPORT        -> handleGetReport(session, roleId);
                     case OP_REFRESH_CONTAINER -> handleGetRed(session, roleId);
                     default -> log.warn("[Territory] Unknown op={} roleId={}", type, roleId);
@@ -134,7 +135,7 @@ public class TerritoryHandler implements MessageHandler {
             if (resp.getSuccess()) {
                 publishTaskProgress(roleId, type);
                 if (type == 1) {
-                    taskProgressPublisher.publish(roleId, "condition_45", 1, "websocket-territory-mine");
+                    taskProgressPublisher.publish(roleId, TaskCondition.TERRITORY_MINE.taskKey(), 1, "websocket-territory-mine");
                 }
                 handleGetInfo(session, roleId);  // refresh info
             } else {
@@ -151,7 +152,7 @@ public class TerritoryHandler implements MessageHandler {
         try {
             TerritoryActionResponse resp = territoryGrpcClient.dispatchAction(roleId, 3);
             if (resp.getSuccess()) {
-                taskProgressPublisher.publish(roleId, "condition_58", 1, "websocket-territory-buy-bot");
+                taskProgressPublisher.publish(roleId, TaskCondition.TERRITORY_BUY_BOT.taskKey(), 1, "websocket-territory-buy-bot");
             }
             handleGetInfo(session, roleId);
         } catch (Exception e) {

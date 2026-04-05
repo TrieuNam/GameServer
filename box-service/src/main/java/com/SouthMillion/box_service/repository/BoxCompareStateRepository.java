@@ -21,7 +21,7 @@ public class BoxCompareStateRepository {
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;
 
-    @Value("${box.compare.ttl-minutes:15}")
+    @Value("${box.compare.ttl-minutes:1440}")
     private long ttlMinutes;
 
     public void save(BoxDTOs.BoxCompareStateResp state) {
@@ -39,14 +39,22 @@ public class BoxCompareStateRepository {
         if (roleId == null) {
             return Optional.empty();
         }
+        String redisKey = key(roleId);
         try {
-            String raw = redis.opsForValue().get(key(roleId));
+            String raw = redis.opsForValue().get(redisKey);
             if (raw == null || raw.isBlank()) {
                 return Optional.empty();
             }
-            return Optional.ofNullable(objectMapper.readValue(raw, BoxDTOs.BoxCompareStateResp.class));
+            BoxDTOs.BoxCompareStateResp state = objectMapper.readValue(raw, BoxDTOs.BoxCompareStateResp.class);
+            touch(redisKey);
+            return Optional.ofNullable(state);
         } catch (Exception e) {
             log.warn("[box] load compare state failed roleId={} ex={}", roleId, e.toString());
+            try {
+                redis.delete(redisKey);
+            } catch (Exception ignored) {
+                // ignore cleanup failure for corrupt cache entries
+            }
             return Optional.empty();
         }
     }
@@ -64,5 +72,16 @@ public class BoxCompareStateRepository {
 
     private String key(Long roleId) {
         return KEY_PREFIX + roleId;
+    }
+
+    private void touch(String redisKey) {
+        if (redisKey == null || redisKey.isBlank() || ttlMinutes <= 0) {
+            return;
+        }
+        try {
+            redis.expire(redisKey, ttlMinutes, TimeUnit.MINUTES);
+        } catch (Exception e) {
+            log.debug("[box] touch compare state ttl failed key={} ex={}", redisKey, e.toString());
+        }
     }
 }

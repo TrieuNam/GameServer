@@ -32,11 +32,15 @@ public class AngelServiceGrpcImpl extends AngelGrpcServiceGrpc.AngelGrpcServiceI
             List<AngelData> angelDataList = angels.stream()
                 .map(this::toAngelData)
                 .collect(Collectors.toList());
+            boolean hasData = !angelDataList.isEmpty();
+            if (!hasData) {
+                log.debug("No angel rows found for userId={}", request.getUserId());
+            }
             
             GetUserAngelsResponse response = GetUserAngelsResponse.newBuilder()
                 .setStatus(ResponseStatus.newBuilder()
                     .setCode(200)
-                    .setMessage("Success")
+                    .setMessage(hasData ? "Success" : "No angel data")
                     .setSuccess(true)
                     .build())
                 .addAllAngels(angelDataList)

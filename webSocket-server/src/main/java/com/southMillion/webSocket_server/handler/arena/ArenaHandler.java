@@ -6,14 +6,20 @@ import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.grpc.ArenaGrpcClient;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
+import com.SouthMillion.webSocket_server.service.TaskCondition;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
+import com.SouthMillion.webSocket_server.service.client.BagFeign;
+import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.SouthMillion.dto.bag.BagDTOs;
+import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.SouthMillion.proto.Msgarena.Msgarena;
 import org.SouthMillion.proto.Msgrole.Msgrole;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +49,8 @@ public class ArenaHandler implements MessageHandler {
     private final ArenaGrpcClient arenaGrpcClient;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;
+    private final BagFeign bagFeign;
+    private final WalletHttpClient walletHttpClient;
 
     @Override
     public int[] interests() {
@@ -265,12 +273,16 @@ public class ArenaHandler implements MessageHandler {
      */
     private void handleClaimRewards(PlayerSession session) {
         try {
-            Map<String, Object> result = arenaGrpcClient.claimRewards(session.getRoleId(), "DAILY");
+            Long roleId = session.getRoleId();
+            Map<String, Object> result = arenaGrpcClient.claimRewards(roleId, "DAILY");
+            if (rewardClaimed(result)) {
+                syncPostClaimState(session, roleId);
+            }
 
             // Send updated arena info
             handleGetArenaInfo(session);
 
-            log.info("[arena] Rewards claimed: roleId={}", session.getRoleId());
+            log.info("[arena] Rewards claimed: roleId={}", roleId);
 
         } catch (Exception e) {
             log.error("[arena] Failed to claim rewards", e);
@@ -390,12 +402,70 @@ public class ArenaHandler implements MessageHandler {
             }
 
             Emitters.emit(session, MessageIds.SC_ARENA_REPORT_LIST, builder.build().toByteArray());
-            publishTaskProgress(session.getRoleId(), "condition_37", "websocket-arena-history");
+            publishTaskProgress(session.getRoleId(), TaskCondition.TRIAL_COMPLETE.taskKey(), "websocket-arena-history");
             log.info("[arena] Sent battle history ({} records) to roleId={}", history != null ? history.size() : 0, session.getRoleId());
 
         } catch (Exception e) {
             log.error("[arena] Failed to get battle history", e);
         }
+    }
+
+    private void syncPostClaimState(PlayerSession session, Long roleId) {
+        pushBagState(session, roleId);
+        pushWalletBalance(session, roleId);
+
+        Mono.delay(Duration.ofMillis(250))
+                .onErrorResume(ex -> Mono.empty())
+                .subscribe(ignored -> {
+                    pushBagState(session, roleId);
+                    pushWalletBalance(session, roleId);
+                });
+    }
+
+    private void pushBagState(PlayerSession session, Long roleId) {
+        if (roleId == null) {
+            return;
+        }
+        try {
+            List<BagDTOs.ItemView> list = bagFeign.list(String.valueOf(roleId));
+            Emitters.sendKnapsackAllInfo(session, list);
+        } catch (Exception e) {
+            log.warn("[arena] Failed to push bag state for roleId={}: {}", roleId, e.getMessage());
+        }
+    }
+
+    private void pushWalletBalance(PlayerSession session, Long roleId) {
+        if (roleId == null) {
+            return;
+        }
+        try {
+            WalletDTOs.BalancesResp walletResp = walletHttpClient.info(String.valueOf(roleId));
+            if (walletResp != null && walletResp.balances() != null) {
+                Emitters.sendWalletBalances(session, walletResp.balances());
+            }
+        } catch (Exception e) {
+            log.warn("[arena] Failed to push wallet balance for roleId={}: {}", roleId, e.getMessage());
+        }
+    }
+
+    private boolean rewardClaimed(Map<String, Object> result) {
+        if (result == null) {
+            return false;
+        }
+        Object success = result.get("success");
+        if (success instanceof Boolean ok) {
+            return ok;
+        }
+        Object claimed = result.get("claimed");
+        if (claimed instanceof Boolean ok) {
+            return ok;
+        }
+        Object code = result.get("code");
+        if (code instanceof Number number) {
+            int value = number.intValue();
+            return value == 0 || value == 200;
+        }
+        return true;
     }
 
     private void publishTaskProgress(Long roleId, String taskKey, String source) {

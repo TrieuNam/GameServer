@@ -1,0 +1,20 @@
+{
+  "serviceName" : "eureka-server",
+  "displayName" : "Eureka Server",
+  "phase" : "P0",
+  "port" : 8761,
+  "serviceStatus" : "RUNNING",
+  "doctorStatus" : "STARTED",
+  "watched" : false,
+  "approvalRequired" : false,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : null,
+  "lastErrorSummary" : "Service is running normally",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:38:48.740+07:00  INFO 58712 --- [eureka-server] [   virtual-1877] c.n.e.registry.AbstractInstanceRegistry  : Registered instance NOTIFICATION-SERVICE/WINDOWS-JQ9M1AH.lan:notification-service:8520 with status UP (replication=false)", "2026-04-05T23:38:48.889+07:00  INFO 58712 --- [eureka-server] [   virtual-1879] c.n.e.registry.AbstractInstanceRegistry  : Registered instance NOTIFICATION-SERVICE/WINDOWS-JQ9M1AH.lan:notification-service:8520 with status UP (replication=true)", "2026-04-05T23:38:50.990+07:00  INFO 58712 --- [eureka-server] [   virtual-1895] c.n.e.registry.AbstractInstanceRegistry  : Registered instance ANALYTICS-SERVICE/WINDOWS-JQ9M1AH.lan:analytics-service:8510 with status UP (replication=false)", "2026-04-05T23:38:51.499+07:00  INFO 58712 --- [eureka-server] [   virtual-1902] c.n.e.registry.AbstractInstanceRegistry  : Registered instance ANALYTICS-SERVICE/WINDOWS-JQ9M1AH.lan:analytics-service:8510 with status UP (replication=true)", "2026-04-05T23:38:51.967+07:00  INFO 58712 --- [eureka-server] [   virtual-1905] c.n.e.registry.AbstractInstanceRegistry  : Registered instance ACTIVITY-SERVICE/WINDOWS-JQ9M1AH.lan:activity-service:8382 with status UP (replication=false)", "2026-04-05T23:38:52.383+07:00  INFO 58712 --- [eureka-server] [   virtual-1906] c.n.e.registry.AbstractInstanceRegistry  : Registered instance ACTIVITY-SERVICE/WINDOWS-JQ9M1AH.lan:activity-service:8382 with status UP (replication=true)", "2026-04-05T23:39:22.354+07:00  INFO 58712 --- [eureka-server] [   virtual-2156] c.n.e.registry.AbstractInstanceRegistry  : Registered instance MAIN-FB-SERVICE/WINDOWS-JQ9M1AH.lan:main-fb-service:8128 with status UP (replication=false)", "2026-04-05T23:39:22.861+07:00  INFO 58712 --- [eureka-server] [   virtual-2159] c.n.e.registry.AbstractInstanceRegistry  : Registered instance MAIN-FB-SERVICE/WINDOWS-JQ9M1AH.lan:main-fb-service:8128 with status UP (replication=true)", "2026-04-05T23:39:43.007+07:00  INFO 58712 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 0ms", "2026-04-05T23:40:43.007+07:00  INFO 58712 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 0ms", "2026-04-05T23:41:43.011+07:00  INFO 58712 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 3ms", "2026-04-05T23:42:43.011+07:00  INFO 58712 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 0ms" ],
+  "lastUpdated" : "2026-04-05T23:42:57.6758462"
+}

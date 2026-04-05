@@ -203,9 +203,12 @@ public class AnalyticsEventConsumer {
             Long playerId = ((Number) event.get("roleId")).longValue();
             analyticsService.trackEvent(playerId, "role.levelup", "progression", event, null);
 
-            // → task-service: level_up progress (1 per level-up event; delta field if bulk)
-            Number levelsGained = (Number) event.getOrDefault("levelsGained", 1);
-            publishTaskProgress(playerId, "level_up", levelsGained.intValue(), "role-service");
+            // → task-service: level_up progress — send absolute newLevel so SNAPSHOT_MAX works correctly.
+            // task-service uses max(currentProgress, delta), so repeated events are idempotent.
+            Number newLevel = (Number) event.get("newLevel");
+            if (newLevel != null && newLevel.intValue() > 0) {
+                publishTaskProgress(playerId, "level_up", newLevel.intValue(), "role-service");
+            }
 
             ack.acknowledge();
         } catch (Exception e) {

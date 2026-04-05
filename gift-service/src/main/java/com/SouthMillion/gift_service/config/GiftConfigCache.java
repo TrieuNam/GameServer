@@ -65,9 +65,17 @@ public class GiftConfigCache {
             if (cached != null && !cached.isBlank()) {
                 log.debug("[GiftConfigCache] Redis HIT path={}", path);
                 try {
-                    return om.readTree(cached);
+                    JsonNode node = om.readTree(cached);
+                    cache.put(path, node);
+                    touchRedisKey(redisKey);
+                    return node;
                 } catch (Exception e) {
                     log.warn("Failed to parse cached JSON from Redis, will reload: {}", e.toString());
+                    try {
+                        redis.delete(redisKey);
+                    } catch (Exception ignored) {
+                        // ignore corrupt-cache cleanup failure
+                    }
                 }
             }
             log.debug("[GiftConfigCache] Redis MISS path={}", path);
@@ -163,6 +171,17 @@ public class GiftConfigCache {
             }
         }
         return map;
+    }
+
+    private void touchRedisKey(String redisKey) {
+        if (!redisEnabled || redisKey == null || redisKey.isBlank() || redisTtlHours <= 0) {
+            return;
+        }
+        try {
+            redis.expire(redisKey, redisTtlHours, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.debug("[GiftConfigCache] redis ttl touch failed key={} ex={}", redisKey, e.toString());
+        }
     }
 
     private String toRedisKey(String path) {

@@ -1,0 +1,21 @@
+FROM eclipse-temurin:21-jre-jammy
+
+WORKDIR /app
+
+ARG SERVICE_PATH
+COPY ${SERVICE_PATH}/target /tmp/target
+
+RUN set -eux; \
+    jarPath="$(find /tmp/target -maxdepth 1 -type f -name '*.jar' ! -name 'original-*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' | head -n 1)"; \
+    if [ -z "$jarPath" ]; then \
+        echo "No runnable jar found in /tmp/target for ${SERVICE_PATH}" >&2; \
+        exit 1; \
+    fi; \
+    cp "$jarPath" /app/app.jar; \
+    rm -rf /tmp/target
+
+EXPOSE 8080
+
+ENV JAVA_OPTS=""
+
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

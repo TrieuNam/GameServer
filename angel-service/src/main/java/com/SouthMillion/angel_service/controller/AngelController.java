@@ -37,6 +37,7 @@ public class AngelController {
             List<Angel> angels = angelService.getAllAngels(roleId);
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
+            response.put("hasData", !angels.isEmpty());
             response.put("angels", angels);
             return response;
         } catch (Exception e) {

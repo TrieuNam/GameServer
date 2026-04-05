@@ -2,12 +2,11 @@ package com.SouthMillion.webSocket_server.config;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.SouthMillion.webSocket_server.service.client.ConfigFeign;
+import com.SouthMillion.webSocket_server.service.ConfigSnapshotLookupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -28,11 +27,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Preload static config JSON files from config-service into Redis after websocket-server startup.
+ * Preload static config JSON files from remote config-service into Redis after websocket-server startup.
  *
  * Purpose:
+ * - Warm Redis once at startup so login paths can reuse cached config data.
  * - Reduce repeated config-service calls during login peak.
  * - Build task condition index from task_cfg.json for O(1) condition lookup.
  */
@@ -41,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class StartupConfigRedisPreloader {
 
-    private final ConfigFeign configFeign;
+    private final ConfigSnapshotLookupService configLookup;
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;
 
@@ -54,7 +55,7 @@ public class StartupConfigRedisPreloader {
     @Value("${app.redis-preload.p0-paths:gameworld/logicconfig/task_cfg.json,gameworld/logicconfig/roleexp.json,gameworld/logicconfig/role_name.json,gameworld/skill/single_skill.json,gameworld/skill/passive_skill.json}")
     private List<String> p0Paths;
 
-    @Value("${app.redis-preload.p1-paths:gameworld/item/equipment.json,gameworld/item/other.json,gameworld/item/expense.json,gameworld/item/gift.json,gameworld/logicconfig/shop_cfg.json,gameworld/logicconfig/shop_shenmi.json,gameworld/logicconfig/cloth_shop.json,gameworld/logicconfig/unpack.json,gameworld/logicconfig/kaixiangdaji.json}")
+    @Value("${app.redis-preload.p1-paths:gameworld/item/equipment.json,gameworld/item/other.json,gameworld/item/expense.json,gameworld/item/gift.json,gameworld/logicconfig/shop_cfg.json,gameworld/logicconfig/shop_shenmi.json,gameworld/logicconfig/cloth_shop.json,gameworld/logicconfig/model_clothes.json,gameworld/logicconfig/angel.json,gameworld/logicconfig/unpack.json,gameworld/logicconfig/kaixiangdaji.json}")
     private List<String> p1Paths;
 
     @Value("${app.redis-preload.p1-async:true}")
@@ -63,7 +64,14 @@ public class StartupConfigRedisPreloader {
     @Value("${app.redis-preload.p1-timeout-ms:15000}")
     private long p1TimeoutMs;
 
+    @Value("${app.redis-preload.fetch-attempts:3}")
+    private int fetchAttempts;
+
+    @Value("${app.redis-preload.fetch-backoff-ms:1000}")
+    private long fetchBackoffMs;
+
     private final ConcurrentHashMap<String, Map<String, Object>> fileStatuses = new ConcurrentHashMap<>();
+    private final AtomicBoolean running = new AtomicBoolean(false);
     private volatile Map<String, Object> summary = Map.of(
         "enabled", true,
         "state", "INIT",
@@ -75,7 +83,11 @@ public class StartupConfigRedisPreloader {
     );
 
     @EventListener(ApplicationReadyEvent.class)
-    public void preload() {
+    public void onApplicationReady() {
+        reloadNow();
+    }
+
+    public boolean reloadNow() {
         if (!enabled) {
             log.info("[redis-preload] disabled");
             summary = Map.of(
@@ -87,7 +99,12 @@ public class StartupConfigRedisPreloader {
                 "fail", 0,
                 "p1State", "DISABLED"
             );
-            return;
+            return true;
+        }
+
+        if (!running.compareAndSet(false, true)) {
+            log.info("[redis-preload] already running; skip duplicate trigger");
+            return isReadyForLogin();
         }
 
         long startedAt = System.currentTimeMillis();
@@ -114,33 +131,48 @@ public class StartupConfigRedisPreloader {
         int ok = p0Result.ok;
         int fail = p0Result.fail;
 
-        if (p1Async) {
-            ExecutorService es = Executors.newSingleThreadExecutor();
-            Future<TierResult> p1Future = es.submit(() -> preloadTier("P1", p1));
-            try {
-                TierResult p1Result = p1Future.get(p1TimeoutMs, TimeUnit.MILLISECONDS);
+        try {
+            if (p1Async) {
+                ExecutorService es = Executors.newSingleThreadExecutor();
+                Future<TierResult> p1Future = es.submit(() -> preloadTier("P1", p1));
+                try {
+                    TierResult p1Result = p1Future.get(p1TimeoutMs, TimeUnit.MILLISECONDS);
+                    ok += p1Result.ok;
+                    fail += p1Result.fail;
+                    updateSummary(ok, fail, "COMPLETED", "COMPLETED", startedAtIso);
+                } catch (TimeoutException e) {
+                    p1Future.cancel(true);
+                    updateSummary(ok, fail, "PARTIAL_TIMEOUT", "TIMEOUT", startedAtIso);
+                    log.warn("[redis-preload] P1 timeout after {}ms", p1TimeoutMs);
+                } catch (Exception e) {
+                    updateSummary(ok, fail + 1, "PARTIAL_ERROR", "ERROR", startedAtIso);
+                    log.warn("[redis-preload] P1 failed: {}", e.getMessage());
+                } finally {
+                    es.shutdownNow();
+                }
+            } else {
+                TierResult p1Result = preloadTier("P1", p1);
                 ok += p1Result.ok;
                 fail += p1Result.fail;
                 updateSummary(ok, fail, "COMPLETED", "COMPLETED", startedAtIso);
-            } catch (TimeoutException e) {
-                p1Future.cancel(true);
-                updateSummary(ok, fail, "PARTIAL_TIMEOUT", "TIMEOUT", startedAtIso);
-                log.warn("[redis-preload] P1 timeout after {}ms", p1TimeoutMs);
-            } catch (Exception e) {
-                updateSummary(ok, fail + 1, "PARTIAL_ERROR", "ERROR", startedAtIso);
-                log.warn("[redis-preload] P1 failed: {}", e.getMessage());
-            } finally {
-                es.shutdownNow();
             }
-        } else {
-            TierResult p1Result = preloadTier("P1", p1);
-            ok += p1Result.ok;
-            fail += p1Result.fail;
-            updateSummary(ok, fail, "COMPLETED", "COMPLETED", startedAtIso);
-        }
 
-        long elapsed = System.currentTimeMillis() - startedAt;
-        log.info("[redis-preload] completed in {}ms, ok={}, fail={}", elapsed, ok, fail);
+            long elapsed = System.currentTimeMillis() - startedAt;
+            log.info("[redis-preload] completed in {}ms, ok={}, fail={}", elapsed, ok, fail);
+            return fail == 0;
+        } finally {
+            running.set(false);
+        }
+    }
+
+    public boolean isReadyForLogin() {
+        if (!enabled) {
+            return true;
+        }
+        Object state = summary.get("state");
+        Object fail = summary.get("fail");
+        long failCount = fail instanceof Number n ? n.longValue() : Long.MAX_VALUE;
+        return "COMPLETED".equals(String.valueOf(state)) && failCount == 0;
     }
 
     public Map<String, Object> statusSnapshot() {
@@ -192,20 +224,15 @@ public class StartupConfigRedisPreloader {
         status.put("loadedAt", "");
         status.put("durationMs", 0);
         status.put("hash", "");
+        status.put("source", "");
         try {
-            ResponseEntity<byte[]> resp = configFeign.getFile(path, null);
-            if (!resp.getStatusCode().is2xxSuccessful() || resp.getBody() == null) {
-                log.warn("[redis-preload] skip path={} status={}", path, resp.getStatusCode());
-                status.put("status", String.valueOf(resp.getStatusCode().value()));
-                status.put("durationMs", System.currentTimeMillis() - startedAt);
-                fileStatuses.put(path, status);
-                return false;
-            }
-
-            String json = new String(resp.getBody(), StandardCharsets.UTF_8);
+            ConfigSnapshotLookupService.LookupResult lookup = loadFromConfigServiceWithRetry(path);
+            String json = lookup.payload();
             String fileKey = fileKey(path);
             String hash = sha256Hex(json);
             String loadedAt = Instant.now().toString();
+
+            status.put("source", lookup.source());
 
             redis.opsForValue().set(fileKey, json, ttlHours, TimeUnit.HOURS);
             redis.opsForValue().set(fileMetaHashKey(path), hash, ttlHours, TimeUnit.HOURS);
@@ -231,6 +258,30 @@ public class StartupConfigRedisPreloader {
             fileStatuses.put(path, status);
             return false;
         }
+    }
+
+    private ConfigSnapshotLookupService.LookupResult loadFromConfigServiceWithRetry(String path) {
+        RuntimeException last = null;
+        int maxAttempts = Math.max(1, fetchAttempts);
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                return configLookup.warmFromRemote(path);
+            } catch (RuntimeException ex) {
+                last = ex;
+                if (attempt < maxAttempts) {
+                    long delay = Math.max(100L, fetchBackoffMs * attempt);
+                    log.warn("[redis-preload] fetch retry path={} attempt={}/{} delayMs={} error={}",
+                            path, attempt, maxAttempts, delay, ex.getMessage());
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw ex;
+                    }
+                }
+            }
+        }
+        throw last == null ? new IllegalStateException("Failed to preload config path=" + path) : last;
     }
 
     private void buildTaskConditionIndex(String taskCfgJson) {

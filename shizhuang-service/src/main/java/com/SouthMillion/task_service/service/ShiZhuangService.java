@@ -15,30 +15,51 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.ShiZhuang.*;
 import org.SouthMillion.dto.item.shop.ClothShopItemDTO;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ShiZhuangService {
+    private static final String MODEL_CLOTHES_PATH = "gameworld/logicconfig/model_clothes.json";
+    private static final String CLOTH_SHOP_PATH = "gameworld/logicconfig/cloth_shop.json";
+
     private final ShiZhuangRepository repo;
     private final ShiZhuangCacheService cache;
 
     private final PlayerClothesRepository playerClothesRepository;
     private final ConfigFeignClient configFeignClient;
     private final WalletFeignClient walletFeignClient;
+    private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${shizhuang.config.redis-enabled:true}")
+    private boolean redisEnabled;
+    @Value("${shizhuang.config.redis-ttl-hours:24}")
+    private long redisTtlHours;
+    @Value("${shizhuang.config.allow-remote-fallback-on-miss:false}")
+    private boolean allowRemoteFallbackOnMiss;
+
+    private final Map<String, JsonNode> localConfigCache = new ConcurrentHashMap<>();
 
     // Load config từ model_clothes.json
     public List<ClothesDTO> loadClothesConfig() {
-        JsonNode jsonNode = configFeignClient.getConfigFile("gameworld/logicconfig/model_clothes.json");
+        JsonNode jsonNode = loadConfigNode(MODEL_CLOTHES_PATH);
         if (jsonNode == null || !jsonNode.has("clothes")) return Collections.emptyList();
         try {
             return Arrays.asList(objectMapper.treeToValue(jsonNode.get("clothes"), ClothesDTO[].class));
@@ -49,7 +70,7 @@ public class ShiZhuangService {
 
     // Load config nâng cấp
     public List<ClothesUpDTO> loadClothesUpConfig() {
-        JsonNode jsonNode = configFeignClient.getConfigFile("gameworld/logicconfig/model_clothes.json");
+        JsonNode jsonNode = loadConfigNode(MODEL_CLOTHES_PATH);
         if (jsonNode == null || !jsonNode.has("clothes_up")) return Collections.emptyList();
         try {
             return Arrays.asList(objectMapper.treeToValue(jsonNode.get("clothes_up"), ClothesUpDTO[].class));
@@ -58,9 +79,9 @@ public class ShiZhuangService {
         }
     }
 
-    // 1. Lấy config thời trang từ config-service
+    // 1. Lấy config thời trang từ Redis-first cache
     private ClothesDTO getClothesConfig(Integer clothesId) {
-        JsonNode jsonNode = configFeignClient.getConfigFile("gameworld/logicconfig/model_clothes.json");
+        JsonNode jsonNode = loadConfigNode(MODEL_CLOTHES_PATH);
         if (jsonNode == null || !jsonNode.has("clothes")) throw new RuntimeException("Config not found");
         try {
             List<ClothesDTO> list = Arrays.asList(objectMapper.treeToValue(jsonNode.get("clothes"), ClothesDTO[].class));
@@ -73,13 +94,79 @@ public class ShiZhuangService {
 
     // Load shop từ cloth_shop.json
     public List<ClothShopItemDTO> loadClothShopConfig() {
-        JsonNode jsonNode = configFeignClient.getConfigFile("gameworld/logicconfig/cloth_shop.json");
+        JsonNode jsonNode = loadConfigNode(CLOTH_SHOP_PATH);
+        if (jsonNode == null || jsonNode.isNull()) {
+            return Collections.emptyList();
+        }
         try {
             ClothShopConfigDTO config = objectMapper.treeToValue(jsonNode, ClothShopConfigDTO.class);
-            return config.getShop();
+            return config != null && config.getShop() != null ? config.getShop() : Collections.emptyList();
         } catch (Exception e) {
             throw new RuntimeException("Parse cloth_shop.json fail", e);
         }
+    }
+
+    private JsonNode loadConfigNode(String path) {
+        JsonNode localCached = localConfigCache.get(path);
+        if (localCached != null && !localCached.isNull()) {
+            return localCached;
+        }
+
+        String redisKey = toRedisKey(path);
+        if (redisEnabled) {
+            try {
+                String cached = redis.opsForValue().get(redisKey);
+                if (cached != null && !cached.isBlank()) {
+                    JsonNode node = objectMapper.readTree(cached);
+                    localConfigCache.put(path, node);
+                    touchRedisKey(redisKey);
+                    log.debug("[ShiZhuangService] Redis HIT path={}", path);
+                    return node;
+                }
+                log.debug("[ShiZhuangService] Redis MISS path={}", path);
+            } catch (Exception e) {
+                log.warn("[ShiZhuangService] redis read failed path={} ex={}", path, e.toString());
+                try {
+                    redis.delete(redisKey);
+                } catch (Exception ignored) {
+                    // ignore corrupt-cache cleanup failure
+                }
+            }
+        }
+
+        if (!allowRemoteFallbackOnMiss) {
+            throw new IllegalStateException("Config missing from Redis while shizhuang.config.allow-remote-fallback-on-miss=false: " + path);
+        }
+
+        JsonNode remote = configFeignClient.getConfigFile(path);
+        if (remote == null || remote.isNull()) {
+            throw new RuntimeException("Config not found: " + path);
+        }
+
+        localConfigCache.put(path, remote);
+        if (redisEnabled) {
+            try {
+                redis.opsForValue().set(redisKey, objectMapper.writeValueAsString(remote), redisTtlHours, TimeUnit.HOURS);
+            } catch (Exception e) {
+                log.debug("[ShiZhuangService] redis write failed path={} ex={}", path, e.toString());
+            }
+        }
+        return remote;
+    }
+
+    private void touchRedisKey(String redisKey) {
+        if (!redisEnabled || redisKey == null || redisKey.isBlank() || redisTtlHours <= 0) {
+            return;
+        }
+        try {
+            redis.expire(redisKey, redisTtlHours, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.debug("[ShiZhuangService] redis ttl touch failed key={} ex={}", redisKey, e.toString());
+        }
+    }
+
+    private String toRedisKey(String path) {
+        return "cfg:file:" + path.replace('/', ':');
     }
 
     // Mua thời trang
@@ -121,9 +208,10 @@ public class ShiZhuangService {
         // Update vào bảng sở hữu thời trang
         PlayerClothesEntity owned = playerClothesRepository.findByPlayerIdAndClothesId(parsedPlayerId, clothesId)
                 .orElse(PlayerClothesEntity.builder()
-                .playerId(parsedPlayerId)
+                        .playerId(parsedPlayerId)
                         .clothesId(clothesId)
                         .level(1)
+                        .wearing(false)
                         .build());
         // Nếu đã có, có thể tăng level hoặc ignore (tuỳ logic game)
         playerClothesRepository.save(owned);
@@ -131,13 +219,81 @@ public class ShiZhuangService {
     }
 
 
-    // Mặc thời trang (nếu chưa có thì tạo mới)
+    // Mặc thời trang và cập nhật trạng thái đang đeo theo đúng type (shield/body/weapon/head)
     @Transactional
     public void wearClothes(String playerId, Integer clothesId) {
         long parsedPlayerId = parsePlayerId(playerId);
+        Integer targetType = resolveClothesType(clothesId);
+
+        List<PlayerClothesEntity> owned = new ArrayList<>(playerClothesRepository.findByPlayerId(parsedPlayerId));
+        PlayerClothesEntity target = playerClothesRepository.findByPlayerIdAndClothesId(parsedPlayerId, clothesId)
+                .orElseGet(() -> {
+                    PlayerClothesEntity created = PlayerClothesEntity.builder()
+                            .playerId(parsedPlayerId)
+                            .clothesId(clothesId)
+                            .level(1)
+                            .wearing(false)
+                            .build();
+                    owned.add(created);
+                    return created;
+                });
+
+        for (PlayerClothesEntity entity : owned) {
+            if (entity == null || entity.getClothesId() == null) {
+                continue;
+            }
+            Integer clothesType = resolveClothesType(entity.getClothesId());
+            if (targetType != null && targetType.equals(clothesType)) {
+                entity.setWearing(false);
+            }
+        }
+
+        target.setWearing(true);
+        playerClothesRepository.saveAll(owned);
+        log.info("[ShiZhuang] Player={} wore clothesId={} type={}", playerId, clothesId, targetType);
+    }
+
+    @Transactional
+    public void unwearClothes(String playerId, Integer clothesId) {
+        long parsedPlayerId = parsePlayerId(playerId);
         playerClothesRepository.findByPlayerIdAndClothesId(parsedPlayerId, clothesId)
-                .or(() -> Optional.of(playerClothesRepository.save(PlayerClothesEntity.builder()
-                .playerId(parsedPlayerId).clothesId(clothesId).level(1).build())));
+                .ifPresent(entity -> {
+                    entity.setWearing(false);
+                    playerClothesRepository.save(entity);
+                    log.info("[ShiZhuang] Player={} removed clothesId={}", playerId, clothesId);
+                });
+    }
+
+    public Map<String, Integer> getCurrentAppearance(String playerId) {
+        long parsedPlayerId = parsePlayerId(playerId);
+        Map<String, Integer> appearance = new HashMap<>();
+        appearance.put("surfaceWeapon", 0);
+        appearance.put("surfaceShield", 0);
+        appearance.put("surfaceHead", 0);
+        appearance.put("surfaceBody", 0);
+
+        List<PlayerClothesEntity> owned = playerClothesRepository.findByPlayerId(parsedPlayerId);
+        if (owned == null || owned.isEmpty()) {
+            return appearance;
+        }
+
+        Map<Integer, List<PlayerClothesEntity>> byType = new HashMap<>();
+        for (PlayerClothesEntity entity : owned) {
+            if (entity == null || entity.getClothesId() == null) {
+                continue;
+            }
+            Integer clothesType = resolveClothesType(entity.getClothesId());
+            if (clothesType == null) {
+                continue;
+            }
+            byType.computeIfAbsent(clothesType, key -> new ArrayList<>()).add(entity);
+        }
+
+        applyAppearanceSlot(appearance, byType.get(0), "surfaceShield");
+        applyAppearanceSlot(appearance, byType.get(1), "surfaceBody");
+        applyAppearanceSlot(appearance, byType.get(2), "surfaceWeapon");
+        applyAppearanceSlot(appearance, byType.get(3), "surfaceHead");
+        return appearance;
     }
 
     // Nâng cấp thời trang
@@ -167,6 +323,39 @@ public class ShiZhuangService {
         return entities.stream()
                 .map(PlayerClothesMapper::toDTO)
                 .collect(Collectors.toList());
+    }
+
+    private void applyAppearanceSlot(Map<String, Integer> appearance, List<PlayerClothesEntity> entries, String fieldName) {
+        PlayerClothesEntity selected = pickDisplayedClothes(entries);
+        if (selected != null && selected.getClothesId() != null) {
+            appearance.put(fieldName, selected.getClothesId());
+        }
+    }
+
+    private PlayerClothesEntity pickDisplayedClothes(List<PlayerClothesEntity> entries) {
+        if (entries == null || entries.isEmpty()) {
+            return null;
+        }
+        return entries.stream()
+                .filter(Objects::nonNull)
+                .max(Comparator
+                        .comparingInt((PlayerClothesEntity entity) -> Boolean.TRUE.equals(entity.getWearing()) ? 1 : 0)
+                        .thenComparingInt(entity -> entity.getLevel() != null ? entity.getLevel() : 0)
+                        .thenComparingLong(entity -> entity.getId() != null ? entity.getId() : 0L))
+                .orElse(null);
+    }
+
+    private Integer resolveClothesType(Integer clothesId) {
+        if (clothesId == null || clothesId <= 0) {
+            return null;
+        }
+        try {
+            ClothesDTO cfg = getClothesConfig(clothesId);
+            return cfg != null ? cfg.getClothesType() : null;
+        } catch (Exception e) {
+            log.debug("[ShiZhuang] resolveClothesType skipped clothesId={} ex={}", clothesId, e.toString());
+            return null;
+        }
     }
 
     private long parsePlayerId(String playerId) {

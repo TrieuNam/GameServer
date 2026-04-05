@@ -69,6 +69,8 @@ public class RedisFirstConfigLoader {
         String cached = redis.opsForValue().get(redisKey);
         if (cached != null && !cached.isBlank()) {
             log.debug("[RedisFirstConfig] HIT path={}", path);
+            touch(redisKey);
+            touch(toETagKey(path));
             return cached;
         }
 
@@ -123,6 +125,17 @@ public class RedisFirstConfigLoader {
         redis.delete(toRedisKey(path));
         redis.delete(toETagKey(path));
         log.info("[RedisFirstConfig] Cleared cache for path={}", path);
+    }
+
+    private void touch(String key) {
+        if (key == null || key.isBlank() || ttlHours <= 0) {
+            return;
+        }
+        try {
+            redis.expire(key, ttlHours, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.debug("[RedisFirstConfig] ttl touch failed key={} ex={}", key, e.toString());
+        }
     }
 
     private String toRedisKey(String path) {

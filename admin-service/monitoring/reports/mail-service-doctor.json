@@ -1,0 +1,20 @@
+{
+  "serviceName" : "mail-service",
+  "displayName" : "Mail Service",
+  "phase" : "P3",
+  "port" : 8470,
+  "serviceStatus" : "STOPPED",
+  "doctorStatus" : "STARTED",
+  "watched" : false,
+  "approvalRequired" : false,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : null,
+  "lastErrorSummary" : "Service is running normally",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-05T23:37:31.913+07:00  INFO 39324 --- [mail-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-05T23:37:31.913+07:00  INFO 39324 --- [mail-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "========================================", "Mail Service Started Successfully!", "Port: 8470", "Database: mail_db", "========================================", "2026-04-05T23:39:53.668+07:00  INFO 39324 --- [mail-service] [    virtual-128] c.S.m.controller.MailController          : REST API: Get mail list - roleId=2", "2026-04-05T23:39:53.703+07:00  INFO 39324 --- [mail-service] [    virtual-128] c.S.mail_service.service.MailService     : Getting mail list: roleId=2", "Hibernate: select m1_0.id,m1_0.claimed_at,m1_0.content,m1_0.created_at,m1_0.expires_at,m1_0.is_claimed_attachment,m1_0.is_deleted,m1_0.is_read,m1_0.read_at,m1_0.receiver_id,m1_0.sender_id,m1_0.sender_name,m1_0.title,m1_0.type from mail m1_0 where m1_0.receiver_id=? and not(m1_0.is_deleted) order by m1_0.created_at desc", "Hibernate: select count(m1_0.id) from mail m1_0 where m1_0.receiver_id=? and m1_0.is_read=0 and m1_0.is_deleted=0", "2026-04-05T23:42:19.433+07:00  INFO 39324 --- [mail-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-05T23:42:58.6977806"
+}

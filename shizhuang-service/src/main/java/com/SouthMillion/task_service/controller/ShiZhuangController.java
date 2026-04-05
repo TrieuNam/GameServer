@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/shizhuang")
@@ -58,12 +59,24 @@ public class ShiZhuangController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/unwear")
+    public ResponseEntity<?> unwear(@RequestParam String roleId,
+                                    @RequestParam Integer clothesId) {
+        service.unwearClothes(roleId, clothesId);
+        return ResponseEntity.ok().build();
+    }
+
     // API nâng cấp thời trang
     @PostMapping("/levelup")
     public ResponseEntity<?> levelUp(@RequestParam String roleId,
                                      @RequestParam Integer clothesId) {
         service.levelUpClothes(roleId, clothesId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/appearance/{roleId}")
+    public ResponseEntity<Map<String, Integer>> getCurrentAppearance(@PathVariable String roleId) {
+        return ResponseEntity.ok(service.getCurrentAppearance(roleId));
     }
 
     // API lấy danh sách thời trang sở hữu

@@ -32,6 +32,12 @@ spring:
       database: 0
       timeout: 3000ms
 
+shizhuang:
+  config:
+    redis-enabled: true
+    redis-ttl-hours: 24
+    allow-remote-fallback-on-miss: false
+
 eureka:
   client:
     service-url:

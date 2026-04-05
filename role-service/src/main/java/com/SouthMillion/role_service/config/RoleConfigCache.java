@@ -148,6 +148,7 @@ public class RoleConfigCache {
                     levelTableRef.set(bundle.table());
                     baseAttrRef.set(bundle.baseAttr());
                     otherRef.set(bundle.other());
+                    touchRedisKey(redisKey);
                     return true;
                 }
                 log.debug("[RoleConfigCache] Redis MISS path={}, calling config-service", path);
@@ -203,7 +204,13 @@ public class RoleConfigCache {
                     List<String> names = parseNamePool(json);
                     if (names != null && !names.isEmpty()) {
                         namePoolRef.set(names);
+                        touchRedisKey(redisKey);
                         return true;
+                    }
+                    try {
+                        redis.delete(redisKey);
+                    } catch (Exception ignored) {
+                        // ignore invalid-cache cleanup failure
                     }
                 }
                 log.debug("[RoleConfigCache] Redis MISS path={}, calling config-service", path);
@@ -508,6 +515,17 @@ public class RoleConfigCache {
      * Convert config path to Redis key format.
      * Example: "gameworld/logicconfig/roleexp.json" → "cfg:file:gameworld:logicconfig:roleexp.json"
      */
+    private void touchRedisKey(String redisKey) {
+        if (!redisEnabled || redisKey == null || redisKey.isBlank() || redisTtlHours <= 0) {
+            return;
+        }
+        try {
+            redis.expire(redisKey, redisTtlHours, TimeUnit.HOURS);
+        } catch (Exception e) {
+            log.debug("[RoleConfigCache] redis ttl touch failed key={} ex={}", redisKey, e.toString());
+        }
+    }
+
     private String toRedisKey(String path) {
         return "cfg:file:" + path.replace('/', ':');
     }

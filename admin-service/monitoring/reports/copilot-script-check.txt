@@ -1,0 +1,3 @@
+﻿GitHub CLI (gh) is not installed. Prompt prepared only.
+
+Prompt file: .\monitoring\reports\sample-prompt.md

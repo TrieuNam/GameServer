@@ -34,4 +34,16 @@ public class ClothesDTO {
     /** Quality tier (1-5) */
     @JsonProperty("quality")
     private Integer quality;
+
+    /** 0=shield, 1=body, 2=weapon, 3=head */
+    @JsonProperty("clothes_type")
+    private Integer clothesType;
+
+    /** Linked item id used by the client config */
+    @JsonProperty("clothes_item")
+    private Integer clothesItem;
+
+    /** Render resource id */
+    @JsonProperty("res_id")
+    private Integer resId;
 }

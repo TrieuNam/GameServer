@@ -25,4 +25,8 @@ public class PlayerClothesEntity {
 
     @Column(name = "level")
     private Integer level;
+
+    @Builder.Default
+    @Column(name = "wearing", nullable = false)
+    private Boolean wearing = false;
 }

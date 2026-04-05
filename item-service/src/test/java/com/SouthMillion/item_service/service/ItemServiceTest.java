@@ -25,7 +25,8 @@ class ItemServiceTest {
     @InjectMocks private ItemService itemService;
 
     private static ItemMetaDTO dto(int itemId, String type, Integer pileLimit) {
-        return new ItemMetaDTO(itemId, type, 1, 0L, 100L, pileLimit, 0L, false, false);
+        return new ItemMetaDTO(itemId, type, 1, 0L, 100L, pileLimit, 0L, false, false,
+                null, null, null, null, null, null, null, null, null, null);
     }
 
     // =========================================================

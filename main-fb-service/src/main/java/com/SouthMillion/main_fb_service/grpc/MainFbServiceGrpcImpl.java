@@ -4,7 +4,7 @@ import com.SouthMillion.main_fb_service.service.MainFbService;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import net.devh.boot.grpc.server.service.GrpcService;
 import org.SouthMillion.dto.main_fb.*;
 import org.SouthMillion.proto.mainfb.*;
 
@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * gRPC service implementation for Main Dungeon/Copy service
  * Handles PvE instance/dungeon operations with high throughput
  */
-@Service
+@GrpcService
 @RequiredArgsConstructor
 public class MainFbServiceGrpcImpl extends MainFbServiceGrpc.MainFbServiceImplBase {
 

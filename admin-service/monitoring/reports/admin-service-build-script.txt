@@ -1,0 +1,24 @@
+﻿[INFO] Scanning for projects...
+[WARNING] The requested profile "alwaysActiveProfile" could not be activated because it does not exist.
+[WARNING] The requested profile "anotherAlwaysActiveProfile" could not be activated because it does not exist.
+[INFO] 
+[INFO] -------------------< com.southMillion:admin-service >-------------------
+[INFO] Building admin-service 1.0.0
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ admin-service ---
+[INFO] Copying 3 resources from src\main\resources to target\classes
+[INFO] Copying 4 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ admin-service ---
+[INFO] Nothing to compile - all classes are up to date.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.739 s
+[INFO] Finished at: 2026-04-05T12:26:59+07:00
+[INFO] ------------------------------------------------------------------------
+[WARNING] The requested profile "alwaysActiveProfile" could not be activated because it does not exist.
+[WARNING] The requested profile "anotherAlwaysActiveProfile" could not be activated because it does not exist.
+
