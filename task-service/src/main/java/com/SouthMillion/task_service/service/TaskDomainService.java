@@ -7,7 +7,9 @@ import com.SouthMillion.task_service.entity.TaskProgressEventEntity;
 import com.SouthMillion.task_service.entity.TaskProgressEntity;
 import com.SouthMillion.task_service.repository.TaskProgressEventRepository;
 import com.SouthMillion.task_service.repository.TaskProgressRepository;
-import lombok.RequiredArgsConstructor;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.event.task.TaskStateChangedEvent;
 import org.SouthMillion.dto.event.task.TaskProgressEvent;
@@ -36,7 +38,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class TaskDomainService {
 
@@ -62,11 +63,37 @@ public class TaskDomainService {
     // Virtual Thread executor for parallel operations
     private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
+    // Metrics
+    private final Timer claimRewardTimer;
+    private final Counter claimRewardSuccessCounter;
+    private final Counter claimRewardFailureCounter;
+
     @Autowired(required = false)
     private KafkaTemplate<String, Object> kafkaTemplate;
 
     @Autowired(required = false)
     private ItemMetaClient itemMetaClient;
+
+    public TaskDomainService(TaskProgressRepository taskProgressRepository,
+                             TaskProgressEventRepository taskProgressEventRepository,
+                             WalletClient walletClient,
+                             BagClient bagClient,
+                             TaskDefinitionProvider taskDefinitionProvider,
+                             MeterRegistry meterRegistry) {
+        this.taskProgressRepository = taskProgressRepository;
+        this.taskProgressEventRepository = taskProgressEventRepository;
+        this.walletClient = walletClient;
+        this.bagClient = bagClient;
+        this.taskDefinitionProvider = taskDefinitionProvider;
+
+        // Initialize metrics
+        this.claimRewardTimer = Timer.builder("task.claim.duration")
+                .description("Task claim reward operation duration")
+                .tag("service", "task-service")
+                .register(meterRegistry);
+        this.claimRewardSuccessCounter = meterRegistry.counter("task.claim.success");
+        this.claimRewardFailureCounter = meterRegistry.counter("task.claim.failure");
+    }
 
     public TaskListResp getAllTasks(String playerId) {
         log.info("Getting all tasks for player: {}", playerId);
