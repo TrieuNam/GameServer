@@ -28,7 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -56,6 +59,9 @@ public class ShiZhuangService {
     private boolean allowRemoteFallbackOnMiss;
 
     private final Map<String, JsonNode> localConfigCache = new ConcurrentHashMap<>();
+
+    // Virtual Thread executor for parallel operations
+    private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
     // Load config từ model_clothes.json
     public List<ClothesDTO> loadClothesConfig() {
@@ -177,32 +183,46 @@ public class ShiZhuangService {
         long parsedPlayerId = parsePlayerId(playyerId);
         ClothesDTO cfg = getClothesConfig(clothesId);
 
-        // Validate and deduct gold (buyMoney)
+        // OPTIMIZATION: Parallel currency deductions using Virtual Threads
+        List<CompletableFuture<Void>> deductionFutures = new ArrayList<>();
+
+        // Validate and deduct gold (buyMoney) - in parallel
         if (buyMoney != null && buyMoney > 0) {
-            Boolean hasGold = walletFeignClient.hasEnough(playyerId, "gold", buyMoney.longValue());
-            if (!Boolean.TRUE.equals(hasGold)) {
-                throw new IllegalArgumentException("Không đủ vàng để mua thời trang");
-            }
-            walletFeignClient.deductCurrency(Map.of(
-                    "roleId", playyerId,
-                    "currencyType", "gold",
-                    "amount", buyMoney.longValue()
-            ));
-            log.info("[ShiZhuang] Deducted {} gold from player={} for clothesId={}", buyMoney, playyerId, clothesId);
+            CompletableFuture<Void> goldFuture = CompletableFuture.runAsync(() -> {
+                Boolean hasGold = walletFeignClient.hasEnough(playyerId, "gold", buyMoney.longValue());
+                if (!Boolean.TRUE.equals(hasGold)) {
+                    throw new IllegalArgumentException("Không đủ vàng để mua thời trang");
+                }
+                walletFeignClient.deductCurrency(Map.of(
+                        "roleId", playyerId,
+                        "currencyType", "gold",
+                        "amount", buyMoney.longValue()
+                ));
+                log.info("[ShiZhuang] Deducted {} gold from player={} for clothesId={}", buyMoney, playyerId, clothesId);
+            }, virtualExecutor);
+            deductionFutures.add(goldFuture);
         }
 
-        // Validate and deduct paid gold / diamonds (addPayGold)
+        // Validate and deduct paid gold / diamonds (addPayGold) - in parallel
         if (addPayGold != null && addPayGold > 0) {
-            Boolean hasDiamond = walletFeignClient.hasEnough(playyerId, "paid_gold", addPayGold.longValue());
-            if (!Boolean.TRUE.equals(hasDiamond)) {
-                throw new IllegalArgumentException("Không đủ kim cương để mua thời trang");
-            }
-            walletFeignClient.deductCurrency(Map.of(
-                    "roleId", playyerId,
-                    "currencyType", "paid_gold",
-                    "amount", addPayGold.longValue()
-            ));
-            log.info("[ShiZhuang] Deducted {} paid_gold from player={} for clothesId={}", addPayGold, playyerId, clothesId);
+            CompletableFuture<Void> diamondFuture = CompletableFuture.runAsync(() -> {
+                Boolean hasDiamond = walletFeignClient.hasEnough(playyerId, "paid_gold", addPayGold.longValue());
+                if (!Boolean.TRUE.equals(hasDiamond)) {
+                    throw new IllegalArgumentException("Không đủ kim cương để mua thời trang");
+                }
+                walletFeignClient.deductCurrency(Map.of(
+                        "roleId", playyerId,
+                        "currencyType", "paid_gold",
+                        "amount", addPayGold.longValue()
+                ));
+                log.info("[ShiZhuang] Deducted {} paid_gold from player={} for clothesId={}", addPayGold, playyerId, clothesId);
+            }, virtualExecutor);
+            deductionFutures.add(diamondFuture);
+        }
+
+        // Wait for all parallel deductions to complete
+        if (!deductionFutures.isEmpty()) {
+            CompletableFuture.allOf(deductionFutures.toArray(new CompletableFuture[0])).join();
         }
 
         // Update vào bảng sở hữu thời trang
