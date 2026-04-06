@@ -27,6 +27,7 @@ import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.springframework.beans.factory.annotation.Value;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -1259,7 +1260,12 @@ public class BoxService {
                 .orElseThrow(() -> new IllegalStateException("BoxState not found for roleId=" + roleId));
     }
 
-    private void autoSellWearItem(Long roleId, EquipDTOs.WearFromBoxItem sellItem, String source) {
+    /**
+     * Auto-sell item cũ khi mặc đồ mới.
+     * Chạy async để không chặn phản hồi wear() cho client.
+     */
+    @Async("boxAsyncExecutor")
+    public void autoSellWearItem(Long roleId, EquipDTOs.WearFromBoxItem sellItem, String source) {
         if (roleId == null || sellItem == null || sellItem.getItemId() == null || sellItem.getItemId() <= 0) {
             return;
         }
