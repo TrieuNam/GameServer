@@ -5,7 +5,9 @@ import com.SouthMillion.mail_service.client.WalletClient;
 import com.SouthMillion.mail_service.dto.MailDTO;
 import com.SouthMillion.mail_service.entity.*;
 import com.SouthMillion.mail_service.repository.*;
-import lombok.RequiredArgsConstructor;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.GrantReq;
 import org.SouthMillion.dto.bag.ItemInfo;
@@ -26,7 +28,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class MailService {
 
     private final MailRepository mailRepository;
@@ -37,42 +38,83 @@ public class MailService {
     // Virtual Thread executor for parallel operations
     private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
+    // Metrics
+    private final Timer sendMailTimer;
+    private final Timer claimRewardsTimer;
+    private final Counter sendMailSuccessCounter;
+    private final Counter sendMailFailureCounter;
+    private final Counter claimRewardsSuccessCounter;
+    private final Counter claimRewardsFailureCounter;
+
+    public MailService(MailRepository mailRepository,
+                       MailAttachmentRepository attachmentRepository,
+                       WalletClient walletClient,
+                       BagClient bagClient,
+                       MeterRegistry meterRegistry) {
+        this.mailRepository = mailRepository;
+        this.attachmentRepository = attachmentRepository;
+        this.walletClient = walletClient;
+        this.bagClient = bagClient;
+
+        // Initialize metrics
+        this.sendMailTimer = Timer.builder("mail.send.duration")
+                .description("Mail send operation duration")
+                .tag("service", "mail-service")
+                .register(meterRegistry);
+        this.claimRewardsTimer = Timer.builder("mail.claim.duration")
+                .description("Mail claim rewards operation duration")
+                .tag("service", "mail-service")
+                .register(meterRegistry);
+        this.sendMailSuccessCounter = meterRegistry.counter("mail.send.success");
+        this.sendMailFailureCounter = meterRegistry.counter("mail.send.failure");
+        this.claimRewardsSuccessCounter = meterRegistry.counter("mail.claim.success");
+        this.claimRewardsFailureCounter = meterRegistry.counter("mail.claim.failure");
+    }
+
     @Transactional
     public MailDTO.Response<MailDTO.MailInfo> sendMail(MailDTO.SendMailRequest request) {
-        log.info("Sending mail: type={}, receiver={}", request.getType(), request.getReceiverId());
+        return sendMailTimer.record(() -> {
+            try {
+                log.info("Sending mail: type={}, receiver={}", request.getType(), request.getReceiverId());
 
-        LocalDateTime expiresAt = LocalDateTime.now().plusDays(request.getExpirationDays());
+                LocalDateTime expiresAt = LocalDateTime.now().plusDays(request.getExpirationDays());
 
-        Mail mail = Mail.builder()
-                .type(request.getType())
-                .senderId(request.getSenderId() != null && !request.getSenderId().isEmpty() ? Long.parseLong(request.getSenderId()) : null)
-                .senderName(request.getSenderName())
-                .receiverId(Long.parseLong(request.getReceiverId()))
-                .title(request.getTitle())
-                .content(request.getContent())
-                .expiresAt(expiresAt)
-                .build();
-
-        mail = mailRepository.save(mail);
-        log.info("Mail created: id={}", mail.getId());
-
-        // Save attachments
-        if (request.getAttachments() != null && !request.getAttachments().isEmpty()) {
-            for (MailDTO.AttachmentInfo attachmentInfo : request.getAttachments()) {
-                MailAttachment attachment = MailAttachment.builder()
-                        .mailId(mail.getId())
-                        .attachmentType(attachmentInfo.getAttachmentType())
-                        .itemId(attachmentInfo.getItemId())
-                        .itemName(attachmentInfo.getItemName())
-                        .quantity(attachmentInfo.getQuantity())
-                        .quality(attachmentInfo.getQuality())
+                Mail mail = Mail.builder()
+                        .type(request.getType())
+                        .senderId(request.getSenderId() != null && !request.getSenderId().isEmpty() ? Long.parseLong(request.getSenderId()) : null)
+                        .senderName(request.getSenderName())
+                        .receiverId(Long.parseLong(request.getReceiverId()))
+                        .title(request.getTitle())
+                        .content(request.getContent())
+                        .expiresAt(expiresAt)
                         .build();
-                attachmentRepository.save(attachment);
-            }
-            log.info("Attachments saved: count={}", request.getAttachments().size());
-        }
 
-        return MailDTO.Response.success(buildMailInfo(mail));
+                mail = mailRepository.save(mail);
+                log.info("Mail created: id={}", mail.getId());
+
+                // Save attachments
+                if (request.getAttachments() != null && !request.getAttachments().isEmpty()) {
+                    for (MailDTO.AttachmentInfo attachmentInfo : request.getAttachments()) {
+                        MailAttachment attachment = MailAttachment.builder()
+                                .mailId(mail.getId())
+                                .attachmentType(attachmentInfo.getAttachmentType())
+                                .itemId(attachmentInfo.getItemId())
+                                .itemName(attachmentInfo.getItemName())
+                                .quantity(attachmentInfo.getQuantity())
+                                .quality(attachmentInfo.getQuality())
+                                .build();
+                        attachmentRepository.save(attachment);
+                    }
+                    log.info("Attachments saved: count={}", request.getAttachments().size());
+                }
+
+                sendMailSuccessCounter.increment();
+                return MailDTO.Response.success(buildMailInfo(mail));
+            } catch (Exception e) {
+                sendMailFailureCounter.increment();
+                throw e;
+            }
+        });
     }
 
     @Transactional
@@ -139,47 +181,56 @@ public class MailService {
 
     @Transactional
     public MailDTO.Response<MailDTO.ClaimAttachmentResponse> claimAttachment(Long mailId) {
-        log.info("Claiming attachment: mailId={}", mailId);
+        return claimRewardsTimer.record(() -> {
+            try {
+                log.info("Claiming attachment: mailId={}", mailId);
 
-        Mail mail = mailRepository.findById(mailId)
-                .orElseThrow(() -> new RuntimeException("Mail not found"));
+                Mail mail = mailRepository.findById(mailId)
+                        .orElseThrow(() -> new RuntimeException("Mail not found"));
 
-        if (mail.isExpired()) {
-            return MailDTO.Response.error(-1, "Mail has expired");
-        }
+                if (mail.isExpired()) {
+                    return MailDTO.Response.error(-1, "Mail has expired");
+                }
 
-        if (mail.getIsClaimedAttachment()) {
-            return MailDTO.Response.error(-2, "Attachment already claimed");
-        }
+                if (mail.getIsClaimedAttachment()) {
+                    return MailDTO.Response.error(-2, "Attachment already claimed");
+                }
 
-        List<MailAttachment> attachments = attachmentRepository.findByMailId(mailId);
-        if (attachments.isEmpty()) {
-            return MailDTO.Response.error(-3, "No attachments found");
-        }
+                List<MailAttachment> attachments = attachmentRepository.findByMailId(mailId);
+                if (attachments.isEmpty()) {
+                    return MailDTO.Response.error(-3, "No attachments found");
+                }
 
-        mail.markAsClaimedAttachment();
-        mailRepository.save(mail);
+                mail.markAsClaimedAttachment();
+                mailRepository.save(mail);
 
-        List<MailDTO.AttachmentInfo> attachmentInfos = attachments.stream()
-                .map(this::buildAttachmentInfo)
-                .collect(Collectors.toList());
+                List<MailDTO.AttachmentInfo> attachmentInfos = attachments.stream()
+                        .map(this::buildAttachmentInfo)
+                        .collect(Collectors.toList());
 
-        // Grant rewards to player
-        try {
-            grantRewardsToPlayer(String.valueOf(mail.getReceiverId()), attachments);
-            log.info("Rewards granted: roleId={}, count={}", mail.getReceiverId(), attachments.size());
-        } catch (Exception e) {
-            log.error("Failed to grant rewards: {}", e.getMessage());
-            return MailDTO.Response.error(-4, "Failed to grant rewards");
-        }
+                // Grant rewards to player
+                try {
+                    grantRewardsToPlayer(String.valueOf(mail.getReceiverId()), attachments);
+                    log.info("Rewards granted: roleId={}, count={}", mail.getReceiverId(), attachments.size());
+                } catch (Exception e) {
+                    log.error("Failed to grant rewards: {}", e.getMessage());
+                    claimRewardsFailureCounter.increment();
+                    return MailDTO.Response.error(-4, "Failed to grant rewards");
+                }
 
-        MailDTO.ClaimAttachmentResponse response = MailDTO.ClaimAttachmentResponse.builder()
-                .mailId(mailId)
-                .claimedAttachments(attachmentInfos)
-                .message("Attachments claimed successfully")
-                .build();
+                MailDTO.ClaimAttachmentResponse response = MailDTO.ClaimAttachmentResponse.builder()
+                        .mailId(mailId)
+                        .claimedAttachments(attachmentInfos)
+                        .message("Attachments claimed successfully")
+                        .build();
 
-        return MailDTO.Response.success(response);
+                claimRewardsSuccessCounter.increment();
+                return MailDTO.Response.success(response);
+            } catch (Exception e) {
+                claimRewardsFailureCounter.increment();
+                throw e;
+            }
+        });
     }
 
     @Transactional
