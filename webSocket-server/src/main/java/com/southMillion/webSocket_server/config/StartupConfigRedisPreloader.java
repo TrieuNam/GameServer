@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -84,6 +85,23 @@ public class StartupConfigRedisPreloader {
 
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
+        reloadNow();
+    }
+
+    /**
+     * Scheduled refresh job to proactively update Redis cache.
+     * Runs every 30 minutes by default to ensure config data stays fresh.
+     * Prevents cache misses when TTL expires.
+     */
+    @Scheduled(
+        initialDelayString = "${app.redis-preload.scheduled-initial-delay-ms:1800000}",
+        fixedDelayString = "${app.redis-preload.scheduled-interval-ms:1800000}"
+    )
+    public void scheduledRefresh() {
+        if (!enabled) {
+            return;
+        }
+        log.info("[redis-preload] scheduled refresh triggered");
         reloadNow();
     }
 
