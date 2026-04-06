@@ -262,11 +262,11 @@ spring:
 
 ---
 
-## Phase 4: Complete Coverage ⚪
+## Phase 4: Complete Coverage 🔵 IN PROGRESS
 
-### 4.1 Add Metrics to All Services
+### 4.1 Add Metrics to All Services ⚙️
 
-Thêm Micrometer metrics cho tất cả services còn lại:
+Adding Micrometer metrics for comprehensive observability and performance monitoring.
 
 **Template**:
 ```java
@@ -285,34 +285,42 @@ public ServiceName(MeterRegistry meterRegistry, ...) {
 }
 
 // In methods:
-@Timed(value = "service.operation")
 public Result operation() {
-    try {
-        // ... logic
-        successCounter.increment();
-        return result;
-    } catch (Exception e) {
-        failureCounter.increment();
-        throw e;
-    }
+    return operationTimer.record(() -> {
+        try {
+            // ... logic
+            successCounter.increment();
+            return result;
+        } catch (Exception e) {
+            failureCounter.increment();
+            throw e;
+        }
+    });
 }
 ```
 
-**Services cần add metrics**:
-- ✅ Box-Service (done)
-- ✅ Equip-Service (có partial)
-- ⬜ Role-Service
-- ⬜ Wallet-Service
-- ⬜ Mail-Service
-- ⬜ Task-Service
-- ⬜ Guild-Service
-- ⬜ Pet-Service
-- ⬜ Shizhuang-Service
-- ⬜ Shop-Service
-- ⬜ Angel-Service
-- ⬜ Artifact-Service
-- ⬜ Mount-Service
-- ⬜ Activity-Service
+**Services Status**:
+- ✅ Box-Service (already has comprehensive metrics)
+- ✅ Equip-Service (has partial metrics)
+- ✅ Mail-Service (Phase 4 - sendMail + claimAttachment metrics)
+- ✅ Pet-Service (Phase 4 - gradeUp + evolve metrics + actuator dependency)
+- ⚙️ Task-Service (actuator dependency added, metrics pending)
+- ⚙️ Guild-Service (actuator dependency added, metrics pending)
+- ⚙️ Shop-Service (actuator ready, metrics pending)
+- ⚙️ Shizhuang-Service (actuator ready, metrics pending)
+- ⬜ Role-Service (pending)
+- ⬜ Wallet-Service (pending)
+- ⬜ Angel-Service (pending)
+- ⬜ Artifact-Service (pending)
+- ⬜ Mount-Service (pending)
+- ⬜ Activity-Service (pending)
+
+**Progress**: 4/14 services have metrics instrumentation (28% complete)
+
+**Next Steps**:
+1. Complete metrics for Task, Guild, Shop, Shizhuang services
+2. Add actuator + metrics to remaining core services (Role, Wallet)
+3. Add metrics to specialized services (Angel, Artifact, Mount, Activity)
 
 ---
 
