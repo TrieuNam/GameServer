@@ -86,6 +86,9 @@ docker/volumes/
 # Monitoring runtime data
 admin-service/monitoring/prometheus-data/
 
+# AI agent local workspace
+/docs/skill_agent/ai-agents-skills/
+
 # Backup files
 backups/
 *.backup
