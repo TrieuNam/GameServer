@@ -95,4 +95,9 @@ public interface GuildMemberRepository extends JpaRepository<GuildMember, Long> 
     @Modifying
     @Query("UPDATE GuildMember m SET m.roleLevel = :level WHERE m.roleId = :roleId")
     void updateMemberLevel(@Param("roleId") Long roleId, @Param("level") Integer level);
+
+    /**
+     * Batch find members by guild IDs (for N+1 query optimization)
+     */
+    List<GuildMember> findByGuildIdIn(List<Long> guildIds);
 }

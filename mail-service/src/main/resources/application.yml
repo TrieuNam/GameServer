@@ -6,7 +6,11 @@ spring:
     active: local  # Default to local profile (root/root). Use -Dspring.profiles.active=prod for production
   application:
     name: mail-service
-  
+
+  threads:
+    virtual:
+      enabled: true
+
   datasource:
     url: ${DB_URL:jdbc:mysql://127.0.0.1:33086/game_mail?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
     username: ${DB_USERNAME:tpnam}

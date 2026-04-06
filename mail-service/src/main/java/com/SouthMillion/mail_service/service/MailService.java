@@ -15,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +33,9 @@ public class MailService {
     private final MailAttachmentRepository attachmentRepository;
     private final WalletClient walletClient;
     private final BagClient bagClient;
+
+    // Virtual Thread executor for parallel operations
+    private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
     @Transactional
     public MailDTO.Response<MailDTO.MailInfo> sendMail(MailDTO.SendMailRequest request) {
@@ -215,9 +222,16 @@ public class MailService {
     public MailDTO.Response<Integer> fetchAllAttachments(String roleId) {
         Long receiverId = Long.parseLong(roleId);
         List<Mail> unclaimedMails = mailRepository.findUnclaimedMails(receiverId);
+
+        // FIX N+1 QUERY: Batch load all attachments at once
+        List<Long> mailIds = unclaimedMails.stream().map(Mail::getId).collect(Collectors.toList());
+        Map<Long, List<MailAttachment>> attachmentsByMail = attachmentRepository.findByMailIdIn(mailIds)
+                .stream()
+                .collect(Collectors.groupingBy(MailAttachment::getMailId));
+
         int count = 0;
         for (Mail mail : unclaimedMails) {
-            List<MailAttachment> attachments = attachmentRepository.findByMailId(mail.getId());
+            List<MailAttachment> attachments = attachmentsByMail.getOrDefault(mail.getId(), List.of());
             if (!attachments.isEmpty()) {
                 grantRewardsToPlayer(roleId, attachments);
                 mail.setIsClaimedAttachment(true);
@@ -253,6 +267,7 @@ public class MailService {
 
     /**
      * Grant rewards to player from mail attachments
+     * OPTIMIZED: Parallel wallet and bag calls using Virtual Threads
      */
     private void grantRewardsToPlayer(String roleId, List<MailAttachment> attachments) {
         // Separate currency and items
@@ -281,7 +296,10 @@ public class MailService {
             }
         }
 
-        // Grant currency if any
+        // Build currency request
+        final long finalTotalGold = totalGold;
+        final long finalTotalDiamond = totalDiamond;
+        WalletDTOs.BatchReq walletReq = null;
         if (totalGold > 0 || totalDiamond > 0) {
             List<WalletDTOs.Change> changes = new ArrayList<>();
             if (totalGold > 0) {
@@ -296,27 +314,52 @@ public class MailService {
                         .amount(totalDiamond)
                         .build());
             }
-
-            WalletDTOs.BatchReq walletReq = WalletDTOs.BatchReq.builder()
+            walletReq = WalletDTOs.BatchReq.builder()
                     .roleId(roleId)
                     .changes(changes)
                     .reason(201) // MAIL_CLAIM
                     .build();
-            walletClient.grantCurrency(roleId, walletReq);
-            log.info("Currency granted: roleId={}, gold={}, diamond={}", roleId, totalGold, totalDiamond);
         }
 
-        // Grant items if any
+        // Build items request
+        GrantReq grantReq = null;
         if (!items.isEmpty()) {
-            GrantReq grantReq = GrantReq.builder()
+            grantReq = GrantReq.builder()
                     .userId(1L) // audit field
                     .roleId(roleId)
                     .items(items)
                     .eventId("MAIL_CLAIM_" + System.currentTimeMillis())
                     .source("Mail reward")
                     .build();
-            bagClient.grantItems(grantReq);
-            log.info("Items granted: roleId={}, count={}", roleId, items.size());
+        }
+
+        // PARALLEL EXECUTION with Virtual Threads
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        // Grant currency if any
+        if (walletReq != null) {
+            final WalletDTOs.BatchReq finalWalletReq = walletReq;
+            CompletableFuture<Void> walletFuture = CompletableFuture.runAsync(() -> {
+                walletClient.grantCurrency(roleId, finalWalletReq);
+                log.info("Currency granted: roleId={}, gold={}, diamond={}", roleId, finalTotalGold, finalTotalDiamond);
+            }, virtualExecutor);
+            futures.add(walletFuture);
+        }
+
+        // Grant items if any
+        if (grantReq != null) {
+            final GrantReq finalGrantReq = grantReq;
+            final int itemCount = items.size();
+            CompletableFuture<Void> bagFuture = CompletableFuture.runAsync(() -> {
+                bagClient.grantItems(finalGrantReq);
+                log.info("Items granted: roleId={}, count={}", roleId, itemCount);
+            }, virtualExecutor);
+            futures.add(bagFuture);
+        }
+
+        // Wait for all parallel operations to complete
+        if (!futures.isEmpty()) {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         }
     }
 

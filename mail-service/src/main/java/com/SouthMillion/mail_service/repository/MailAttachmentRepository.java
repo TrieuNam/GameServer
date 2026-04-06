@@ -13,4 +13,9 @@ public interface MailAttachmentRepository extends JpaRepository<MailAttachment, 
     void deleteByMailId(Long mailId);
 
     boolean existsByMailId(Long mailId);
+
+    /**
+     * Batch find attachments by mail IDs (for N+1 query optimization)
+     */
+    List<MailAttachment> findByMailIdIn(List<Long> mailIds);
 }
