@@ -83,6 +83,9 @@ dump.rdb
 # Docker volumes
 docker/volumes/
 
+# Monitoring runtime data
+admin-service/monitoring/prometheus-data/
+
 # Backup files
 backups/
 *.backup
