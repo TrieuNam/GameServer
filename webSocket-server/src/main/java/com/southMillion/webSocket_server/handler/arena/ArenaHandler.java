@@ -19,7 +19,6 @@ import org.SouthMillion.proto.Msgrole.Msgrole;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
@@ -413,13 +412,6 @@ public class ArenaHandler implements MessageHandler {
     private void syncPostClaimState(PlayerSession session, Long roleId) {
         pushBagState(session, roleId);
         pushWalletBalance(session, roleId);
-
-        Mono.delay(Duration.ofMillis(250))
-                .onErrorResume(ex -> Mono.empty())
-                .subscribe(ignored -> {
-                    pushBagState(session, roleId);
-                    pushWalletBalance(session, roleId);
-                });
     }
 
     private void pushBagState(PlayerSession session, Long roleId) {

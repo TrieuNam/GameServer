@@ -494,13 +494,14 @@ public class WaBaoHandler implements MessageHandler {
 
     /**
      * pushAll — gửi đủ 10 SC types sau login (theo yêu cầu client MsgIdManger.ts)
-     * SC: 1642 1643 1644(skip) 1645 1646 1647 1648 1649 1650 1651
+     * SC: 1642(skip-login) 1643 1644(skip) 1645 1646 1647 1648 1649 1650 1651
+     * 1642 bị bỏ qua ở đây vì boxHandler.pushAll đã push 1616 với cùng data (boxLevel, buyTimes…).
+     * Client sẽ nhận 1642 ngay sau thao tác đầu tiên (open/wear/sell/…) qua handleGetInfo trong mỗi op.
      */
     public Mono<Void> pushAll(PlayerSession session) {
         Long roleId = session.getRoleId();
         if (roleId == null) return Mono.empty();
         return Mono.fromRunnable(() -> {
-            handleGetInfo(session, roleId);     // 1642
             sendMapInfo(session);               // 1643
             sendIntegrityInfo(session);         // 1645
             sendCollectionList(session);        // 1646

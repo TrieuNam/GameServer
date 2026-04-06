@@ -445,6 +445,11 @@ public class RoleServiceHandler implements MessageHandler {
             return;
         }
         int value = parseInt(source.get(key), 0);
+        if (value <= 0) {
+            // 0 nghĩa là không có trang phục/appearance — không set field để proto "has_*" = false
+            // Client phân biệt: has=false → không hiện, has=true & value=0 → có thể hiện mặc định
+            return;
+        }
         switch (key) {
             case "surfaceWeapon" -> appearance.setSurfaceWeapon(value);
             case "surfaceShield" -> appearance.setSurfaceShield(value);

@@ -3,18 +3,18 @@
   "displayName" : "World Service",
   "phase" : "P2",
   "port" : 8370,
-  "serviceStatus" : "RUNNING",
+  "serviceStatus" : "ERROR",
   "doctorStatus" : "ERROR",
   "watched" : false,
   "approvalRequired" : true,
   "autoApprovalEnabled" : false,
   "copilotReady" : false,
-  "lastErrorType" : "RuntimeException",
-  "lastErrorSummary" : "Caused by: org.hibernate.exception.SQLGrammarException: JDBC exception executing SQL [select we1_0.event_id,we1_0.active,we1_0.create_time,we1_0.cron_schedule,we1_0.description,we1_0.end_time,we1_0.event_data,we1_0.ev...",
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-07T04:42:28.662+07:00  INFO 1884 --- [world-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
   "decisionNote" : null,
   "promptFile" : null,
   "reportFile" : null,
   "lastCommand" : null,
-  "recentLogs" : [ "\tat org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138) ~[spring-tx-6.2.8.jar!/:6.2.8]", "\t... 25 common frames omitted", "Caused by: java.sql.SQLSyntaxErrorException: Table 'game_world.world_events' doesn't exist", "\tat com.mysql.cj.jdbc.exceptions.SQLError.createSQLException(SQLError.java:112) ~[mysql-connector-j-9.2.0.jar!/:9.2.0]", "\tat com.mysql.cj.jdbc.exceptions.SQLExceptionsMapping.translateException(SQLExceptionsMapping.java:114) ~[mysql-connector-j-9.2.0.jar!/:9.2.0]", "\tat com.mysql.cj.jdbc.ClientPreparedStatement.executeInternal(ClientPreparedStatement.java:990) ~[mysql-connector-j-9.2.0.jar!/:9.2.0]", "\tat com.mysql.cj.jdbc.ClientPreparedStatement.executeQuery(ClientPreparedStatement.java:1058) ~[mysql-connector-j-9.2.0.jar!/:9.2.0]", "\tat com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52) ~[HikariCP-6.3.0.jar!/:na]", "\tat com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java) ~[HikariCP-6.3.0.jar!/:na]", "\tat org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess.executeQuery(DeferredResultSetAccess.java:251) ~[hibernate-core-6.6.18.Final.jar!/:6.6.18.Final]", "\t... 58 common frames omitted", "" ],
-  "lastUpdated" : "2026-04-05T23:42:58.541683"
+  "recentLogs" : [ "2026-04-07T04:32:36.143+07:00  INFO 1884 --- [world-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-07T04:32:36.144+07:00  INFO 1884 --- [world-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-07T04:32:36.144+07:00  INFO 1884 --- [world-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-07T04:32:36.144+07:00  INFO 1884 --- [world-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-07T04:32:36.144+07:00  INFO 1884 --- [world-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-07T04:32:36.144+07:00  INFO 1884 --- [world-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-07T04:32:36.144+07:00  INFO 1884 --- [world-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-07T04:33:06.168+07:00  INFO 1884 --- [world-service] [    virtual-112] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'", "2026-04-07T04:33:06.169+07:00  INFO 1884 --- [world-service] [    virtual-112] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'", "2026-04-07T04:33:06.171+07:00  INFO 1884 --- [world-service] [    virtual-112] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms", "2026-04-07T04:37:28.659+07:00  INFO 1884 --- [world-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-07T04:42:28.662+07:00  INFO 1884 --- [world-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-07T04:47:17.5500686"
 }

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
@@ -135,7 +136,7 @@ class TaskDomainServiceTest {
             given(taskProgressRepository.findAllByPlayerId(PLAYER_ID_L)).willReturn(List.of());
 
             TaskDomainService service = new TaskDomainService(
-                taskProgressRepository, taskProgressEventRepository, walletClient, bagClient, provider);
+                taskProgressRepository, taskProgressEventRepository, walletClient, bagClient, provider, mock(MeterRegistry.class));
 
             TaskListResp resp = service.getAllTasks(PLAYER_ID);
             List<String> keys = resp.getTasks().stream()
@@ -158,7 +159,7 @@ class TaskDomainServiceTest {
             given(taskProgressRepository.findAllByPlayerId(PLAYER_ID_L)).willReturn(List.of());
 
             TaskDomainService service = new TaskDomainService(
-                taskProgressRepository, taskProgressEventRepository, walletClient, bagClient, provider);
+                taskProgressRepository, taskProgressEventRepository, walletClient, bagClient, provider, mock(MeterRegistry.class));
 
             TaskListResp resp = service.getAllTasks(PLAYER_ID);
             List<String> keys = resp.getTasks().stream()
@@ -440,7 +441,7 @@ class TaskDomainServiceTest {
             given(provider.getTaskConfigs()).willReturn(configs);
 
             TaskDomainService service = new TaskDomainService(
-                taskProgressRepository, taskProgressEventRepository, walletClient, bagClient, provider);
+                taskProgressRepository, taskProgressEventRepository, walletClient, bagClient, provider, mock(MeterRegistry.class));
 
             given(taskProgressRepository.findAllByPlayerId(PLAYER_ID_L))
                 .willReturn(List.of(), List.of(), List.of(progress("1", 1, TaskStatus.CLAIMED)));
@@ -467,7 +468,7 @@ class TaskDomainServiceTest {
             given(provider.getTaskConfigs()).willReturn(configs);
 
             TaskDomainService service = new TaskDomainService(
-                taskProgressRepository, taskProgressEventRepository, walletClient, bagClient, provider);
+                taskProgressRepository, taskProgressEventRepository, walletClient, bagClient, provider, mock(MeterRegistry.class));
 
             given(taskProgressRepository.findAllByPlayerId(PLAYER_ID_L))
                 .willReturn(

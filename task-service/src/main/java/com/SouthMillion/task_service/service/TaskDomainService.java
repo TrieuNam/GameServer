@@ -17,6 +17,7 @@ import org.SouthMillion.dto.bag.BagAddItemReq;
 import org.SouthMillion.dto.bag.BagDTOs;
 import org.SouthMillion.dto.task.*;
 import org.SouthMillion.dto.wallet.WalletDTOs;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.core.KafkaTemplate;
