@@ -225,18 +225,13 @@ public class ShiZhuangService {
         long parsedPlayerId = parsePlayerId(playerId);
         Integer targetType = resolveClothesType(clothesId);
 
-        List<PlayerClothesEntity> owned = new ArrayList<>(playerClothesRepository.findByPlayerId(parsedPlayerId));
+        // Không tự động tạo entity - phải sở hữu thời trang trước khi mặc
         PlayerClothesEntity target = playerClothesRepository.findByPlayerIdAndClothesId(parsedPlayerId, clothesId)
-                .orElseGet(() -> {
-                    PlayerClothesEntity created = PlayerClothesEntity.builder()
-                            .playerId(parsedPlayerId)
-                            .clothesId(clothesId)
-                            .level(1)
-                            .wearing(false)
-                            .build();
-                    owned.add(created);
-                    return created;
-                });
+                .orElseThrow(() -> new IllegalArgumentException(
+                    "Người chơi chưa sở hữu thời trang này: clothesId=" + clothesId));
+
+        // Tìm tất cả clothes của player để unequip cùng type
+        List<PlayerClothesEntity> owned = new ArrayList<>(playerClothesRepository.findByPlayerId(parsedPlayerId));
 
         for (PlayerClothesEntity entity : owned) {
             if (entity == null || entity.getClothesId() == null) {
@@ -267,13 +262,16 @@ public class ShiZhuangService {
     public Map<String, Integer> getCurrentAppearance(String playerId) {
         long parsedPlayerId = parsePlayerId(playerId);
         Map<String, Integer> appearance = new HashMap<>();
+        // Mặc định trả về 0 (không có appearance) thay vì -1
         appearance.put("surfaceWeapon", 0);
         appearance.put("surfaceShield", 0);
         appearance.put("surfaceHead", 0);
         appearance.put("surfaceBody", 0);
 
         List<PlayerClothesEntity> owned = playerClothesRepository.findByPlayerId(parsedPlayerId);
+        // Nếu không có clothes nào, trả về appearance mặc định (tất cả = 0)
         if (owned == null || owned.isEmpty()) {
+            log.debug("[ShiZhuang] No clothes found for playerId={}, returning default appearance", playerId);
             return appearance;
         }
 
