@@ -7,7 +7,9 @@ import com.SouthMillion.pet_service.model.dto.*;
 import com.SouthMillion.pet_service.model.entity.*;
 import com.SouthMillion.pet_service.repository.*;
 import com.SouthMillion.pet_service.service.PetService;
-import lombok.RequiredArgsConstructor;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagDTOs;
 import org.SouthMillion.dto.wallet.WalletDTOs;
@@ -17,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -24,7 +29,6 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-@RequiredArgsConstructor
 public class PetServiceImpl implements PetService {
 
     private final PetRepository petRepository;
@@ -35,6 +39,50 @@ public class PetServiceImpl implements PetService {
     private final PetDungeonRepository petDungeonRepository;
     private final BagClient bagClient;
     private final WalletClient walletClient;
+
+    // Virtual Thread executor for parallel operations
+    private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
+
+    // Metrics
+    private final Timer gradeUpTimer;
+    private final Timer evolveTimer;
+    private final Counter gradeUpSuccessCounter;
+    private final Counter gradeUpFailureCounter;
+    private final Counter evolveSuccessCounter;
+    private final Counter evolveFailureCounter;
+
+    public PetServiceImpl(PetRepository petRepository,
+                          PetTSGemRepository tsGemRepository,
+                          PetClothRepository clothRepository,
+                          PetRemainsRepository remainsRepository,
+                          PetFightIndexRepository fightIndexRepository,
+                          PetDungeonRepository petDungeonRepository,
+                          BagClient bagClient,
+                          WalletClient walletClient,
+                          MeterRegistry meterRegistry) {
+        this.petRepository = petRepository;
+        this.tsGemRepository = tsGemRepository;
+        this.clothRepository = clothRepository;
+        this.remainsRepository = remainsRepository;
+        this.fightIndexRepository = fightIndexRepository;
+        this.petDungeonRepository = petDungeonRepository;
+        this.bagClient = bagClient;
+        this.walletClient = walletClient;
+
+        // Initialize metrics
+        this.gradeUpTimer = Timer.builder("pet.gradeup.duration")
+                .description("Pet grade up operation duration")
+                .tag("service", "pet-service")
+                .register(meterRegistry);
+        this.evolveTimer = Timer.builder("pet.evolve.duration")
+                .description("Pet evolution operation duration")
+                .tag("service", "pet-service")
+                .register(meterRegistry);
+        this.gradeUpSuccessCounter = meterRegistry.counter("pet.gradeup.success");
+        this.gradeUpFailureCounter = meterRegistry.counter("pet.gradeup.failure");
+        this.evolveSuccessCounter = meterRegistry.counter("pet.evolve.success");
+        this.evolveFailureCounter = meterRegistry.counter("pet.evolve.failure");
+    }
 
     private static final int PET_BAG_MAX = 100;
     private static final int GOLD_COIN_ITEM_ID = 1;
@@ -155,73 +203,106 @@ public class PetServiceImpl implements PetService {
     @Override
     @Transactional
     public void gradeUp(String userId, Integer petIndex, List<Integer> materialIndices) {
-        log.info("Grading up pet: userId={}, petIndex={}, materials={}", 
-            userId, petIndex, materialIndices);
+        gradeUpTimer.record(() -> {
+            try {
+                log.info("Grading up pet: userId={}, petIndex={}, materials={}",
+                    userId, petIndex, materialIndices);
 
-        Pet pet = getPet(userId, petIndex);
-        
-        // Validate materials exist and are different from main pet
-        if (materialIndices.contains(petIndex)) {
-            throw new PetServiceException("Cannot use pet as its own material");
-        }
+                Pet pet = getPet(userId, petIndex);
 
-        for (Integer materialIndex : materialIndices) {
-            if (!petRepository.existsByUserIdAndPetIndex(userId, materialIndex)) {
-                throw new PetNotFoundException(userId, materialIndex);
+                // Validate materials exist and are different from main pet
+                if (materialIndices.contains(petIndex)) {
+                    throw new PetServiceException("Cannot use pet as its own material");
+                }
+
+                for (Integer materialIndex : materialIndices) {
+                    if (!petRepository.existsByUserIdAndPetIndex(userId, materialIndex)) {
+                        throw new PetNotFoundException(userId, materialIndex);
+                    }
+                }
+
+                // Calculate grade up cost
+                long goldCost = pet.getOrder() * 10000L;
+                int materialItemId = 20001; // Pet grade stone
+                int materialCount = pet.getOrder() * 5;
+
+                // OPTIMIZATION: Parallel resource consumption using Virtual Threads
+                CompletableFuture<Void> goldFuture = CompletableFuture.runAsync(() -> {
+                    consumeGold(userId.toString(), goldCost, "pet_gradeup");
+                }, virtualExecutor);
+
+                CompletableFuture<Void> materialFuture = CompletableFuture.runAsync(() -> {
+                    consumeMaterial(userId.toString(), materialItemId, materialCount);
+                }, virtualExecutor);
+
+                // Wait for both operations to complete
+                CompletableFuture.allOf(goldFuture, materialFuture).join();
+
+                pet.setOrder(pet.getOrder() + 1);
+                pet.setCapability(calculateCapability(userId, petIndex));
+
+                // Delete material pets
+                for (Integer materialIndex : materialIndices) {
+                    petRepository.deleteByUserIdAndPetIndex(userId, materialIndex);
+                }
+
+                petRepository.save(pet);
+                log.info("Pet graded up: userId={}, petIndex={}, newOrder={}",
+                    userId, petIndex, pet.getOrder());
+                gradeUpSuccessCounter.increment();
+            } catch (Exception e) {
+                gradeUpFailureCounter.increment();
+                throw e;
             }
-        }
-
-        // Calculate grade up cost
-        long goldCost = pet.getOrder() * 10000L;
-        int materialItemId = 20001; // Pet grade stone
-        int materialCount = pet.getOrder() * 5;
-        
-        // Consume resources
-        consumeGold(userId.toString(), goldCost, "pet_gradeup");
-        consumeMaterial(userId.toString(), materialItemId, materialCount);
-
-        pet.setOrder(pet.getOrder() + 1);
-        pet.setCapability(calculateCapability(userId, petIndex));
-        
-        // Delete material pets
-        for (Integer materialIndex : materialIndices) {
-            petRepository.deleteByUserIdAndPetIndex(userId, materialIndex);
-        }
-
-        petRepository.save(pet);
-        log.info("Pet graded up: userId={}, petIndex={}, newOrder={}", 
-            userId, petIndex, pet.getOrder());
+        });
     }
 
     @Override
     @Transactional
     public void evolve(String userId, Integer petIndex) {
-        log.info("Evolving pet: userId={}, petIndex={}", userId, petIndex);
+        evolveTimer.record(() -> {
+            try {
+                log.info("Evolving pet: userId={}, petIndex={}", userId, petIndex);
 
-        Pet pet = getPet(userId, petIndex);
-        
-        // Check evolution requirements
-        if (pet.getLevel() < 200) {
-            throw new PetServiceException("Pet level must be at least 200 to evolve");
-        }
+                Pet pet = getPet(userId, petIndex);
 
-        // Get evolution config and consume materials
-        long goldCost = 100000L;
-        int materialItemId = 20002; // Evolution stone
-        int materialCount = 10;
-        
-        consumeGold(userId.toString(), goldCost, "pet_evolution");
-        consumeMaterial(userId.toString(), materialItemId, materialCount);
-        
-        // Change pet_id to evolved form (config-based transformation)
-        Integer newPetId = pet.getPetId() + 1000; // Evolved pet ID = base + 1000
-        pet.setPetId(newPetId);
-        pet.setLevel(pet.getLevel() + 10); // Bonus levels
-        pet.setCapability(calculateCapability(userId, petIndex));
+                // Check evolution requirements
+                if (pet.getLevel() < 200) {
+                    throw new PetServiceException("Pet level must be at least 200 to evolve");
+                }
 
-        petRepository.save(pet);
-        log.info("Pet evolved: userId={}, petIndex={}, newPetId={}", 
-            userId, petIndex, newPetId);
+                // Get evolution config and consume materials
+                long goldCost = 100000L;
+                int materialItemId = 20002; // Evolution stone
+                int materialCount = 10;
+
+                // OPTIMIZATION: Parallel resource consumption using Virtual Threads
+                CompletableFuture<Void> goldFuture = CompletableFuture.runAsync(() -> {
+                    consumeGold(userId.toString(), goldCost, "pet_evolution");
+                }, virtualExecutor);
+
+                CompletableFuture<Void> materialFuture = CompletableFuture.runAsync(() -> {
+                    consumeMaterial(userId.toString(), materialItemId, materialCount);
+                }, virtualExecutor);
+
+                // Wait for both operations to complete
+                CompletableFuture.allOf(goldFuture, materialFuture).join();
+
+                // Change pet_id to evolved form (config-based transformation)
+                Integer newPetId = pet.getPetId() + 1000; // Evolved pet ID = base + 1000
+                pet.setPetId(newPetId);
+                pet.setLevel(pet.getLevel() + 10); // Bonus levels
+                pet.setCapability(calculateCapability(userId, petIndex));
+
+                petRepository.save(pet);
+                log.info("Pet evolved: userId={}, petIndex={}, newPetId={}",
+                    userId, petIndex, newPetId);
+                evolveSuccessCounter.increment();
+            } catch (Exception e) {
+                evolveFailureCounter.increment();
+                throw e;
+            }
+        });
     }
 
     @Override

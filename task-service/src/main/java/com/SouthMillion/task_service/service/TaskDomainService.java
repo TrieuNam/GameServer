@@ -7,7 +7,9 @@ import com.SouthMillion.task_service.entity.TaskProgressEventEntity;
 import com.SouthMillion.task_service.entity.TaskProgressEntity;
 import com.SouthMillion.task_service.repository.TaskProgressEventRepository;
 import com.SouthMillion.task_service.repository.TaskProgressRepository;
-import lombok.RequiredArgsConstructor;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.event.task.TaskStateChangedEvent;
 import org.SouthMillion.dto.event.task.TaskProgressEvent;
@@ -30,10 +32,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class TaskDomainService {
 
@@ -56,11 +60,40 @@ public class TaskDomainService {
     private final BagClient bagClient;
     private final TaskDefinitionProvider taskDefinitionProvider;
 
+    // Virtual Thread executor for parallel operations
+    private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
+
+    // Metrics
+    private final Timer claimRewardTimer;
+    private final Counter claimRewardSuccessCounter;
+    private final Counter claimRewardFailureCounter;
+
     @Autowired(required = false)
     private KafkaTemplate<String, Object> kafkaTemplate;
 
     @Autowired(required = false)
     private ItemMetaClient itemMetaClient;
+
+    public TaskDomainService(TaskProgressRepository taskProgressRepository,
+                             TaskProgressEventRepository taskProgressEventRepository,
+                             WalletClient walletClient,
+                             BagClient bagClient,
+                             TaskDefinitionProvider taskDefinitionProvider,
+                             MeterRegistry meterRegistry) {
+        this.taskProgressRepository = taskProgressRepository;
+        this.taskProgressEventRepository = taskProgressEventRepository;
+        this.walletClient = walletClient;
+        this.bagClient = bagClient;
+        this.taskDefinitionProvider = taskDefinitionProvider;
+
+        // Initialize metrics
+        this.claimRewardTimer = Timer.builder("task.claim.duration")
+                .description("Task claim reward operation duration")
+                .tag("service", "task-service")
+                .register(meterRegistry);
+        this.claimRewardSuccessCounter = meterRegistry.counter("task.claim.success");
+        this.claimRewardFailureCounter = meterRegistry.counter("task.claim.failure");
+    }
 
     public TaskListResp getAllTasks(String playerId) {
         log.info("Getting all tasks for player: {}", playerId);
@@ -413,57 +446,71 @@ public class TaskDomainService {
 
     /**
      * Grant rewards to player via wallet-service and bag-service
+     * OPTIMIZED: Parallel wallet and bag calls using Virtual Threads
      */
     private void grantRewards(String playerId, TaskDefinitionConfig config) {
         try {
-            // 1. Grant gold and exp via wallet-service
+            List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+            // 1. Grant gold and exp via wallet-service (async)
             if (config.goldReward() > 0 || config.expReward() > 0) {
-                List<WalletDTOs.Change> changes = new ArrayList<>();
+                CompletableFuture<Void> walletFuture = CompletableFuture.runAsync(() -> {
+                    List<WalletDTOs.Change> changes = new ArrayList<>();
 
-                if (config.goldReward() > 0) {
-                    changes.add(WalletDTOs.Change.builder()
-                        .itemId(1L) // itemId 1 = Gold
-                        .amount((long) config.goldReward())
-                        .build());
-                }
+                    if (config.goldReward() > 0) {
+                        changes.add(WalletDTOs.Change.builder()
+                            .itemId(1L) // itemId 1 = Gold
+                            .amount((long) config.goldReward())
+                            .build());
+                    }
 
-                if (config.expReward() > 0) {
-                    changes.add(WalletDTOs.Change.builder()
-                        .itemId(2L) // itemId 2 = Experience
-                        .amount((long) config.expReward())
-                        .build());
-                }
+                    if (config.expReward() > 0) {
+                        changes.add(WalletDTOs.Change.builder()
+                            .itemId(2L) // itemId 2 = Experience
+                            .amount((long) config.expReward())
+                            .build());
+                    }
 
-                WalletDTOs.BatchReq walletReq = WalletDTOs.BatchReq.builder()
-                    .roleId(playerId)
-                    .changes(changes)
-                    .idemKey("task:" + playerId + ":" + config.key())
-                    .reason(1001) // Task reward reason code
-                    .build();
+                    WalletDTOs.BatchReq walletReq = WalletDTOs.BatchReq.builder()
+                        .roleId(playerId)
+                        .changes(changes)
+                        .idemKey("task:" + playerId + ":" + config.key())
+                        .reason(1001) // Task reward reason code
+                        .build();
 
-                walletClient.addCurrency(playerId, walletReq);
-                log.info("Granted wallet rewards to player {}: gold={}, exp={}",
-                    playerId, config.goldReward(), config.expReward());
+                    walletClient.addCurrency(playerId, walletReq);
+                    log.info("Granted wallet rewards to player {}: gold={}, exp={}",
+                        playerId, config.goldReward(), config.expReward());
+                }, virtualExecutor);
+                futures.add(walletFuture);
             }
 
-            // 2. Grant items via bag-service
+            // 2. Grant items via bag-service (async)
             if (config.itemRewards() != null && !config.itemRewards().isEmpty()) {
-                List<BagDTOs.GrantItem> items = parseItemRewards(config.itemRewards());
+                CompletableFuture<Void> bagFuture = CompletableFuture.runAsync(() -> {
+                    List<BagDTOs.GrantItem> items = parseItemRewards(config.itemRewards());
 
-                if (!items.isEmpty()) {
-                    String eventId = "task:" + playerId + ":" + config.key();
-                    BagAddItemReq grantReq = BagAddItemReq.builder()
-                        .userId(Long.parseLong(playerId))
-                        .roleId(Long.parseLong(playerId))
-                        .items(toBagAddItems(items))
-                        .source("TASK_REWARD")
-                        .idemKey(eventId)
-                        .reason(1001)
-                        .build();
-                    bagClient.grantItems(grantReq);
-                    log.info("Granted bag items to player {}: {} (parsedItems={}, eventId={})",
-                            playerId, config.itemRewards(), items.size(), eventId);
-                }
+                    if (!items.isEmpty()) {
+                        String eventId = "task:" + playerId + ":" + config.key();
+                        BagAddItemReq grantReq = BagAddItemReq.builder()
+                            .userId(Long.parseLong(playerId))
+                            .roleId(Long.parseLong(playerId))
+                            .items(toBagAddItems(items))
+                            .source("TASK_REWARD")
+                            .idemKey(eventId)
+                            .reason(1001)
+                            .build();
+                        bagClient.grantItems(grantReq);
+                        log.info("Granted bag items to player {}: {} (parsedItems={}, eventId={})",
+                                playerId, config.itemRewards(), items.size(), eventId);
+                    }
+                }, virtualExecutor);
+                futures.add(bagFuture);
+            }
+
+            // Wait for all parallel operations to complete
+            if (!futures.isEmpty()) {
+                CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
             }
 
         } catch (Exception e) {
@@ -567,6 +614,7 @@ public class TaskDomainService {
         return readInt(meta, "quality", "color", "q");
     }
 
+    @Cacheable(value = "taskItemMeta", key = "#itemId", unless = "#result == null || #result.isEmpty()")
     private Map<String, Object> loadItemMeta(int itemId) {
         if (itemMetaClient == null || itemId <= 0) {
             return Map.of();

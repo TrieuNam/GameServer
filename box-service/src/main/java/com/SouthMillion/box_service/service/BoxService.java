@@ -27,6 +27,8 @@ import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.springframework.beans.factory.annotation.Value;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -65,6 +67,10 @@ public class BoxService {
     private final WalletFeign walletFeign;
     private final Counter compareMissingEquippedBeforeCounter;
     private final Counter compareIncompleteStateCounter;
+    private final Timer wearOperationTimer;
+    private final Timer autoSellTimer;
+    private final Counter autoSellSuccessCounter;
+    private final Counter autoSellFailureCounter;
     /** Arena ticket itemId to drop on box open. Set -1 (default) to disable. */
     @Value("${box.arena-ticket.item-id:-1}")
     private int arenaTicketItemId;
@@ -107,6 +113,16 @@ public class BoxService {
         this.walletFeign = walletFeign;
         this.compareMissingEquippedBeforeCounter = meterRegistry.counter("box.compare.missing_equipped_before");
         this.compareIncompleteStateCounter = meterRegistry.counter("box.compare.incomplete_state");
+        this.wearOperationTimer = Timer.builder("box.wear.duration")
+                .description("Time taken for wear operation")
+                .tag("operation", "wear")
+                .register(meterRegistry);
+        this.autoSellTimer = Timer.builder("box.autosell.duration")
+                .description("Time taken for auto-sell operation")
+                .tag("operation", "auto_sell")
+                .register(meterRegistry);
+        this.autoSellSuccessCounter = meterRegistry.counter("box.autosell.success");
+        this.autoSellFailureCounter = meterRegistry.counter("box.autosell.failure");
     }
 
     // ========= CONSTANTS =========
@@ -486,61 +502,63 @@ public class BoxService {
      * Sau khi mặc thành công thì luôn clear compare-state để kết thúc flow compare.
      */
     public BoxDTOs.OkResp wear(Long roleId) {
-        BoxState s = getOrCreate(roleId);
-        EquipDTOs.WearFromBoxItem wearItem = resolveWearItem(roleId, s);
-        if (wearItem == null || wearItem.getItemId() == null || wearItem.getItemId() <= 0) {
-            return BoxDTOs.OkResp.builder().ok(false).message("NO_PENDING").build();
-        }
-        int itemId = wearItem.getItemId();
-        if (itemId <= 0) return BoxDTOs.OkResp.builder().ok(false).message("BAD_ITEM").build();
+        return wearOperationTimer.record(() -> {
+            BoxState s = getOrCreate(roleId);
+            EquipDTOs.WearFromBoxItem wearItem = resolveWearItem(roleId, s);
+            if (wearItem == null || wearItem.getItemId() == null || wearItem.getItemId() <= 0) {
+                return BoxDTOs.OkResp.builder().ok(false).message("NO_PENDING").build();
+            }
+            int itemId = wearItem.getItemId();
+            if (itemId <= 0) return BoxDTOs.OkResp.builder().ok(false).message("BAD_ITEM").build();
 
-        BoxDTOs.BoxCompareStateResp beforeWearCompare = compareStateRepo.find(roleId).orElse(null);
+            BoxDTOs.BoxCompareStateResp beforeWearCompare = compareStateRepo.find(roleId).orElse(null);
 
-        EquipDTOs.WearFromBoxResp out;
-        try {
-            out = equipFeign.wearFromBox(EquipDTOs.WearFromBoxReq.builder()
-                    .roleId(String.valueOf(roleId))
-                    .item(wearItem)
-                    .build());
-        } catch (Exception e) {
-            log.warn("[box] wearFromBox failed roleId={} ex={} — clearing pending to unblock box", roleId, e.toString());
+            EquipDTOs.WearFromBoxResp out;
+            try {
+                out = equipFeign.wearFromBox(EquipDTOs.WearFromBoxReq.builder()
+                        .roleId(String.valueOf(roleId))
+                        .item(wearItem)
+                        .build());
+            } catch (Exception e) {
+                log.warn("[box] wearFromBox failed roleId={} ex={} — clearing pending to unblock box", roleId, e.toString());
+                s.setPendingJson(null);
+                boxRepo.save(s);
+                compareStateRepo.delete(roleId);
+                return BoxDTOs.OkResp.builder().ok(false).message("WEAR_FAILED").build();
+            }
+
+            EquipDTOs.ReplacedEquip replaced = out != null ? out.getReplaced() : null;
+            EquipDTOs.ReplacedEquip compareStateReplaced = replacedFromCompareState(beforeWearCompare);
+            if ((replaced == null || replaced.getItemId() == null || replaced.getItemId() <= 0) && compareStateReplaced != null) {
+                replaced = compareStateReplaced;
+                log.info("[box] wear fallback replaced from compare-state roleId={} replacedItemId={}", roleId, replaced.getItemId());
+            }
+
+            EquipDTOs.WearFromBoxItem replacedWearItem = wearItemFromReplaced(replaced);
+            if (sameWearItemSnapshot(wearItem, replacedWearItem)) {
+                EquipDTOs.WearFromBoxItem compareStateWearItem = wearItemFromReplaced(compareStateReplaced);
+                if (!sameWearItemSnapshot(wearItem, compareStateWearItem) && compareStateReplaced != null) {
+                    replaced = compareStateReplaced;
+                    replacedWearItem = compareStateWearItem;
+                    log.info("[box] wear normalize replaced from compare-state roleId={} replacedItemId={}", roleId, replaced.getItemId());
+                } else {
+                    replaced = null;
+                    replacedWearItem = null;
+                }
+            }
+
+            int replacedItemId = replaced != null && replaced.getItemId() != null ? replaced.getItemId() : 0;
+            if (replacedWearItem != null && replacedItemId > 0) {
+                autoSellWearItem(roleId, replacedWearItem, "BOX_WEAR_AUTO_SELL_OLD");
+            }
+
             s.setPendingJson(null);
             boxRepo.save(s);
             compareStateRepo.delete(roleId);
-            return BoxDTOs.OkResp.builder().ok(false).message("WEAR_FAILED").build();
-        }
+            log.info("[box] wear finalized roleId={} wornItemId={} replacedItemId={}", roleId, itemId, replacedItemId);
 
-        EquipDTOs.ReplacedEquip replaced = out != null ? out.getReplaced() : null;
-        EquipDTOs.ReplacedEquip compareStateReplaced = replacedFromCompareState(beforeWearCompare);
-        if ((replaced == null || replaced.getItemId() == null || replaced.getItemId() <= 0) && compareStateReplaced != null) {
-            replaced = compareStateReplaced;
-            log.info("[box] wear fallback replaced from compare-state roleId={} replacedItemId={}", roleId, replaced.getItemId());
-        }
-
-        EquipDTOs.WearFromBoxItem replacedWearItem = wearItemFromReplaced(replaced);
-        if (sameWearItemSnapshot(wearItem, replacedWearItem)) {
-            EquipDTOs.WearFromBoxItem compareStateWearItem = wearItemFromReplaced(compareStateReplaced);
-            if (!sameWearItemSnapshot(wearItem, compareStateWearItem) && compareStateReplaced != null) {
-                replaced = compareStateReplaced;
-                replacedWearItem = compareStateWearItem;
-                log.info("[box] wear normalize replaced from compare-state roleId={} replacedItemId={}", roleId, replaced.getItemId());
-            } else {
-                replaced = null;
-                replacedWearItem = null;
-            }
-        }
-
-        int replacedItemId = replaced != null && replaced.getItemId() != null ? replaced.getItemId() : 0;
-        if (replacedWearItem != null && replacedItemId > 0) {
-            autoSellWearItem(roleId, replacedWearItem, "BOX_WEAR_AUTO_SELL_OLD");
-        }
-
-        s.setPendingJson(null);
-        boxRepo.save(s);
-        compareStateRepo.delete(roleId);
-        log.info("[box] wear finalized roleId={} wornItemId={} replacedItemId={}", roleId, itemId, replacedItemId);
-
-        return BoxDTOs.OkResp.builder().ok(true).message("OK").build();
+            return BoxDTOs.OkResp.builder().ok(true).message("OK").build();
+        });
     }
 
     /**
@@ -1259,32 +1277,42 @@ public class BoxService {
                 .orElseThrow(() -> new IllegalStateException("BoxState not found for roleId=" + roleId));
     }
 
-    private void autoSellWearItem(Long roleId, EquipDTOs.WearFromBoxItem sellItem, String source) {
-        if (roleId == null || sellItem == null || sellItem.getItemId() == null || sellItem.getItemId() <= 0) {
-            return;
-        }
-        Map<String, Object> req = Map.of(
-                "roleId", roleId,
-                "item", sellItem.toPendingMap()
-        );
+    /**
+     * Auto-sell item cũ khi mặc đồ mới.
+     * Chạy async để không chặn phản hồi wear() cho client.
+     */
+    @Async("boxAsyncExecutor")
+    public void autoSellWearItem(Long roleId, EquipDTOs.WearFromBoxItem sellItem, String source) {
+        autoSellTimer.record(() -> {
+            if (roleId == null || sellItem == null || sellItem.getItemId() == null || sellItem.getItemId() <= 0) {
+                return;
+            }
+            Map<String, Object> req = Map.of(
+                    "roleId", roleId,
+                    "item", sellItem.toPendingMap()
+            );
 
-        Map<String, Object> out;
-        try {
-            out = equipFeign.computeSell(req);
-        } catch (Exception e) {
-            log.warn("[box] auto sell compute failed roleId={} itemId={} ex={}", roleId, sellItem.getItemId(), e.toString());
-            return;
-        }
-        if (out == null) {
-            log.warn("[box] auto sell returned null roleId={} itemId={}", roleId, sellItem.getItemId());
-            return;
-        }
+            Map<String, Object> out;
+            try {
+                out = equipFeign.computeSell(req);
+            } catch (Exception e) {
+                log.warn("[box] auto sell compute failed roleId={} itemId={} ex={}", roleId, sellItem.getItemId(), e.toString());
+                autoSellFailureCounter.increment();
+                return;
+            }
+            if (out == null) {
+                log.warn("[box] auto sell returned null roleId={} itemId={}", roleId, sellItem.getItemId());
+                autoSellFailureCounter.increment();
+                return;
+            }
 
-        long sellCoin = pLong(out.get("coin"), 0);
-        long sellExp = pLong(out.get("exp"), 0);
-        grantSellRewards(roleId, sellCoin, sellExp, "box:auto-sell:" + roleId + ":" + sellItem.getItemId());
-        log.info("[box] auto sold old equip roleId={} itemId={} coin={} exp={} source={}",
-                roleId, sellItem.getItemId(), sellCoin, sellExp, source);
+            long sellCoin = pLong(out.get("coin"), 0);
+            long sellExp = pLong(out.get("exp"), 0);
+            grantSellRewards(roleId, sellCoin, sellExp, "box:auto-sell:" + roleId + ":" + sellItem.getItemId());
+            autoSellSuccessCounter.increment();
+            log.info("[box] auto sold old equip roleId={} itemId={} coin={} exp={} source={}",
+                    roleId, sellItem.getItemId(), sellCoin, sellExp, source);
+        });
     }
 
     private void grantSellRewards(Long roleId, long sellCoin, long sellExp, String idemPrefix) {

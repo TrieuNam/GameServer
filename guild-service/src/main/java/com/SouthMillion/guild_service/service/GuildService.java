@@ -202,7 +202,7 @@ public class GuildService {
     @Transactional(readOnly = true)
     public GuildDTO.Response<GuildDTO.PageResponse<GuildDTO.ListItem>> searchGuilds(GuildDTO.SearchRequest request) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
-        
+
         Page<Guild> page;
         if (request.getKeyword() != null && !request.getKeyword().trim().isEmpty()) {
             page = guildRepository.searchByName(request.getKeyword().trim(), pageable);
@@ -210,8 +210,18 @@ public class GuildService {
             page = guildRepository.findTopGuilds(pageable);
         }
 
-        List<GuildDTO.ListItem> items = page.getContent().stream()
-                .map(this::buildGuildListItem)
+        // FIX N+1 QUERY: Batch load all members for all guilds at once
+        List<Guild> guildList = page.getContent();
+        List<Long> guildIds = guildList.stream().map(Guild::getId).collect(Collectors.toList());
+
+        // Single query to fetch all members for all guilds
+        Map<Long, List<GuildMember>> membersByGuild = memberRepository.findByGuildIdIn(guildIds)
+                .stream()
+                .collect(Collectors.groupingBy(GuildMember::getGuildId));
+
+        // Build list items using pre-loaded members
+        List<GuildDTO.ListItem> items = guildList.stream()
+                .map(guild -> buildGuildListItem(guild, membersByGuild.getOrDefault(guild.getId(), Collections.emptyList())))
                 .collect(Collectors.toList());
 
         GuildDTO.PageResponse<GuildDTO.ListItem> pageResponse = GuildDTO.PageResponse.<GuildDTO.ListItem>builder()
@@ -798,11 +808,10 @@ public class GuildService {
                 .build();
     }
 
-    private GuildDTO.ListItem buildGuildListItem(Guild guild) {
-        // Calculate total guild power (sum of all members)
-        List<GuildMember> members = memberRepository.findByGuildIdOrderByRankDescContributionDesc(guild.getId());
+    private GuildDTO.ListItem buildGuildListItem(Guild guild, List<GuildMember> members) {
+        // Calculate total guild power (sum of all members) - using pre-loaded members to avoid N+1
         long totalPower = members.stream().mapToLong(GuildMember::getPower).sum();
-        
+
         return GuildDTO.ListItem.builder()
                 .id(guild.getId())
                 .name(guild.getName())

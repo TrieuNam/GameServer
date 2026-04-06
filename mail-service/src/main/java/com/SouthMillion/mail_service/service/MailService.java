@@ -5,7 +5,9 @@ import com.SouthMillion.mail_service.client.WalletClient;
 import com.SouthMillion.mail_service.dto.MailDTO;
 import com.SouthMillion.mail_service.entity.*;
 import com.SouthMillion.mail_service.repository.*;
-import lombok.RequiredArgsConstructor;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.GrantReq;
 import org.SouthMillion.dto.bag.ItemInfo;
@@ -15,6 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -22,7 +28,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class MailService {
 
     private final MailRepository mailRepository;
@@ -30,42 +35,86 @@ public class MailService {
     private final WalletClient walletClient;
     private final BagClient bagClient;
 
+    // Virtual Thread executor for parallel operations
+    private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
+
+    // Metrics
+    private final Timer sendMailTimer;
+    private final Timer claimRewardsTimer;
+    private final Counter sendMailSuccessCounter;
+    private final Counter sendMailFailureCounter;
+    private final Counter claimRewardsSuccessCounter;
+    private final Counter claimRewardsFailureCounter;
+
+    public MailService(MailRepository mailRepository,
+                       MailAttachmentRepository attachmentRepository,
+                       WalletClient walletClient,
+                       BagClient bagClient,
+                       MeterRegistry meterRegistry) {
+        this.mailRepository = mailRepository;
+        this.attachmentRepository = attachmentRepository;
+        this.walletClient = walletClient;
+        this.bagClient = bagClient;
+
+        // Initialize metrics
+        this.sendMailTimer = Timer.builder("mail.send.duration")
+                .description("Mail send operation duration")
+                .tag("service", "mail-service")
+                .register(meterRegistry);
+        this.claimRewardsTimer = Timer.builder("mail.claim.duration")
+                .description("Mail claim rewards operation duration")
+                .tag("service", "mail-service")
+                .register(meterRegistry);
+        this.sendMailSuccessCounter = meterRegistry.counter("mail.send.success");
+        this.sendMailFailureCounter = meterRegistry.counter("mail.send.failure");
+        this.claimRewardsSuccessCounter = meterRegistry.counter("mail.claim.success");
+        this.claimRewardsFailureCounter = meterRegistry.counter("mail.claim.failure");
+    }
+
     @Transactional
     public MailDTO.Response<MailDTO.MailInfo> sendMail(MailDTO.SendMailRequest request) {
-        log.info("Sending mail: type={}, receiver={}", request.getType(), request.getReceiverId());
+        return sendMailTimer.record(() -> {
+            try {
+                log.info("Sending mail: type={}, receiver={}", request.getType(), request.getReceiverId());
 
-        LocalDateTime expiresAt = LocalDateTime.now().plusDays(request.getExpirationDays());
+                LocalDateTime expiresAt = LocalDateTime.now().plusDays(request.getExpirationDays());
 
-        Mail mail = Mail.builder()
-                .type(request.getType())
-                .senderId(request.getSenderId() != null && !request.getSenderId().isEmpty() ? Long.parseLong(request.getSenderId()) : null)
-                .senderName(request.getSenderName())
-                .receiverId(Long.parseLong(request.getReceiverId()))
-                .title(request.getTitle())
-                .content(request.getContent())
-                .expiresAt(expiresAt)
-                .build();
-
-        mail = mailRepository.save(mail);
-        log.info("Mail created: id={}", mail.getId());
-
-        // Save attachments
-        if (request.getAttachments() != null && !request.getAttachments().isEmpty()) {
-            for (MailDTO.AttachmentInfo attachmentInfo : request.getAttachments()) {
-                MailAttachment attachment = MailAttachment.builder()
-                        .mailId(mail.getId())
-                        .attachmentType(attachmentInfo.getAttachmentType())
-                        .itemId(attachmentInfo.getItemId())
-                        .itemName(attachmentInfo.getItemName())
-                        .quantity(attachmentInfo.getQuantity())
-                        .quality(attachmentInfo.getQuality())
+                Mail mail = Mail.builder()
+                        .type(request.getType())
+                        .senderId(request.getSenderId() != null && !request.getSenderId().isEmpty() ? Long.parseLong(request.getSenderId()) : null)
+                        .senderName(request.getSenderName())
+                        .receiverId(Long.parseLong(request.getReceiverId()))
+                        .title(request.getTitle())
+                        .content(request.getContent())
+                        .expiresAt(expiresAt)
                         .build();
-                attachmentRepository.save(attachment);
-            }
-            log.info("Attachments saved: count={}", request.getAttachments().size());
-        }
 
-        return MailDTO.Response.success(buildMailInfo(mail));
+                mail = mailRepository.save(mail);
+                log.info("Mail created: id={}", mail.getId());
+
+                // Save attachments
+                if (request.getAttachments() != null && !request.getAttachments().isEmpty()) {
+                    for (MailDTO.AttachmentInfo attachmentInfo : request.getAttachments()) {
+                        MailAttachment attachment = MailAttachment.builder()
+                                .mailId(mail.getId())
+                                .attachmentType(attachmentInfo.getAttachmentType())
+                                .itemId(attachmentInfo.getItemId())
+                                .itemName(attachmentInfo.getItemName())
+                                .quantity(attachmentInfo.getQuantity())
+                                .quality(attachmentInfo.getQuality())
+                                .build();
+                        attachmentRepository.save(attachment);
+                    }
+                    log.info("Attachments saved: count={}", request.getAttachments().size());
+                }
+
+                sendMailSuccessCounter.increment();
+                return MailDTO.Response.success(buildMailInfo(mail));
+            } catch (Exception e) {
+                sendMailFailureCounter.increment();
+                throw e;
+            }
+        });
     }
 
     @Transactional
@@ -132,47 +181,56 @@ public class MailService {
 
     @Transactional
     public MailDTO.Response<MailDTO.ClaimAttachmentResponse> claimAttachment(Long mailId) {
-        log.info("Claiming attachment: mailId={}", mailId);
+        return claimRewardsTimer.record(() -> {
+            try {
+                log.info("Claiming attachment: mailId={}", mailId);
 
-        Mail mail = mailRepository.findById(mailId)
-                .orElseThrow(() -> new RuntimeException("Mail not found"));
+                Mail mail = mailRepository.findById(mailId)
+                        .orElseThrow(() -> new RuntimeException("Mail not found"));
 
-        if (mail.isExpired()) {
-            return MailDTO.Response.error(-1, "Mail has expired");
-        }
+                if (mail.isExpired()) {
+                    return MailDTO.Response.error(-1, "Mail has expired");
+                }
 
-        if (mail.getIsClaimedAttachment()) {
-            return MailDTO.Response.error(-2, "Attachment already claimed");
-        }
+                if (mail.getIsClaimedAttachment()) {
+                    return MailDTO.Response.error(-2, "Attachment already claimed");
+                }
 
-        List<MailAttachment> attachments = attachmentRepository.findByMailId(mailId);
-        if (attachments.isEmpty()) {
-            return MailDTO.Response.error(-3, "No attachments found");
-        }
+                List<MailAttachment> attachments = attachmentRepository.findByMailId(mailId);
+                if (attachments.isEmpty()) {
+                    return MailDTO.Response.error(-3, "No attachments found");
+                }
 
-        mail.markAsClaimedAttachment();
-        mailRepository.save(mail);
+                mail.markAsClaimedAttachment();
+                mailRepository.save(mail);
 
-        List<MailDTO.AttachmentInfo> attachmentInfos = attachments.stream()
-                .map(this::buildAttachmentInfo)
-                .collect(Collectors.toList());
+                List<MailDTO.AttachmentInfo> attachmentInfos = attachments.stream()
+                        .map(this::buildAttachmentInfo)
+                        .collect(Collectors.toList());
 
-        // Grant rewards to player
-        try {
-            grantRewardsToPlayer(String.valueOf(mail.getReceiverId()), attachments);
-            log.info("Rewards granted: roleId={}, count={}", mail.getReceiverId(), attachments.size());
-        } catch (Exception e) {
-            log.error("Failed to grant rewards: {}", e.getMessage());
-            return MailDTO.Response.error(-4, "Failed to grant rewards");
-        }
+                // Grant rewards to player
+                try {
+                    grantRewardsToPlayer(String.valueOf(mail.getReceiverId()), attachments);
+                    log.info("Rewards granted: roleId={}, count={}", mail.getReceiverId(), attachments.size());
+                } catch (Exception e) {
+                    log.error("Failed to grant rewards: {}", e.getMessage());
+                    claimRewardsFailureCounter.increment();
+                    return MailDTO.Response.error(-4, "Failed to grant rewards");
+                }
 
-        MailDTO.ClaimAttachmentResponse response = MailDTO.ClaimAttachmentResponse.builder()
-                .mailId(mailId)
-                .claimedAttachments(attachmentInfos)
-                .message("Attachments claimed successfully")
-                .build();
+                MailDTO.ClaimAttachmentResponse response = MailDTO.ClaimAttachmentResponse.builder()
+                        .mailId(mailId)
+                        .claimedAttachments(attachmentInfos)
+                        .message("Attachments claimed successfully")
+                        .build();
 
-        return MailDTO.Response.success(response);
+                claimRewardsSuccessCounter.increment();
+                return MailDTO.Response.success(response);
+            } catch (Exception e) {
+                claimRewardsFailureCounter.increment();
+                throw e;
+            }
+        });
     }
 
     @Transactional
@@ -215,9 +273,16 @@ public class MailService {
     public MailDTO.Response<Integer> fetchAllAttachments(String roleId) {
         Long receiverId = Long.parseLong(roleId);
         List<Mail> unclaimedMails = mailRepository.findUnclaimedMails(receiverId);
+
+        // FIX N+1 QUERY: Batch load all attachments at once
+        List<Long> mailIds = unclaimedMails.stream().map(Mail::getId).collect(Collectors.toList());
+        Map<Long, List<MailAttachment>> attachmentsByMail = attachmentRepository.findByMailIdIn(mailIds)
+                .stream()
+                .collect(Collectors.groupingBy(MailAttachment::getMailId));
+
         int count = 0;
         for (Mail mail : unclaimedMails) {
-            List<MailAttachment> attachments = attachmentRepository.findByMailId(mail.getId());
+            List<MailAttachment> attachments = attachmentsByMail.getOrDefault(mail.getId(), List.of());
             if (!attachments.isEmpty()) {
                 grantRewardsToPlayer(roleId, attachments);
                 mail.setIsClaimedAttachment(true);
@@ -253,6 +318,7 @@ public class MailService {
 
     /**
      * Grant rewards to player from mail attachments
+     * OPTIMIZED: Parallel wallet and bag calls using Virtual Threads
      */
     private void grantRewardsToPlayer(String roleId, List<MailAttachment> attachments) {
         // Separate currency and items
@@ -281,7 +347,10 @@ public class MailService {
             }
         }
 
-        // Grant currency if any
+        // Build currency request
+        final long finalTotalGold = totalGold;
+        final long finalTotalDiamond = totalDiamond;
+        WalletDTOs.BatchReq walletReq = null;
         if (totalGold > 0 || totalDiamond > 0) {
             List<WalletDTOs.Change> changes = new ArrayList<>();
             if (totalGold > 0) {
@@ -296,27 +365,52 @@ public class MailService {
                         .amount(totalDiamond)
                         .build());
             }
-
-            WalletDTOs.BatchReq walletReq = WalletDTOs.BatchReq.builder()
+            walletReq = WalletDTOs.BatchReq.builder()
                     .roleId(roleId)
                     .changes(changes)
                     .reason(201) // MAIL_CLAIM
                     .build();
-            walletClient.grantCurrency(roleId, walletReq);
-            log.info("Currency granted: roleId={}, gold={}, diamond={}", roleId, totalGold, totalDiamond);
         }
 
-        // Grant items if any
+        // Build items request
+        GrantReq grantReq = null;
         if (!items.isEmpty()) {
-            GrantReq grantReq = GrantReq.builder()
+            grantReq = GrantReq.builder()
                     .userId(1L) // audit field
                     .roleId(roleId)
                     .items(items)
                     .eventId("MAIL_CLAIM_" + System.currentTimeMillis())
                     .source("Mail reward")
                     .build();
-            bagClient.grantItems(grantReq);
-            log.info("Items granted: roleId={}, count={}", roleId, items.size());
+        }
+
+        // PARALLEL EXECUTION with Virtual Threads
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        // Grant currency if any
+        if (walletReq != null) {
+            final WalletDTOs.BatchReq finalWalletReq = walletReq;
+            CompletableFuture<Void> walletFuture = CompletableFuture.runAsync(() -> {
+                walletClient.grantCurrency(roleId, finalWalletReq);
+                log.info("Currency granted: roleId={}, gold={}, diamond={}", roleId, finalTotalGold, finalTotalDiamond);
+            }, virtualExecutor);
+            futures.add(walletFuture);
+        }
+
+        // Grant items if any
+        if (grantReq != null) {
+            final GrantReq finalGrantReq = grantReq;
+            final int itemCount = items.size();
+            CompletableFuture<Void> bagFuture = CompletableFuture.runAsync(() -> {
+                bagClient.grantItems(finalGrantReq);
+                log.info("Items granted: roleId={}, count={}", roleId, itemCount);
+            }, virtualExecutor);
+            futures.add(bagFuture);
+        }
+
+        // Wait for all parallel operations to complete
+        if (!futures.isEmpty()) {
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         }
     }
 

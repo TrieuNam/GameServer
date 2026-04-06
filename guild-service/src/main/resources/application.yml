@@ -3,7 +3,11 @@
     active: local  # Default to local profile
   application:
     name: guild-service
-  
+
+  threads:
+    virtual:
+      enabled: true
+
   config:
     import: "optional:configserver:"
 

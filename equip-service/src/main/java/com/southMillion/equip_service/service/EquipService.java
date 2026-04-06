@@ -20,11 +20,15 @@ import org.SouthMillion.dto.bag.BagConsumeReq;
 import org.SouthMillion.dto.bag.BagDTOs;
 
 import org.SouthMillion.dto.equip.EquipDTOs;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 @Slf4j
@@ -40,6 +44,9 @@ public class EquipService {
     private final RoleFeign roleFeign;
     private final EquipSnapshotRepository snapshotRepo;
     private final Counter metaFallbackCounter;
+
+    // Virtual Thread executor for parallel operations
+    private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
     public EquipService(EquipSlotRepository slotRepo,
                         ItemMetaFeign itemMetaFeign,
@@ -172,25 +179,36 @@ public class EquipService {
         int oldDef = slot.getDefend();
         int oldSpd = slot.getSpeed();
 
-        // 4) nếu có đồ cũ -> trả về túi
-        if (slot.getItemId() > 0) {
-            var add = createAddItemReq(req.getRoleId(), slot.getItemId(), 1, false, "unequip-old", byteToInteger(req.getBagType()));
-            var addResp = bagFeign.add(add);
-            if (!isAddSuccess(addResp)) {
-                log.warn("Return old equip to bag failed role={}, item={}", req.getRoleId(), slot.getItemId());
-            }
-        }
-
-        // 5) snapshot stats & lưu slot
+        // 4) nếu có đồ cũ -> trả về túi & 5) snapshot stats & lưu slot
+        // OPTIMIZATION: Run these in parallel
+        int oldItemId = slot.getItemId();
         snapshotStatsFromMeta(slot, meta);
         slot.setItemId(req.getItemId());
         slotRepo.save(slot);
         syncSnapshot(roleIdLong, slot);
-        applyRoleStatDelta(roleIdLong,
-            slot.getHp() - oldHp,
-            slot.getAttack() - oldAtk,
-            slot.getDefend() - oldDef,
-            slot.getSpeed() - oldSpd);
+
+        // Parallel execution: Return old item to bag + Update role stats
+        CompletableFuture<Void> returnOldFuture = CompletableFuture.completedFuture(null);
+        if (oldItemId > 0) {
+            returnOldFuture = CompletableFuture.runAsync(() -> {
+                var add = createAddItemReq(req.getRoleId(), oldItemId, 1, false, "unequip-old", byteToInteger(req.getBagType()));
+                var addResp = bagFeign.add(add);
+                if (!isAddSuccess(addResp)) {
+                    log.warn("Return old equip to bag failed role={}, item={}", req.getRoleId(), oldItemId);
+                }
+            }, virtualExecutor);
+        }
+
+        CompletableFuture<Void> updateStatsFuture = CompletableFuture.runAsync(() -> {
+            applyRoleStatDelta(roleIdLong,
+                slot.getHp() - oldHp,
+                slot.getAttack() - oldAtk,
+                slot.getDefend() - oldDef,
+                slot.getSpeed() - oldSpd);
+        }, virtualExecutor);
+
+        // Wait for both operations to complete
+        CompletableFuture.allOf(returnOldFuture, updateStatsFuture).join();
 
         return EquipDTOs.OkResp.OK();
     }
@@ -328,7 +346,9 @@ public class EquipService {
      * - Đọc meta để lấy các khóa như: sell_price / sell_exp (nếu có).
      * - Nếu request có "businessmanPermyriad" (0..10000) -> áp dụng vào coin.
      * - Nếu meta thiếu, dùng công thức fallback mềm theo quality/level.
+     * - Cache kết quả dựa trên itemId, quality, level, businessman để tăng tốc độ
      */
+    @Cacheable(value = "equipSellPrice", key = "#req.get('item')?.get('itemId') + '_' + #req.get('item')?.get('quality') + '_' + #req.get('item')?.get('equipLevel') + '_' + #req.get('businessmanPermyriad')", unless = "#result == null")
     public Map<String, Object> computeSell(Map<String, Object> req) {
         @SuppressWarnings("unchecked")
         Map<String,Object> item = (Map<String,Object>) req.get("item");
