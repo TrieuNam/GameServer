@@ -149,7 +149,9 @@ public class ShiZhuangHandler implements MessageHandler {
             publishTaskProgress(roleId, taskActionConditionMapping.shizhuangEquipTaskKey(), "websocket-shizhuang-equip");
             log.info("[ShiZhuang] Equipped/wore clothes {}", clothesId);
         } catch (Exception e) {
-            log.error("[ShiZhuang] Error equipping item {}: {}", clothesId, e.getMessage(), e);
+            log.error("[ShiZhuang] Error equipping item {} (player may not own this item): {}", clothesId, e.getMessage());
+            // Send current list to refresh client state
+            handleGetEquipsList(session, roleId);
         }
     }
 
@@ -184,7 +186,9 @@ public class ShiZhuangHandler implements MessageHandler {
             publishTaskProgress(roleId, taskActionConditionMapping.shizhuangEquipTaskKey(), "websocket-shizhuang-wear");
             log.info("[ShiZhuang] Wore fashion {}", fashionId);
         } catch (Exception e) {
-            log.error("[ShiZhuang] Error wearing fashion {}: {}", fashionId, e.getMessage(), e);
+            log.error("[ShiZhuang] Error wearing fashion {} (player may not own this item): {}", fashionId, e.getMessage());
+            // Send current list to refresh client state
+            handleGetEquipsList(session, roleId);
         }
     }
 
