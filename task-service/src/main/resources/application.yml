@@ -11,6 +11,13 @@ spring:
     virtual:
       enabled: true
 
+  cache:
+    type: redis
+    cache-names: taskItemMeta
+    redis:
+      time-to-live: 600000  # 10 minutes
+      cache-null-values: false
+
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:33074/game_task?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
     username: ${DB_USERNAME}
