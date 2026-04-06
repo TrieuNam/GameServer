@@ -31,6 +31,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -44,6 +47,9 @@ public class ShopService {
     private final ShopLimitRepository limitRepo;
     private final WalletFeignClient walletFeign;
     private final ItemMetaFeign itemMeta;
+
+    // Virtual Thread executor for parallel operations
+    private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
 
     // optional: có thể tắt dependency này ở test
     @Autowired(required = false) @Nullable
@@ -122,6 +128,7 @@ public class ShopService {
         return 0;
     }
 
+    @org.springframework.cache.annotation.Cacheable(value = "shopItemMeta", key = "#itemId", unless = "#result == null")
     private Map<String, Object> getItemMeta(long itemId) {
         if (itemId <= 0) return null;
         Map<String, Map<String, Object>> metas = itemMeta.batchMeta(String.valueOf(itemId));
