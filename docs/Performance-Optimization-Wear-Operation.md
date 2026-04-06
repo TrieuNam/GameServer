@@ -21,29 +21,42 @@ Client gặp độ trễ đáng kể (200-300ms) khi gửi lệnh "wear" để m
 
 ## Các Cải Tiến Đã Triển Khai
 
-### 1. Async Auto-Sell Flow (Tác động cao nhất)
+### 1. Async Auto-Sell Flow với Virtual Threads (Tác động cao nhất)
 
 **File**: `box-service/src/main/java/com/SouthMillion/box_service/service/BoxService.java`
 **File**: `box-service/src/main/java/com/SouthMillion/box_service/config/AsyncConfig.java`
 
 **Thay đổi**:
-- Tạo `AsyncConfig` với `ThreadPoolTaskExecutor` riêng cho box-service
-  - Core pool size: 4 threads
-  - Max pool size: 16 threads
-  - Queue capacity: 100 tasks
+- Tạo `AsyncConfig` sử dụng **Virtual Threads** (JDK 21+) thay vì ThreadPoolTaskExecutor
+  - Sử dụng `Executors.newVirtualThreadPerTaskExecutor()`
+  - Virtual threads tự động scale theo nhu cầu, không cần cấu hình pool size
+  - Nhẹ hơn và hiệu quả hơn cho I/O operations
 - Chuyển phương thức `autoSellWearItem()` từ `private void` thành `@Async public void`
-- Auto-sell operation bây giờ chạy bất đồng bộ, không chặn phản hồi wear()
+- Auto-sell operation bây giờ chạy bất đồng bộ trên virtual threads, không chặn phản hồi wear()
 
-**Lợi ích**:
+**Lợi ích Virtual Threads**:
+- **Lightweight**: Hàng triệu virtual threads có thể chạy đồng thời (vs hàng nghìn platform threads)
+- **Auto-scaling**: Không cần tune pool size - tự động tạo thread mới khi cần
+- **Better I/O**: Tối ưu cho HTTP calls, database queries, Redis operations
+- **Simplified**: Không cần lo về queue capacity hay thread starvation
+
+**Lợi ích chung**:
 - Giảm thời gian phản hồi wear() xuống ~50-100ms (loại bỏ 2 HTTP calls khỏi critical path)
 - Client nhận phản hồi ngay lập tức mà không cần đợi sell/wallet operations
-- Auto-sell vẫn hoàn thành trong background
+- Auto-sell vẫn hoàn thành trong background với virtual threads
 
 **Code ví dụ**:
 ```java
+// AsyncConfig.java - Sử dụng Virtual Threads
+@Bean(name = "boxAsyncExecutor")
+public Executor getAsyncExecutor() {
+    return Executors.newVirtualThreadPerTaskExecutor();
+}
+
+// BoxService.java - Auto-sell chạy trên virtual thread
 @Async("boxAsyncExecutor")
 public void autoSellWearItem(Long roleId, EquipDTOs.WearFromBoxItem sellItem, String source) {
-    // Auto-sell logic chạy async
+    // Auto-sell logic chạy async trên virtual thread
 }
 ```
 
@@ -147,18 +160,24 @@ cd ../equip-service
 mvn clean install -DskipTests
 ```
 
-2. **Cấu hình Redis**:
-Đảm bảo Redis đang chạy và services có thể kết nối:
+2. **Cấu hình Virtual Threads**:
+Đảm bảo Virtual Threads được bật trong `application.yml`:
 ```yaml
 spring:
+  threads:
+    virtual:
+      enabled: true
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 ```
 
-3. **Khởi động services**:
+3. **Khởi động services với JDK 21**:
 ```bash
+# Đảm bảo sử dụng JDK 21+
+java -version  # Phải là "openjdk version "21" hoặc cao hơn
+
 # Khởi động theo thứ tự
 java -jar eureka-server/target/eureka-server-1.0.0.jar
 java -jar config-service/target/config-service-1.0.0.jar
@@ -166,10 +185,10 @@ java -jar equip-service/target/equip-service-1.0.0.jar
 java -jar box-service/target/box-service-1.0.0.jar
 ```
 
-4. **Kiểm tra async executor**:
+4. **Kiểm tra Virtual Thread executor**:
 Xem logs khi box-service khởi động:
 ```
-[AsyncConfig] Initialized box-async executor: core=4, max=16, queue=100
+[AsyncConfig] Initialized Virtual Thread executor for async operations
 ```
 
 ## Monitoring và Troubleshooting
@@ -210,18 +229,31 @@ redis-cli
 > GET equipSellPrice::40001_3_10_0
 ```
 
-### Debug Async Operations
+### Debug Async Operations với Virtual Threads
 
-**Xem thread pool status** (thêm vào logs):
+**Kiểm tra Virtual Thread**:
+Virtual threads không cần monitoring như platform threads vì chúng được quản lý tự động bởi JVM.
+
+Tuy nhiên, bạn có thể xem thông tin về virtual threads:
 ```java
+// Thêm vào BoxService để debug (optional)
 @Scheduled(fixedRate = 60000)
-public void logAsyncStatus() {
-    ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) asyncExecutor;
-    log.info("Async pool: active={}, pool={}, queue={}",
-        executor.getActiveCount(),
-        executor.getPoolSize(),
-        executor.getThreadPoolExecutor().getQueue().size());
+public void logVirtualThreadInfo() {
+    Thread currentThread = Thread.currentThread();
+    log.info("Current thread info: name={}, virtual={}, id={}",
+        currentThread.getName(),
+        currentThread.isVirtual(),
+        currentThread.threadId());
 }
+```
+
+**JVM flags hữu ích cho Virtual Threads**:
+```bash
+# Xem virtual thread diagnostics
+java -Djdk.tracePinnedThreads=full -jar box-service.jar
+
+# Monitor virtual threads (JDK 21+)
+jcmd <pid> Thread.dump_to_file -format=json /tmp/threads.json
 ```
 
 ### Các Vấn Đề Thường Gặp
@@ -230,6 +262,7 @@ public void logAsyncStatus() {
 - Kiểm tra logs: `[box] auto sold old equip roleId=...`
 - Verify `@EnableAsync` có trong `AsyncConfig`
 - Đảm bảo phương thức được gọi từ bên ngoài class (Spring proxy)
+- Kiểm tra JDK version: `java -version` (phải là 21+)
 
 **2. Cache không hoạt động**:
 - Kiểm tra Redis connection
@@ -238,8 +271,9 @@ public void logAsyncStatus() {
 
 **3. Performance không cải thiện**:
 - Check metrics để xác định bottleneck thực tế
-- Verify async executor có đủ threads
+- Virtual threads scale tự động - không cần tune
 - Monitor database connection pool usage
+- Kiểm tra xem có thread pinning không (synchronized blocks, native calls)
 
 ## Tối Ưu Tiếp Theo (Phase 2)
 
@@ -270,7 +304,10 @@ Các cải tiến có thể thêm vào sau:
    ```bash
    redis-cli KEYS "equipSellPrice*" | xargs redis-cli DEL
    ```
-4. **Thread Pool Tuning**: Điều chỉnh pool size dựa trên load thực tế
+4. **Virtual Threads**: Tận dụng JDK 21+ để có performance tốt nhất
+   - Tránh synchronized blocks (có thể gây thread pinning)
+   - Ưu tiên ReentrantLock thay vì synchronized khi cần locking
+   - Monitor thread pinning với `-Djdk.tracePinnedThreads=full`
 5. **Async Error Handling**: Monitor `box.autosell.failure` để phát hiện vấn đề sớm
 
 ## Tài Liệu Tham Khảo
@@ -279,11 +316,19 @@ Các cải tiến có thể thêm vào sau:
 - [Spring Cache Abstraction](https://docs.spring.io/spring-framework/docs/current/reference/html/integration.html#cache)
 - [Micrometer Metrics](https://micrometer.io/docs)
 - [Redis Caching Best Practices](https://redis.io/docs/manual/client-side-caching/)
+- [JEP 444: Virtual Threads](https://openjdk.org/jeps/444)
+- [Virtual Threads Best Practices](https://docs.oracle.com/en/java/javase/21/core/virtual-threads.html)
 
 ## Changelog
 
+### Version 1.1.0 (2026-04-06)
+- ✅ **BREAKING**: Chuyển sang Virtual Threads (JDK 21+)
+- ✅ Loại bỏ ThreadPoolTaskExecutor
+- ✅ Simplified async configuration
+- ✅ Cập nhật documentation cho Virtual Threads
+
 ### Version 1.0.0 (2026-04-06)
-- ✅ Async auto-sell flow
+- ✅ Async auto-sell flow với ThreadPoolTaskExecutor
 - ✅ Redis caching for computeSell results
 - ✅ Performance metrics (timers and counters)
 - ✅ Documentation
