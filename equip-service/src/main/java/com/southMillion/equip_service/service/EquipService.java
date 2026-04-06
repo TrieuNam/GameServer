@@ -20,6 +20,7 @@ import org.SouthMillion.dto.bag.BagConsumeReq;
 import org.SouthMillion.dto.bag.BagDTOs;
 
 import org.SouthMillion.dto.equip.EquipDTOs;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -328,7 +329,9 @@ public class EquipService {
      * - Đọc meta để lấy các khóa như: sell_price / sell_exp (nếu có).
      * - Nếu request có "businessmanPermyriad" (0..10000) -> áp dụng vào coin.
      * - Nếu meta thiếu, dùng công thức fallback mềm theo quality/level.
+     * - Cache kết quả dựa trên itemId, quality, level, businessman để tăng tốc độ
      */
+    @Cacheable(value = "equipSellPrice", key = "#req.get('item')?.get('itemId') + '_' + #req.get('item')?.get('quality') + '_' + #req.get('item')?.get('equipLevel') + '_' + #req.get('businessmanPermyriad')", unless = "#result == null")
     public Map<String, Object> computeSell(Map<String, Object> req) {
         @SuppressWarnings("unchecked")
         Map<String,Object> item = (Map<String,Object>) req.get("item");
