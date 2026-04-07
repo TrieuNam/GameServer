@@ -3,6 +3,7 @@ package com.SouthMillion.webSocket_server.handler.guild;
 import com.google.protobuf.ByteString;
 import com.SouthMillion.webSocket_server.constant.MessageIds;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.handler.LazyLoadHandler;
 import com.SouthMillion.webSocket_server.handler.common.ProtoRequestWrapper;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
@@ -21,7 +22,7 @@ import java.util.Map;
 
 /**
  * Guild System Handler - Using ProtoRequestWrapper for proto compatibility
- * 
+ *
  * Request Types from client:
  * - 1: Guild Info
  * - 2: Create Guild
@@ -33,11 +34,13 @@ import java.util.Map;
  * - 8: Search Guilds
  * - 9: Apply to Guild
  * - 10: Guild Approve
+ *
+ * This handler implements LazyLoadHandler for on-demand loading when the player opens the guild UI.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class GuildHandler implements MessageHandler {
+public class GuildHandler implements MessageHandler, LazyLoadHandler {
 
     private final GuildFeign guildFeign;
     private final TaskProgressPublisher taskProgressPublisher;
@@ -46,6 +49,17 @@ public class GuildHandler implements MessageHandler {
     @Override
     public int[] interests() {
         return new int[]{MessageIds.CS_GUILD_REQ}; // 9640 (fixed from 2000)
+    }
+
+    @Override
+    public String getModuleName() {
+        return "guild";
+    }
+
+    @Override
+    public Mono<Void> loadOnDemand(PlayerSession ps) {
+        log.info("[Guild] Lazy loading for roleId={}", ps.getRoleId());
+        return pushAll(ps);
     }
 
     /** Gọi sau login: đẩy thông tin bang hội (9642) về client (guildId=0 nếu chưa có bang). */

@@ -37,6 +37,9 @@ public interface MsgIds {
     int CS_FETCH_TASK_REWARD_REQ   = 1451; // PB_CSFetchTaskRewardReq
     int SC_TASK_PROGRESS_INFO      = 1452; // PB_SCTaskProgressInfo
 
+    // ===== Lazy load feature data (msgrole.proto: 1453)
+    int CS_FEATURE_DATA_REQ        = 1453; // PB_CSFeatureDataReq — request lazy-loaded module data
+
     // ===== Role / Settings (giữ theo client: 1460/1461)
     int CS_ROLE_SYSTEM_SET_REQ     = 1460; // PB_CSRoleSystemSetReq
     int SC_ROLE_SYSTEM_SET_INFO    = 1461; // PB_SCRoleSystemSetInfo

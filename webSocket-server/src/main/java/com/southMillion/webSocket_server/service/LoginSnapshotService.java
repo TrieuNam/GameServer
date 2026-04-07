@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * - R1: Persist role bootstrap snapshot summary for task/wallet/equip modules.
  * - R2: Compare module versions and report stale modules.
  * - R3: Feature-flag rollout by role hash + p95 bootstrap metric.
+ * - R4: Retrieve cached snapshot data to skip redundant Feign calls during login.
  */
 @Slf4j
 @Service
@@ -58,6 +59,7 @@ public class LoginSnapshotService {
     private final AtomicLong snapshotMiss = new AtomicLong();
     private final AtomicLong snapshotStale = new AtomicLong();
     private final AtomicLong bootstrapWrites = new AtomicLong();
+    private final AtomicLong cacheRetrievals = new AtomicLong();
 
     private final Object metricsLock = new Object();
     private final List<Long> bootstrapDurationsMs = new ArrayList<>();
@@ -134,6 +136,102 @@ public class LoginSnapshotService {
         }
     }
 
+    /**
+     * Retrieve cached snapshot data for a specific module.
+     * Returns null if cache is disabled, role not in rollout, or data doesn't exist/is stale.
+     *
+     * @param roleId the role ID
+     * @param module the module name (task, wallet, equip)
+     * @return cached module data as Map, or null if not available
+     */
+    public Map<String, Object> getCachedModuleData(Long roleId, String module) {
+        if (!enabled || roleId == null || !TRACKED_MODULES.contains(module)) {
+            return null;
+        }
+
+        if (!isInRollout(roleId)) {
+            return null;
+        }
+
+        try {
+            String versionKey = roleModuleVersionKey(roleId, module);
+            String version = redis.opsForValue().get(versionKey);
+
+            if (version == null || !version.equals(moduleVersionToken)) {
+                log.debug("[login-snapshot] module '{}' stale or missing for roleId={}", module, roleId);
+                return null;
+            }
+
+            String dataKey = roleModuleDataKey(roleId, module);
+            String dataJson = redis.opsForValue().get(dataKey);
+
+            if (dataJson == null || dataJson.isBlank()) {
+                log.debug("[login-snapshot] no cached data for module '{}' roleId={}", module, roleId);
+                return null;
+            }
+
+            cacheRetrievals.incrementAndGet();
+            Map<String, Object> data = objectMapper.readValue(dataJson, MAP_TYPE);
+            log.info("[login-snapshot] retrieved cached data for module '{}' roleId={}", module, roleId);
+            return data;
+
+        } catch (Exception e) {
+            log.warn("[login-snapshot] failed to retrieve cached data for module '{}' roleId={}: {}",
+                    module, roleId, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Store module data in cache for faster subsequent logins.
+     *
+     * @param roleId the role ID
+     * @param module the module name (task, wallet, equip)
+     * @param data the module data to cache
+     */
+    public void cacheModuleData(Long roleId, String module, Map<String, Object> data) {
+        if (!enabled || roleId == null || !TRACKED_MODULES.contains(module) || data == null) {
+            return;
+        }
+
+        try {
+            String dataKey = roleModuleDataKey(roleId, module);
+            String dataJson = objectMapper.writeValueAsString(data);
+            redis.opsForValue().set(dataKey, dataJson, ttlHours, TimeUnit.HOURS);
+
+            log.debug("[login-snapshot] cached data for module '{}' roleId={}", module, roleId);
+        } catch (Exception e) {
+            log.warn("[login-snapshot] failed to cache data for module '{}' roleId={}: {}",
+                    module, roleId, e.getMessage());
+        }
+    }
+
+    /**
+     * Invalidate cached data for a specific module when data changes.
+     * This ensures stale cache is not used on next login.
+     *
+     * @param roleId the role ID
+     * @param module the module name (task, wallet, equip)
+     */
+    public void invalidateModule(Long roleId, String module) {
+        if (!enabled || roleId == null || !TRACKED_MODULES.contains(module)) {
+            return;
+        }
+
+        try {
+            String versionKey = roleModuleVersionKey(roleId, module);
+            redis.delete(versionKey);
+
+            String dataKey = roleModuleDataKey(roleId, module);
+            redis.delete(dataKey);
+
+            log.debug("[login-snapshot] invalidated cache for module '{}' roleId={}", module, roleId);
+        } catch (Exception e) {
+            log.warn("[login-snapshot] failed to invalidate module '{}' roleId={}: {}",
+                    module, roleId, e.getMessage());
+        }
+    }
+
     public Map<String, Object> status() {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("enabled", enabled);
@@ -147,6 +245,7 @@ public class LoginSnapshotService {
         out.put("snapshotMiss", snapshotMiss.get());
         out.put("snapshotStale", snapshotStale.get());
         out.put("bootstrapWrites", bootstrapWrites.get());
+        out.put("cacheRetrievals", cacheRetrievals.get());
         out.put("hitRatio", ratio(snapshotHits.get(), assessCalls.get() - rolloutSkipped.get()));
         out.put("bootstrapP95Ms", bootstrapP95Ms());
         return out;
@@ -241,6 +340,10 @@ public class LoginSnapshotService {
 
     private String roleModuleVersionKey(Long roleId, String module) {
         return "role:module:version:" + roleId + ":" + module;
+    }
+
+    private String roleModuleDataKey(Long roleId, String module) {
+        return "role:module:data:" + roleId + ":" + module;
     }
 
     private double ratio(long numerator, long denominator) {

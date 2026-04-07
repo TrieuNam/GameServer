@@ -77,9 +77,14 @@ message PB_CSFetchTaskRewardReq {                       			//!< 1451 领取任�
 }
 
 //MsgId:1452
-message PB_SCTaskProgressInfo {                                  //!<  1452 	任务 进度				
+message PB_SCTaskProgressInfo {                                  //!<  1452 	任务 进度
 		optional int32  id = 1;								//!< 当前任务id
 		optional int32  progress = 2;						//!< 当前任务进度
+}
+
+//MsgId:1453
+message PB_CSFeatureDataReq {                                    //!<  1453 	请求特定功能模块数据（懒加载）
+		optional bytes module_name = 1;						//!< 模块名称 (activity, friend, guild, box)
 }
 
 message PB_system_set{
