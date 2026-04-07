@@ -1,6 +1,7 @@
 package com.SouthMillion.webSocket_server.handler.box;
 
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.handler.LazyLoadHandler;
 import com.SouthMillion.webSocket_server.handler.bag.BagHandler;
 import com.SouthMillion.webSocket_server.handler.role.RoleServiceHandler;
 import com.SouthMillion.webSocket_server.handler.task.TaskHandler;
@@ -49,11 +50,13 @@ import java.util.function.Supplier;
  *   1616 PB_SCBoxInfo        — box state after most ops
  *   1617 PB_SCBoxSetingInfo  — auto-open settings ack
  *   1618 PB_SCBoxSellInfo    — sell result
+ *
+ * This handler implements LazyLoadHandler for on-demand loading when the player opens the box UI.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BoxHandler implements MessageHandler {
+public class BoxHandler implements MessageHandler, LazyLoadHandler {
 
     private final BoxFeign boxFeign;
     private final EquipHttpClient equipHttpClient;
@@ -81,6 +84,17 @@ public class BoxHandler implements MessageHandler {
     @Override
     public int[] interests() {
         return new int[]{1610, 1611};
+    }
+
+    @Override
+    public String getModuleName() {
+        return "box";
+    }
+
+    @Override
+    public Mono<Void> loadOnDemand(PlayerSession ps) {
+        log.info("[Box] Lazy loading for roleId={}", ps.getRoleId());
+        return pushAll(ps);
     }
 
     /** Gọi sau login: đẩy trạng thái hộp kho báu (1616) về client. */

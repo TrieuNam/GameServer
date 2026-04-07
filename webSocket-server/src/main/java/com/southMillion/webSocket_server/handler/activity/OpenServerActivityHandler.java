@@ -1,6 +1,7 @@
 package com.SouthMillion.webSocket_server.handler.activity;
 
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.handler.LazyLoadHandler;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.client.ActivityFeign;
@@ -22,11 +23,13 @@ import java.util.Map;
  *   2166 PB_CSMarketShopReq          → 2167 PB_SCMarketShopInfo          (集市商店)
  *
  * opera_type: 1=GET_INFO, 2=CLAIM/BUY, 3=REFRESH (MarketShop only)
+ *
+ * This handler implements LazyLoadHandler for on-demand loading when the player opens the activity UI.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class OpenServerActivityHandler implements MessageHandler {
+public class OpenServerActivityHandler implements MessageHandler, LazyLoadHandler {
 
     private final ActivityFeign activityFeign;
 
@@ -37,6 +40,17 @@ public class OpenServerActivityHandler implements MessageHandler {
     @Override
     public int[] interests() {
         return new int[]{2160, 2162, 2164, 2166};
+    }
+
+    @Override
+    public String getModuleName() {
+        return "activity";
+    }
+
+    @Override
+    public Mono<Void> loadOnDemand(PlayerSession ps) {
+        log.info("[OpenActivity] Lazy loading for roleId={}", ps.getRoleId());
+        return pushAll(ps);
     }
 
     /** Push initial open-server activity snapshots right after login bootstrap. */

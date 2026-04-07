@@ -3,6 +3,7 @@ package com.SouthMillion.webSocket_server.handler.friend;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.SouthMillion.webSocket_server.constant.MessageIds;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.handler.LazyLoadHandler;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.client.FriendFeign;
@@ -17,14 +18,14 @@ import java.util.Map;
 
 /**
  * Friend Handler - Friend System
- * 
+ *
  * Messages:
  * - C→S 1431 (CS_FRIEND_REQ) - Client friend request
  * - S→C 1432 (SC_FRIEND_LIST) - Friend list response
  * - S→C 1433 (SC_FRIEND_REQUEST) - Friend request notification
  * - S→C 1434 (SC_FRIEND_ONLINE) - Friend online status update
  * - S→C 1435 (SC_FRIEND_OPERATION) - Operation result
- * 
+ *
  * Friend Operations:
  * - 1: Get friend list
  * - 2: Send friend request
@@ -35,11 +36,13 @@ import java.util.Map;
  * - 7: Unblock player
  * - 8: Search players
  * - 9: Get online status
+ *
+ * This handler implements LazyLoadHandler for on-demand loading when the player opens the friend UI.
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class FriendHandler implements MessageHandler {
+public class FriendHandler implements MessageHandler, LazyLoadHandler {
 
     private final FriendFeign friendFeign;
 
@@ -57,6 +60,17 @@ public class FriendHandler implements MessageHandler {
     @Override
     public int[] interests() {
         return new int[]{MessageIds.CS_FRIEND_REQ}; // 1431
+    }
+
+    @Override
+    public String getModuleName() {
+        return "friend";
+    }
+
+    @Override
+    public Mono<Void> loadOnDemand(PlayerSession ps) {
+        log.info("[Friend] Lazy loading for roleId={}", ps.getRoleId());
+        return pushAll(ps);
     }
 
     /** Gọi sau login: đẩy danh sách bạn bè (1432) và lời mời chờ (1433) về client. */
