@@ -487,11 +487,15 @@ public class LoginBootstrapHandler implements MessageHandler {
             log.info("[bootstrap] skip initial non-core visual/progression bootstrap for freshly created roleId={}", ps.getRoleId());
         }
 
+        // Phase 3 Optimization: Lazy-loaded modules (box, activity, friend, guild) are excluded
+        // from initial bootstrap. They will be loaded on-demand when the player opens their UI
+        // via CS_FEATURE_DATA_REQ (msgId 1453) handled by LazyDataRequestHandler.
+        // This reduces initial login time by 1-2 seconds.
         return Mono.when(
-                safe(() -> boxHandler.pushAll(ps), "box", ps, t0Bootstrap),
+                // REMOVED: boxHandler (lazy-loaded as "box")
                 safe(() -> taskHandler.reportDailyLogin(ps).then(taskHandler.pushAll(ps)), "task", ps, t0Bootstrap),
                 safe(() -> skillHandler.pushAll(ps), "skill", ps, t0Bootstrap),
-                safe(() -> openServerActivityHandler.pushAll(ps), "activity", ps, t0Bootstrap),
+                // REMOVED: openServerActivityHandler (lazy-loaded as "activity")
                 safe(() -> blockHandler.pushAll(ps), "block", ps, t0Bootstrap),
                 safe(() -> waBaoHandler.pushAll(ps), "wabao", ps, t0Bootstrap),
                 maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> shiZhuangHandler.pushAll(ps), "shizhuang", ps, t0Bootstrap),
@@ -504,13 +508,13 @@ public class LoginBootstrapHandler implements MessageHandler {
                 maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> petHandler.pushAll(ps), "pet", ps, t0Bootstrap),
                 maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> angelHandler.pushAll(ps), "angel", ps, t0Bootstrap),
                 maybeSkipFreshRoleDeferredModule(skipFreshRoleDeferredModules, () -> mountHandler.pushAll(ps), "mount", ps, t0Bootstrap),
-                safe(() -> friendHandler.pushAll(ps), "friend", ps, t0Bootstrap),
+                // REMOVED: friendHandler (lazy-loaded as "friend")
                 safe(() -> mailHandler.pushAll(ps), "mail", ps, t0Bootstrap),
                 safe(() -> starMapHandler.pushAll(ps), "starmap", ps, t0Bootstrap),
                 safe(() -> arenaHandler.pushAll(ps), "arena", ps, t0Bootstrap),
                 safe(() -> escortHandler.pushAll(ps), "escort", ps, t0Bootstrap),
                 safe(() -> territoryHandler.pushAll(ps), "territory", ps, t0Bootstrap),
-                safe(() -> guildHandler.pushAll(ps), "guild", ps, t0Bootstrap),
+                // REMOVED: guildHandler (lazy-loaded as "guild")
                 safe(() -> mainFbHandler.pushAll(ps), "mainfb", ps, t0Bootstrap)
         );
     }
