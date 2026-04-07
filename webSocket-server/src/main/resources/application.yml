@@ -57,8 +57,8 @@ feign:
     config:
       default:
         loggerLevel: FULL   # log URL, headers, body request/response
-        connectTimeout: 1000   # 1s (was 3s) — fail fast khi service down
-        readTimeout: 3000      # 3s (was 5s) — không chờ quá lâu
+        connectTimeout: 2000   # 2s (increased from 1s) — more lenient for services under load
+        readTimeout: 5000      # 5s (increased from 3s) — allow more time for complex queries
   okhttp:
     enabled: true           # nếu dùng OkHttp (khuyên dùng)
 

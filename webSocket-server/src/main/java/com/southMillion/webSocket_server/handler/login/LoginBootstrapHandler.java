@@ -132,9 +132,9 @@ public class LoginBootstrapHandler implements MessageHandler {
 
     // ===== Timing thresholds (ms) =====
     /** Log WARN nếu 1 service bootstrap mất hơn mức này */
-    private static final long SLOW_WARN_MS  = 3_000;
+    private static final long SLOW_WARN_MS  = 2_000;  // Lowered from 3s to detect issues earlier
     /** Log ERROR nếu 1 service bootstrap mất hơn mức này (gần timeout) */
-    private static final long SLOW_ERROR_MS = 8_000;
+    private static final long SLOW_ERROR_MS = 6_000;  // Lowered from 8s for earlier alerting
     /** Guard để client retry/reconnect không bắn full bootstrap trùng ngay sau 1450 đầu tiên. */
     private static final long BOOTSTRAP_REPLAY_GUARD_MS = 1_500;
     /** Fallback cho client cũ không gửi 1450: tự bootstrap nhẹ sau login ACK. */
