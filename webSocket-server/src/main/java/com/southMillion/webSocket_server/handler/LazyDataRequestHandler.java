@@ -2,6 +2,7 @@ package com.SouthMillion.webSocket_server.handler;
 
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.net.MsgIds;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.proto.Msgrole.Msgrole;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import jakarta.annotation.PostConstruct;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,8 +43,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class LazyDataRequestHandler implements MessageHandler {
 
-    private static final int CS_FEATURE_DATA_REQ = 1453;
-
     private final List<LazyLoadHandler> lazyHandlers;
     private final Map<String, LazyLoadHandler> handlerRegistry = new ConcurrentHashMap<>();
 
@@ -60,7 +60,7 @@ public class LazyDataRequestHandler implements MessageHandler {
 
     @Override
     public int[] interests() {
-        return new int[]{CS_FEATURE_DATA_REQ};
+        return new int[]{MsgIds.CS_FEATURE_DATA_REQ}; // 1453
     }
 
     @Override
@@ -73,7 +73,10 @@ public class LazyDataRequestHandler implements MessageHandler {
         return Mono.fromCallable(() -> {
                     try {
                         Msgrole.PB_CSFeatureDataReq req = Msgrole.PB_CSFeatureDataReq.parseFrom(payload);
-                        return req.hasModuleName() ? req.getModuleName() : "";
+                        if (!req.hasModuleName()) {
+                            return "";
+                        }
+                        return new String(req.getModuleName().toByteArray(), StandardCharsets.UTF_8);
                     } catch (Exception e) {
                         log.warn("[lazy-load] Parse error for roleId={}: {}", ps.getRoleId(), e.toString());
                         return "";
