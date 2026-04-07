@@ -143,6 +143,8 @@ public class TaskHandler implements MessageHandler {
                 log.info("[Task] advanceTask returned newTaskId={} for roleId={} (claimedBefore={} claimedAfter={} rewardClaimed={})",
                         newTaskId, roleId, claimedBefore, claimedAfter, rewardClaimed);
                 if (rewardClaimed) {
+                    // Phase 6: Invalidate task cache when task state changes
+                    loginSnapshotService.invalidateModule(roleId, "task");
                     syncPostClaimState(session, roleId);
                 }
 
@@ -174,9 +176,28 @@ public class TaskHandler implements MessageHandler {
 
         int taskId = 0;
         int progress = 0;
+        boolean usedCache = false;
 
         try {
-            TaskListResp resp = taskFeign.getTaskList(String.valueOf(roleId));
+            // Phase 6: Try Redis cache first
+            Map<String, Object> cachedData = loginSnapshotService.getCachedModuleData(roleId, "task");
+            TaskListResp resp;
+
+            if (cachedData != null) {
+                // Use cached data
+                resp = convertCachedDataToTaskListResp(cachedData);
+                usedCache = true;
+                log.debug("[Task] Using cached task data for roleId={}", roleId);
+            } else {
+                // Fetch from task-service
+                resp = taskFeign.getTaskList(String.valueOf(roleId));
+
+                // Cache the response for next login
+                if (resp != null) {
+                    Map<String, Object> dataToCache = convertTaskListRespToMap(resp);
+                    loginSnapshotService.cacheModuleData(roleId, "task", dataToCache);
+                }
+            }
 
             if (resp != null) {
                 taskId = resp.getClaimedTasks() != null ? resp.getClaimedTasks() : 0;
@@ -192,8 +213,8 @@ public class TaskHandler implements MessageHandler {
                 }
             }
 
-            log.info("[Task] Pushed task state — roleId={} taskId={} progress={} (status check enforced)",
-                    roleId, taskId, progress);
+            log.info("[Task] Pushed task state — roleId={} taskId={} progress={} cached={} (status check enforced)",
+                    roleId, taskId, progress, usedCache);
             lastKnownProgress.put(roleId, new TaskProgressSnapshot(taskId, progress));
         } catch (Exception e) {
             TaskProgressSnapshot snap = lastKnownProgress.get(roleId);
@@ -451,6 +472,78 @@ public class TaskHandler implements MessageHandler {
         log.debug("[TaskMatch] reportedKey={} reportedCondition={} | currentTask={} currentCondition={} → {}",
             reportedTaskKey, reportedConditionType, currentTaskKey, currentConditionType, matched ? "MATCH" : "MISMATCH");
         return matched;
+    }
+
+    // ─── Phase 6: Redis Cache Helper Methods ──────────────────────────────────
+
+    /**
+     * Convert cached Map data back to TaskListResp for use in pushCurrentTaskProgress.
+     */
+    @SuppressWarnings("unchecked")
+    private TaskListResp convertCachedDataToTaskListResp(Map<String, Object> cached) {
+        try {
+            Integer claimedTasks = (Integer) cached.get("claimedTasks");
+            List<Map<String, Object>> taskMaps = (List<Map<String, Object>>) cached.get("tasks");
+
+            List<TaskDTO> tasks = null;
+            if (taskMaps != null) {
+                tasks = taskMaps.stream().map(this::mapToTaskDTO).toList();
+            }
+
+            TaskListResp resp = new TaskListResp();
+            resp.setClaimedTasks(claimedTasks);
+            resp.setTasks(tasks);
+            return resp;
+        } catch (Exception e) {
+            log.warn("[Task] Failed to convert cached data: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Convert a single task Map to TaskDTO.
+     */
+    private TaskDTO mapToTaskDTO(Map<String, Object> map) {
+        TaskDTO dto = new TaskDTO();
+        dto.setTaskKey((String) map.get("taskKey"));
+        dto.setCurrentProgress(((Number) map.getOrDefault("currentProgress", 0)).intValue());
+        dto.setTargetValue(((Number) map.getOrDefault("targetValue", 1)).intValue());
+        String statusStr = (String) map.get("status");
+        if (statusStr != null) {
+            dto.setStatus(TaskStatus.valueOf(statusStr));
+        }
+        return dto;
+    }
+
+    /**
+     * Convert TaskListResp to Map for Redis caching.
+     */
+    private Map<String, Object> convertTaskListRespToMap(TaskListResp resp) {
+        Map<String, Object> data = new java.util.HashMap<>();
+        data.put("claimedTasks", resp.getClaimedTasks());
+
+        if (resp.getTasks() != null) {
+            List<Map<String, Object>> taskMaps = resp.getTasks().stream()
+                    .map(this::taskDTOToMap)
+                    .toList();
+            data.put("tasks", taskMaps);
+        }
+
+        return data;
+    }
+
+    /**
+     * Convert TaskDTO to Map for Redis caching.
+     */
+    private Map<String, Object> taskDTOToMap(TaskDTO dto) {
+        Map<String, Object> map = new java.util.HashMap<>();
+        map.put("taskKey", dto.getTaskKey());
+        map.put("currentProgress", dto.getCurrentProgress());
+        map.put("targetValue", dto.getTargetValue());
+        if (dto.getStatus() != null) {
+            map.put("status", dto.getStatus().name());
+        }
+        return map;
     }
 
     private record TaskProgressSnapshot(int taskId, int progress) {}
