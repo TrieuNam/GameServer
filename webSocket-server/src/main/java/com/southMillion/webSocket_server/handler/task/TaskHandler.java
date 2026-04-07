@@ -3,6 +3,7 @@ package com.SouthMillion.webSocket_server.handler.task;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.service.LoginSnapshotService;
 import com.SouthMillion.webSocket_server.service.TaskCondition;
 import com.SouthMillion.webSocket_server.service.TaskConditionRegistry;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
@@ -22,6 +23,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,6 +54,7 @@ public class TaskHandler implements MessageHandler {
     private final TaskProgressPublisher taskProgressPublisher;
     private final BagFeign bagFeign;
     private final WalletHttpClient walletHttpClient;
+    private final LoginSnapshotService loginSnapshotService;
     private final ConcurrentHashMap<Long, TaskProgressSnapshot> lastKnownProgress = new ConcurrentHashMap<>();
 
     private static final int MSGID_CLAIM_TASK_REWARD_REQ = 1451;  // PB_CSFetchTaskRewardReq

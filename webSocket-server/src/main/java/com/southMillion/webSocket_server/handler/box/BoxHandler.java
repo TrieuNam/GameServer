@@ -67,6 +67,7 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
     private final TaskProgressPublisher taskProgressPublisher;
     private final WalletHttpClient walletHttpClient;
     private final BagUpdateGate bagUpdateGate;
+    private final reactor.core.scheduler.Scheduler feignVtScheduler;
 
     private static final int REQ_OPEN     = 1;
     private static final int REQ_EQUIP    = 2;
@@ -151,7 +152,7 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
                         FeignTokenHolder.clear();
                     }
                 })
-                .subscribeOn(Schedulers.boundedElastic())
+                .subscribeOn(feignVtScheduler)
                 .timeout(Duration.ofMillis(timeoutMs))
                 .onErrorResume(ex -> {
                     log.debug("[Box] {} skipped roleId={} timeoutMs={} ex={}", operation, roleId, timeoutMs, ex.toString());
@@ -1173,7 +1174,7 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
                             FeignTokenHolder.clear();
                         }
                     })
-                    .subscribeOn(Schedulers.boundedElastic())
+                    .subscribeOn(feignVtScheduler)
                     .timeout(Duration.ofMillis(timeoutMs))
                     .onErrorResume(ex -> {
                         log.debug("[Box] {} skipped roleId={} timeoutMs={} ex={}", operation, roleId, timeoutMs, ex.toString());

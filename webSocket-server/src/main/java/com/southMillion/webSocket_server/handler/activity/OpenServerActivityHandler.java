@@ -32,6 +32,7 @@ import java.util.Map;
 public class OpenServerActivityHandler implements MessageHandler, LazyLoadHandler {
 
     private final ActivityFeign activityFeign;
+    private final reactor.core.scheduler.Scheduler feignVtScheduler;
 
     private static final int OP_GET_INFO = 1;
     private static final int OP_CLAIM    = 2;
@@ -65,27 +66,28 @@ public class OpenServerActivityHandler implements MessageHandler, LazyLoadHandle
         // Parallel execution: fetch all 4 activities concurrently instead of sequentially
         // Old: sevenDay → luck → newArea → market (sequential, ~2000ms)
         // New: Mono.zip all 4 calls (parallel, ~500ms - 75% faster)
+        // Phase 5: Use virtual thread scheduler (feignVtScheduler) for better concurrency
         return Mono.zip(
                 Mono.fromCallable(() -> activityFeign.getSevenDay(roleIdStr))
-                        .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                        .subscribeOn(feignVtScheduler)
                         .onErrorResume(e -> {
                             log.debug("[OpenActivity/SevenDay] bootstrap fetch skipped roleId={} ex={}", roleId, e.toString());
                             return Mono.empty();
                         }),
                 Mono.fromCallable(() -> activityFeign.getLuck(roleIdStr))
-                        .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                        .subscribeOn(feignVtScheduler)
                         .onErrorResume(e -> {
                             log.debug("[OpenActivity/LuckUnpacking] bootstrap fetch skipped roleId={} ex={}", roleId, e.toString());
                             return Mono.empty();
                         }),
                 Mono.fromCallable(() -> activityFeign.getNewArea(roleIdStr))
-                        .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                        .subscribeOn(feignVtScheduler)
                         .onErrorResume(e -> {
                             log.debug("[OpenActivity/NewArea] bootstrap fetch skipped roleId={} ex={}", roleId, e.toString());
                             return Mono.empty();
                         }),
                 Mono.fromCallable(() -> activityFeign.getMarket(roleIdStr))
-                        .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                        .subscribeOn(feignVtScheduler)
                         .onErrorResume(e -> {
                             log.debug("[OpenActivity/MarketShop] bootstrap fetch skipped roleId={} ex={}", roleId, e.toString());
                             return Mono.empty();

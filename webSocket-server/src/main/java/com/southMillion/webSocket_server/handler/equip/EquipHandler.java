@@ -27,6 +27,7 @@ public class EquipHandler implements MessageHandler {
 
     private final EquipHttpClient equipHttpClient;
     private final TaskProgressPublisher taskProgressPublisher;
+    private final reactor.core.scheduler.Scheduler feignVtScheduler;
 
     // Legacy C++ req_type parity (other/equip/equip.cpp)
     private static final int OP_BAG_WEARING   = 1;
@@ -91,13 +92,14 @@ public class EquipHandler implements MessageHandler {
         // Parallel execution: fetch all equip data concurrently instead of sequentially
         // Old: sendEquipList() → sendFuMoList() → sendBagList() (sequential, ~1200ms total)
         // New: Mono.zip all 3 calls (parallel, ~500ms total - 60% faster)
+        // Phase 5: Use virtual thread scheduler (feignVtScheduler) for better concurrency
         return Mono.zip(
                 Mono.fromCallable(() -> equipHttpClient.list(String.valueOf(roleId)))
-                        .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic()),
+                        .subscribeOn(feignVtScheduler),
                 Mono.fromCallable(() -> equipHttpClient.fumoList(String.valueOf(roleId)))
-                        .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic()),
+                        .subscribeOn(feignVtScheduler),
                 Mono.fromCallable(() -> fetchBagSlots(roleId))
-                        .subscribeOn(reactor.core.scheduler.Schedulers.boundedElastic())
+                        .subscribeOn(feignVtScheduler)
         ).flatMap(tuple -> {
             // Emit all responses
             sendEquipListFromResp(session, tuple.getT1());
