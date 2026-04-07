@@ -163,10 +163,11 @@ public class LoginBootstrapHandler implements MessageHandler {
     @Override
     public Mono<Void> handle(PlayerSession ps, int msgId, byte[] payload) {
         if (msgId == MsgIds.CS_ALL_INFO_REQ) {
-            // Theo flow client gốc, 1450 mới là tín hiệu yêu cầu fan-out full info.
-            // Không bootstrap full ngay trong ACK login để tránh load 2 lần toàn bộ services.
+            // CS_ALL_INFO_REQ (1450) vẫn được giữ để tương thích với client cũ,
+            // nhưng bây giờ bootstrap đã được trigger ngay trong login flow.
+            // Guard BOOTSTRAP_REPLAY_GUARD_MS sẽ ngăn load trùng lặp.
             if (ps.isLoggedIn() && ps.getRoleId() != null) {
-                log.info("[1450] CS_ALL_INFO_REQ roleId={} — starting core-first bootstrap", ps.getRoleId());
+                log.info("[1450] CS_ALL_INFO_REQ roleId={} — bootstrap may already be running from login", ps.getRoleId());
                 triggerBootstrapOnAllInfo(ps, "CS_ALL_INFO_REQ");
             } else {
                 log.warn("[1450] CS_ALL_INFO_REQ ignored — session not logged in ws={}", ps.getWs().getId());
@@ -322,11 +323,11 @@ public class LoginBootstrapHandler implements MessageHandler {
                         skipFreshRoleDeferredModulesOnce.put(ps.getRoleId(), Boolean.TRUE);
                         log.info("[login] created new role for user {} — skip first deferred non-core gameplay bootstrap", ps.getUserId());
                     }
-                    // Giữ ACK login thật nhẹ: client chuẩn sẽ gửi 1450 ngay sau đó để lấy full data.
-                    // Nếu client cũ không gửi 1450, fallback timer bên dưới sẽ tự kích hoạt bootstrap một lần.
-                    log.debug("[login] waiting for CS_ALL_INFO_REQ before full bootstrap roleId={}", ps.getRoleId());
+                    // ── Tải ngay tất cả core game data và user database data ──────────────
+                    // Thay vì chờ CS_ALL_INFO_REQ (1450), load toàn bộ data ngay sau login ACK
+                    log.info("[login] immediately loading all core game data and user DB data for roleId={}", ps.getRoleId());
                     initializeActivityData(ps);
-                    scheduleBootstrapFallback(ps);
+                    triggerBootstrapOnAllInfo(ps, "LOGIN_IMMEDIATE");
                     return Mono.empty();
                 })
                 .onErrorResume(e -> {
@@ -378,6 +379,8 @@ public class LoginBootstrapHandler implements MessageHandler {
     // ─────────────────────────────────────────────────────────────────────────
 
     private void scheduleBootstrapFallback(PlayerSession ps) {
+        // Note: Phương thức này không còn được sử dụng vì bootstrap được trigger ngay trong login flow.
+        // Giữ lại để tương thích code, nhưng không được gọi nữa.
         Long roleId = ps.getRoleId();
         if (roleId == null) {
             return;
@@ -399,13 +402,17 @@ public class LoginBootstrapHandler implements MessageHandler {
     }
 
     /**
-     * Client chính thống sẽ gửi `1450 / CS_ALL_INFO_REQ` sau khi login OK để yêu cầu full info.
-     * Vì vậy bootstrap full được dời sang 1450 và chia làm 2 wave:
+     * Trigger full bootstrap để load tất cả core game data và user database data.
+     * Được gọi ngay sau khi login thành công để load data ngay lập tức.
+     *
+     * Bootstrap được chia làm 2 wave:
      * - CORE: role/bag/equip → authoritative snapshot + inventory/equipment cần sớm
-     * - DEFERRED: box/task/skill và các module gameplay khác tải sau nền, tránh đẩy nhầm "game data" như role-core
+     * - DEFERRED: box/task/skill và các module gameplay khác tải song song
      *
      * Các service có static JSON nặng (task/equip/skill/box) phải ưu tiên đi qua Redis-preload
      * đã warm ở startup; `StartupDependencyReadiness` chỉ mở login khi phần preload này sẵn sàng.
+     *
+     * Guard BOOTSTRAP_REPLAY_GUARD_MS ngăn chặn việc load trùng lặp nếu client gửi CS_ALL_INFO_REQ.
      */
     private void triggerBootstrapOnAllInfo(PlayerSession ps, String trigger) {
         Long roleId = ps.getRoleId();
