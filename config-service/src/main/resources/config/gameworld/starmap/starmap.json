@@ -1,0 +1,170 @@
+{
+  "stars": [
+    {
+      "starId": 1,
+      "name": "Polaris",
+      "description": "The North Star - guides travelers",
+      "constellationId": 1,
+      "baseAttributes": {
+        "hp": 200,
+        "attack": 30,
+        "defense": 20,
+        "speed": 10,
+        "critRate": 3,
+        "critDamage": 5,
+        "blessing": 50
+      },
+      "activationCost": {
+        "gold": 5000,
+        "materialItemId": 3001,
+        "materialCount": 10,
+        "energyCost": 100
+      },
+      "levelCost": {
+        "goldPerLevel": 1000,
+        "materialItemId": 3001,
+        "materialPerLevel": 5,
+        "energyPerLevel": 50
+      }
+    },
+    {
+      "starId": 2,
+      "name": "Sirius",
+      "description": "The brightest star - warrior's beacon",
+      "constellationId": 1,
+      "baseAttributes": {
+        "hp": 150,
+        "attack": 50,
+        "defense": 15,
+        "speed": 15,
+        "critRate": 5,
+        "critDamage": 10,
+        "blessing": 80
+      },
+      "activationCost": {
+        "gold": 8000,
+        "materialItemId": 3002,
+        "materialCount": 15,
+        "energyCost": 150
+      },
+      "levelCost": {
+        "goldPerLevel": 1500,
+        "materialItemId": 3002,
+        "materialPerLevel": 7,
+        "energyPerLevel": 75
+      }
+    },
+    {
+      "starId": 3,
+      "name": "Vega",
+      "description": "The harp star - musician's muse",
+      "constellationId": 2,
+      "baseAttributes": {
+        "hp": 180,
+        "attack": 40,
+        "defense": 25,
+        "speed": 12,
+        "critRate": 4,
+        "critDamage": 8,
+        "blessing": 65
+      },
+      "activationCost": {
+        "gold": 6000,
+        "materialItemId": 3001,
+        "materialCount": 12,
+        "energyCost": 120
+      },
+      "levelCost": {
+        "goldPerLevel": 1200,
+        "materialItemId": 3001,
+        "materialPerLevel": 6,
+        "energyPerLevel": 60
+      }
+    },
+    {
+      "starId": 4,
+      "name": "Betelgeuse",
+      "description": "The red giant - destroyer's flame",
+      "constellationId": 2,
+      "baseAttributes": {
+        "hp": 250,
+        "attack": 60,
+        "defense": 30,
+        "speed": 8,
+        "critRate": 6,
+        "critDamage": 12,
+        "blessing": 100
+      },
+      "activationCost": {
+        "gold": 10000,
+        "materialItemId": 3003,
+        "materialCount": 20,
+        "energyCost": 200
+      },
+      "levelCost": {
+        "goldPerLevel": 2000,
+        "materialItemId": 3003,
+        "materialPerLevel": 10,
+        "energyPerLevel": 100
+      }
+    }
+  ],
+  "constellations": [
+    {
+      "constellationId": 1,
+      "name": "The Navigator",
+      "description": "Ancient constellation of the pathfinder",
+      "totalStars": 2,
+      "starIds": [1, 2],
+      "bonusAttributes": {
+        "hp": 500,
+        "attack": 100,
+        "defense": 50,
+        "speed": 30,
+        "critRate": 10,
+        "critDamage": 20,
+        "blessing": 200
+      },
+      "unlockCost": {
+        "gold": 20000,
+        "materialItemId": 3004,
+        "materialCount": 30,
+        "requiredStarsActivated": 2
+      },
+      "levelCost": {
+        "goldPerLevel": 5000,
+        "materialItemId": 3004,
+        "materialPerLevel": 15,
+        "energyPerLevel": 200
+      }
+    },
+    {
+      "constellationId": 2,
+      "name": "The Destroyer",
+      "description": "Constellation of war and conquest",
+      "totalStars": 2,
+      "starIds": [3, 4],
+      "bonusAttributes": {
+        "hp": 600,
+        "attack": 150,
+        "defense": 70,
+        "speed": 40,
+        "critRate": 15,
+        "critDamage": 30,
+        "blessing": 300
+      },
+      "unlockCost": {
+        "gold": 30000,
+        "materialItemId": 3005,
+        "materialCount": 50,
+        "requiredStarsActivated": 2
+      },
+      "levelCost": {
+        "goldPerLevel": 7000,
+        "materialItemId": 3005,
+        "materialPerLevel": 20,
+        "energyPerLevel": 300
+      }
+    }
+  ]
+}
