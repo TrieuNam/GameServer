@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -45,6 +46,7 @@ class MainFbServiceTest {
     @Mock private MainFbStageProgressRepository progressRepo;
     @Mock private MainFbChapterRewardRepository chapterRepo;
     @Mock private MainFbTaskProgressRepository  taskRepo;
+    @Mock private TaskProgressPublisher         taskProgressPublisher;
     @Mock private StringRedisTemplate           redis;
     @SuppressWarnings("unchecked")
     @Mock private ValueOperations<String, String> valueOps;
@@ -54,6 +56,8 @@ class MainFbServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(mainFbService, "STAMINA_ITEM_ID", 50001L);
+        Mockito.lenient().when(taskProgressPublisher.publish(anyString(), anyString(), anyInt(), anyString()))
+                .thenReturn(true);
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
@@ -290,6 +294,31 @@ class MainFbServiceTest {
             long totalCount = result.stream().mapToLong(ItemStackDTO::count).sum();
             assertThat(totalCount).isEqualTo(20); // 10 doubled
             then(itemFeign).should().addItemsBulk(eq("p1"), any(), any());
+        }
+
+        @Test
+        @DisplayName("TC-MAINFB-011A [P] condition 4 nhan snapshot so ai da clear thay vi delta=1")
+        void finish_reportsAbsoluteDungeonProgressSnapshot() {
+            MaoxianConfig.Clearance c = clearance(1, 2, 0);
+            MainFbDTOs.FinishStageReq req = MainFbDTOs.FinishStageReq.builder()
+                    .playerId("p1").battleId("battle-2").stage(1).level(2).score(150).build();
+
+            given(redis.opsForValue()).willReturn(valueOps);
+            given(valueOps.setIfAbsent(anyString(), eq("1"), eq(Duration.ofMinutes(30))))
+                    .willReturn(Boolean.TRUE);
+            given(cfg.findStage(1, 2)).willReturn(Optional.of(c));
+            given(progressRepo.findByPlayerIdAndStageAndLevel("p1", 1, 2))
+                    .willReturn(Optional.empty());
+            given(progressRepo.save(any())).willAnswer(inv -> inv.getArgument(0));
+            given(progressRepo.findByPlayerId("p1")).willReturn(List.of(
+                    progress("p1", 1, 1, 150, 1),
+                    progress("p1", 1, 2, 150, 1)
+            ));
+            given(taskCfg.indexOf(1, 2)).willReturn(-1); // không nằm trong chain nhiệm vụ nội bộ vẫn phải báo task condition_4
+
+            mainFbService.finish(req);
+
+            then(taskProgressPublisher).should().publish("p1", "complete_dungeon", 2, "main-fb-service");
         }
 
         @Test

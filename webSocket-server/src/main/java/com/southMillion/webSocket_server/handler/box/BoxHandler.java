@@ -128,13 +128,13 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
             // Send pending equip (1615) if available
             sendPendingEquipInfoFromResp(session, compareState, equipInfo, 0);
 
-            return Mono.empty();
+            return Mono.<Void>empty();
         }).onErrorResume(e -> {
             log.warn("[Box] pushAll parallel fetch error roleId={}: {}", roleId, e.getMessage());
             // Fallback: send empty responses
             sendBoxInfo(session, Msgbox.PB_SCBoxInfo.newBuilder().build());
             sendSettingInfo(session, Msgbox.PB_SCBoxSetingInfo.newBuilder().build());
-            return Mono.empty();
+            return Mono.<Void>empty();
         });
     }
 

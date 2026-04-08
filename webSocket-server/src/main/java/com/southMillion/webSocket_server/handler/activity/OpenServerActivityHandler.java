@@ -98,10 +98,10 @@ public class OpenServerActivityHandler implements MessageHandler, LazyLoadHandle
             pushSafely("LuckUnpacking", roleId, () -> emitLuckUnpackingInfo(session, tuple.getT2()));
             pushSafely("NewArea", roleId, () -> emitNewAreaPreferentialInfo(session, tuple.getT3()));
             pushSafely("MarketShop", roleId, () -> emitMarketShopInfo(session, tuple.getT4()));
-            return Mono.empty();
+            return Mono.<Void>empty();
         }).onErrorResume(e -> {
             log.warn("[OpenActivity] pushAll parallel fetch error roleId={}: {}", roleId, e.getMessage());
-            return Mono.empty();
+            return Mono.<Void>empty();
         });
     }
 

@@ -3,7 +3,6 @@ package com.SouthMillion.webSocket_server.handler.mainfb;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
-import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.client.BagFeign;
 import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
 import com.SouthMillion.webSocket_server.service.grpc.MainFbGrpcClient;
@@ -11,12 +10,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagDTOs;
 import org.SouthMillion.dto.wallet.WalletDTOs;
+import org.SouthMillion.proto.Msgbattle.Msgbattle;
 import org.SouthMillion.proto.Msgmainfb.Msgmainfb;
+import org.SouthMillion.proto.mainfb.EnterStageResponse;
+import org.SouthMillion.proto.mainfb.GetCurrentTaskResponse;
 import org.SouthMillion.proto.mainfb.GetProgressResponse;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.util.List;
 
 /**
@@ -33,12 +34,14 @@ import java.util.List;
 public class MainFbHandler implements MessageHandler {
 
     private final MainFbGrpcClient mainFbGrpcClient;
-    private final TaskProgressPublisher taskProgressPublisher;
     private final BagFeign bagFeign;
     private final WalletHttpClient walletHttpClient;
 
-    private static final int OP_CHALLENGE    = 0;  // 挑战 / get info
-    private static final int OP_CLAIM_REWARD = 1;  // 领取阶段奖励
+    private static final int OP_CHALLENGE         = 0;      // 挑战当前主线关卡
+    private static final int OP_CLAIM_REWARD      = 1;      // 领取阶段奖励
+    private static final int MSG_SC_MAIN_FB_INFO  = 2006;
+    private static final int MSG_SC_BATTLE_REPORT = 11003;
+    private static final int MAIN_FB_BATTLE_MODE  = 0;
 
     @Override
     public int[] interests() {
@@ -51,13 +54,7 @@ public class MainFbHandler implements MessageHandler {
         if (roleId == null) return Mono.empty();
         return Mono.fromRunnable(() -> {
             try {
-                GetProgressResponse prog = mainFbGrpcClient.getProgress(String.valueOf(roleId));
-                int level = prog.getProgressesCount();
-                Msgmainfb.PB_SCMainFbInfo info = Msgmainfb.PB_SCMainFbInfo.newBuilder()
-                        .setLevel(level)
-                        .setStage(level)
-                        .build();
-                sendInfo(session, info);
+                sendInfo(session, buildProgressInfo(roleId));
             } catch (Exception e) {
                 log.warn("[MainFb] pushAll error for roleId={}: {}", roleId, e.getMessage());
                 sendInfo(session, Msgmainfb.PB_SCMainFbInfo.newBuilder().build());
@@ -76,7 +73,7 @@ public class MainFbHandler implements MessageHandler {
                 log.debug("[MainFb] op={}, roleId={}", type, roleId);
 
                 switch (type) {
-                    case OP_CHALLENGE    -> handleGetInfo(session, roleId);
+                    case OP_CHALLENGE    -> handleChallenge(session, roleId);
                     case OP_CLAIM_REWARD -> handleClaimReward(session, roleId);
                     default -> {
                         log.warn("[MainFb] Unknown op={}", type);
@@ -90,14 +87,53 @@ public class MainFbHandler implements MessageHandler {
         });
     }
 
-    // op=0: Get current main dungeon progress
+    // op=0: Start the current main-fb challenge and return battle data for the client.
+    private void handleChallenge(PlayerSession session, Long roleId) {
+        if (roleId == null) {
+            sendInfo(session, Msgmainfb.PB_SCMainFbInfo.newBuilder().build());
+            return;
+        }
+
+        String playerId = String.valueOf(roleId);
+        try {
+            GetCurrentTaskResponse currentTask = mainFbGrpcClient.getCurrentTask(playerId);
+            if (currentTask == null || currentTask.getAllDone()) {
+                log.info("[MainFb] No pending main-fb stage for roleId={}", roleId);
+                sendInfo(session, buildProgressInfo(roleId));
+                return;
+            }
+
+            int stage = currentTask.getStage();
+            int level = currentTask.getLevel();
+            if (stage <= 0 || level <= 0) {
+                log.warn("[MainFb] Invalid task stage for roleId={}, stage={}, level={}", roleId, stage, level);
+                sendInfo(session, buildProgressInfo(roleId));
+                return;
+            }
+
+            EnterStageResponse enterResp = mainFbGrpcClient.enterStage(playerId, stage, level);
+            if (enterResp == null || enterResp.getBattleId() == null || enterResp.getBattleId().isBlank()) {
+                log.warn("[MainFb] enterStage returned empty battleId for roleId={}, stage={}, level={}", roleId, stage, level);
+                sendInfo(session, buildProgressInfo(roleId));
+                return;
+            }
+
+            Msgbattle.PB_SCBattleReport report = Msgbattle.PB_SCBattleReport.newBuilder()
+                    .setBattleModeType(MAIN_FB_BATTLE_MODE)
+                    .setBattleFileName(enterResp.getBattleId())
+                    .build();
+            Emitters.emit(session, MSG_SC_BATTLE_REPORT, report.toByteArray());
+            log.info("[MainFb] Started stage {}-{} for roleId={}, battleId={}", stage, level, roleId, enterResp.getBattleId());
+        } catch (Exception e) {
+            log.error("[MainFb] handleChallenge error for roleId={}", roleId, e);
+            sendInfo(session, buildProgressInfo(roleId));
+        }
+    }
+
+    // Retained for explicit info refresh flows if needed.
     private void handleGetInfo(PlayerSession session, Long roleId) {
         try {
-            GetProgressResponse prog = mainFbGrpcClient.getProgress(String.valueOf(roleId));
-            Msgmainfb.PB_SCMainFbInfo info = Msgmainfb.PB_SCMainFbInfo.newBuilder()
-                    .setLevel(prog.getProgressesCount())
-                    .build();
-            sendInfo(session, info);
+            sendInfo(session, buildProgressInfo(roleId));
         } catch (Exception e) {
             log.error("[MainFb] handleGetInfo error for roleId={}", roleId, e);
             sendInfo(session, Msgmainfb.PB_SCMainFbInfo.newBuilder().build());
@@ -107,32 +143,68 @@ public class MainFbHandler implements MessageHandler {
     // op=1: Claim current stage reward
     private void handleClaimReward(PlayerSession session, Long roleId) {
         try {
-            GetProgressResponse prog = mainFbGrpcClient.getProgress(String.valueOf(roleId));
-            int stage = prog.getProgressesCount() > 0 ? prog.getProgressesCount() : 1;
-            mainFbGrpcClient.claimChapterReward(String.valueOf(roleId), stage);
+            String playerId = String.valueOf(roleId);
+            int stage = resolveClaimStage(playerId);
+            mainFbGrpcClient.claimChapterReward(playerId, stage);
             syncPostClaimState(session, roleId);
-            reportTaskProgress(roleId, "complete_dungeon", 1);
-            Msgmainfb.PB_SCMainFbInfo info = Msgmainfb.PB_SCMainFbInfo.newBuilder()
-                    .setLevel(stage)
-                    .setStage(stage)
-                    .build();
-            sendInfo(session, info);
+            sendInfo(session, buildProgressInfo(roleId));
         } catch (Exception e) {
             log.error("[MainFb] handleClaimReward error for roleId={}", roleId, e);
             sendInfo(session, Msgmainfb.PB_SCMainFbInfo.newBuilder().build());
         }
     }
 
+    private Msgmainfb.PB_SCMainFbInfo buildProgressInfo(Long roleId) {
+        if (roleId == null) {
+            return Msgmainfb.PB_SCMainFbInfo.newBuilder().build();
+        }
+
+        String playerId = String.valueOf(roleId);
+        GetProgressResponse prog = mainFbGrpcClient.getProgress(playerId);
+        int clearedLevelCount = prog.getProgressesCount();
+        int clearedStageCount = 0;
+
+        try {
+            GetCurrentTaskResponse currentTask = mainFbGrpcClient.getCurrentTask(playerId);
+            if (currentTask != null) {
+                if (currentTask.getAllDone()) {
+                    clearedStageCount = Math.max(clearedStageCount, 1);
+                } else if (currentTask.getStage() > 0) {
+                    clearedStageCount = Math.max(0, currentTask.getStage() - 1);
+                }
+            }
+        } catch (Exception e) {
+            log.debug("[MainFb] buildProgressInfo fallback for roleId={}: {}", roleId, e.getMessage());
+        }
+
+        return Msgmainfb.PB_SCMainFbInfo.newBuilder()
+                .setLevel(clearedLevelCount)
+                .setStage(clearedStageCount)
+                .build();
+    }
+
+    private int resolveClaimStage(String playerId) {
+        try {
+            GetCurrentTaskResponse currentTask = mainFbGrpcClient.getCurrentTask(playerId);
+            if (currentTask != null) {
+                if (currentTask.getAllDone()) {
+                    return Math.max(1, currentTask.getStage());
+                }
+                if (currentTask.getStage() > 1) {
+                    return currentTask.getStage() - 1;
+                }
+            }
+        } catch (Exception e) {
+            log.debug("[MainFb] resolveClaimStage fallback for playerId={}: {}", playerId, e.getMessage());
+        }
+
+        GetProgressResponse prog = mainFbGrpcClient.getProgress(playerId);
+        return prog.getProgressesCount() > 0 ? prog.getProgressesCount() : 1;
+    }
+
     private void syncPostClaimState(PlayerSession session, Long roleId) {
         pushBagState(session, roleId);
         pushWalletBalance(session, roleId);
-
-        Mono.delay(Duration.ofMillis(250))
-                .onErrorResume(ex -> Mono.empty())
-                .subscribe(ignored -> {
-                    pushBagState(session, roleId);
-                    pushWalletBalance(session, roleId);
-                });
     }
 
     private void pushBagState(PlayerSession session, Long roleId) {
@@ -163,20 +235,10 @@ public class MainFbHandler implements MessageHandler {
 
     private void sendInfo(PlayerSession session, Msgmainfb.PB_SCMainFbInfo info) {
         try {
-            Emitters.emit(session, 2006, info.toByteArray());
+            Emitters.emit(session, MSG_SC_MAIN_FB_INFO, info.toByteArray());
         } catch (Exception e) {
             log.error("[MainFb] sendInfo failed", e);
         }
     }
 
-    private void reportTaskProgress(Long roleId, String taskKey, int delta) {
-        if (roleId == null || delta <= 0) {
-            return;
-        }
-        try {
-            taskProgressPublisher.publish(roleId, taskKey, delta, "websocket-mainfb");
-        } catch (Exception e) {
-            log.warn("[MainFb] Failed to report task progress roleId={}, taskKey={}: {}", roleId, taskKey, e.getMessage());
-        }
-    }
 }
