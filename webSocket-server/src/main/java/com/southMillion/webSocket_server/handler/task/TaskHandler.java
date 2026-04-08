@@ -99,7 +99,8 @@ public class TaskHandler implements MessageHandler {
         Long roleId = session.getRoleId();
         if (roleId == null) return Mono.empty();
 
-        return Mono.fromRunnable(() -> pushCurrentTaskProgress(session));
+        // Bootstrap may reuse the login snapshot cache to avoid redundant startup Feign calls.
+        return Mono.fromRunnable(() -> pushCurrentTaskProgress(session, true));
     }
 
     // ─── Message handler ───────────────────────────────────────────────────────
@@ -171,6 +172,12 @@ public class TaskHandler implements MessageHandler {
      *   All tasks done / task-service down → fallback progress=0
      */
     public void pushCurrentTaskProgress(PlayerSession session) {
+        // Realtime pushes must fetch fresh task state; otherwise the login snapshot cache can
+        // make handlers look "stuck" even though the Kafka consumer and handler both ran.
+        pushCurrentTaskProgress(session, false);
+    }
+
+    private void pushCurrentTaskProgress(PlayerSession session, boolean preferCache) {
         Long roleId = session.getRoleId();
         if (roleId == null) return;
 
@@ -179,21 +186,19 @@ public class TaskHandler implements MessageHandler {
         boolean usedCache = false;
 
         try {
-            // Phase 6: Try Redis cache first
-            Map<String, Object> cachedData = loginSnapshotService.getCachedModuleData(roleId, "task");
+            Map<String, Object> cachedData = preferCache
+                    ? loginSnapshotService.getCachedModuleData(roleId, "task")
+                    : null;
             TaskListResp resp;
 
             if (cachedData != null) {
-                // Use cached data
                 resp = convertCachedDataToTaskListResp(cachedData);
                 usedCache = true;
                 log.debug("[Task] Using cached task data for roleId={}", roleId);
             } else {
-                // Fetch from task-service
                 resp = taskFeign.getTaskList(String.valueOf(roleId));
 
-                // Cache the response for next login
-                if (resp != null) {
+                if (preferCache && resp != null) {
                     Map<String, Object> dataToCache = convertTaskListRespToMap(resp);
                     loginSnapshotService.cacheModuleData(roleId, "task", dataToCache);
                 }

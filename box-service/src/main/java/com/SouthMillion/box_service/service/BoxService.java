@@ -1438,14 +1438,33 @@ public class BoxService {
      * Lấy quality theo trọng số trong colorRow hoặc fallback 1..8.
      */
     private int rollQuality(Map<String, Object> colorRow, boolean isFive) {
-        // Nếu colorRow có "rate1..8" → rút thăm theo rate. Nếu không → uniform 1..8
         int[] rate = new int[8];
         int sum = 0;
-        for (int i = 1; i <= 8; i++) {
-            int r = pInt(colorRow.getOrDefault("rate" + i, 0), 0);
-            rate[i - 1] = r;
-            sum += r;
+
+        // unpack.json stores the real box rarity weights in equipment_color_1 / equipment_color_2
+        // (single-open vs five-open). If we ignore these keys we silently fall back to uniform 1..8,
+        // which makes purple/red/yellow far too common.
+        Object packedRates = colorRow.get(isFive ? "equipment_color_2" : "equipment_color_1");
+        if (packedRates == null && isFive) {
+            packedRates = colorRow.get("equipment_color_1");
         }
+        if (packedRates != null) {
+            String[] parts = String.valueOf(packedRates).trim().split("\\|");
+            for (int i = 0; i < Math.min(parts.length, rate.length); i++) {
+                rate[i] = pInt(parts[i], 0);
+                sum += rate[i];
+            }
+        }
+
+        // Backward-compatible fallback if a different config source still uses rate1..8 columns.
+        if (sum <= 0) {
+            for (int i = 1; i <= 8; i++) {
+                int r = pInt(colorRow.getOrDefault("rate" + i, 0), 0);
+                rate[i - 1] = r;
+                sum += r;
+            }
+        }
+
         if (sum <= 0) {
             return 1 + ThreadLocalRandom.current().nextInt(8);
         }

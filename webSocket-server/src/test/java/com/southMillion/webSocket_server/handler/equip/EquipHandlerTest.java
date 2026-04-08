@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ public class EquipHandlerTest {
 
     @BeforeEach
     void setUp() {
-        equipHandler = new EquipHandler(equipHttpClient, taskProgressPublisher);
+        equipHandler = new EquipHandler(equipHttpClient, taskProgressPublisher, Schedulers.immediate());
         playerSession = PlayerSession.builder()
                 .roleId(2001L)
                 .username("testUser")

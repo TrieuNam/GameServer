@@ -1,34 +1,21 @@
 package com.SouthMillion.main_fb_service.service.client;
 
-import org.SouthMillion.dto.item.ChangeItemRequestDTO;
-import org.SouthMillion.dto.wallet.ResultDTO;
+import org.SouthMillion.dto.bag.BagAddItemReq;
+import org.SouthMillion.dto.bag.BagConsumeReq;
+import org.SouthMillion.dto.bag.BagDTOs;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 
-@FeignClient(name = "item-service")
+import java.util.List;
+
+@FeignClient(name = "bag-service")
 public interface ItemFeignClient {
 
-    // ===== Items (theo ItemFacadeController của bạn) =====
-    @PostMapping("/api/item/{playerId}/add")
-    ResultDTO<Void> addItem(@PathVariable("playerId") String playerId,
-                            @RequestBody ChangeItemRequestDTO req,
-                            @RequestHeader(value = "X-Request-Id", required = false) String reqId);
+    @PostMapping("/api/bag/internal/consume")
+    ResponseEntity<Void> consumeItem(@RequestBody BagConsumeReq req);
 
-    @PostMapping("/api/item/{playerId}/consume")
-    ResultDTO<Void> consumeItem(@PathVariable("playerId") String playerId,
-                                @RequestBody ChangeItemRequestDTO req,
-                                @RequestHeader(value = "X-Request-Id", required = false) String reqId);
-
-    @PostMapping("/api/item/{playerId}/bulk-add")
-    ResultDTO<Void> addItemsBulk(@PathVariable("playerId") String playerId,
-                                 @RequestBody ChangeItemRequestDTO req,
-                                 @RequestHeader(value = "X-Request-Id", required = false) String reqId);
-
-    @PostMapping("/api/item/{playerId}/bulk-consume")
-    ResultDTO<Void> consumeItemsBulk(@PathVariable("playerId") String playerId,
-                                     @RequestBody ChangeItemRequestDTO req,
-                                     @RequestHeader(value = "X-Request-Id", required = false) String reqId);
+    @PostMapping("/api/bag/internal/add")
+    ResponseEntity<List<BagDTOs.ItemView>> addItemsBulk(@RequestBody BagAddItemReq req);
 }

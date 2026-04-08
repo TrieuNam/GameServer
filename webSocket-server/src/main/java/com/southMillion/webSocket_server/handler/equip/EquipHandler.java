@@ -105,14 +105,14 @@ public class EquipHandler implements MessageHandler {
             sendEquipListFromResp(session, tuple.getT1());
             sendFuMoListFromResp(session, tuple.getT2());
             sendBagList(session, tuple.getT3());
-            return Mono.empty();
+            return Mono.<Void>empty();
         }).onErrorResume(e -> {
             log.warn("[Equip] pushAll parallel fetch error roleId={}: {}", roleId, e.getMessage());
             // Fallback: send empty responses
             sendEquipListFromResp(session, null);
             sendFuMoListFromResp(session, null);
             sendBagList(session, List.of());
-            return Mono.empty();
+            return Mono.<Void>empty();
         });
     }
 

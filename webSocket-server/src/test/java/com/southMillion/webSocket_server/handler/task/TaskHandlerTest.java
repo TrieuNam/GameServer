@@ -3,6 +3,7 @@ package com.SouthMillion.webSocket_server.handler.task;
 import com.SouthMillion.webSocket_server.constant.MessageIds;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.handler.task.TaskHandler;
+import com.SouthMillion.webSocket_server.service.LoginSnapshotService;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.client.BagFeign;
 import com.SouthMillion.webSocket_server.service.client.TaskFeign;
@@ -19,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -41,6 +43,7 @@ class TaskHandlerTest {
     @Mock private TaskProgressPublisher taskProgressPublisher;
     @Mock private BagFeign bagFeign;
     @Mock private WalletHttpClient walletHttpClient;
+    @Mock private LoginSnapshotService loginSnapshotService;
     @InjectMocks private TaskHandler taskHandler;
 
     private PlayerSession playerSession;
@@ -135,6 +138,46 @@ class TaskHandlerTest {
     }
 
     @Test
+    @DisplayName("Direct realtime push bypasses stale login snapshot cache")
+    void pushCurrentTaskProgress_realtimePushBypassesCache() {
+        TaskDTO freshTask = TaskDTO.builder()
+                .taskKey("0")
+                .targetValue(1)
+                .currentProgress(1)
+                .status(TaskStatus.COMPLETED)
+                .build();
+        when(taskFeign.getTaskList("2001")).thenReturn(TaskListResp.builder()
+                .tasks(List.of(freshTask))
+                .claimedTasks(0)
+                .totalTasks(1)
+                .build());
+
+        assertDoesNotThrow(() -> taskHandler.pushCurrentTaskProgress(playerSession));
+
+        verify(taskFeign).getTaskList("2001");
+        verify(loginSnapshotService, never()).getCachedModuleData(2001L, "task");
+    }
+
+    @Test
+    @DisplayName("Bootstrap push may still use cached task snapshot")
+    void sendAllTaskProgress_bootstrapMayUseCachedSnapshot() {
+        when(loginSnapshotService.getCachedModuleData(2001L, "task")).thenReturn(Map.of(
+                "claimedTasks", 0,
+                "tasks", List.of(Map.of(
+                        "taskKey", "0",
+                        "currentProgress", 1,
+                        "targetValue", 1,
+                        "status", "COMPLETED"
+                ))
+        ));
+
+        assertDoesNotThrow(() -> taskHandler.sendAllTaskProgress(playerSession).block());
+
+        verify(loginSnapshotService).getCachedModuleData(2001L, "task");
+        verify(taskFeign, never()).getTaskList("2001");
+    }
+
+    @Test
     @DisplayName("condition 1 level task uses binary 0/1 client progress")
     void toClientProgress_levelTaskUsesBinaryDisplay() {
         TaskDTO inProgress = TaskDTO.builder()
@@ -197,14 +240,16 @@ class TaskHandlerTest {
     // ─── sendAllTaskProgress ─────────────────────────────────────────────────
 
     @Test
-    @DisplayName("sendAllTaskProgress delegates to pushCurrentTaskProgress")
+    @DisplayName("sendAllTaskProgress fetches task-service data on cache miss")
     void sendAllTaskProgress_delegatesCorrectly() {
         TaskDTO task = TaskDTO.builder().taskKey("daily_login").targetValue(1)
                 .currentProgress(0).status(TaskStatus.NOT_STARTED).build();
+        when(loginSnapshotService.getCachedModuleData(2001L, "task")).thenReturn(null);
         when(taskFeign.getTaskList("2001")).thenReturn(
                 TaskListResp.builder().tasks(List.of(task)).claimedTasks(0).totalTasks(1).build());
 
         assertDoesNotThrow(() -> taskHandler.sendAllTaskProgress(playerSession).block());
+        verify(loginSnapshotService).getCachedModuleData(2001L, "task");
         verify(taskFeign).getTaskList("2001");
     }
 

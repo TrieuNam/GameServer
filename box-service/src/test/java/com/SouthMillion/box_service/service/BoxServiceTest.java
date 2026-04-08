@@ -15,8 +15,8 @@ import com.SouthMillion.box_service.service.client.EquipFeign;
 import com.SouthMillion.box_service.service.client.ItemMetaFeign;
 import com.SouthMillion.box_service.service.client.RoleFeign;
 import com.SouthMillion.box_service.service.client.WalletFeign;
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.SouthMillion.dto.box.BoxDTOs;
 import org.SouthMillion.dto.equip.EquipDTOs;
 import org.junit.jupiter.api.*;
@@ -25,6 +25,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -56,8 +57,7 @@ class BoxServiceTest {
     @Mock private EquipFeign           equipFeign;
     @Mock private RoleFeign            roleFeign;
     @Mock private WalletFeign          walletFeign;
-    @Mock private MeterRegistry        meterRegistry;
-    @Mock private Counter              counter;
+    @Spy  private MeterRegistry        meterRegistry = new SimpleMeterRegistry();
 
     @InjectMocks private BoxService boxService;
 
@@ -67,8 +67,6 @@ class BoxServiceTest {
     void setupDefaults() {
         Mockito.lenient().when(compareStateRepo.find(anyLong())).thenReturn(Optional.empty());
         Mockito.lenient().when(equipIdx.isEquipId(anyInt())).thenReturn(true);
-        Mockito.lenient().when(meterRegistry.counter(anyString())).thenReturn(counter);
-        Mockito.lenient().when(meterRegistry.counter(anyString(), any(String[].class))).thenReturn(counter);
     }
 
     /** Build a BoxState with typical values and no active level-up or pending. */
@@ -210,6 +208,22 @@ class BoxServiceTest {
                 .fristAtt(11)
                 .secondAtt(12)
                 .build();
+    }
+
+    @Test
+    @DisplayName("TC-BOX-000 [P] rollQuality() phai ton trong equipment_color_1/2 tu unpack config")
+    void rollQuality_usesConfiguredEquipmentColorWeights() {
+        Map<String, Object> colorRow = Map.of(
+                "equipment_color_1", "0|0|10000|0|0|0|0|0",
+                "equipment_color_2", "0|0|0|10000|0|0|0|0"
+        );
+
+        for (int i = 0; i < 20; i++) {
+            Integer singleOpenQuality = ReflectionTestUtils.invokeMethod(boxService, "rollQuality", colorRow, false);
+            Integer fiveOpenQuality = ReflectionTestUtils.invokeMethod(boxService, "rollQuality", colorRow, true);
+            assertThat(singleOpenQuality).isEqualTo(3);
+            assertThat(fiveOpenQuality).isEqualTo(4);
+        }
     }
 
     // =========================================================

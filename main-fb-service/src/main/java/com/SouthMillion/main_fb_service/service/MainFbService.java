@@ -15,8 +15,8 @@ import com.SouthMillion.main_fb_service.utils.ReqId;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.SouthMillion.dto.item.ChangeItemPair;
-import org.SouthMillion.dto.item.ChangeItemRequestDTO;
+import org.SouthMillion.dto.bag.BagAddItemReq;
+import org.SouthMillion.dto.bag.BagConsumeReq;
 import org.SouthMillion.dto.main_fb.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -101,11 +101,16 @@ public class MainFbService {
         if (c.getNow_box() != null && !c.getNow_box().isEmpty()) {
             cost = Integer.parseInt(c.getNow_box());
             if (cost > 0) {
-                var consumeReq = ChangeItemRequestDTO.builder()
-                        .itemId(STAMINA_ITEM_ID)
-                        .count(cost)
+                long roleId = Long.parseLong(req.getPlayerId());
+                var consumeReq = BagConsumeReq.builder()
+                        .userId(roleId)
+                        .roleId(roleId)
+                        .itemId(STAMINA_ITEM_ID.intValue())
+                        .amount(cost)
+                        .source("mainfb.enterStage")
+                        .idemKey(ReqId.gen())
                         .build();
-                itemFeign.consumeItem(req.getPlayerId(), consumeReq, ReqId.gen());
+                itemFeign.consumeItem(consumeReq);
             }
         }
 
@@ -139,22 +144,37 @@ public class MainFbService {
         progress.onClear(req.getScore());
         progressRepo.save(progress);
 
+        int clearedDungeonProgress = (int) progressRepo.findByPlayerId(req.getPlayerId()).stream()
+                .filter(p -> Optional.ofNullable(p.getClearCount()).orElse(0) > 0)
+                .count();
+
         // build phần thưởng (win)
         List<ItemStackDTO> rewards = mapDrops(c.getWin());
         if (progress.getClearCount() == 1) {
             rewards = aggregate(addSame(rewards, rewards));
         }
 
-        // ====== TIẾN NHIỆM VỤ (KHÔNG phát thêm thưởng) ======
+        // ====== TIẾN NHIỆM VỤ NỘI BỘ + TASK condition_4 (vượt ải) ======
         maybeAdvanceMission(req.getPlayerId(), req.getStage(), req.getLevel());
+        publishDungeonProgressSnapshot(req.getPlayerId(), clearedDungeonProgress);
 
         // phát thưởng ải
         if (!rewards.isEmpty()) {
-            var pairs = rewards.stream()
-                    .map(s -> ChangeItemPair.builder().itemId(s.itemId()).count(s.count()).build())
+            long roleId = Long.parseLong(req.getPlayerId());
+            var bagItems = rewards.stream()
+                    .map(s -> BagAddItemReq.Item.builder()
+                            .itemId(s.itemId().intValue())
+                            .amount(s.count())
+                            .build())
                     .toList();
-            var addReq = ChangeItemRequestDTO.builder().items(pairs).build();
-            itemFeign.addItemsBulk(req.getPlayerId(), addReq, ReqId.gen());
+            var addReq = BagAddItemReq.builder()
+                    .userId(roleId)
+                    .roleId(roleId)
+                    .items(bagItems)
+                    .source("mainfb.finishStage")
+                    .idemKey(ReqId.gen())
+                    .build();
+            itemFeign.addItemsBulk(addReq);
         }
         return rewards;
     }
@@ -176,11 +196,16 @@ public class MainFbService {
         if (maxQuick > 0 && times > maxQuick) times = maxQuick;
         int quickCost = calcQuickCost(c.getQuick_expend(), times);
         if (quickCost > 0) {
-            var consumeReq = ChangeItemRequestDTO.builder()
-                    .itemId(STAMINA_ITEM_ID)
-                    .count(quickCost)
+            long roleId = Long.parseLong(req.getPlayerId());
+            var consumeReq = BagConsumeReq.builder()
+                    .userId(roleId)
+                    .roleId(roleId)
+                    .itemId(STAMINA_ITEM_ID.intValue())
+                    .amount(quickCost)
+                    .source("mainfb.sweep")
+                    .idemKey(ReqId.gen())
                     .build();
-            itemFeign.consumeItem(req.getPlayerId(), consumeReq, ReqId.gen());
+            itemFeign.consumeItem(consumeReq);
         }
 
         List<ItemStackDTO> base = mapDrops(c.getWin());
@@ -189,11 +214,21 @@ public class MainFbService {
         total = aggregate(total);
 
         if (!total.isEmpty()) {
-            var pairs = total.stream()
-                    .map(s -> ChangeItemPair.builder().itemId(s.itemId()).count(s.count()).build())
+            long roleId = Long.parseLong(req.getPlayerId());
+            var bagItems = total.stream()
+                    .map(s -> BagAddItemReq.Item.builder()
+                            .itemId(s.itemId().intValue())
+                            .amount(s.count())
+                            .build())
                     .toList();
-            var addReq = ChangeItemRequestDTO.builder().items(pairs).build();
-            itemFeign.addItemsBulk(req.getPlayerId(), addReq, ReqId.gen());
+            var addReq = BagAddItemReq.builder()
+                    .userId(roleId)
+                    .roleId(roleId)
+                    .items(bagItems)
+                    .source("mainfb.sweep")
+                    .idemKey(ReqId.gen())
+                    .build();
+            itemFeign.addItemsBulk(addReq);
         }
 
         MainFbDTOs.SweepResp resp = new MainFbDTOs.SweepResp();
@@ -220,11 +255,21 @@ public class MainFbService {
 
         List<ItemStackDTO> rewards = mapDrops(jdr.getWin());
         if (!rewards.isEmpty()) {
-            var pairs = rewards.stream()
-                    .map(s -> ChangeItemPair.builder().itemId(s.itemId()).count(s.count()).build())
+            long roleId = Long.parseLong(playerId);
+            var bagItems = rewards.stream()
+                    .map(s -> BagAddItemReq.Item.builder()
+                            .itemId(s.itemId().intValue())
+                            .amount(s.count())
+                            .build())
                     .toList();
-            var addReq = ChangeItemRequestDTO.builder().items(pairs).build();
-            itemFeign.addItemsBulk(playerId, addReq, ReqId.gen());
+            var addReq = BagAddItemReq.builder()
+                    .userId(roleId)
+                    .roleId(roleId)
+                    .items(bagItems)
+                    .source("mainfb.chapterReward")
+                    .idemKey(ReqId.gen())
+                    .build();
+            itemFeign.addItemsBulk(addReq);
         }
 
         rec.markClaimed();
@@ -256,10 +301,17 @@ public class MainFbService {
             state.markDone(idxOf);
         }
         taskRepo.save(state);
+    }
 
-        // → task-service: report complete_dungeon progress (delta=1 per dungeon cleared in order)
-        if (!taskProgressPublisher.publish(playerId, "complete_dungeon", 1, "main-fb-service")) {
-            log.warn("[MainFb] Failed to publish dungeon progress for player {}", playerId);
+    private void publishDungeonProgressSnapshot(String playerId, int clearedDungeonProgress) {
+        if (clearedDungeonProgress <= 0) {
+            return;
+        }
+        // task-service condition 4 uses SNAPSHOT_MAX, so send the player's current cleared-dungeon count
+        // instead of delta=1 and instead of tying the publish to the internal main-fb mission order.
+        if (!taskProgressPublisher.publish(playerId, "complete_dungeon", clearedDungeonProgress, "main-fb-service")) {
+            log.warn("[MainFb] Failed to publish dungeon progress snapshot for player {} progress={}",
+                    playerId, clearedDungeonProgress);
         }
     }
 
