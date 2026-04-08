@@ -1,11 +1,13 @@
 package com.SouthMillion.rune_service.service.impl;
 
 import com.SouthMillion.rune_service.client.BagClient;
+import com.SouthMillion.rune_service.client.RoleServiceClient;
 import com.SouthMillion.rune_service.client.WalletClient;
 import com.SouthMillion.rune_service.exception.RuneServiceException;
 import com.SouthMillion.rune_service.model.entity.Rune;
 import com.SouthMillion.rune_service.repository.RuneRepository;
 import com.SouthMillion.rune_service.service.RuneService;
+import com.SouthMillion.rune_service.util.RunePowerCalculator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagDTOs;
@@ -22,10 +24,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class RuneServiceImpl implements RuneService {
-    
+
     private final RuneRepository runeRepository;
     private final WalletClient walletClient;
     private final BagClient bagClient;
+    private final RunePowerCalculator powerCalculator;
+    private final RoleServiceClient roleServiceClient;
     private final Random random = new Random();
     
     private static final int MAX_RUNE_LEVEL = 100;
@@ -237,39 +241,56 @@ public class RuneServiceImpl implements RuneService {
     @Override
     @Transactional
     public Rune equipRune(Long userId, Integer runeIndex, Integer equipSlot) {
-        log.info("Equipping rune for user: {}, runeIndex: {}, slot: {}", 
+        log.info("Equipping rune for user: {}, runeIndex: {}, slot: {}",
             userId, runeIndex, equipSlot);
-        
+
         Rune rune = getRune(userId, runeIndex);
-        
+
         if (rune.getIsEquipped()) {
             throw new RuneServiceException("Rune already equipped", "RUNE_ALREADY_EQUIPPED");
         }
-        
+
         // Unequip any rune in this slot
         runeRepository.unequipRuneFromSlot(userId, equipSlot);
-        
+
         rune.setIsEquipped(true);
         rune.setEquipSlot(equipSlot);
-        
-        return runeRepository.save(rune);
+
+        Rune saved = runeRepository.save(rune);
+
+        // Calculate rune power and update role capability
+        Long runePower = powerCalculator.calculateTotalRunePower(saved);
+        log.info("Rune equipped: slot={}, power={}", equipSlot, runePower);
+
+        // Update role capability via role-service
+        updateRoleCapability(String.valueOf(userId), runePower, "rune_equip");
+
+        return saved;
     }
-    
+
     @Override
     @Transactional
     public void unequipRune(Long userId, Integer runeIndex) {
         log.info("Unequipping rune for user: {}, runeIndex: {}", userId, runeIndex);
-        
+
         Rune rune = getRune(userId, runeIndex);
-        
+
         if (!rune.getIsEquipped()) {
             throw new RuneServiceException("Rune not equipped", "RUNE_NOT_EQUIPPED");
         }
-        
+
+        // Calculate power delta (negative for unequip)
+        Long powerDelta = -powerCalculator.calculateTotalRunePower(rune);
+
         rune.setIsEquipped(false);
         rune.setEquipSlot(null);
-        
+
         runeRepository.save(rune);
+
+        // Update role capability (remove rune power)
+        updateRoleCapability(String.valueOf(userId), powerDelta, "rune_unequip");
+
+        log.info("Rune unequipped: index={}, power delta={}", runeIndex, powerDelta);
     }
     
     @Override
@@ -306,37 +327,10 @@ public class RuneServiceImpl implements RuneService {
     
     @Override
     public Long calculateRunePower(Rune rune) {
-        long power = 0L;
-        
-        // Main attribute
-        power += rune.getMainAttrValue();
-        
-        // Sub attributes
-        if (rune.getSubAttr1Value() != null) {
-            power += rune.getSubAttr1Value();
-        }
-        if (rune.getSubAttr2Value() != null) {
-            power += rune.getSubAttr2Value();
-        }
-        if (rune.getSubAttr3Value() != null) {
-            power += rune.getSubAttr3Value();
-        }
-        
-        // Level bonus
-        power += rune.getLevel() * 50L;
-        
-        // Quality bonus
-        power += rune.getQuality() * 200L;
-        
-        // Star bonus
-        power += rune.getStar() * 100L;
-        
-        // Refinement bonus
-        power += rune.getRefinementLevel() * 150L;
-        
-        return power;
+        // Use RunePowerCalculator for accurate config-based power calculation
+        return powerCalculator.calculateTotalRunePower(rune);
     }
-    
+
     @Override
     public Long calculateTotalRunePower(Long userId) {
         List<Rune> runes = runeRepository.findByUserIdAndIsEquippedTrue(userId);
@@ -459,17 +453,44 @@ public class RuneServiceImpl implements RuneService {
         if (quantity <= 0) {
             return;
         }
-        
+
         BagDTOs.UseItemReq request = new BagDTOs.UseItemReq();
         request.setItemId(itemId);
         request.setNum(quantity);
-        
+
         try {
             bagClient.useItem(roleId, request);
             log.debug("Consumed material: itemId={}, quantity={}", itemId, quantity);
         } catch (Exception e) {
             log.error("Failed to consume material: {}", e.getMessage());
             throw new RuneServiceException("Insufficient materials: " + e.getMessage(), "BAG_ERROR");
+        }
+    }
+
+    /**
+     * Update role capability via role-service
+     * Called when rune is equipped/unequipped to update player combat power
+     *
+     * @param roleId Player role ID
+     * @param deltaValue Power change (positive for equip, negative for unequip)
+     * @param reason Reason for update
+     */
+    private void updateRoleCapability(String roleId, Long deltaValue, String reason) {
+        if (deltaValue == null || deltaValue == 0L) {
+            return;
+        }
+
+        try {
+            RoleServiceClient.CapabilityUpdateRequest request =
+                    new RoleServiceClient.CapabilityUpdateRequest("rune", deltaValue, reason);
+
+            roleServiceClient.updateCapability(roleId, request);
+            log.info("Updated role capability: roleId={}, delta={}, reason={}", roleId, deltaValue, reason);
+        } catch (Exception e) {
+            // Log error but don't fail the rune operation
+            // Capability update is not critical for rune equip/unequip success
+            log.error("Failed to update role capability: roleId={}, delta={}, error={}",
+                    roleId, deltaValue, e.getMessage());
         }
     }
 }
