@@ -1,6 +1,7 @@
 package com.SouthMillion.mount_service.service.impl;
 
 import com.SouthMillion.mount_service.client.BagClient;
+import com.SouthMillion.mount_service.client.RoleServiceClient;
 import com.SouthMillion.mount_service.client.WalletClient;
 import com.SouthMillion.mount_service.config.MountConfigHolder;
 import com.SouthMillion.mount_service.exception.MountServiceException;
@@ -8,6 +9,7 @@ import com.SouthMillion.mount_service.model.entity.Mount;
 import com.SouthMillion.mount_service.publisher.MountEventPublisher;
 import com.SouthMillion.mount_service.repository.MountRepository;
 import com.SouthMillion.mount_service.service.MountService;
+import com.SouthMillion.mount_service.util.MountPowerCalculator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagDTOs;
@@ -27,13 +29,15 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class MountServiceImpl implements MountService {
-    
+
     private final MountRepository mountRepository;
     private final MountConfigHolder configHolder;
     private final BagClient bagClient;
     private final WalletClient walletClient;
     private final MountEventPublisher mountEventPublisher;
-    
+    private final MountPowerCalculator powerCalculator;
+    private final RoleServiceClient roleServiceClient;
+
     // Constants
     private static final int MAX_MOUNT_LEVEL = 100;
     private static final int MAX_MOUNT_GRADE = 10;
@@ -184,34 +188,54 @@ public class MountServiceImpl implements MountService {
     @Transactional
     public void equipMount(Long userId, Integer mountIndex) {
         log.info("Equipping mount for user: {}, index: {}", userId, mountIndex);
-        
+
         Mount mount = getMount(userId, mountIndex);
-        
+
         if (!mount.getIsActive()) {
             throw new MountServiceException("Cannot equip inactive mount", "MOUNT_NOT_ACTIVE");
         }
-        
+
         // Unequip all other mounts first
         mountRepository.unequipAllMounts(userId);
-        
+
         // Equip this mount
         mount.setIsEquipped(true);
         mountRepository.save(mount);
-        
-        // Recalculate role capability with mount stats
-        Long mountPower = calculateMountPower(mount);
-        log.info("Mount equipped: {}, adding power: {}", mountIndex, mountPower);
-        // Note: Role-service integration for capability update would be done via RoleClient
+
+        // Calculate mount power and update role capability
+        Long mountPower = powerCalculator.calculateTotalMountPower(mount, List.of());
+        log.info("Mount equipped: {}, power: {}", mountIndex, mountPower);
+
+        // Update role capability via role-service
+        updateRoleCapability(String.valueOf(userId), mountPower, "mount_equip");
     }
-    
+
     @Override
     @Transactional
     public void unequipMount(Long userId) {
         log.info("Unequipping mount for user: {}", userId);
+
+        // Get currently equipped mount to calculate power delta
+        List<Mount> mounts = mountRepository.findByUserId(userId);
+        Mount equippedMount = mounts.stream()
+                .filter(Mount::getIsEquipped)
+                .findFirst()
+                .orElse(null);
+
+        Long powerDelta = 0L;
+        if (equippedMount != null) {
+            powerDelta = -powerCalculator.calculateTotalMountPower(equippedMount, List.of());
+        }
+
+        // Unequip all mounts
         mountRepository.unequipAllMounts(userId);
-        // Recalculate role capability without mount stats
-        log.info("Mount unequipped for user: {}, removing mount power from capability", userId);
-        // Note: Role-service integration for capability update would be done via RoleClient
+
+        // Update role capability (remove mount power)
+        if (powerDelta != 0L) {
+            updateRoleCapability(String.valueOf(userId), powerDelta, "mount_unequip");
+        }
+
+        log.info("Mount unequipped for user: {}, power delta: {}", userId, powerDelta);
     }
     
     @Override
@@ -330,21 +354,8 @@ public class MountServiceImpl implements MountService {
     
     @Override
     public Long calculateMountPower(Mount mount) {
-        if (!mount.getIsActive()) {
-            return 0L;
-        }
-        
-        // Calculate mount power using config-based formula
-        // Note: In production, formula coefficients would come from MountConfigHolder
-        long basePower = mount.getLevel() * 100L;
-        long gradePower = mount.getGrade() * 500L;
-        long starPower = mount.getStarLevel() * 200L;
-        long skinPower = mount.getSkinLevel() * 50L;
-        
-        long totalPower = basePower + gradePower + starPower + skinPower;
-        
-        log.debug("Mount power calculated: {}", totalPower);
-        return totalPower;
+        // Use MountPowerCalculator for accurate config-based power calculation
+        return powerCalculator.calculateTotalMountPower(mount, List.of());
     }
     
     @Override
@@ -410,17 +421,44 @@ public class MountServiceImpl implements MountService {
         if (quantity <= 0) {
             return;
         }
-        
+
         BagDTOs.UseItemReq request = new BagDTOs.UseItemReq();
         request.setItemId(itemId);
         request.setNum(quantity);
-        
+
         try {
             bagClient.useItem(roleId, request);
             log.debug("Consumed material: itemId={}, quantity={}", itemId, quantity);
         } catch (Exception e) {
             log.error("Failed to consume material: {}", e.getMessage());
             throw new MountServiceException("Insufficient materials or bag error", "BAG_ERROR");
+        }
+    }
+
+    /**
+     * Update role capability via role-service
+     * Called when mount is equipped/unequipped to update player combat power
+     *
+     * @param roleId Player role ID
+     * @param deltaValue Power change (positive for equip, negative for unequip)
+     * @param reason Reason for update
+     */
+    private void updateRoleCapability(String roleId, Long deltaValue, String reason) {
+        if (deltaValue == null || deltaValue == 0L) {
+            return;
+        }
+
+        try {
+            RoleServiceClient.CapabilityUpdateRequest request =
+                    new RoleServiceClient.CapabilityUpdateRequest("mount", deltaValue, reason);
+
+            roleServiceClient.updateCapability(roleId, request);
+            log.info("Updated role capability: roleId={}, delta={}, reason={}", roleId, deltaValue, reason);
+        } catch (Exception e) {
+            // Log error but don't fail the mount operation
+            // Capability update is not critical for mount equip/unequip success
+            log.error("Failed to update role capability: roleId={}, delta={}, error={}",
+                    roleId, deltaValue, e.getMessage());
         }
     }
 }
