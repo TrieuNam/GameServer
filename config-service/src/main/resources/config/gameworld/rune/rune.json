@@ -1,0 +1,136 @@
+{
+  "runeList": [
+    {
+      "runeId": 1,
+      "name": "Basic Rune",
+      "description": "Common rune for beginners",
+      "baseAttributes": {
+        "hp": 50,
+        "attack": 25,
+        "defense": 15,
+        "speed": 10,
+        "critRate": 0,
+        "critDamage": 0
+      },
+      "levelCost": {
+        "goldPerLevel": 100,
+        "materialItemId": 2001,
+        "materialPerLevel": 2
+      },
+      "qualityCost": {
+        "gold": 1000,
+        "materialItemId": 2002,
+        "materialCount": 5
+      },
+      "starCost": {
+        "goldPerStar": 500,
+        "materialItemId": 2003,
+        "materialPerStar": 3
+      },
+      "refinementCost": {
+        "goldPerLevel": 200,
+        "materialItemId": 2004,
+        "materialPerLevel": 2
+      }
+    },
+    {
+      "runeId": 2,
+      "name": "Advanced Rune",
+      "description": "Intermediate rune with enhanced stats",
+      "baseAttributes": {
+        "hp": 100,
+        "attack": 50,
+        "defense": 30,
+        "speed": 20,
+        "critRate": 5,
+        "critDamage": 10
+      },
+      "levelCost": {
+        "goldPerLevel": 200,
+        "materialItemId": 2001,
+        "materialPerLevel": 3
+      },
+      "qualityCost": {
+        "gold": 2000,
+        "materialItemId": 2002,
+        "materialCount": 10
+      },
+      "starCost": {
+        "goldPerStar": 1000,
+        "materialItemId": 2003,
+        "materialPerStar": 5
+      },
+      "refinementCost": {
+        "goldPerLevel": 400,
+        "materialItemId": 2004,
+        "materialPerLevel": 3
+      }
+    },
+    {
+      "runeId": 3,
+      "name": "Rare Rune",
+      "description": "Rare rune with significant power boost",
+      "baseAttributes": {
+        "hp": 200,
+        "attack": 100,
+        "defense": 60,
+        "speed": 40,
+        "critRate": 10,
+        "critDamage": 20
+      },
+      "levelCost": {
+        "goldPerLevel": 300,
+        "materialItemId": 2001,
+        "materialPerLevel": 4
+      },
+      "qualityCost": {
+        "gold": 5000,
+        "materialItemId": 2002,
+        "materialCount": 15
+      },
+      "starCost": {
+        "goldPerStar": 2000,
+        "materialItemId": 2003,
+        "materialPerStar": 7
+      },
+      "refinementCost": {
+        "goldPerLevel": 600,
+        "materialItemId": 2004,
+        "materialPerLevel": 4
+      }
+    },
+    {
+      "runeId": 4,
+      "name": "Epic Rune",
+      "description": "Epic rune for advanced players",
+      "baseAttributes": {
+        "hp": 300,
+        "attack": 150,
+        "defense": 90,
+        "speed": 60,
+        "critRate": 15,
+        "critDamage": 30
+      },
+      "levelCost": {
+        "goldPerLevel": 500,
+        "materialItemId": 2001,
+        "materialPerLevel": 5
+      },
+      "qualityCost": {
+        "gold": 10000,
+        "materialItemId": 2002,
+        "materialCount": 20
+      },
+      "starCost": {
+        "goldPerStar": 3000,
+        "materialItemId": 2003,
+        "materialPerStar": 10
+      },
+      "refinementCost": {
+        "goldPerLevel": 1000,
+        "materialItemId": 2004,
+        "materialPerLevel": 5
+      }
+    }
+  ]
+}

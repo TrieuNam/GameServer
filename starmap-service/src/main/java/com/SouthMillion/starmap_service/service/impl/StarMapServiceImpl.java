@@ -2,13 +2,17 @@ package com.SouthMillion.starmap_service.service.impl;
 
 import com.SouthMillion.starmap_service.client.BagClient;
 import com.SouthMillion.starmap_service.client.RoleClient;
+import com.SouthMillion.starmap_service.client.RoleServiceClient;
 import com.SouthMillion.starmap_service.client.WalletClient;
+import com.SouthMillion.starmap_service.config.StarmapConfigProvider;
 import com.SouthMillion.starmap_service.exception.StarMapServiceException;
+import com.SouthMillion.starmap_service.model.config.StarmapConfig;
 import com.SouthMillion.starmap_service.model.entity.Constellation;
 import com.SouthMillion.starmap_service.model.entity.Star;
 import com.SouthMillion.starmap_service.repository.ConstellationRepository;
 import com.SouthMillion.starmap_service.repository.StarRepository;
 import com.SouthMillion.starmap_service.service.StarMapService;
+import com.SouthMillion.starmap_service.util.StarmapPowerCalculator;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,12 +29,15 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class StarMapServiceImpl implements StarMapService {
-    
+
     private final StarRepository starRepository;
     private final ConstellationRepository constellationRepository;
     private final BagClient bagClient;
     private final WalletClient walletClient;
     private final RoleClient roleClient;
+    private final StarmapPowerCalculator powerCalculator;
+    private final RoleServiceClient roleServiceClient;
+    private final StarmapConfigProvider configProvider;
     
     private static final int MAX_STAR_LEVEL = 50;
     private static final int MAX_CONSTELLATION_LEVEL = 20;
@@ -53,7 +60,7 @@ public class StarMapServiceImpl implements StarMapService {
     @Transactional
     public Star activateStar(Long userId, Integer starId) {
         log.info("Activating star for user: {}, starId: {}", userId, starId);
-        
+
         Star star = starRepository.findByUserIdAndStarId(userId, starId)
             .orElseGet(() -> {
                 Star newStar = new Star();
@@ -64,17 +71,26 @@ public class StarMapServiceImpl implements StarMapService {
                 newStar.setEnergy(0L);
                 return newStar;
             });
-        
+
         if (star.getIsActive()) {
             throw new StarMapServiceException("Star already activated", "STAR_ALREADY_ACTIVE");
         }
-        
+
         star.setIsActive(true);
         star.setLevel(1);
-        
+
         Star saved = starRepository.save(star);
-        log.info("Star activated: {}", saved);
-        
+
+        // Calculate star power and sync with role-service
+        StarmapConfig config = configProvider.getStarmapConfig();
+        StarmapConfig.StarItem starConfig = findStarConfig(starId, config);
+        Long starPower = powerCalculator.calculateStarPower(saved, starConfig);
+
+        log.info("Star activated: starId={}, power={}", starId, starPower);
+
+        // Update role capability
+        updateRoleCapability(String.valueOf(userId), starPower, "star_activated");
+
         return saved;
     }
     
@@ -128,7 +144,7 @@ public class StarMapServiceImpl implements StarMapService {
     @Transactional
     public Constellation unlockConstellation(Long userId, Integer constellationId) {
         log.info("Unlocking constellation for user: {}, id: {}", userId, constellationId);
-        
+
         Constellation constellation = constellationRepository
             .findByUserIdAndConstellationId(userId, constellationId)
             .orElseGet(() -> {
@@ -143,14 +159,26 @@ public class StarMapServiceImpl implements StarMapService {
                 newConst.setPower(0L);
                 return newConst;
             });
-        
+
         if (constellation.getIsUnlocked()) {
             throw new StarMapServiceException("Constellation already unlocked", "CONSTELLATION_ALREADY_UNLOCKED");
         }
-        
+
         constellation.setIsUnlocked(true);
-        
-        return constellationRepository.save(constellation);
+
+        Constellation saved = constellationRepository.save(constellation);
+
+        // Calculate constellation power and sync with role-service
+        StarmapConfig config = configProvider.getStarmapConfig();
+        StarmapConfig.ConstellationItem constellationConfig = findConstellationConfig(constellationId, config);
+        Long constellationPower = powerCalculator.calculateConstellationPower(saved, constellationConfig);
+
+        log.info("Constellation unlocked: id={}, power={}", constellationId, constellationPower);
+
+        // Update role capability
+        updateRoleCapability(String.valueOf(userId), constellationPower, "constellation_unlocked");
+
+        return saved;
     }
     
     @Override
@@ -198,29 +226,19 @@ public class StarMapServiceImpl implements StarMapService {
     public Long calculateTotalStarMapPower(Long userId) {
         List<Star> stars = starRepository.findByUserIdAndIsActiveTrue(userId);
         List<Constellation> constellations = constellationRepository.findByUserIdAndIsUnlockedTrue(userId);
-        
-        long starPower = stars.stream()
-            .mapToLong(star -> star.getLevel() * 100L + star.getEnergy() / 10)
-            .sum();
-        
-        long constellationPower = constellations.stream()
-            .mapToLong(this::calculateConstellationPower)
-            .sum();
-        
-        return starPower + constellationPower;
+
+        // Use StarmapPowerCalculator for accurate config-based power calculation
+        StarmapConfig config = configProvider.getStarmapConfig();
+        return powerCalculator.calculateTotalStarmapPower(stars, constellations, config);
     }
-    
+
     @Override
     public Long calculateConstellationPower(Constellation constellation) {
-        if (!constellation.getIsUnlocked()) {
-            return 0L;
-        }
-        
-        long basePower = constellation.getLevel() * 500L;
-        long completionBonus = constellation.getIsCompleted() ? 5000L : 0L;
-        long starBonus = constellation.getStarsActivated() * 200L;
-        
-        return basePower + completionBonus + starBonus + constellation.getPower();
+        // Use StarmapPowerCalculator for accurate config-based power calculation
+        StarmapConfig config = configProvider.getStarmapConfig();
+        StarmapConfig.ConstellationItem constellationConfig =
+            findConstellationConfig(constellation.getConstellationId(), config);
+        return powerCalculator.calculateConstellationPower(constellation, constellationConfig);
     }
     
     /**

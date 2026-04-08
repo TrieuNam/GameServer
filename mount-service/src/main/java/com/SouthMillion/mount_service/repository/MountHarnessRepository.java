@@ -42,4 +42,11 @@ public interface MountHarnessRepository extends JpaRepository<MountHarness, Long
      * Find harness by grade (for decomposition/upgrade materials)
      */
     List<MountHarness> findByUserIdAndGrade(Long userId, Integer grade);
+
+    /**
+     * Find equipped harness items by item IDs
+     * Used to fetch harness details for mounted equipment slots
+     */
+    @Query("SELECT h FROM MountHarness h WHERE h.userId = :userId AND h.itemId IN :itemIds")
+    List<MountHarness> findByUserIdAndItemIdIn(@Param("userId") Long userId, @Param("itemIds") List<Integer> itemIds);
 }

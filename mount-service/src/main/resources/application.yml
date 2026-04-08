@@ -7,11 +7,11 @@ spring:
     active: local  # Default to local profile
   application:
     name: mount-service
-  
+
   threads:
     virtual:
       enabled: true
-  
+
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
     producer:
@@ -19,7 +19,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       acks: all
       retries: 3
-  
+
   datasource:
     url: ${DB_URL:jdbc:mysql://127.0.0.1:33078/game_mount?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true}
     username: ${DB_USERNAME:root}
@@ -27,12 +27,27 @@ spring:
     hikari:
       maximum-pool-size: 10
       minimum-idle: 5
-  
+
   jpa:
     hibernate:
       ddl-auto: update
     database-platform: org.hibernate.dialect.MySQL8Dialect
     show-sql: false
+
+  # Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
 
 eureka:
   client:
@@ -61,3 +76,15 @@ logging:
     com.game.mount: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Mount Service Configuration
+mount:
+  config:
+    path: gameworld/mount/mount.json
+    redis-enabled: true
+    redis-ttl-hours: 24
+    refresh-initial-delay-ms: 60000
+    refresh-interval-ms: 3600000
+  harness:
+    config:
+      path: gameworld/mount/harness.json

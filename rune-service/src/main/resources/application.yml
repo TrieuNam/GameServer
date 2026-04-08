@@ -11,11 +11,25 @@ spring:
     active: local  # Default to local profile
   application:
     name: rune-service
-  
+
   threads:
     virtual:
       enabled: true
-  
+
+  # Redis configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
+
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
     producer:
@@ -76,3 +90,11 @@ logging:
     root: INFO
     com.game.rune: DEBUG
     org.hibernate.SQL: DEBUG
+
+# Rune configuration settings
+rune:
+  config:
+    path: gameworld/rune/rune.json
+    redis-enabled: true
+    redis-ttl-hours: 24
+    refresh-interval-ms: 3600000  # 1 hour
