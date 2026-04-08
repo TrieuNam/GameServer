@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package knights;
+
+option java_package = "org.SouthMillion.proto.knights";
+option java_outer_classname = "KnightsServiceProto";
+option java_multiple_files = true;
+
+import "common.proto";
+
+// Knights Handbook gRPC Service Definition
+service KnightsService {
+  // Get or create handbook for a role
+  rpc GetOrCreate(GetOrCreateRequest) returns (KnightsHandbookResponse);
+
+  // Claim sequential reward
+  rpc ClaimSeqReward(ClaimSeqRewardRequest) returns (KnightsHandbookResponse);
+
+  // Claim level reward
+  rpc ClaimLevelReward(ClaimLevelRewardRequest) returns (KnightsHandbookResponse);
+
+  // Get condition progress
+  rpc GetConditions(GetConditionsRequest) returns (GenericResponse);
+}
+
+// Request Messages
+
+message GetOrCreateRequest {
+  int64 role_id = 1;
+}
+
+message ClaimSeqRewardRequest {
+  int64 role_id = 1;
+  int32 seq_index = 2;
+}
+
+message ClaimLevelRewardRequest {
+  int64 role_id = 1;
+  int32 level_index = 2;
+}
+
+message GetConditionsRequest {
+  int64 role_id = 1;
+}
+
+// Response Messages
+
+message KnightsHandbookData {
+  int64 id = 1;
+  int64 role_id = 2;
+  int32 level = 3;
+  int64 flag = 4;
+  int64 level_flag = 5;
+}
+
+message KnightsHandbookResponse {
+  bool success = 1;
+  string message = 2;
+  KnightsHandbookData handbook = 3;
+}
+
+message GenericResponse {
+  bool success = 1;
+  string message = 2;
+  string data_json = 3;  // JSON serialized result
+}

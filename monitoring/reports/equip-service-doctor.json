@@ -1,0 +1,20 @@
+{
+  "serviceName" : "equip-service",
+  "displayName" : "Equip Service",
+  "phase" : "P1",
+  "port" : 8240,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:31:24.545+07:00  INFO 25032 --- [equip-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:21:33.346+07:00  INFO 25032 --- [equip-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-08T00:21:33.346+07:00  INFO 25032 --- [equip-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-08T00:21:33.346+07:00  INFO 25032 --- [equip-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:21:33.346+07:00  INFO 25032 --- [equip-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-08T00:21:33.346+07:00  INFO 25032 --- [equip-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:21:33.347+07:00  INFO 25032 --- [equip-service] [           main] EquipServiceApplication$CacheInitializer : Initializing EquipmentConfigCache on startup...", "2026-04-08T00:21:35.062+07:00  INFO 25032 --- [equip-service] [           main] EquipServiceApplication$CacheInitializer : EquipmentConfigCache initialized successfully", "2026-04-08T00:26:24.530+07:00  INFO 25032 --- [equip-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-08T00:27:34.668+07:00  INFO 25032 --- [equip-service] [omcat-handler-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'", "2026-04-08T00:27:34.669+07:00  INFO 25032 --- [equip-service] [omcat-handler-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'", "2026-04-08T00:27:34.677+07:00  INFO 25032 --- [equip-service] [omcat-handler-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 7 ms", "2026-04-08T00:31:24.545+07:00  INFO 25032 --- [equip-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:54.6822622"
+}

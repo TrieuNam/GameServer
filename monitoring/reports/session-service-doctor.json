@@ -1,0 +1,20 @@
+{
+  "serviceName" : "session-service",
+  "displayName" : "Session Service",
+  "phase" : "P1",
+  "port" : 8096,
+  "serviceStatus" : "RUNNING",
+  "doctorStatus" : "STARTED",
+  "watched" : false,
+  "approvalRequired" : false,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : null,
+  "lastErrorSummary" : "Service is running normally",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:21:32.191+07:00  INFO 61848 --- [session-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENV JAVA_OPTS=\"<arguments above>\"", "2026-04-08T00:21:32.192+07:00  INFO 61848 --- [session-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENTRYPOINT java $JAVA_OPTS -jar app.jar", "2026-04-08T00:21:32.192+07:00  INFO 61848 --- [session-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-08T00:21:32.193+07:00  INFO 61848 --- [session-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-08T00:21:32.193+07:00  INFO 61848 --- [session-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-08T00:21:32.193+07:00  INFO 61848 --- [session-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-08T00:21:32.193+07:00  INFO 61848 --- [session-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-08T00:21:32.193+07:00  INFO 61848 --- [session-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:21:32.193+07:00  INFO 61848 --- [session-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-08T00:21:32.193+07:00  INFO 61848 --- [session-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:26:24.468+07:00  INFO 61848 --- [session-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-08T00:31:24.481+07:00  INFO 61848 --- [session-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:54.5784334"
+}

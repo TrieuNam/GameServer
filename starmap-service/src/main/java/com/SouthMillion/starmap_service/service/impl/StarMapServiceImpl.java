@@ -291,4 +291,42 @@ public class StarMapServiceImpl implements StarMapService {
             throw new StarMapServiceException("Insufficient materials: " + e.getMessage(), "BAG_ERROR");
         }
     }
+
+    private StarmapConfig.StarItem findStarConfig(Integer starId, StarmapConfig config) {
+        if (starId == null || config == null || config.getStars() == null) {
+            return null;
+        }
+
+        return config.getStars().stream()
+            .filter(star -> starId.equals(star.getStarId()))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private StarmapConfig.ConstellationItem findConstellationConfig(Integer constellationId, StarmapConfig config) {
+        if (constellationId == null || config == null || config.getConstellations() == null) {
+            return null;
+        }
+
+        return config.getConstellations().stream()
+            .filter(constellation -> constellationId.equals(constellation.getConstellationId()))
+            .findFirst()
+            .orElse(null);
+    }
+
+    private void updateRoleCapability(String roleId, Long deltaValue, String reason) {
+        if (roleId == null || roleId.isBlank() || deltaValue == null || deltaValue == 0L) {
+            return;
+        }
+
+        try {
+            RoleServiceClient.CapabilityUpdateRequest request =
+                new RoleServiceClient.CapabilityUpdateRequest("starmap", deltaValue, reason);
+            roleServiceClient.updateCapability(roleId, request);
+            log.info("Updated role capability: roleId={}, delta={}, reason={}", roleId, deltaValue, reason);
+        } catch (Exception e) {
+            log.error("Failed to update role capability: roleId={}, delta={}, error={}",
+                roleId, deltaValue, e.getMessage());
+        }
+    }
 }

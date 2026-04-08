@@ -1,0 +1,20 @@
+{
+  "serviceName" : "activity-service",
+  "displayName" : "Activity Service",
+  "phase" : "P3",
+  "port" : 8382,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:31:11.768+07:00  INFO 60896 --- [activity-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:26:18.932+07:00  INFO 60896 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-08T00:26:18.932+07:00  INFO 60896 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-08T00:26:18.932+07:00  INFO 60896 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-08T00:26:18.932+07:00  INFO 60896 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-08T00:26:18.932+07:00  INFO 60896 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-08T00:26:18.932+07:00  INFO 60896 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:26:18.932+07:00  INFO 60896 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-08T00:26:18.932+07:00  INFO 60896 --- [activity-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:27:34.536+07:00  INFO 60896 --- [activity-service] [    virtual-110] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'", "2026-04-08T00:27:34.538+07:00  INFO 60896 --- [activity-service] [    virtual-110] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'", "2026-04-08T00:27:34.549+07:00  INFO 60896 --- [activity-service] [    virtual-110] o.s.web.servlet.DispatcherServlet        : Completed initialization in 9 ms", "2026-04-08T00:31:11.768+07:00  INFO 60896 --- [activity-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:55.9429527"
+}

@@ -1,0 +1,20 @@
+{
+  "serviceName" : "scheduler-service",
+  "displayName" : "Scheduler Service",
+  "phase" : "P3",
+  "port" : 8550,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:30:33.195+07:00  INFO 15716 --- [scheduler-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:25:45.137+07:00  INFO 15716 --- [scheduler-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ðŸ³ Dockerfile example:", "2026-04-08T00:25:45.138+07:00  INFO 15716 --- [scheduler-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENV JAVA_OPTS=\"<arguments above>\"", "2026-04-08T00:25:45.138+07:00  INFO 15716 --- [scheduler-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENTRYPOINT java $JAVA_OPTS -jar app.jar", "2026-04-08T00:25:45.139+07:00  INFO 15716 --- [scheduler-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-08T00:25:45.139+07:00  INFO 15716 --- [scheduler-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-08T00:25:45.139+07:00  INFO 15716 --- [scheduler-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-08T00:25:45.139+07:00  INFO 15716 --- [scheduler-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-08T00:25:45.139+07:00  INFO 15716 --- [scheduler-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"64Mi\"", "2026-04-08T00:25:45.140+07:00  INFO 15716 --- [scheduler-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:25:45.140+07:00  INFO 15716 --- [scheduler-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"32Mi\"", "2026-04-08T00:25:45.140+07:00  INFO 15716 --- [scheduler-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:30:33.195+07:00  INFO 15716 --- [scheduler-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:55.8337537"
+}

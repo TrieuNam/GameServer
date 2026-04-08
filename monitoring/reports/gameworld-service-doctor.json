@@ -1,0 +1,20 @@
+{
+  "serviceName" : "gameworld-service",
+  "displayName" : "Game World Service",
+  "phase" : "P2",
+  "port" : 8105,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:33:54.780+07:00  INFO 69936 --- [gameworld-service] [reshExecutor-%d] o.a.h.c.h.i.c.HttpRequestRetryExec       : Recoverable I/O exception (java.net.SocketException) caught when processing request to {}-...",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:22:59.177+07:00  INFO 69936 --- [gameworld-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENTRYPOINT java $JAVA_OPTS -jar app.jar", "2026-04-08T00:22:59.177+07:00  INFO 69936 --- [gameworld-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-08T00:22:59.177+07:00  INFO 69936 --- [gameworld-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-08T00:22:59.177+07:00  INFO 69936 --- [gameworld-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-08T00:22:59.178+07:00  INFO 69936 --- [gameworld-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-08T00:22:59.178+07:00  INFO 69936 --- [gameworld-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-08T00:22:59.178+07:00  INFO 69936 --- [gameworld-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:22:59.178+07:00  INFO 69936 --- [gameworld-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-08T00:22:59.178+07:00  INFO 69936 --- [gameworld-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:27:50.774+07:00  INFO 69936 --- [gameworld-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-08T00:32:50.789+07:00  INFO 69936 --- [gameworld-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-08T00:33:54.780+07:00  INFO 69936 --- [gameworld-service] [reshExecutor-%d] o.a.h.c.h.i.c.HttpRequestRetryExec       : Recoverable I/O exception (java.net.SocketException) caught when processing request to {}->[http://localhost:8761]" ],
+  "lastUpdated" : "2026-04-08T00:33:55.328256"
+}

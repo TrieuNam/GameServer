@@ -1,0 +1,20 @@
+{
+  "serviceName" : "role-service",
+  "displayName" : "Role Service",
+  "phase" : "P1",
+  "port" : 8410,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:30:51.314+07:00  INFO 45692 --- [role-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "\ttransaction.timeout.ms = 60000", "\ttransactional.id = null", "\tvalue.serializer = class org.springframework.kafka.support.serializer.JsonSerializer", "", "2026-04-08T00:29:00.136+07:00  INFO 45692 --- [role-service] [cat-handler-202] o.a.k.c.t.i.KafkaMetricsCollector        : initializing Kafka metrics collector", "2026-04-08T00:29:00.144+07:00  INFO 45692 --- [role-service] [cat-handler-202] o.a.k.clients.producer.KafkaProducer     : [Producer clientId=producer-2] Instantiated an idempotent producer.", "2026-04-08T00:29:00.164+07:00  INFO 45692 --- [role-service] [cat-handler-202] o.a.kafka.common.utils.AppInfoParser     : Kafka version: 3.9.1", "2026-04-08T00:29:00.164+07:00  INFO 45692 --- [role-service] [cat-handler-202] o.a.kafka.common.utils.AppInfoParser     : Kafka commitId: f745dfdcee2b9851", "2026-04-08T00:29:00.164+07:00  INFO 45692 --- [role-service] [cat-handler-202] o.a.kafka.common.utils.AppInfoParser     : Kafka startTimeMs: 1775582940164", "2026-04-08T00:29:00.175+07:00  INFO 45692 --- [role-service] [ad | producer-2] org.apache.kafka.clients.Metadata        : [Producer clientId=producer-2] Cluster ID: MkU3OEVBNTcwNTJENDM2Qg", "2026-04-08T00:29:00.175+07:00  INFO 45692 --- [role-service] [ad | producer-2] o.a.k.c.p.internals.TransactionManager   : [Producer clientId=producer-2] ProducerId set to 7009 with epoch 0", "2026-04-08T00:30:51.314+07:00  INFO 45692 --- [role-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:54.538842"
+}

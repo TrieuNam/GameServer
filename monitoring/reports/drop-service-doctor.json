@@ -1,0 +1,20 @@
+{
+  "serviceName" : "drop-service",
+  "displayName" : "Drop Service",
+  "phase" : "P1",
+  "port" : 8250,
+  "serviceStatus" : "RUNNING",
+  "doctorStatus" : "STARTED",
+  "watched" : false,
+  "approvalRequired" : false,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : null,
+  "lastErrorSummary" : "Service is running normally",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:21:14.562+07:00  INFO 71356 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-08T00:21:14.562+07:00  INFO 71356 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-08T00:21:14.563+07:00  INFO 71356 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:21:14.563+07:00  INFO 71356 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-08T00:21:14.563+07:00  INFO 71356 --- [drop-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:21:26.077+07:00  INFO 71356 --- [drop-service] [           main] c.S.d.config.DropConfigRedisPreloader    : [drop-preload] done source=startup forceRefresh=false hits=714 warmed=0 failed=0 total=714", "2026-04-08T00:21:26.141+07:00  INFO 71356 --- [drop-service] [           main] c.S.d.config.DropConfigRedisPreloader    : [drop-preload] redis-ready cachedCount=714 knownDropCount=714", "2026-04-08T00:21:35.288+07:00  INFO 71356 --- [drop-service] [omcat-handler-0] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'", "2026-04-08T00:21:35.289+07:00  INFO 71356 --- [drop-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'", "2026-04-08T00:21:35.292+07:00  INFO 71356 --- [drop-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms", "2026-04-08T00:26:04.880+07:00  INFO 71356 --- [drop-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-08T00:31:04.896+07:00  INFO 71356 --- [drop-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:54.7127622"
+}

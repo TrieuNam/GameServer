@@ -77,6 +77,11 @@ anticheat:
     behavior-window: 300       # 5 minutes in seconds
     suspicious-score-threshold: 70
     auto-ban-score: 90
+
+  topics:
+    position: player-position
+    combat: combat-events
+    resource: resource-events
     
   monitoring:
     check-interval: 60000      # 1 minute

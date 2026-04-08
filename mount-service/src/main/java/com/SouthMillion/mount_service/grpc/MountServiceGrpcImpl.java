@@ -8,7 +8,7 @@ import org.SouthMillion.grpc.common.ResponseStatus;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import net.devh.boot.grpc.server.service.GrpcService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * Provides high-performance mount operations via gRPC
  */
 @Slf4j
-@Service
+@GrpcService
 @RequiredArgsConstructor
 public class MountServiceGrpcImpl extends MountServiceGrpc.MountServiceImplBase {
 

@@ -1,6 +1,10 @@
 server:
   port: 8112
 
+grpc:
+  server:
+    port: 9640
+
 spring:
   application:
     name: pet-service

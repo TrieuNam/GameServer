@@ -1,0 +1,120 @@
+[INFO] Scanning for projects...
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.SouthMillion:wallet-service:jar:1.0.0
+[WARNING] 'dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique: org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:jar -> duplicate declaration of version (?) @ line 87, column 15
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.SouthMillion:globalserver-service:jar:1.0.0
+[WARNING] 'dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique: org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:jar -> duplicate declaration of version (?) @ line 55, column 15
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.SouthMillion:gameworld-service:jar:1.0.0
+[WARNING] 'dependencies.dependency.(groupId:artifactId:type:classifier)' must be unique: org.projectlombok:lombok:jar -> duplicate declaration of version (?) @ line 65, column 15
+[WARNING] 
+[WARNING] Some problems were encountered while building the effective model for com.SouthMillion:pet-service:jar:1.0.0
+[WARNING] 'build.plugins.plugin.version' for org.apache.maven.plugins:maven-compiler-plugin is missing. @ line 138, column 21
+[WARNING] 
+[WARNING] It is highly recommended to fix these problems because they threaten the stability of your build.
+[WARNING] 
+[WARNING] For this reason, future Maven versions might no longer support building such malformed projects.
+[WARNING] 
+[INFO] ------------------------------------------------------------------------
+[INFO] Detecting the operating system and CPU architecture
+[INFO] ------------------------------------------------------------------------
+[INFO] os.detected.name: windows
+[INFO] os.detected.arch: x86_64
+[INFO] os.detected.bitness: 64
+[INFO] os.detected.version: 10.0
+[INFO] os.detected.version.major: 10
+[INFO] os.detected.version.minor: 0
+[INFO] os.detected.classifier: windows-x86_64
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Build Order:
+[INFO] 
+[INFO] common-lib                                                         [jar]
+[INFO] webSocket-server                                                   [jar]
+[INFO] 
+[INFO] --------------------< org.SouthMillion:common-lib >---------------------
+[INFO] Building common-lib 1.0.0                                          [1/2]
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- protobuf:0.6.1:compile (default) @ common-lib ---
+[INFO] Compiling 64 proto file(s) to D:\project\serverGame\GameServer\common-lib\target\generated-sources\protobuf\java
+[WARNING] PROTOC: file_service.proto:8:1: warning: Import common.proto is unused.
+localization_service.proto:8:1: warning: Import common.proto is unused.
+
+[INFO] 
+[INFO] --- protobuf:0.6.1:compile-custom (default) @ common-lib ---
+[INFO] Compiling 64 proto file(s) to D:\project\serverGame\GameServer\common-lib\target\generated-sources\protobuf\grpc-java
+[WARNING] PROTOC: file_service.proto:8:1: warning: Import common.proto is unused.
+localization_service.proto:8:1: warning: Import common.proto is unused.
+
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ common-lib ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 64 resources from src\main\proto to target\classes
+[INFO] Copying 64 resources from src\main\proto to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ common-lib ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 781 source files with javac [debug release 21] to target\classes
+[INFO] /D:/project/serverGame/GameServer/common-lib/target/generated-sources/protobuf/java/org/SouthMillion/proto/Msgarena/Msgarena.java: Some input files use or override a deprecated API.
+[INFO] /D:/project/serverGame/GameServer/common-lib/target/generated-sources/protobuf/java/org/SouthMillion/proto/Msgarena/Msgarena.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- protobuf:0.6.1:test-compile (default) @ common-lib ---
+[INFO] D:\project\serverGame\GameServer\common-lib\src\test\proto does not exist. Review the configuration or consider disabling the plugin.
+[INFO] 
+[INFO] --- protobuf:0.6.1:test-compile-custom (default) @ common-lib ---
+[INFO] D:\project\serverGame\GameServer\common-lib\src\test\proto does not exist. Review the configuration or consider disabling the plugin.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ common-lib ---
+[INFO] skip non existing resourceDirectory D:\project\serverGame\GameServer\common-lib\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ common-lib ---
+[INFO] No sources to compile
+[INFO] 
+[INFO] -----------------< com.southMillion:webSocket-server >------------------
+[INFO] Building webSocket-server 1.0.0                                    [2/2]
+[INFO]   from D:\project\serverGame\GameServer\webSocket-server\pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ webSocket-server ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.0:compile (default-compile) @ webSocket-server ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 158 source files with javac [debug parameters release 21] to target\classes
+[INFO] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[INFO] /D:/project/serverGame/GameServer/webSocket-server/src/main/java/com/SouthMillion/webSocket_server/handler/WsGatewayHandler.java: D:\project\serverGame\GameServer\webSocket-server\src\main\java\com\SouthMillion\webSocket_server\handler\WsGatewayHandler.java uses or overrides a deprecated API.
+[INFO] /D:/project/serverGame/GameServer/webSocket-server/src/main/java/com/SouthMillion/webSocket_server/handler/WsGatewayHandler.java: Recompile with -Xlint:deprecation for details.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ webSocket-server ---
+[INFO] skip non existing resourceDirectory D:\project\serverGame\GameServer\webSocket-server\src\test\resources
+[INFO] 
+[INFO] --- compiler:3.14.0:testCompile (default-testCompile) @ webSocket-server ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 8 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] Annotation processing is enabled because one or more processors were found
+  on the class path. A future release of javac may disable annotation processing
+  unless at least one processor is specified by name (-processor), or a search
+  path is specified (--processor-path, --processor-module-path), or annotation
+  processing is enabled explicitly (-proc:only, -proc:full).
+  Use -Xlint:-options to suppress this message.
+  Use -proc:none to disable annotation processing.
+[INFO] ------------------------------------------------------------------------
+[INFO] Reactor Summary for common-lib 1.0.0:
+[INFO] 
+[INFO] common-lib ......................................... SUCCESS [ 52.270 s]
+[INFO] webSocket-server ................................... SUCCESS [  9.110 s]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:03 min
+[INFO] Finished at: 2026-04-07T18:56:09+07:00
+[INFO] ------------------------------------------------------------------------

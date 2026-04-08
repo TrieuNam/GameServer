@@ -3,7 +3,6 @@ package com.SouthMillion.mount_service.config;
 import com.SouthMillion.mount_service.model.config.HarnessConfig;
 import com.SouthMillion.mount_service.model.config.MountConfig;
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +17,6 @@ import java.util.Map;
  */
 @Component
 @Data
-@RequiredArgsConstructor
 @Slf4j
 public class MountConfigHolder {
 

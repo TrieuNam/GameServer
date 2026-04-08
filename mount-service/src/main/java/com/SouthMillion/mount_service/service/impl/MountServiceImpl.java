@@ -554,10 +554,19 @@ public class MountServiceImpl implements MountService {
         }
 
         try {
-            BagDTOs.AddItemReq request = new BagDTOs.AddItemReq();
-            request.setItemId(itemId);
-            request.setNum(quantity);
-            bagClient.addItem(roleId, request);
+            List<BagDTOs.GrantItem> items = new ArrayList<>();
+            BagDTOs.GrantItem item = new BagDTOs.GrantItem();
+            item.setItemId(itemId);
+            item.setNum(quantity);
+            items.add(item);
+
+            BagDTOs.GrantReq request = new BagDTOs.GrantReq();
+            request.setUserId(roleId);
+            request.setRoleId(roleId);
+            request.setItems(items);
+            request.setEventId(UUID.randomUUID().toString());
+
+            bagClient.grantItems(request);
             log.debug("Added material: itemId={}, quantity={}", itemId, quantity);
         } catch (Exception e) {
             log.error("Failed to add material: {}", e.getMessage());
@@ -643,17 +652,9 @@ public class MountServiceImpl implements MountService {
             return List.of();
         }
 
-        // Note: Mount stores itemIds in slots, but MountHarness table stores items by harnessIndex
-        // For Phase 3, we're using a simplified approach where we create virtual harness from config
-        // In production, you'd need to either:
-        // 1. Store full harness attributes on mount table, or
-        // 2. Create separate equipped_harness table with foreign key to mount
-
-        // For now, return empty list as harness power is calculated via config lookup
         log.debug("Mount has {} harness items equipped: {}", equippedIds.size(), equippedIds);
 
-        // TODO Phase 3: Implement proper harness attribute storage and retrieval
-        // This would require fetching harness config and creating MountHarness objects
-        return List.of();
+        // Fetch harness objects from DB by itemId (harnessSlot stores item config IDs)
+        return harnessRepository.findByUserIdAndItemIdIn(mount.getUserId(), equippedIds);
     }
 }

@@ -5,15 +5,15 @@ import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
-import com.SouthMillion.webSocket_server.service.client.LingZhuFeign;
+import com.SouthMillion.webSocket_server.service.grpc.LingZhuGrpcClient;
+import org.SouthMillion.proto.lingzhu.GetAllResponse;
+import org.SouthMillion.proto.lingzhu.LingZhuProgressData;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.proto.Msglingzhu.Msglingzhu;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Map;
 
 /**
  * Handles lord dungeon (领主副本) operations.
@@ -28,7 +28,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class LingZhuHandler implements MessageHandler {
 
-    private final LingZhuFeign lingZhuFeign;
+    private final LingZhuGrpcClient lingZhuGrpcClient;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;
 
@@ -68,14 +68,14 @@ public class LingZhuHandler implements MessageHandler {
 
                 switch (type) {
                     case OP_CHALLENGE -> {
-                        Map<String, Object> challenge = lingZhuFeign.challenge(String.valueOf(roleId), p1, p2);
-                        if (isSuccess(challenge)) {
+                        boolean challengeOk = lingZhuGrpcClient.challenge(roleId, p1, p2).getSuccess();
+                        if (challengeOk) {
                             publishTaskProgress(roleId, taskActionConditionMapping.lingzhuChallengeTaskKey(), "websocket-lingzhu-challenge");
                         }
                     }
                     case OP_SWEEP -> {
-                        Map<String, Object> sweep = lingZhuFeign.sweep(String.valueOf(roleId), p1, p2 > 0 ? p2 : 1);
-                        if (isSuccess(sweep)) {
+                        boolean sweepOk = lingZhuGrpcClient.sweep(roleId, p1, p2 > 0 ? p2 : 1).getSuccess();
+                        if (sweepOk) {
                             publishTaskProgress(roleId, taskActionConditionMapping.lingzhuSweepTaskKey(), "websocket-lingzhu-sweep");
                         }
                     }
@@ -92,16 +92,14 @@ public class LingZhuHandler implements MessageHandler {
 
     private void sendLingZhuInfo(PlayerSession session, Long roleId) {
         try {
-            List<Map<String, Object>> dataList = lingZhuFeign.getAll(String.valueOf(roleId));
+            GetAllResponse resp = lingZhuGrpcClient.getAll(roleId);
             Msglingzhu.PB_SCLingZhuInfo.Builder builder = Msglingzhu.PB_SCLingZhuInfo.newBuilder();
-            if (dataList != null) {
-                for (Map<String, Object> d : dataList) {
-                    Msglingzhu.PB_CSLingZhuData.Builder item = Msglingzhu.PB_CSLingZhuData.newBuilder();
-                    if (d.get("stage") instanceof Number n)      item.setStage(n.intValue());
-                    if (d.get("passLevel") instanceof Number n)  item.setPassLevel(n.intValue());
-                    if (d.get("sweepCount") instanceof Number n) item.setSweepCount(n.intValue());
-                    builder.addLingzhuList(item.build());
-                }
+            for (LingZhuProgressData d : resp.getItemsList()) {
+                Msglingzhu.PB_CSLingZhuData.Builder item = Msglingzhu.PB_CSLingZhuData.newBuilder();
+                item.setStage(d.getStage());
+                item.setPassLevel(d.getPassLevel());
+                item.setSweepCount(d.getSweepCount());
+                builder.addLingzhuList(item.build());
             }
             Emitters.emit(session, 2009, builder.build().toByteArray());
         } catch (Exception e) {
@@ -114,17 +112,6 @@ public class LingZhuHandler implements MessageHandler {
         try {
             Emitters.emit(session, 2009, Msglingzhu.PB_SCLingZhuInfo.newBuilder().build().toByteArray());
         } catch (Exception ignored) {}
-    }
-
-    private boolean isSuccess(Map<String, Object> result) {
-        if (result == null) {
-            return false;
-        }
-        Object success = result.get("success");
-        if (success instanceof Boolean b) {
-            return b;
-        }
-        return "true".equalsIgnoreCase(String.valueOf(success));
     }
 
     private void publishTaskProgress(Long roleId, String taskKey, String source) {

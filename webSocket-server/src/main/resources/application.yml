@@ -246,6 +246,58 @@ grpc:
     shop-service:
       address: 'static://localhost:9260'
       negotiation-type: plaintext
+    # -- gem --
+    gem-service:
+      address: 'static://localhost:9611'
+      negotiation-type: plaintext
+    # -- activity --
+    activity-service:
+      address: 'static://localhost:9612'
+      negotiation-type: plaintext
+    # -- shizhuang --
+    shizhuang-service:
+      address: 'static://localhost:9613'
+      negotiation-type: plaintext
+    # -- lingzhu --
+    lingzhu-service:
+      address: 'static://localhost:9607'
+      negotiation-type: plaintext
+    # -- knights --
+    knights-service:
+      address: 'static://localhost:9608'
+      negotiation-type: plaintext
+    # -- pagoda --
+    pagoda-service:
+      address: 'static://localhost:9609'
+      negotiation-type: plaintext
+    # -- scroll --
+    scroll-service:
+      address: 'static://localhost:9610'
+      negotiation-type: plaintext
+    # -- mail --
+    mail-service:
+      address: 'static://localhost:9604'
+      negotiation-type: plaintext
+    # -- chat --
+    chat-service:
+      address: 'static://localhost:9601'
+      negotiation-type: plaintext
+    # -- guild --
+    guild-service:
+      address: 'static://localhost:9602'
+      negotiation-type: plaintext
+    # -- friend --
+    friend-service:
+      address: 'static://localhost:9603'
+      negotiation-type: plaintext
+    # -- pet --
+    pet-service:
+      address: 'static://localhost:9640'
+      negotiation-type: plaintext
+    # -- mount --
+    mount-service:
+      address: 'static://localhost:9088'
+      negotiation-type: plaintext
 
 logging:
   level:

@@ -1,0 +1,20 @@
+{
+  "serviceName" : "shop-service",
+  "displayName" : "Shop Service",
+  "phase" : "P1",
+  "port" : 8260,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:31:28.990+07:00  INFO 12820 --- [shop-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:21:37.333+07:00  INFO 12820 --- [shop-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-08T00:21:37.333+07:00  INFO 12820 --- [shop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-08T00:21:37.333+07:00  INFO 12820 --- [shop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-08T00:21:37.333+07:00  INFO 12820 --- [shop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-08T00:21:37.334+07:00  INFO 12820 --- [shop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:21:37.334+07:00  INFO 12820 --- [shop-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-08T00:21:37.334+07:00  INFO 12820 --- [shop-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:21:38.924+07:00  INFO 12820 --- [shop-service] [omcat-handler-0] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'", "2026-04-08T00:21:38.924+07:00  INFO 12820 --- [shop-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'", "2026-04-08T00:21:38.927+07:00  INFO 12820 --- [shop-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms", "2026-04-08T00:26:28.983+07:00  INFO 12820 --- [shop-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-08T00:31:28.990+07:00  INFO 12820 --- [shop-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:54.7414147"
+}

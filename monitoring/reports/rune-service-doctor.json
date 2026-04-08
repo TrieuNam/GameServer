@@ -1,0 +1,20 @@
+{
+  "serviceName" : "rune-service",
+  "displayName" : "Rune Service",
+  "phase" : "P3",
+  "port" : 8093,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:30:17.396+07:00  INFO 27492 --- [rune-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:25:31.728+07:00  INFO 27492 --- [rune-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ðŸ³ Dockerfile example:", "2026-04-08T00:25:31.729+07:00  INFO 27492 --- [rune-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENV JAVA_OPTS=\"<arguments above>\"", "2026-04-08T00:25:31.729+07:00  INFO 27492 --- [rune-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENTRYPOINT java $JAVA_OPTS -jar app.jar", "2026-04-08T00:25:31.729+07:00  INFO 27492 --- [rune-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-08T00:25:31.729+07:00  INFO 27492 --- [rune-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-08T00:25:31.729+07:00  INFO 27492 --- [rune-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-08T00:25:31.729+07:00  INFO 27492 --- [rune-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-08T00:25:31.729+07:00  INFO 27492 --- [rune-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-08T00:25:31.729+07:00  INFO 27492 --- [rune-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:25:31.730+07:00  INFO 27492 --- [rune-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-08T00:25:31.730+07:00  INFO 27492 --- [rune-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:30:17.396+07:00  INFO 27492 --- [rune-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:55.6707769"
+}

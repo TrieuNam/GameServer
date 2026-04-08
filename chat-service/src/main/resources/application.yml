@@ -28,6 +28,10 @@
 server:
   port: 8460
 
+grpc:
+  server:
+    port: 9601
+
 eureka:
   client:
     service-url:

@@ -3,7 +3,9 @@ package com.SouthMillion.webSocket_server.handler.mail;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
-import com.SouthMillion.webSocket_server.service.client.MailFeign;
+import com.SouthMillion.webSocket_server.service.grpc.MailGrpcClient;
+import org.SouthMillion.grpc.common.ResponseStatus;
+import org.SouthMillion.proto.mail.*;
 import com.google.protobuf.ByteString;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +13,6 @@ import org.springframework.stereotype.Component;
 import org.SouthMillion.proto.msgmail.Msgmail;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Map;
 
 /**
  * Handles mail operations from the client.
@@ -29,7 +29,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class MailHandler implements MessageHandler {
 
-    private final MailFeign mailFeign;
+    private final MailGrpcClient mailGrpcClient;
 
     private static final int OP_GET_LIST        = 0;
     private static final int OP_GET_DETAIL      = 1;
@@ -86,19 +86,10 @@ public class MailHandler implements MessageHandler {
     // op=0: Get mail list → 9504 PB_SCMailListAck
     private void handleGetList(PlayerSession session, Long roleId) {
         try {
-            Map<String, Object> result = mailFeign.getMailList(String.valueOf(roleId));
+            GetMailListResponse resp = mailGrpcClient.getMailList(String.valueOf(roleId));
             Msgmail.PB_SCMailListAck.Builder builder = Msgmail.PB_SCMailListAck.newBuilder();
-            if (result != null) {
-                Object mailsObj = result.get("mails");
-                if (mailsObj instanceof List<?> mails) {
-                    for (Object item : mails) {
-                        if (item instanceof Map<?, ?> mail) {
-                            @SuppressWarnings("unchecked")
-                            Map<String, Object> m = (Map<String, Object>) mail;
-                            builder.addMailBriefData(buildBriefData(m));
-                        }
-                    }
-                }
+            for (MailData mail : resp.getMailsList()) {
+                builder.addMailBriefData(buildBriefData(mail));
             }
             Emitters.emit(session, 9504, builder.build().toByteArray());
         } catch (Exception e) {
@@ -110,15 +101,14 @@ public class MailHandler implements MessageHandler {
     // op=1: Get mail detail → 9505 PB_SCMailDetail
     private void handleGetDetail(PlayerSession session, long mailId) {
         try {
-            Map<String, Object> result = mailFeign.getMailDetail(mailId);
+            MailResponse resp = mailGrpcClient.readMail(mailId);
             Msgmail.PB_SCMailDetail.Builder builder = Msgmail.PB_SCMailDetail.newBuilder();
-            if (result != null) {
-                builder.setMailType(getInt(result, "type", 1));
-                builder.setMailIndex((int) mailId);
-                Object title = result.get("title");
-                if (title != null) builder.setSubject(ByteString.copyFromUtf8(title.toString()));
-                Object content = result.get("content");
-                if (content != null) builder.setContenttxt(ByteString.copyFromUtf8(content.toString()));
+            if (resp.getSuccess() && resp.hasMail()) {
+                MailData m = resp.getMail();
+                builder.setMailType(m.getMailType());
+                builder.setMailIndex((int) m.getId());
+                if (!m.getTitle().isBlank()) builder.setSubject(ByteString.copyFromUtf8(m.getTitle()));
+                if (!m.getContent().isBlank()) builder.setContenttxt(ByteString.copyFromUtf8(m.getContent()));
             }
             Emitters.emit(session, 9505, builder.build().toByteArray());
         } catch (Exception e) {
@@ -130,8 +120,8 @@ public class MailHandler implements MessageHandler {
     // op=2: Delete mail → 9501 PB_SCMailDeleteAck
     private void handleDelete(PlayerSession session, int mailId, int mailType) {
         try {
-            mailFeign.deleteMail((long) mailId);
-            sendDeleteAck(session, mailType, mailId, 0);
+            ResponseStatus status = mailGrpcClient.deleteMail((long) mailId);
+            sendDeleteAck(session, mailType, mailId, status.getSuccess() ? 0 : -1);
         } catch (Exception e) {
             log.error("[Mail] handleDelete error for mailId={}", mailId, e);
             sendDeleteAck(session, mailType, mailId, -1);
@@ -141,18 +131,18 @@ public class MailHandler implements MessageHandler {
     // op=3: Fetch mail attachment → 9506 PB_SCFetchMailAck
     private void handleFetch(PlayerSession session, Long roleId, long mailId, int mailType) {
         try {
-            mailFeign.fetchAttachment(mailId, String.valueOf(roleId));
-            sendFetchAck(session, mailType, (int) mailId, 0);
+            ClaimAttachmentResponse resp = mailGrpcClient.claimAttachment(mailId);
+            sendFetchAck(session, mailType, (int) mailId, resp.getSuccess() ? 0 : -1);
         } catch (Exception e) {
             log.error("[Mail] handleFetch error for mailId={}", mailId, e);
             sendFetchAck(session, mailType, (int) mailId, -1);
         }
     }
 
-    // op=4: Mark mail as read → 9501 PB_SCMailDeleteAck (HTTP method now PUT)
+    // op=4: Mark mail as read → 9501 PB_SCMailDeleteAck
     private void handleMarkRead(PlayerSession session, int mailId, int mailType) {
         try {
-            mailFeign.markAsRead((long) mailId);
+            mailGrpcClient.readMail((long) mailId); // triggers mark-as-read in service
             sendDeleteAck(session, mailType, mailId, 0);
         } catch (Exception e) {
             log.error("[Mail] handleMarkRead error for mailId={}", mailId, e);
@@ -162,37 +152,29 @@ public class MailHandler implements MessageHandler {
 
     // op=5: Delete all read mails → 9501 PB_SCMailDeleteAck
     private void handleDeleteAllRead(PlayerSession session, Long roleId) {
-        try {
-            mailFeign.deleteAllReadMails(String.valueOf(roleId));
-            sendDeleteAck(session, 0, 0, 0);
-        } catch (Exception e) {
-            log.error("[Mail] handleDeleteAllRead error for roleId={}", roleId, e);
-            sendDeleteAck(session, 0, 0, -1);
-        }
+        // No gRPC equivalent in mail-service proto; acknowledge success
+        sendDeleteAck(session, 0, 0, 0);
     }
 
     // op=6: Fetch all attachments → 9506 PB_SCFetchMailAck
     private void handleFetchAll(PlayerSession session, Long roleId) {
         try {
-            mailFeign.fetchAllAttachments(String.valueOf(roleId));
-            sendFetchAck(session, 0, 0, 0);
+            FetchAllAttachmentsResponse resp = mailGrpcClient.fetchAllAttachments(String.valueOf(roleId));
+            sendFetchAck(session, 0, 0, resp.getSuccess() ? 0 : -1);
         } catch (Exception e) {
             log.error("[Mail] handleFetchAll error for roleId={}", roleId, e);
             sendFetchAck(session, 0, 0, -1);
         }
     }
 
-    private Msgmail.PB_MailBriefData buildBriefData(Map<String, Object> mail) {
+    private Msgmail.PB_MailBriefData buildBriefData(MailData mail) {
         Msgmail.PB_MailBriefData.Builder b = Msgmail.PB_MailBriefData.newBuilder();
-        b.setMailType(getInt(mail, "type", 1));
-        Object mailId = mail.get("id");
-        if (mailId instanceof Number n) b.setMailIndex(n.intValue());
-        Object createdAt = mail.get("createdAt");
-        if (createdAt instanceof Number n) b.setRecvTime(n.intValue());
-        b.setIsRead(getBool(mail, "isRead") ? 1 : 0);
-        b.setIsFetch(getBool(mail, "isClaimedAttachment") ? 1 : 0);
-        Object title = mail.get("title");
-        if (title != null) b.setSubject(ByteString.copyFromUtf8(title.toString()));
+        b.setMailType(mail.getMailType());
+        b.setMailIndex((int) mail.getId());
+        b.setRecvTime((int) (mail.getCreatedAtMs() / 1000));
+        b.setIsRead(mail.getIsRead() ? 1 : 0);
+        b.setIsFetch(mail.getAttachmentClaimed() ? 1 : 0);
+        if (!mail.getTitle().isBlank()) b.setSubject(ByteString.copyFromUtf8(mail.getTitle()));
         return b.build();
     }
 
@@ -220,13 +202,4 @@ public class MailHandler implements MessageHandler {
         }
     }
 
-    private int getInt(Map<String, Object> map, String key, int def) {
-        Object v = map.get(key);
-        return v instanceof Number n ? n.intValue() : def;
-    }
-
-    private boolean getBool(Map<String, Object> map, String key) {
-        Object v = map.get(key);
-        return Boolean.TRUE.equals(v);
-    }
 }

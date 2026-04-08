@@ -1,0 +1,81 @@
+syntax = "proto3";
+package friend;
+option java_package = "org.SouthMillion.proto.friend";
+option java_outer_classname = "FriendServiceProto";
+option java_multiple_files = true;
+import "common.proto";
+
+service FriendService {
+  rpc GetFriendList(GetFriendListRequest) returns (FriendListResponse);
+  rpc SendFriendRequest(SendFriendReq) returns (common.ResponseStatus);
+  rpc HandleFriendRequest(HandleFriendReq) returns (common.ResponseStatus);
+  rpc RemoveFriend(RemoveFriendRequest) returns (common.ResponseStatus);
+  rpc BlockPlayer(BlockPlayerRequest) returns (common.ResponseStatus);
+  rpc GetOnlineFriends(GetOnlineFriendsRequest) returns (OnlineFriendsResponse);
+  rpc UpdateOnlineStatus(UpdateOnlineStatusRequest) returns (common.ResponseStatus);
+  rpc GiveGift(GiveGiftRequest) returns (common.ResponseStatus);
+}
+
+message GetFriendListRequest { string role_id = 1; }
+message GetOnlineFriendsRequest { string role_id = 1; }
+
+message SendFriendReq {
+  string requester_id = 1;
+  string requester_name = 2;
+  string target_id = 3;
+}
+
+message HandleFriendReq {
+  string role_id = 1;
+  string requester_id = 2;
+  bool accept = 3;
+}
+
+message RemoveFriendRequest {
+  string role_id = 1;
+  string friend_id = 2;
+}
+
+message BlockPlayerRequest {
+  string blocker_id = 1;
+  string blocked_id = 2;
+  string blocker_name = 3;
+}
+
+message UpdateOnlineStatusRequest {
+  string role_id = 1;
+  string role_name = 2;
+  int32 level = 3;
+  bool online = 4;
+}
+
+message GiveGiftRequest {
+  string sender_id = 1;
+  string receiver_id = 2;
+}
+
+message FriendListResponse {
+  bool success = 1;
+  string message = 2;
+  repeated FriendData friends = 3;
+}
+
+message OnlineFriendsResponse {
+  bool success = 1;
+  repeated OnlineStatusData friends = 2;
+}
+
+message FriendData {
+  string role_id = 1;
+  string role_name = 2;
+  int32 level = 3;
+  bool online = 4;
+  int64 friend_since_ms = 5;
+}
+
+message OnlineStatusData {
+  string role_id = 1;
+  string role_name = 2;
+  int32 level = 3;
+  bool online = 4;
+}

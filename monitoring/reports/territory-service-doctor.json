@@ -1,0 +1,20 @@
+{
+  "serviceName" : "territory-service",
+  "displayName" : "Territory Service",
+  "phase" : "P2",
+  "port" : 8360,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:33:15.332+07:00  INFO 34368 --- [territory-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "\tat io.grpc.ForwardingServerCallListener$SimpleForwardingServerCallListener.onHalfClose(ForwardingServerCallListener.java:40) ~[grpc-api-1.61.0.jar!/:1.61.0]", "\tat io.grpc.Contexts$ContextualizedServerCallListener.onHalfClose(Contexts.java:86) ~[grpc-api-1.61.0.jar!/:1.61.0]", "\tat io.grpc.internal.ServerCallImpl$ServerStreamListenerImpl.halfClosed(ServerCallImpl.java:351) ~[grpc-core-1.61.0.jar!/:1.61.0]", "\tat io.grpc.internal.ServerImpl$JumpToApplicationThreadServerStreamListener$1HalfClosed.runInContext(ServerImpl.java:861) ~[grpc-core-1.61.0.jar!/:1.61.0]", "\tat io.grpc.internal.ContextRunnable.run(ContextRunnable.java:37) ~[grpc-core-1.61.0.jar!/:1.61.0]", "\tat io.grpc.internal.SerializingExecutor.run(SerializingExecutor.java:133) ~[grpc-core-1.61.0.jar!/:1.61.0]", "\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144) ~[na:na]", "\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642) ~[na:na]", "\tat java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]", "", "2026-04-08T00:28:15.317+07:00  INFO 34368 --- [territory-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-08T00:33:15.332+07:00  INFO 34368 --- [territory-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:55.4122851"
+}

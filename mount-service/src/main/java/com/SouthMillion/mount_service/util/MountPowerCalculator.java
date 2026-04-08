@@ -99,8 +99,8 @@ public class MountPowerCalculator {
         long totalHarnessPower = 0L;
 
         for (MountHarness harness : harnessEquipment) {
-            if (harness != null && harness.getHarnessId() != null) {
-                HarnessConfig.Attributes attrs = configHolder.getHarnessAttributes(harness.getHarnessId());
+            if (harness != null && harness.getItemId() != null) {
+                HarnessConfig.Attributes attrs = configHolder.getHarnessAttributes(harness.getItemId());
 
                 if (attrs != null) {
                     // Same power formula as mount stats
@@ -109,9 +109,9 @@ public class MountPowerCalculator {
                             + (attrs.getDefense() != null ? attrs.getDefense() : 0) * 3L
                             + (attrs.getSpeed() != null ? attrs.getSpeed() : 0) * 2L;
 
-                    // Apply upgrade level multiplier (each upgrade level adds 10%)
-                    if (harness.getUpgradeLevel() != null && harness.getUpgradeLevel() > 0) {
-                        harnessPower = Math.round(harnessPower * (1.0 + harness.getUpgradeLevel() * 0.1));
+                    // Apply harness level multiplier (each level adds 10%)
+                    if (harness.getLevel() != null && harness.getLevel() > 0) {
+                        harnessPower = Math.round(harnessPower * (1.0 + harness.getLevel() * 0.1));
                     }
 
                     totalHarnessPower += harnessPower;
@@ -176,8 +176,8 @@ public class MountPowerCalculator {
         // Add harness bonuses
         if (harnessEquipment != null) {
             for (MountHarness harness : harnessEquipment) {
-                if (harness != null && harness.getHarnessId() != null) {
-                    HarnessConfig.Attributes attrs = configHolder.getHarnessAttributes(harness.getHarnessId());
+                if (harness != null && harness.getItemId() != null) {
+                    HarnessConfig.Attributes attrs = configHolder.getHarnessAttributes(harness.getItemId());
                     if (attrs != null) {
                         hp += attrs.getHp() != null ? attrs.getHp() : 0;
                         attack += attrs.getAttack() != null ? attrs.getAttack() : 0;

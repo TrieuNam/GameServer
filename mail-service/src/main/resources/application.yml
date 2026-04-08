@@ -1,6 +1,10 @@
 ﻿server:
   port: 8470
 
+grpc:
+  server:
+    port: 9604
+
 spring:
   profiles:
     active: local  # Default to local profile (root/root). Use -Dspring.profiles.active=prod for production

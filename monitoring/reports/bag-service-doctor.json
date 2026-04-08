@@ -1,0 +1,20 @@
+{
+  "serviceName" : "bag-service",
+  "displayName" : "Bag Service",
+  "phase" : "P1",
+  "port" : 8230,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:32:22.728+07:00  INFO 10984 --- [bag-service] [cat-handler-402] c.S.b.service.BagDomainService           : [bag.use] roleId=9 itemId=40004 requested=1 remaining=31",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:32:18.132+07:00  INFO 10984 --- [bag-service] [cat-handler-397] c.S.b.service.BagDomainService           : [bag.use] roleId=9 itemId=40004 requested=1", "2026-04-08T00:32:18.135+07:00  INFO 10984 --- [bag-service] [cat-handler-397] c.S.b.service.BagDomainService           : [bag.consume.exact] roleId=9 itemId=40004 requested=1 stackCount=2 totalBefore=33", "2026-04-08T00:32:18.135+07:00  INFO 10984 --- [bag-service] [cat-handler-397] c.S.b.service.BagDomainService           : [bag.consume.exact] roleId=9 itemId=40004 stackId=09469939-b371-438e-8bb1-d3e3305faba1 before=4 take=1 after=3", "2026-04-08T00:32:18.140+07:00  INFO 10984 --- [bag-service] [cat-handler-397] c.S.b.service.BagDomainService           : [bag.consume.exact] done roleId=9 itemId=40004 requested=1 totalAfter=32", "2026-04-08T00:32:18.140+07:00  INFO 10984 --- [bag-service] [cat-handler-397] c.S.b.service.BagDomainService           : [bag.use] roleId=9 itemId=40004 requested=1 remaining=32", "2026-04-08T00:32:22.714+07:00  INFO 10984 --- [bag-service] [cat-handler-402] c.S.b.controller.InternalBagController   : [bag.consume.api] roleId=9 source=BOX_OPEN requestItemId=40004 requestAmount=1 costCount=0", "2026-04-08T00:32:22.714+07:00  INFO 10984 --- [bag-service] [cat-handler-402] c.S.b.controller.InternalBagController   : [bag.consume.api] roleId=9 source=BOX_OPEN itemId=40004 amount=1 mode=single", "2026-04-08T00:32:22.718+07:00  INFO 10984 --- [bag-service] [cat-handler-402] c.S.b.service.BagDomainService           : [bag.use] roleId=9 itemId=40004 requested=1", "2026-04-08T00:32:22.722+07:00  INFO 10984 --- [bag-service] [cat-handler-402] c.S.b.service.BagDomainService           : [bag.consume.exact] roleId=9 itemId=40004 requested=1 stackCount=2 totalBefore=32", "2026-04-08T00:32:22.722+07:00  INFO 10984 --- [bag-service] [cat-handler-402] c.S.b.service.BagDomainService           : [bag.consume.exact] roleId=9 itemId=40004 stackId=09469939-b371-438e-8bb1-d3e3305faba1 before=3 take=1 after=2", "2026-04-08T00:32:22.728+07:00  INFO 10984 --- [bag-service] [cat-handler-402] c.S.b.service.BagDomainService           : [bag.consume.exact] done roleId=9 itemId=40004 requested=1 totalAfter=31", "2026-04-08T00:32:22.728+07:00  INFO 10984 --- [bag-service] [cat-handler-402] c.S.b.service.BagDomainService           : [bag.use] roleId=9 itemId=40004 requested=1 remaining=31" ],
+  "lastUpdated" : "2026-04-08T00:33:54.6569003"
+}

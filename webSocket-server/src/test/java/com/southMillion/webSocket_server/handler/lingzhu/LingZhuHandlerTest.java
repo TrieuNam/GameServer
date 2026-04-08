@@ -2,7 +2,7 @@ package com.SouthMillion.webSocket_server.handler.lingzhu;
 
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
-import com.SouthMillion.webSocket_server.service.client.LingZhuFeign;
+import com.SouthMillion.webSocket_server.service.grpc.LingZhuGrpcClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.verify;
 class LingZhuHandlerTest {
 
     @Mock
-    private LingZhuFeign lingZhuFeign;
+    private LingZhuGrpcClient lingZhuGrpcClient;
     @Mock
     private TaskProgressPublisher taskProgressPublisher;
     @Mock

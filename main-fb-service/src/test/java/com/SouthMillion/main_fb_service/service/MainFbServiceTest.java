@@ -199,7 +199,7 @@ class MainFbServiceTest {
 
             assertThat(result.getBattleId()).isEqualTo("battle-abc");
             assertThat(result.getCost()).isEqualTo(0);
-            then(itemFeign).should(never()).consumeItem(any(), any(), any());
+            then(itemFeign).should(never()).consumeItem(any());
         }
 
         @Test
@@ -217,7 +217,7 @@ class MainFbServiceTest {
             MainFbDTOs.EnterStageResp result = mainFbService.enter(req);
 
             assertThat(result.getCost()).isEqualTo(10);
-            then(itemFeign).should().consumeItem(eq("p1"), any(), any());
+            then(itemFeign).should().consumeItem(any());
         }
 
         @Test
@@ -293,7 +293,7 @@ class MainFbServiceTest {
             assertThat(result).isNotEmpty();
             long totalCount = result.stream().mapToLong(ItemStackDTO::count).sum();
             assertThat(totalCount).isEqualTo(20); // 10 doubled
-            then(itemFeign).should().addItemsBulk(eq("p1"), any(), any());
+            then(itemFeign).should().addItemsBulk(any());
         }
 
         @Test
@@ -387,7 +387,7 @@ class MainFbServiceTest {
             // 2 times × 10 items = 20
             int total = result.getRewards().stream().mapToInt(MainFbDTOs.RewardItem::getCount).sum();
             assertThat(total).isEqualTo(20);
-            then(itemFeign).should().addItemsBulk(eq("p1"), any(), any());
+            then(itemFeign).should().addItemsBulk(any());
         }
 
         @Test
@@ -483,7 +483,7 @@ class MainFbServiceTest {
 
             assertThat(result).isNotEmpty();
             assertThat(result.get(0).count()).isEqualTo(100);
-            then(itemFeign).should().addItemsBulk(eq("p1"), any(), any());
+            then(itemFeign).should().addItemsBulk(any());
         }
 
         @Test

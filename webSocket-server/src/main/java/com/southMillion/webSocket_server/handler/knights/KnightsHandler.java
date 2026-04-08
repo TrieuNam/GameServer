@@ -3,14 +3,15 @@ package com.SouthMillion.webSocket_server.handler.knights;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
-import com.SouthMillion.webSocket_server.service.client.KnightsFeign;
+import com.SouthMillion.webSocket_server.service.grpc.KnightsGrpcClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.SouthMillion.proto.knights.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.proto.Msgother.Msgother;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.Map;
 
 /**
  * Knights Handbook Handler (骑士手册).
@@ -25,7 +26,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class KnightsHandler implements MessageHandler {
 
-    private final KnightsFeign knightsFeign;
+    private final KnightsGrpcClient knightsGrpcClient;
+    private final ObjectMapper objectMapper;
 
     private static final int OP_GET_INFO       = 1;
     private static final int OP_GET_CONDITIONS = 2;
@@ -50,20 +52,20 @@ public class KnightsHandler implements MessageHandler {
 
                 switch (opType) {
                     case OP_GET_CONDITIONS -> {
-                        Map<String, Object> cond = knightsFeign.getConditions(String.valueOf(roleId));
+                        GenericResponse cond = knightsGrpcClient.getConditions(roleId);
                         sendConditionInfo(session, cond);
                     }
                     case OP_CLAIM_REWARD -> {
-                        Map<String, Object> result = knightsFeign.claimSeq(String.valueOf(roleId), param1);
+                        KnightsHandbookResponse result = knightsGrpcClient.claimSeqReward(roleId, param1);
                         sendKnightsInfo(session, result);
                     }
                     case OP_CLAIM_LEVEL -> {
-                        Map<String, Object> result = knightsFeign.claimLevel(String.valueOf(roleId), param1);
+                        KnightsHandbookResponse result = knightsGrpcClient.claimLevelReward(roleId, param1);
                         sendKnightsInfo(session, result);
                     }
                     default -> {
                         // OP_GET_INFO or unknown
-                        Map<String, Object> info = knightsFeign.getInfo(String.valueOf(roleId));
+                        KnightsHandbookResponse info = knightsGrpcClient.getOrCreate(roleId);
                         sendKnightsInfo(session, info);
                     }
                 }
@@ -74,13 +76,14 @@ public class KnightsHandler implements MessageHandler {
         });
     }
 
-    private void sendKnightsInfo(PlayerSession session, Map<String, Object> data) {
+    private void sendKnightsInfo(PlayerSession session, KnightsHandbookResponse resp) {
         try {
             Msgother.PB_SCKnightsInfo.Builder builder = Msgother.PB_SCKnightsInfo.newBuilder();
-            if (data != null) {
-                if (data.get("level") instanceof Number n)     builder.setLevel(n.intValue());
-                if (data.get("flag") instanceof Number n)      builder.setFlag(n.intValue());
-                if (data.get("levelFlag") instanceof Number n) builder.setLevelFlag(n.intValue());
+            if (resp != null && resp.hasHandbook()) {
+                KnightsHandbookData hb = resp.getHandbook();
+                builder.setLevel(hb.getLevel());
+                builder.setFlag((int) hb.getFlag());
+                builder.setLevelFlag((int) hb.getLevelFlag());
             }
             Emitters.emit(session, 1626, builder.build().toByteArray());
         } catch (Exception e) {
@@ -88,15 +91,25 @@ public class KnightsHandler implements MessageHandler {
         }
     }
 
-    private void sendConditionInfo(PlayerSession session, Map<String, Object> data) {
+    private void sendConditionInfo(PlayerSession session, GenericResponse resp) {
         try {
             Msgother.PB_SCKnightsConditionInfo.Builder builder =
                     Msgother.PB_SCKnightsConditionInfo.newBuilder();
-            if (data != null && data.get("conditions") instanceof java.util.List<?> list) {
-                for (Object item : list) {
-                    if (item instanceof Number n) {
-                        builder.addContitionList(n.intValue());
+            if (resp != null && resp.getSuccess() && !resp.getDataJson().isBlank()) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    java.util.Map<String, Object> parsed =
+                            objectMapper.readValue(resp.getDataJson(), java.util.Map.class);
+                    Object condList = parsed.get("conditions");
+                    if (condList instanceof java.util.List<?> list) {
+                        for (Object item : list) {
+                            if (item instanceof Number n) {
+                                builder.addContitionList(n.intValue());
+                            }
+                        }
                     }
+                } catch (Exception parseEx) {
+                    log.warn("[Knights] Failed to parse conditions JSON: {}", parseEx.getMessage());
                 }
             }
             Emitters.emit(session, 1627, builder.build().toByteArray());

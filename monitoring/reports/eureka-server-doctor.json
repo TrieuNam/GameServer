@@ -1,0 +1,20 @@
+{
+  "serviceName" : "eureka-server",
+  "displayName" : "Eureka Server",
+  "phase" : "P0",
+  "port" : 8761,
+  "serviceStatus" : "RUNNING",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "RuntimeException",
+  "lastErrorSummary" : "Caused by: java.net.SocketTimeoutException: Read timed out",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:26:12.454+07:00  INFO 63524 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 0ms", "2026-04-08T00:26:13.980+07:00  INFO 63524 --- [eureka-server] [   virtual-1701] c.n.e.registry.AbstractInstanceRegistry  : Registered instance ACTIVITY-SERVICE/localhost:activity-service:8382 with status UP (replication=false)", "2026-04-08T00:26:14.497+07:00  INFO 63524 --- [eureka-server] [   virtual-1706] c.n.e.registry.AbstractInstanceRegistry  : Registered instance ACTIVITY-SERVICE/localhost:activity-service:8382 with status UP (replication=true)", "2026-04-08T00:26:54.568+07:00  INFO 63524 --- [eureka-server] [   virtual-2028] c.n.e.registry.AbstractInstanceRegistry  : Registered instance MAIN-FB-SERVICE/WINDOWS-JQ9M1AH.lan:main-fb-service:8128 with status UP (replication=false)", "2026-04-08T00:26:54.897+07:00  INFO 63524 --- [eureka-server] [   virtual-2029] c.n.e.registry.AbstractInstanceRegistry  : Registered instance MAIN-FB-SERVICE/WINDOWS-JQ9M1AH.lan:main-fb-service:8128 with status UP (replication=true)", "2026-04-08T00:27:12.455+07:00  INFO 63524 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 0ms", "2026-04-08T00:28:12.455+07:00  INFO 63524 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 0ms", "2026-04-08T00:29:12.460+07:00  INFO 63524 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 4ms", "2026-04-08T00:30:12.460+07:00  INFO 63524 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 0ms", "2026-04-08T00:31:12.460+07:00  INFO 63524 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 0ms", "2026-04-08T00:32:12.470+07:00  INFO 63524 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 9ms", "2026-04-08T00:33:12.470+07:00  INFO 63524 --- [eureka-server] [a-EvictionTimer] c.n.e.registry.AbstractInstanceRegistry  : Running the evict task with compensationTime 0ms" ],
+  "lastUpdated" : "2026-04-08T00:33:54.3843088"
+}

@@ -1,0 +1,20 @@
+{
+  "serviceName" : "analytics-service",
+  "displayName" : "Analytics Service",
+  "phase" : "P3",
+  "port" : 8510,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:33:32.816+07:00  INFO 30896 --- [analytics-service] [    virtual-334] c.S.a.service.AnalyticsService           : Tracked event: WS_DISCONNECT for player: 9",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:32:16.826+07:00  INFO 30896 --- [analytics-service] [    virtual-326] c.S.a.service.AnalyticsService           : Tracked event: MSG_DISPATCH for player: 9", "2026-04-08T00:32:18.047+07:00  INFO 30896 --- [analytics-service] [    virtual-327] c.S.a.service.AnalyticsService           : Tracked event: MSG_DISPATCH for player: 9", "2026-04-08T00:32:20.256+07:00  INFO 30896 --- [analytics-service] [    virtual-328] c.S.a.service.AnalyticsService           : Tracked event: MSG_DISPATCH for player: 9", "2026-04-08T00:32:22.633+07:00  INFO 30896 --- [analytics-service] [    virtual-329] c.S.a.service.AnalyticsService           : Tracked event: MSG_DISPATCH for player: 9", "2026-04-08T00:32:24.657+07:00  INFO 30896 --- [analytics-service] [    virtual-330] c.S.a.service.AnalyticsService           : Tracked event: MSG_DISPATCH for player: 9", "2026-04-08T00:32:26.052+07:00  INFO 30896 --- [analytics-service] [tainer#10-0-C-1] c.S.a.service.AnalyticsService           : Tracked event: role.levelup for player: 9", "2026-04-08T00:32:26.113+07:00  INFO 30896 --- [analytics-service] [tainer#10-0-C-1] c.S.a.kafka.AnalyticsEventConsumer       : [TaskProgress][analytics] publishing eventId=00e4daf8-a20f-4b4b-8269-c5fa881360ac roleId=9 taskKey=level_up delta=10 source=role-service topic=task.progress.update", "2026-04-08T00:32:26.114+07:00  INFO 30896 --- [analytics-service] [tainer#10-0-C-1] c.S.a.kafka.AnalyticsEventConsumer       : [TaskProgress][analytics] published eventId=00e4daf8-a20f-4b4b-8269-c5fa881360ac roleId=9 taskKey=level_up delta=10", "2026-04-08T00:32:27.540+07:00  INFO 30896 --- [analytics-service] [    virtual-331] c.S.a.service.AnalyticsService           : Tracked event: MSG_DISPATCH for player: 9", "2026-04-08T00:32:32.310+07:00  INFO 30896 --- [analytics-service] [    virtual-332] c.S.a.service.AnalyticsService           : Tracked event: MSG_DISPATCH for player: 9", "2026-04-08T00:32:33.625+07:00  INFO 30896 --- [analytics-service] [    virtual-333] c.S.a.service.AnalyticsService           : Tracked event: MSG_DISPATCH for player: 9", "2026-04-08T00:33:32.816+07:00  INFO 30896 --- [analytics-service] [    virtual-334] c.S.a.service.AnalyticsService           : Tracked event: WS_DISCONNECT for player: 9" ],
+  "lastUpdated" : "2026-04-08T00:33:55.7663081"
+}

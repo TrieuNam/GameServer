@@ -1,0 +1,20 @@
+{
+  "serviceName" : "shizhuang-service",
+  "displayName" : "Shizhuang Service",
+  "phase" : "P3",
+  "port" : 8350,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:30:42.453+07:00  INFO 50572 --- [shizhuang-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:25:52.928+07:00  INFO 50572 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-08T00:25:52.928+07:00  INFO 50572 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-08T00:25:52.928+07:00  INFO 50572 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-08T00:25:52.928+07:00  INFO 50572 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-08T00:25:52.929+07:00  INFO 50572 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-08T00:25:52.929+07:00  INFO 50572 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:25:52.929+07:00  INFO 50572 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-08T00:25:52.929+07:00  INFO 50572 --- [shizhuang-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:27:31.767+07:00  INFO 50572 --- [shizhuang-service] [omcat-handler-0] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'", "2026-04-08T00:27:31.768+07:00  INFO 50572 --- [shizhuang-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'", "2026-04-08T00:27:31.771+07:00  INFO 50572 --- [shizhuang-service] [omcat-handler-0] o.s.web.servlet.DispatcherServlet        : Completed initialization in 3 ms", "2026-04-08T00:30:42.453+07:00  INFO 50572 --- [shizhuang-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:55.7015206"
+}

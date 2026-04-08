@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package activity;
+
+option java_package = "org.SouthMillion.proto.activity";
+option java_outer_classname = "ActivityServiceProto";
+option java_multiple_files = true;
+
+import "common.proto";
+
+service ActivityService {
+  rpc HandleRandActivity(RandActivityRequest) returns (GenericResponse);
+  rpc GetSevenDaySign(RoleRequest) returns (GenericResponse);
+  rpc ClaimSevenDaySign(SignClaimRequest) returns (GenericResponse);
+  rpc GetLuckUnpacking(RoleRequest) returns (GenericResponse);
+  rpc GetActivityData(ActivityDataRequest) returns (GenericResponse);
+}
+
+message RoleRequest {
+  int64 role_id = 1;
+}
+
+message RandActivityRequest {
+  int64 role_id = 1;
+  int32 activity_type = 2;
+  string op = 3;
+  string params_json = 4;
+}
+
+message SignClaimRequest {
+  int64 role_id = 1;
+  int32 day = 2;
+}
+
+message ActivityDataRequest {
+  int64 role_id = 1;
+  int32 activity_type = 2;
+}
+
+message GenericResponse {
+  bool success = 1;
+  string message = 2;
+  string data_json = 3;
+}

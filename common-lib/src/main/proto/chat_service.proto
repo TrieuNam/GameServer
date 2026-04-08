@@ -1,0 +1,63 @@
+syntax = "proto3";
+package chat;
+option java_package = "org.SouthMillion.proto.chat";
+option java_outer_classname = "ChatServiceProto";
+option java_multiple_files = true;
+import "common.proto";
+
+service ChatService {
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  rpc GetHistory(GetHistoryRequest) returns (GetHistoryResponse);
+  rpc MutePlayer(MutePlayerRequest) returns (common.ResponseStatus);
+  rpc UnmutePlayer(UnmutePlayerRequest) returns (common.ResponseStatus);
+}
+
+message SendMessageRequest {
+  int32 channel = 1;
+  string sender_id = 2;
+  string sender_name = 3;
+  string receiver_id = 4;
+  string receiver_name = 5;
+  string channel_id = 6;
+  string content = 7;
+}
+
+message SendMessageResponse {
+  bool success = 1;
+  string message = 2;
+  ChatMessageData msg = 3;
+}
+
+message GetHistoryRequest {
+  int32 channel = 1;
+  string role_id_1 = 2;
+  string role_id_2 = 3;
+  string channel_id = 4;
+  int32 count = 5;
+}
+
+message GetHistoryResponse {
+  bool success = 1;
+  repeated ChatMessageData messages = 2;
+}
+
+message MutePlayerRequest {
+  string role_id = 1;
+  string role_name = 2;
+  string reason = 3;
+  int32 duration_minutes = 4;
+}
+
+message UnmutePlayerRequest {
+  string role_id = 1;
+}
+
+message ChatMessageData {
+  int64 id = 1;
+  int32 channel = 2;
+  string sender_id = 3;
+  string sender_name = 4;
+  string receiver_id = 5;
+  string content = 6;
+  int64 created_at_ms = 7;
+}

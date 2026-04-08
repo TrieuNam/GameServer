@@ -2,7 +2,7 @@ package com.SouthMillion.webSocket_server.handler.gem;
 
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
-import com.SouthMillion.webSocket_server.service.client.GemFeign;
+import com.SouthMillion.webSocket_server.service.grpc.GemGrpcClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,7 +10,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -22,7 +21,7 @@ import static org.mockito.Mockito.verify;
 class GemHandlerTest {
 
     @Mock
-    private GemFeign gemFeign;
+    private GemGrpcClient gemGrpcClient;
     @Mock
     private TaskProgressPublisher taskProgressPublisher;
     @Mock
@@ -37,7 +36,7 @@ class GemHandlerTest {
                 gemHandler,
                 "publishTaskProgress",
                 2001L,
-                Map.of("success", true),
+                true,
                 "condition_82",
                 "websocket-gem-inlay"
         );
@@ -51,7 +50,7 @@ class GemHandlerTest {
                 gemHandler,
                 "publishTaskProgress",
                 2001L,
-                Map.of("success", false),
+                false,
                 "condition_82",
                 "websocket-gem-inlay"
         );

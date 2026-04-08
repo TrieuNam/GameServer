@@ -2,6 +2,10 @@ server:
   port: 8089
   shutdown: graceful
 
+grpc:
+  server:
+    port: 9650
+
 spring:
   profiles:
     active: local  # Default to local profile

@@ -46,6 +46,10 @@
 server:
   port: 8450
 
+grpc:
+  server:
+    port: 9603
+
 eureka:
   client:
     service-url:

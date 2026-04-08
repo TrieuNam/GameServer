@@ -1,0 +1,20 @@
+{
+  "serviceName" : "webSocket-server",
+  "displayName" : "WebSocket Server",
+  "phase" : "P0",
+  "port" : 8094,
+  "serviceStatus" : "RUNNING",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "RuntimeException",
+  "lastErrorSummary" : "io.grpc.StatusRuntimeException: INTERNAL: Failed to enter stage: [404] during [POST] to [http://item-service/api/item/9/consume] [ItemFeignClient#consumeItem(String,ChangeItemRequestDTO,String)]: [{\"ok\":false,\"message...",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:33:30.087+07:00 DEBUG 38984 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] config-service has no actuator health endpoint at http://192.168.1.23:8888/actuator/health, treating discovered instance as reachable", "2026-04-08T00:33:32.802+07:00 DEBUG 38984 --- [websocket-server] [ctor-http-nio-3] c.S.w.s.InMemoryPlayerSessionRegistry    : [registry] remove ws=45abd15a user=9f00ef5f-806c-423c-838e-165fcfe5bc63 role=9", "2026-04-08T00:33:32.803+07:00 DEBUG 38984 --- [websocket-server] [undedElastic-10] o.s.c.openfeign.support.SpringEncoder    : Writing [{wsId=45abd15a, eventCategory=SYSTEM, sessionId=9041be2128e045baab676c1491745d57, eventType=WS_DISCONNECT, signal=onComplete, playerId=9, timestamp=1775583212802}] using [org.springframework.http.converter.json.MappingJackson2HttpMessageConverter@5f53381a]", "2026-04-08T00:33:32.803+07:00 DEBUG 38984 --- [websocket-server] [undedElastic-10] c.S.w.service.FeignAuthInterceptor       : [feign] add Authorization (len=329, startsWithBearer=false) for POST /api/analytics/track", "2026-04-08T00:33:35.125+07:00 DEBUG 38984 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] world-service has no actuator health endpoint at http://192.168.1.23:8370/actuator/health, treating discovered instance as reachable", "2026-04-08T00:33:35.142+07:00 DEBUG 38984 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] config-service has no actuator health endpoint at http://192.168.1.23:8888/actuator/health, treating discovered instance as reachable", "2026-04-08T00:33:40.189+07:00 DEBUG 38984 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] world-service has no actuator health endpoint at http://192.168.1.23:8370/actuator/health, treating discovered instance as reachable", "2026-04-08T00:33:40.214+07:00 DEBUG 38984 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] config-service has no actuator health endpoint at http://192.168.1.23:8888/actuator/health, treating discovered instance as reachable", "2026-04-08T00:33:45.258+07:00 DEBUG 38984 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] world-service has no actuator health endpoint at http://192.168.1.23:8370/actuator/health, treating discovered instance as reachable", "2026-04-08T00:33:45.275+07:00 DEBUG 38984 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] config-service has no actuator health endpoint at http://192.168.1.23:8888/actuator/health, treating discovered instance as reachable", "2026-04-08T00:33:50.332+07:00 DEBUG 38984 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] world-service has no actuator health endpoint at http://192.168.1.23:8370/actuator/health, treating discovered instance as reachable", "2026-04-08T00:33:50.353+07:00 DEBUG 38984 --- [websocket-server] [adiness-monitor] c.S.w.config.StartupDependencyReadiness  : [startup] config-service has no actuator health endpoint at http://192.168.1.23:8888/actuator/health, treating discovered instance as reachable" ],
+  "lastUpdated" : "2026-04-08T00:33:54.4586438"
+}

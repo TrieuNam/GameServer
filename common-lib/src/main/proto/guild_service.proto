@@ -1,0 +1,51 @@
+syntax = "proto3";
+package guild;
+option java_package = "org.SouthMillion.proto.guild";
+option java_outer_classname = "GuildServiceProto";
+option java_multiple_files = true;
+import "common.proto";
+
+service GuildService {
+  rpc GetGuildInfo(GetGuildInfoRequest) returns (GuildInfoResponse);
+  rpc CreateGuild(CreateGuildRequest) returns (GuildInfoResponse);
+  rpc JoinGuild(JoinGuildRequest) returns (common.ResponseStatus);
+  rpc LeaveGuild(LeaveGuildRequest) returns (common.ResponseStatus);
+  rpc GetMemberGuild(GetMemberGuildRequest) returns (GuildInfoResponse);
+  rpc ListGuilds(ListGuildsRequest) returns (ListGuildsResponse);
+}
+
+message GetGuildInfoRequest { int64 guild_id = 1; }
+message GetMemberGuildRequest { string role_id = 1; }
+message JoinGuildRequest { string role_id = 1; int64 guild_id = 2; }
+message LeaveGuildRequest { string role_id = 1; }
+message ListGuildsRequest { int32 page = 1; int32 size = 2; }
+
+message CreateGuildRequest {
+  string name = 1;
+  string leader_id = 2;
+  string notice = 3;
+}
+
+message GuildInfoResponse {
+  bool success = 1;
+  string message = 2;
+  GuildData guild = 3;
+}
+
+message ListGuildsResponse {
+  bool success = 1;
+  repeated GuildData guilds = 2;
+  int64 total = 3;
+}
+
+message GuildData {
+  int64 id = 1;
+  string name = 2;
+  string notice = 3;
+  int64 leader_id = 4;
+  int32 level = 5;
+  int64 exp = 6;
+  int32 member_count = 7;
+  int32 max_members = 8;
+  int64 created_at_ms = 9;
+}

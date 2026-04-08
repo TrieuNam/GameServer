@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package shizhuang;
+
+option java_package = "org.SouthMillion.proto.shizhuang";
+option java_outer_classname = "ShizhuangServiceProto";
+option java_multiple_files = true;
+
+import "common.proto";
+
+service ShizhuangService {
+  rpc ListByRole(RoleRequest) returns (ShizhuangListResponse);
+  rpc GetInfo(GetInfoRequest) returns (ShizhuangInfoResponse);
+  rpc Activate(ActivateRequest) returns (OperationResponse);
+  rpc Wear(WearRequest) returns (OperationResponse);
+  rpc LevelUp(LevelUpRequest) returns (OperationResponse);
+}
+
+message RoleRequest {
+  int64 role_id = 1;
+}
+
+message GetInfoRequest {
+  int64 role_id = 1;
+  int32 shizhuang_id = 2;
+}
+
+message ActivateRequest {
+  int64 role_id = 1;
+  int32 shizhuang_id = 2;
+}
+
+message WearRequest {
+  int64 role_id = 1;
+  int32 shizhuang_id = 2;
+}
+
+message LevelUpRequest {
+  int64 role_id = 1;
+  int32 shizhuang_id = 2;
+}
+
+message ShizhuangData {
+  int64 id = 1;
+  int64 role_id = 2;
+  int32 shizhuang_id = 3;
+  bool activated = 4;
+  bool wearing = 5;
+  int32 level = 6;
+}
+
+message ShizhuangListResponse {
+  bool success = 1;
+  string message = 2;
+  repeated ShizhuangData items = 3;
+}
+
+message ShizhuangInfoResponse {
+  bool success = 1;
+  string message = 2;
+  ShizhuangData info = 3;
+}
+
+message OperationResponse {
+  bool success = 1;
+  string message = 2;
+}

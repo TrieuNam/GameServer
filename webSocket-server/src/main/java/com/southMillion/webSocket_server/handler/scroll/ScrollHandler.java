@@ -3,15 +3,14 @@ package com.SouthMillion.webSocket_server.handler.scroll;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
-import com.SouthMillion.webSocket_server.service.client.ScrollFeign;
+import com.SouthMillion.webSocket_server.service.grpc.ScrollGrpcClient;
+import org.SouthMillion.proto.scroll.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.proto.Msgscroll.Msgscroll;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Map;
 
 /**
  * Handles scroll/lottery system operations.
@@ -27,7 +26,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ScrollHandler implements MessageHandler {
 
-    private final ScrollFeign scrollFeign;
+    private final ScrollGrpcClient scrollGrpcClient;
 
     private static final int OP_GET_INFO  = 0;
     private static final int OP_DRAW      = 1;
@@ -77,17 +76,17 @@ public class ScrollHandler implements MessageHandler {
     }
 
     private void handleDraw(PlayerSession session, Long roleId, int count) {
-        scrollFeign.draw(String.valueOf(roleId), count > 0 ? count : 1);
+        scrollGrpcClient.draw(roleId, count > 0 ? count : 1);
         sendScrollInfo(session, roleId);
     }
 
     private void sendScrollInfo(PlayerSession session, Long roleId) {
         try {
-            Map<String, Object> meta = scrollFeign.getInfo(String.valueOf(roleId));
+            ScrollMetaResponse resp = scrollGrpcClient.getMeta(roleId);
             Msgscroll.PB_SCScrollInfo.Builder builder = Msgscroll.PB_SCScrollInfo.newBuilder();
-            if (meta != null) {
-                if (meta.get("freeNum") instanceof Number n)  builder.setFreeNum(n.intValue());
-                if (meta.get("baoDiNum") instanceof Number n) builder.setBaoDiNum(n.intValue());
+            if (resp.getSuccess() && resp.hasMeta()) {
+                builder.setFreeNum(resp.getMeta().getFreeNum());
+                builder.setBaoDiNum(resp.getMeta().getBaoDiNum());
             }
             Emitters.emit(session, 2171, builder.build().toByteArray());
         } catch (Exception e) {
@@ -98,18 +97,16 @@ public class ScrollHandler implements MessageHandler {
 
     private void sendListInfo(PlayerSession session, Long roleId) {
         try {
-            List<Map<String, Object>> items = scrollFeign.getList(String.valueOf(roleId));
+            GetListResponse resp = scrollGrpcClient.getList(roleId);
             Msgscroll.PB_SCScrollListInfo.Builder builder = Msgscroll.PB_SCScrollListInfo.newBuilder();
-            if (items != null) {
-                for (Map<String, Object> item : items) {
-                    Msgscroll.PB_ScrollData.Builder sd = Msgscroll.PB_ScrollData.newBuilder();
-                    if (item.get("scrollIndex") instanceof Number n) sd.setIndex(n.intValue());
-                    if (item.get("itemId") instanceof Number n)      sd.setItemId(n.intValue());
-                    if (item.get("level") instanceof Number n)       sd.setLevel(n.intValue());
-                    if (item.get("wearMark") instanceof Number n)    sd.setWearMark(n.intValue());
-                    if (item.get("param") instanceof Number n)       sd.setParam(n.intValue());
-                    builder.addScrollList(sd.build());
-                }
+            for (ScrollItemData item : resp.getItemsList()) {
+                Msgscroll.PB_ScrollData.Builder sd = Msgscroll.PB_ScrollData.newBuilder();
+                sd.setIndex(item.getScrollIndex());
+                sd.setItemId(item.getItemId());
+                sd.setLevel(item.getLevel());
+                sd.setWearMark(item.getWearMark());
+                sd.setParam(item.getParam());
+                builder.addScrollList(sd.build());
             }
             Emitters.emit(session, 2172, builder.build().toByteArray());
         } catch (Exception e) {

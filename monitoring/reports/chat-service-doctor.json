@@ -1,0 +1,20 @@
+{
+  "serviceName" : "chat-service",
+  "displayName" : "Chat Service",
+  "phase" : "P2",
+  "port" : 8460,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:33:19.969+07:00  INFO 15504 --- [chat-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:23:26.602+07:00  INFO 15504 --- [chat-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENV JAVA_OPTS=\"<arguments above>\"", "2026-04-08T00:23:26.603+07:00  INFO 15504 --- [chat-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    ENTRYPOINT java $JAVA_OPTS -jar app.jar", "2026-04-08T00:23:26.603+07:00  INFO 15504 --- [chat-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-08T00:23:26.603+07:00  INFO 15504 --- [chat-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-08T00:23:26.603+07:00  INFO 15504 --- [chat-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-08T00:23:26.603+07:00  INFO 15504 --- [chat-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-08T00:23:26.603+07:00  INFO 15504 --- [chat-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-08T00:23:26.603+07:00  INFO 15504 --- [chat-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:23:26.603+07:00  INFO 15504 --- [chat-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-08T00:23:26.603+07:00  INFO 15504 --- [chat-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:28:19.953+07:00  INFO 15504 --- [chat-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-08T00:33:19.969+07:00  INFO 15504 --- [chat-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:55.462858"
+}

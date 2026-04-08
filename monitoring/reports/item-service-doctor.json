@@ -1,0 +1,20 @@
+{
+  "serviceName" : "item-service",
+  "displayName" : "Item Service",
+  "phase" : "P3",
+  "port" : 8220,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:32:33.656+07:00  WARN 58892 --- [item-service] [    virtual-382] c.S.i.exception.GlobalExceptionHandler   : [item-service] No resource on POST /api/item/9/consume",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:25:06.163+07:00  INFO 58892 --- [item-service] [           main] c.S.c.o.JvmArgumentsSuggester            : ", "2026-04-08T00:25:06.163+07:00  INFO 58892 --- [item-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â˜¸ï¸  Kubernetes example:", "2026-04-08T00:25:06.261+07:00  INFO 58892 --- [item-service] [           main] c.S.c.o.JvmArgumentsSuggester            :    resources:", "2026-04-08T00:25:06.263+07:00  INFO 58892 --- [item-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      limits:", "2026-04-08T00:25:06.264+07:00  INFO 58892 --- [item-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"96Mi\"", "2026-04-08T00:25:06.264+07:00  INFO 58892 --- [item-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:25:06.264+07:00  INFO 58892 --- [item-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-08T00:25:06.264+07:00  INFO 58892 --- [item-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:25:12.790+07:00  WARN 58892 --- [item-service] [    virtual-107] o.s.b.a.health.HealthEndpointSupport     : Health contributor org.springframework.boot.actuate.autoconfigure.health.HealthEndpointConfiguration$AdaptedReactiveHealthContributors$1 (redis) took 10212ms to respond", "2026-04-08T00:29:51.743+07:00  INFO 58892 --- [item-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-08T00:32:32.609+07:00  WARN 58892 --- [item-service] [    virtual-381] c.S.i.exception.GlobalExceptionHandler   : [item-service] No resource on POST /api/item/9/consume", "2026-04-08T00:32:33.656+07:00  WARN 58892 --- [item-service] [    virtual-382] c.S.i.exception.GlobalExceptionHandler   : [item-service] No resource on POST /api/item/9/consume" ],
+  "lastUpdated" : "2026-04-08T00:33:55.6858551"
+}

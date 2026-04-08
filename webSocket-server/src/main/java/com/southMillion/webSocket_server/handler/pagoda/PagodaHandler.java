@@ -5,14 +5,15 @@ import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
-import com.SouthMillion.webSocket_server.service.client.PagodaFeign;
+import com.SouthMillion.webSocket_server.service.grpc.PagodaGrpcClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.SouthMillion.proto.pagoda.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.proto.Msgpagoda.Msgpagoda;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.Map;
 
 /**
  * Handles tower/pagoda dungeon operations.
@@ -28,7 +29,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PagodaHandler implements MessageHandler {
 
-    private final PagodaFeign pagodaFeign;
+    private final PagodaGrpcClient pagodaGrpcClient;
+    private final ObjectMapper objectMapper;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;
 
@@ -83,28 +85,29 @@ public class PagodaHandler implements MessageHandler {
 
             switch (type) {
                 case OP_CHALLENGE -> {
-                    Map<String, Object> challenge = pagodaFeign.challengeShiLian(String.valueOf(roleId), p1);
-                    if (isShiLianChallengeSuccess(challenge, p1)) {
+                    ShiLianResponse challenge = pagodaGrpcClient.challengeShiLian(roleId, p1);
+                    if (challenge.getSuccess() && challenge.hasShilian() && challenge.getShilian().getPassLevel() >= p1) {
                         publishTaskProgress(roleId, taskActionConditionMapping.pagodaShilianChallengeTaskKey(), "websocket-pagoda-shilian-challenge");
                     }
                 }
                 case OP_CLAIM -> {
-                    Boolean claimed = pagodaFeign.claimShiLian(String.valueOf(roleId), p1);
-                    if (Boolean.TRUE.equals(claimed)) {
+                    BoolResponse claimed = pagodaGrpcClient.claimShiLian(roleId, p1);
+                    if (claimed.getResult()) {
                         publishTaskProgress(roleId, taskActionConditionMapping.pagodaShilianClaimTaskKey(), "websocket-pagoda-shilian-claim");
                     }
                 }
                 default           -> {} // GET_INFO — just fetch below
             }
 
-            Map<String, Object> data = pagodaFeign.getShiLian(String.valueOf(roleId));
+            ShiLianResponse data = pagodaGrpcClient.getShiLian(roleId);
             Msgpagoda.PB_SCShiLianPagodaInfo.Builder builder = Msgpagoda.PB_SCShiLianPagodaInfo.newBuilder();
-            if (data != null) {
-                if (data.get("passLevel") instanceof Number n)     builder.setPassLevel(n.intValue());
-                if (data.get("bestLevel") instanceof Number n)     builder.setBestLeve(n.intValue());
-                if (data.get("useItem") instanceof Number n)       builder.addUseItem(n.intValue());
-                if (data.get("randomId") instanceof Number n)      builder.addRandomId(n.intValue());
-                if (data.get("seasonEndTime") instanceof Number n) builder.setSeasonEndTime(n.intValue());
+            if (data.getSuccess() && data.hasShilian()) {
+                ShiLianData sl = data.getShilian();
+                builder.setPassLevel(sl.getPassLevel());
+                builder.setBestLeve(sl.getBestLevel());
+                builder.addUseItem(sl.getUseItem());
+                builder.addRandomId(sl.getRandomId());
+                builder.setSeasonEndTime((int) sl.getSeasonEndTime());
             }
             Emitters.emit(session, 2121, builder.build().toByteArray());
         } catch (Exception e) {
@@ -126,25 +129,32 @@ public class PagodaHandler implements MessageHandler {
 
             switch (type) {
                 case OP_CHALLENGE -> {
-                    Map<String, Object> challenge = pagodaFeign.challengeGuMo(String.valueOf(roleId), p1);
-                    if (isGuMoChallengeSuccess(challenge, p1)) {
+                    GenericResponse challenge = pagodaGrpcClient.challengeGuMo(roleId, p1);
+                    if (challenge.getSuccess()) {
                         publishTaskProgress(roleId, taskActionConditionMapping.pagodaGumoChallengeTaskKey(), "websocket-pagoda-gumo-challenge");
                     }
                 }
                 case OP_CLAIM -> {
-                    Boolean claimed = pagodaFeign.claimGuMo(String.valueOf(roleId), p1);
-                    if (Boolean.TRUE.equals(claimed)) {
+                    BoolResponse claimed = pagodaGrpcClient.claimGuMo(roleId, p1);
+                    if (claimed.getResult()) {
                         publishTaskProgress(roleId, taskActionConditionMapping.pagodaGumoClaimTaskKey(), "websocket-pagoda-gumo-claim");
                     }
                 }
                 default           -> {}
             }
 
-            Map<String, Object> data = pagodaFeign.getGuMo(String.valueOf(roleId));
+            GenericResponse data = pagodaGrpcClient.getGuMo(roleId);
             Msgpagoda.PB_SCGuMoPagodaListInfo.Builder builder = Msgpagoda.PB_SCGuMoPagodaListInfo.newBuilder();
-            if (data != null) {
-                if (data.get("dayReward") instanceof Number n)    builder.setDayReward(n.intValue());
-                if (data.get("lastdayLevel") instanceof Number n) builder.setLastdayLevel(n.intValue());
+            if (data.getSuccess() && !data.getDataJson().isBlank()) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    java.util.Map<String, Object> parsed =
+                            objectMapper.readValue(data.getDataJson(), java.util.Map.class);
+                    if (parsed.get("dayReward") instanceof Number n)    builder.setDayReward(n.intValue());
+                    if (parsed.get("lastdayLevel") instanceof Number n) builder.setLastdayLevel(n.intValue());
+                } catch (Exception parseEx) {
+                    log.warn("[Pagoda/GuMo] Failed to parse GuMo data JSON: {}", parseEx.getMessage());
+                }
             }
             Emitters.emit(session, 2123, builder.build().toByteArray());
         } catch (Exception e) {
@@ -153,57 +163,6 @@ public class PagodaHandler implements MessageHandler {
                 Emitters.emit(session, 2123, Msgpagoda.PB_SCGuMoPagodaListInfo.newBuilder().build().toByteArray());
             } catch (Exception ignored) {}
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private boolean isGuMoChallengeSuccess(Map<String, Object> challengeResult, int layerId) {
-        if (layerId <= 0 || challengeResult == null) {
-            return false;
-        }
-        Object layersRaw = challengeResult.get("layers");
-        if (!(layersRaw instanceof java.util.List<?> layers)) {
-            return false;
-        }
-        for (Object layerObj : layers) {
-            if (!(layerObj instanceof Map<?, ?> raw)) {
-                continue;
-            }
-            Map<String, Object> layer = (Map<String, Object>) raw;
-            Integer currentLayer = getInt(layer, "layerId", "layer_id");
-            Integer starFlag = getInt(layer, "starFlag", "star_flag");
-            if (currentLayer != null && currentLayer == layerId && starFlag != null && starFlag > 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isShiLianChallengeSuccess(Map<String, Object> challengeResult, int level) {
-        if (level <= 0 || challengeResult == null) {
-            return false;
-        }
-        Integer passLevel = getInt(challengeResult, "passLevel", "pass_level");
-        return passLevel != null && passLevel >= level;
-    }
-
-    private Integer getInt(Map<String, Object> map, String... keys) {
-        if (map == null || keys == null) {
-            return null;
-        }
-        for (String key : keys) {
-            Object value = map.get(key);
-            if (value instanceof Number n) {
-                return n.intValue();
-            }
-            if (value != null) {
-                try {
-                    return Integer.parseInt(String.valueOf(value));
-                } catch (Exception ignored) {
-                    // ignore parse errors and continue checking other keys
-                }
-            }
-        }
-        return null;
     }
 
     private void publishTaskProgress(Long roleId, String taskKey, String source) {

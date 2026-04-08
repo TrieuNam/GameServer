@@ -1,0 +1,20 @@
+{
+  "serviceName" : "main-fb-service",
+  "displayName" : "Main FB Service",
+  "phase" : "P4",
+  "port" : 8128,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "Hibernate: select mftpe1_0.id,mftpe1_0.done_index,mftpe1_0.player_id,mftpe1_0.updated_at from mainfb_task_progress mftpe1_0 where mftpe1_0.player_id=?",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:27:00.244+07:00  INFO 62324 --- [main-fb-service] [           main] c.S.c.o.JvmArgumentsSuggester            :      requests:", "2026-04-08T00:27:00.244+07:00  INFO 62324 --- [main-fb-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"48Mi\"", "2026-04-08T00:27:00.244+07:00  INFO 62324 --- [main-fb-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "Hibernate: select mfspe1_0.id,mfspe1_0.best_score,mfspe1_0.clear_count,mfspe1_0.first_clear_ts,mfspe1_0.last_clear_ts,mfspe1_0.level,mfspe1_0.player_id,mfspe1_0.stage from main_fb_stage_progress mfspe1_0 where mfspe1_0.player_id=?", "Hibernate: select mftpe1_0.id,mftpe1_0.done_index,mftpe1_0.player_id,mftpe1_0.updated_at from mainfb_task_progress mftpe1_0 where mftpe1_0.player_id=?", "2026-04-08T00:31:53.658+07:00  INFO 62324 --- [main-fb-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "Hibernate: select mftpe1_0.id,mftpe1_0.done_index,mftpe1_0.player_id,mftpe1_0.updated_at from mainfb_task_progress mftpe1_0 where mftpe1_0.player_id=?", "Hibernate: select mfspe1_0.id,mfspe1_0.best_score,mfspe1_0.clear_count,mfspe1_0.first_clear_ts,mfspe1_0.last_clear_ts,mfspe1_0.level,mfspe1_0.player_id,mfspe1_0.stage from main_fb_stage_progress mfspe1_0 where mfspe1_0.player_id=?", "Hibernate: select mftpe1_0.id,mftpe1_0.done_index,mftpe1_0.player_id,mftpe1_0.updated_at from mainfb_task_progress mftpe1_0 where mftpe1_0.player_id=?", "Hibernate: select mftpe1_0.id,mftpe1_0.done_index,mftpe1_0.player_id,mftpe1_0.updated_at from mainfb_task_progress mftpe1_0 where mftpe1_0.player_id=?", "Hibernate: select mfspe1_0.id,mfspe1_0.best_score,mfspe1_0.clear_count,mfspe1_0.first_clear_ts,mfspe1_0.last_clear_ts,mfspe1_0.level,mfspe1_0.player_id,mfspe1_0.stage from main_fb_stage_progress mfspe1_0 where mfspe1_0.player_id=?", "Hibernate: select mftpe1_0.id,mftpe1_0.done_index,mftpe1_0.player_id,mftpe1_0.updated_at from mainfb_task_progress mftpe1_0 where mftpe1_0.player_id=?" ],
+  "lastUpdated" : "2026-04-08T00:33:55.9587534"
+}

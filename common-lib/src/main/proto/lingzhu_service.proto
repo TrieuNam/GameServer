@@ -1,0 +1,61 @@
+syntax = "proto3";
+
+package lingzhu;
+
+option java_package = "org.SouthMillion.proto.lingzhu";
+option java_outer_classname = "LingZhuServiceProto";
+option java_multiple_files = true;
+
+import "common.proto";
+
+// LingZhu (Lord Dungeon) gRPC Service Definition
+service LingZhuService {
+  // Get all lingzhu progress for a role
+  rpc GetAll(GetAllRequest) returns (GetAllResponse);
+
+  // Challenge a stage level
+  rpc Challenge(ChallengeRequest) returns (GenericResponse);
+
+  // Sweep (auto-clear) a stage multiple times
+  rpc Sweep(SweepRequest) returns (GenericResponse);
+}
+
+// Request Messages
+
+message GetAllRequest {
+  int64 role_id = 1;
+}
+
+message ChallengeRequest {
+  int64 role_id = 1;
+  int32 stage = 2;
+  int32 p1 = 3;
+}
+
+message SweepRequest {
+  int64 role_id = 1;
+  int32 stage = 2;
+  int32 count = 3;
+}
+
+// Response Messages
+
+message LingZhuProgressData {
+  int64 id = 1;
+  int64 role_id = 2;
+  int32 stage = 3;
+  int32 pass_level = 4;
+  int32 sweep_count = 5;
+}
+
+message GetAllResponse {
+  bool success = 1;
+  string message = 2;
+  repeated LingZhuProgressData items = 3;
+}
+
+message GenericResponse {
+  bool success = 1;
+  string message = 2;
+  string data_json = 3;  // JSON serialized result
+}

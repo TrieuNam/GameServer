@@ -1,0 +1,20 @@
+{
+  "serviceName" : "box-service",
+  "displayName" : "Box Service",
+  "phase" : "P1",
+  "port" : 8290,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:32:26.100+07:00  INFO 1456 --- [box-service] [cat-handler-514] c.S.box_service.service.BoxService       : [box] wear finalized roleId=9 wornItemId=8564 replacedItemId=8556",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:32:21.662+07:00  INFO 1456 --- [box-service] [cat-handler-506] c.S.box_service.service.BoxService       : [box] auto sold old equip roleId=9 itemId=16040 coin=1 exp=22 source=BOX_WEAR_AUTO_SELL_OLD", "2026-04-08T00:32:21.688+07:00  INFO 1456 --- [box-service] [cat-handler-506] c.S.box_service.service.BoxService       : [box] wear finalized roleId=9 wornItemId=16064 replacedItemId=16040", "2026-04-08T00:32:22.694+07:00  INFO 1456 --- [box-service] [cat-handler-511] c.S.box_service.service.BoxService       : [box.open] roleId=9 requestedCount=1 normalizedCount=1 isFive=false openBoxTotalBefore=68 lastOpenIsFive=false pendingJsonPresent=false", "2026-04-08T00:32:22.696+07:00  INFO 1456 --- [box-service] [cat-handler-511] c.S.box_service.service.BoxService       : [box.open.trace] roleId=9 step=resolveWearItem elapsedMs=2 hasPending=false pendingItemId=null", "2026-04-08T00:32:22.696+07:00  INFO 1456 --- [box-service] [cat-handler-511] c.S.box_service.service.BoxService       : [box.open] consuming-box roleId=9 boxItemId=40004 need=1 hitFixedThisOpen=false nextFixedStep=282 openBoxTotalBefore=68", "2026-04-08T00:32:22.747+07:00  INFO 1456 --- [box-service] [cat-handler-511] c.S.box_service.service.BoxService       : [box.open] consume-ok roleId=9 boxItemId=40004 need=1 source=BOX_OPEN", "2026-04-08T00:32:22.756+07:00  INFO 1456 --- [box-service] [cat-handler-511] c.S.box_service.service.BoxService       : [box.open.trace] roleId=9 step=random-compareLookup part=3 elapsedMs=8 lookupFailed=false currentItemId=8556", "2026-04-08T00:32:22.758+07:00  INFO 1456 --- [box-service] [cat-handler-511] c.S.box_service.service.BoxService       : [box.compare.state] roleId=9 stateVersion=50fbe226-4f6c-4c9d-a476-ec9c58a11606 source=BOX_OPEN status=PENDING_COMPARE candidateItemId=8564 equippedBeforeItemId=8556 candidateStats=hp=253 atk=212 def=70 spd=47 equippedBeforeStats=hp=226 atk=188 def=62 spd=46", "2026-04-08T00:32:22.829+07:00  INFO 1456 --- [box-service] [cat-handler-511] c.S.box_service.service.BoxService       : [box.open.trace] roleId=9 branch=random-equip resultItemId=8564 compareStatus=PENDING_COMPARE bonusCount=1 totalMs=141", "2026-04-08T00:32:22.947+07:00  INFO 1456 --- [box-service] [cat-handler-512] c.S.box_service.service.BoxService       : [box.info] roleId=9 elapsedMs=58 pending=true pendingItemId=8564 openBoxTotal=69 lastOpenIsFive=false", "2026-04-08T00:32:26.057+07:00  INFO 1456 --- [box-service] [cat-handler-514] c.S.box_service.service.BoxService       : [box] auto sold old equip roleId=9 itemId=8556 coin=1 exp=26 source=BOX_WEAR_AUTO_SELL_OLD", "2026-04-08T00:32:26.100+07:00  INFO 1456 --- [box-service] [cat-handler-514] c.S.box_service.service.BoxService       : [box] wear finalized roleId=9 wornItemId=8564 replacedItemId=8556" ],
+  "lastUpdated" : "2026-04-08T00:33:54.9389255"
+}

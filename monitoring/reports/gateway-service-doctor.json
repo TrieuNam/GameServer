@@ -1,0 +1,20 @@
+{
+  "serviceName" : "gateway-service",
+  "displayName" : "Gateway Service",
+  "phase" : "P0",
+  "port" : 8080,
+  "serviceStatus" : "RUNNING",
+  "doctorStatus" : "STARTED",
+  "watched" : false,
+  "approvalRequired" : false,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : null,
+  "lastErrorSummary" : "Service is running normally",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:19:21.569+07:00  INFO 59480 --- [gateway-service] [           main] c.S.c.o.JvmArgumentsSuggester            :        memory: \"128Mi\"", "2026-04-08T00:19:21.570+07:00  INFO 59480 --- [gateway-service] [           main] c.S.c.o.JvmArgumentsSuggester            : â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•", "2026-04-08T00:19:46.040+07:00  INFO 59480 --- [gateway-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Disable delta property : false", "2026-04-08T00:19:46.040+07:00  INFO 59480 --- [gateway-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null", "2026-04-08T00:19:46.040+07:00  INFO 59480 --- [gateway-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false", "2026-04-08T00:19:46.040+07:00  INFO 59480 --- [gateway-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Application is null : false", "2026-04-08T00:19:46.041+07:00  INFO 59480 --- [gateway-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true", "2026-04-08T00:19:46.041+07:00  INFO 59480 --- [gateway-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Application version is -1: false", "2026-04-08T00:19:46.041+07:00  INFO 59480 --- [gateway-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server", "2026-04-08T00:19:46.093+07:00  INFO 59480 --- [gateway-service] [reshExecutor-%d] com.netflix.discovery.DiscoveryClient    : The response status is 200", "2026-04-08T00:24:15.113+07:00  INFO 59480 --- [gateway-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration", "2026-04-08T00:29:15.124+07:00  INFO 59480 --- [gateway-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:54.4358758"
+}

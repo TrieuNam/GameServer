@@ -2,7 +2,8 @@ package com.SouthMillion.webSocket_server.handler.pagoda;
 
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
-import com.SouthMillion.webSocket_server.service.client.PagodaFeign;
+import com.SouthMillion.webSocket_server.service.grpc.PagodaGrpcClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,7 +21,9 @@ import static org.mockito.Mockito.verify;
 class PagodaHandlerTest {
 
     @Mock
-    private PagodaFeign pagodaFeign;
+    private PagodaGrpcClient pagodaGrpcClient;
+    @Mock
+    private ObjectMapper objectMapper;
     @Mock
     private TaskProgressPublisher taskProgressPublisher;
     @Mock

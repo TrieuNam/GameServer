@@ -1,0 +1,20 @@
+{
+  "serviceName" : "task-service",
+  "displayName" : "Task Service",
+  "phase" : "P2",
+  "port" : 8097,
+  "serviceStatus" : "ERROR",
+  "doctorStatus" : "ERROR",
+  "watched" : false,
+  "approvalRequired" : true,
+  "autoApprovalEnabled" : false,
+  "copilotReady" : false,
+  "lastErrorType" : "UnhandledError",
+  "lastErrorSummary" : "2026-04-08T00:32:49.696+07:00  INFO 65540 --- [task-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration",
+  "decisionNote" : null,
+  "promptFile" : null,
+  "reportFile" : null,
+  "lastCommand" : null,
+  "recentLogs" : [ "2026-04-08T00:32:26.134+07:00  INFO 65540 --- [task-service] [        kafka-1] c.S.t.service.TaskDomainService          : Reporting progress for player: 9, task: level_up, delta: 10", "2026-04-08T00:32:26.150+07:00  INFO 65540 --- [task-service] [        kafka-1] c.S.t.service.TaskDomainService          : Task completed: level_up for player: 9", "2026-04-08T00:32:26.193+07:00  INFO 65540 --- [task-service] [mcat-handler-82] c.S.t.service.TaskDomainService          : Getting all tasks for player: 9", "2026-04-08T00:32:26.206+07:00  INFO 65540 --- [task-service] [mcat-handler-83] c.S.t.service.TaskDomainService          : Getting all tasks for player: 9", "2026-04-08T00:32:27.532+07:00  INFO 65540 --- [task-service] [mcat-handler-84] c.S.t.service.TaskDomainService          : Getting all tasks for player: 9", "2026-04-08T00:32:27.547+07:00  INFO 65540 --- [task-service] [mcat-handler-85] c.S.t.service.TaskDomainService          : [Task] advanceTask for player: 9", "2026-04-08T00:32:27.608+07:00  INFO 65540 --- [task-service] [    virtual-260] c.S.t.service.TaskDomainService          : Granted bag items to player 9: item:40004:5 (parsedItems=1, eventId=task:9:8)", "2026-04-08T00:32:27.608+07:00  INFO 65540 --- [task-service] [mcat-handler-85] c.S.t.service.TaskDomainService          : [Task] Granted rewards for task '8' → player 9: gold=0, exp=0", "2026-04-08T00:32:27.614+07:00  INFO 65540 --- [task-service] [mcat-handler-85] c.S.t.service.TaskDomainService          : [Task] Player 9 advanced from task 7 ('8') to task 8", "2026-04-08T00:32:27.643+07:00  INFO 65540 --- [task-service] [mcat-handler-86] c.S.t.service.TaskDomainService          : Getting all tasks for player: 9", "2026-04-08T00:32:27.688+07:00  INFO 65540 --- [task-service] [mcat-handler-87] c.S.t.service.TaskDomainService          : Getting all tasks for player: 9", "2026-04-08T00:32:49.696+07:00  INFO 65540 --- [task-service] [rap-executor-%d] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration" ],
+  "lastUpdated" : "2026-04-08T00:33:55.25319"
+}

@@ -1,0 +1,89 @@
+syntax = "proto3";
+package mail;
+option java_package = "org.SouthMillion.proto.mail";
+option java_outer_classname = "MailServiceProto";
+option java_multiple_files = true;
+import "common.proto";
+
+service MailService {
+  rpc SendMail(SendMailRequest) returns (SendMailResponse);
+  rpc SendBulkMail(SendBulkMailRequest) returns (SendBulkMailResponse);
+  rpc GetMailList(GetMailListRequest) returns (GetMailListResponse);
+  rpc ReadMail(ReadMailRequest) returns (MailResponse);
+  rpc ClaimAttachment(ClaimAttachmentRequest) returns (ClaimAttachmentResponse);
+  rpc DeleteMail(DeleteMailRequest) returns (common.ResponseStatus);
+  rpc FetchAllAttachments(FetchAllAttachmentsRequest) returns (FetchAllAttachmentsResponse);
+}
+
+message SendMailRequest {
+  string sender_id = 1;
+  string sender_name = 2;
+  string receiver_id = 3;
+  string title = 4;
+  string content = 5;
+  int32 mail_type = 6;
+  repeated MailAttachmentData attachments = 7;
+}
+
+message SendBulkMailRequest {
+  string sender_id = 1;
+  string sender_name = 2;
+  repeated string receiver_ids = 3;
+  string title = 4;
+  string content = 5;
+  int32 mail_type = 6;
+  repeated MailAttachmentData attachments = 7;
+}
+
+message GetMailListRequest { string role_id = 1; }
+message ReadMailRequest { int64 mail_id = 1; }
+message ClaimAttachmentRequest { int64 mail_id = 1; }
+message DeleteMailRequest { int64 mail_id = 1; }
+message FetchAllAttachmentsRequest { string role_id = 1; }
+
+message MailAttachmentData {
+  int32 item_id = 1;
+  int32 quantity = 2;
+  string currency_type = 3;
+  int64 currency_amount = 4;
+}
+
+message SendMailResponse { bool success = 1; string message = 2; int64 mail_id = 3; }
+message SendBulkMailResponse { bool success = 1; string message = 2; int32 sent_count = 3; }
+
+message GetMailListResponse {
+  bool success = 1;
+  repeated MailData mails = 2;
+  int32 unread_count = 3;
+}
+
+message MailResponse {
+  bool success = 1;
+  string message = 2;
+  MailData mail = 3;
+}
+
+message ClaimAttachmentResponse {
+  bool success = 1;
+  string message = 2;
+  repeated MailAttachmentData claimed = 3;
+}
+
+message FetchAllAttachmentsResponse {
+  bool success = 1;
+  int32 claimed_count = 2;
+}
+
+message MailData {
+  int64 id = 1;
+  string sender_id = 2;
+  string sender_name = 3;
+  string receiver_id = 4;
+  string title = 5;
+  string content = 6;
+  int32 mail_type = 7;
+  bool is_read = 8;
+  bool has_attachment = 9;
+  bool attachment_claimed = 10;
+  int64 created_at_ms = 11;
+}
