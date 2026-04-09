@@ -209,4 +209,82 @@ public class GameWorldGrpcClient {
             return false;
         }
     }
+
+    /**
+     * Pickup item from world
+     * @return PickupItemResponse with item details or error code
+     */
+    public PickupItemResponse pickupItem(Long roleId, long itemUid, int zoneId, float playerX, float playerY, float playerZ) {
+        try {
+            Position playerPosition = Position.newBuilder()
+                    .setX(playerX)
+                    .setY(playerY)
+                    .setZ(playerZ)
+                    .build();
+
+            PickupItemRequest request = PickupItemRequest.newBuilder()
+                    .setRoleId(roleId)
+                    .setItemUid(itemUid)
+                    .setZoneId(zoneId)
+                    .setPlayerPosition(playerPosition)
+                    .build();
+
+            PickupItemResponse response = gameWorldServiceStub
+                    .withDeadlineAfter(3, TimeUnit.SECONDS)
+                    .pickupItem(request);
+
+            if (response.getSuccess()) {
+                log.info("Player {} picked up item {}: itemId={}, quantity={}",
+                        roleId, itemUid, response.getItemId(), response.getQuantity());
+            } else {
+                log.warn("Player {} failed to pickup item {}: errorCode={}",
+                        roleId, itemUid, response.getErrorCode());
+            }
+
+            return response;
+        } catch (StatusRuntimeException e) {
+            log.error("Failed to pickup item {} for role: {}", itemUid, roleId, e);
+            return PickupItemResponse.newBuilder()
+                    .setSuccess(false)
+                    .setErrorCode("GRPC_ERROR")
+                    .setErrorMessage(e.getMessage())
+                    .build();
+        }
+    }
+
+    /**
+     * Interact with NPC
+     * @return InteractNpcResponse with interaction result
+     */
+    public InteractNpcResponse interactNpc(Long roleId, int npcId, int interactType, int zoneId) {
+        try {
+            InteractNpcRequest request = InteractNpcRequest.newBuilder()
+                    .setRoleId(roleId)
+                    .setNpcId(npcId)
+                    .setInteractType(interactType)
+                    .setZoneId(zoneId)
+                    .build();
+
+            InteractNpcResponse response = gameWorldServiceStub
+                    .withDeadlineAfter(3, TimeUnit.SECONDS)
+                    .interactNpc(request);
+
+            if (response.getSuccess()) {
+                log.info("Player {} interacted with NPC {}: type={}, npcType={}",
+                        roleId, npcId, interactType, response.getNpcType());
+            } else {
+                log.warn("Player {} failed to interact with NPC {}: errorCode={}",
+                        roleId, npcId, response.getErrorCode());
+            }
+
+            return response;
+        } catch (StatusRuntimeException e) {
+            log.error("Failed to interact with NPC {} for role: {}", npcId, roleId, e);
+            return InteractNpcResponse.newBuilder()
+                    .setSuccess(false)
+                    .setErrorCode("GRPC_ERROR")
+                    .setErrorMessage(e.getMessage())
+                    .build();
+        }
+    }
 }
