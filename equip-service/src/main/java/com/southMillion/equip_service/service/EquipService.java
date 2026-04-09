@@ -371,7 +371,8 @@ public class EquipService {
         long baseExp = firstNonZeroL(
                 asLong(meta.get("sellexp"), 0L),
                 asLong(meta.get("sell_exp"), 0L),
-                asLong(meta.get("exp_sell"), 0L)
+                asLong(meta.get("exp_sell"), 0L),
+                asLong(meta.get("exp"), 0L)
         );
 
         if (baseCoin <= 0) baseCoin = fallbackSellCoin(quality, equipLevel);
