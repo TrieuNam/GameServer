@@ -363,11 +363,13 @@ public class EquipService {
 
         var meta = getOneMeta(itemId);
         long baseCoin = firstNonZeroL(
+                asLong(meta.get("sellprice"), 0L),
                 asLong(meta.get("sell_price"), 0L),
                 asLong(meta.get("price_sell"), 0L),
                 asLong(meta.get("price"), 0L)
         );
         long baseExp = firstNonZeroL(
+                asLong(meta.get("sellexp"), 0L),
                 asLong(meta.get("sell_exp"), 0L),
                 asLong(meta.get("exp_sell"), 0L)
         );
