@@ -25,6 +25,19 @@ import java.util.Map;
 
 /**
  * Battle handler for realtime combat requests routed through battleserver gRPC.
+ *
+ * Error Codes:
+ * - 1000: INVALID_TARGET
+ * - 1001: INSUFFICIENT_STAMINA
+ * - 1002: PLAYER_IN_COMBAT
+ * - 1003: INVALID_COMBAT_TYPE
+ * - 1004: SESSION_NOT_FOUND
+ * - 1005: INVALID_ACTION
+ * - 1006: INVALID_SKILL
+ * - 1007: TARGET_REQUIRED
+ * - 1008: SESSION_ENDED
+ * - 1009: NOT_YOUR_TURN
+ * - 1010: COOLDOWN_ACTIVE
  */
 @Slf4j
 @Component
@@ -35,6 +48,19 @@ public class BattleHandler implements MessageHandler {
     private static final int OP_START_SESSION = 2;
     private static final int OP_EXECUTE_ACTION = 3;
     private static final int OP_END_SESSION = 4;
+
+    // Error codes
+    private static final int ERROR_INVALID_TARGET = 1000;
+    private static final int ERROR_INSUFFICIENT_STAMINA = 1001;
+    private static final int ERROR_PLAYER_IN_COMBAT = 1002;
+    private static final int ERROR_INVALID_COMBAT_TYPE = 1003;
+    private static final int ERROR_SESSION_NOT_FOUND = 1004;
+    private static final int ERROR_INVALID_ACTION = 1005;
+    private static final int ERROR_INVALID_SKILL = 1006;
+    private static final int ERROR_TARGET_REQUIRED = 1007;
+    private static final int ERROR_SESSION_ENDED = 1008;
+    private static final int ERROR_NOT_YOUR_TURN = 1009;
+    private static final int ERROR_COOLDOWN_ACTIVE = 1010;
 
     private final BattleServerGrpcClient battleServerGrpcClient;
     private final ObjectMapper objectMapper;
@@ -72,7 +98,7 @@ public class BattleHandler implements MessageHandler {
                         resp = handleEndSession(req);
                         break;
                     default:
-                        resp = error("Unsupported battle operation: " + op);
+                        resp = error(ERROR_INVALID_ACTION, "UNSUPPORTED_OP", "Unsupported battle operation: " + op);
                 }
 
                 byte[] json = objectMapper.writeValueAsBytes(resp);
@@ -87,7 +113,7 @@ public class BattleHandler implements MessageHandler {
     private Map<String, Object> handleCalculateCombat(Long roleId, Map<String, Object> req) {
         long targetRoleId = getLong(req, "targetRoleId", 0L);
         if (targetRoleId <= 0) {
-            return error("targetRoleId is required");
+            return error(ERROR_INVALID_TARGET, "INVALID_TARGET", "targetRoleId is required");
         }
 
         String combatType = resolveCombatType(getInt(req, "combatType", 1), req);
@@ -101,7 +127,7 @@ public class BattleHandler implements MessageHandler {
         );
 
         if (response == null) {
-            return error("calculateCombat returned null response");
+            return error(ERROR_INVALID_TARGET, "COMBAT_FAILED", "calculateCombat returned null response");
         }
 
         Map<String, Object> data = new HashMap<>();
@@ -128,7 +154,7 @@ public class BattleHandler implements MessageHandler {
         }
 
         if (defenderRoleIds.isEmpty()) {
-            return error("defenderRoleIds or targetRoleId is required");
+            return error(ERROR_TARGET_REQUIRED, "TARGET_REQUIRED", "defenderRoleIds or targetRoleId is required");
         }
 
         String combatType = resolveCombatType(getInt(req, "combatType", 1), req);
@@ -142,7 +168,7 @@ public class BattleHandler implements MessageHandler {
         );
 
         if (session == null || session.getSessionId() == null || session.getSessionId().isBlank()) {
-            return error("startCombat failed");
+            return error(ERROR_PLAYER_IN_COMBAT, "SESSION_START_FAILED", "startCombat failed");
         }
 
         Map<String, Object> data = new HashMap<>();
@@ -155,7 +181,7 @@ public class BattleHandler implements MessageHandler {
     private Map<String, Object> handleExecuteAction(Long roleId, Map<String, Object> req) {
         String sessionId = getString(req, "sessionId", "");
         if (sessionId.isBlank()) {
-            return error("sessionId is required");
+            return error(ERROR_SESSION_NOT_FOUND, "SESSION_ID_REQUIRED", "sessionId is required");
         }
 
         String actorRoleId = getString(req, "actorRoleId", String.valueOf(roleId));
@@ -172,7 +198,7 @@ public class BattleHandler implements MessageHandler {
         );
 
         if (response == null) {
-            return error("executeCombatAction failed");
+            return error(ERROR_INVALID_ACTION, "ACTION_FAILED", "executeCombatAction failed");
         }
 
         Map<String, Object> data = new HashMap<>();
@@ -187,14 +213,14 @@ public class BattleHandler implements MessageHandler {
     private Map<String, Object> handleEndSession(Map<String, Object> req) {
         String sessionId = getString(req, "sessionId", "");
         if (sessionId.isBlank()) {
-            return error("sessionId is required");
+            return error(ERROR_SESSION_NOT_FOUND, "SESSION_ID_REQUIRED", "sessionId is required");
         }
 
         String endReason = getString(req, "endReason", "NORMAL_END");
         CombatResult result = battleServerGrpcClient.endCombat(sessionId, endReason);
 
         if (result == null) {
-            return error("endCombat failed");
+            return error(ERROR_SESSION_NOT_FOUND, "END_FAILED", "endCombat failed");
         }
 
         Map<String, Object> data = new HashMap<>();
@@ -253,8 +279,17 @@ public class BattleHandler implements MessageHandler {
         return result;
     }
 
+    private Map<String, Object> error(int errorCode, String errorType, String message) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", false);
+        result.put("errorCode", errorCode);
+        result.put("error", errorType);
+        result.put("message", message);
+        return result;
+    }
+
     private Map<String, Object> error(String message) {
-        return Map.of("success", false, "error", message);
+        return error(0, "ERROR", message);
     }
 
     private void safeEmitError(PlayerSession session, String message) {

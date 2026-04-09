@@ -5,11 +5,13 @@ import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.net.PacketCodec;
 import com.SouthMillion.webSocket_server.service.PlayerSessionRegistry;
-import com.SouthMillion.webSocket_server.service.client.WorldFeign;
+import com.SouthMillion.webSocket_server.service.client.BagFeign;
+import com.SouthMillion.webSocket_server.service.client.RoleFeign;
 import com.SouthMillion.webSocket_server.service.grpc.GameWorldGrpcClient;
-import com.SouthMillion.webSocket_server.utils.FeignTokenHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.SouthMillion.dto.bag.BagDTOs;
+import org.SouthMillion.dto.role.other.OtherRoleDTOs;
 import org.SouthMillion.grpc.gameworld.*;
 import org.SouthMillion.proto.Msgworld.Msgworld;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * World Handler - Handles world/scene management operations
@@ -29,9 +34,9 @@ import java.time.Duration;
  * <p>
  * Operations:
  * - Enter/leave scenes (zones)
- * - Movement sync (&lt;25ms target)
+ * - Movement sync (&lt;25ms target) with anti-cheat validation
  * - Object visibility (roles, NPCs, monsters, items)
- * - Pickup items
+ * - Pickup items with bag integration
  * - Interact with NPCs
  * <p>
  * Key msgIds:
@@ -42,6 +47,12 @@ import java.time.Duration;
  * - Object enter/leave view
  * - Pickup item request/ack
  * - Interact NPC request/ack
+ *
+ * P0 Phase 3 Enhancements:
+ * - ✅ Pickup item migrated to gRPC with bag integration
+ * - ✅ NPC interaction migrated to gRPC
+ * - ✅ Movement anti-cheat validation
+ * - ✅ Enhanced zone transition handling
  */
 @Slf4j
 @Component
@@ -49,7 +60,8 @@ import java.time.Duration;
 public class WorldHandler implements MessageHandler {
 
     private final GameWorldGrpcClient gameWorldGrpcClient;
-    private final WorldFeign worldFeign;
+    private final BagFeign bagFeign;
+    private final RoleFeign roleFeign;
     private final PlayerSessionRegistry sessionRegistry;
 
     /**
@@ -75,8 +87,47 @@ public class WorldHandler implements MessageHandler {
     private static final int MSGID_PICKUP_ITEM_ACK = 2031;
     private static final int MSGID_INTERACT_NPC_REQ = 2040;
     private static final int MSGID_INTERACT_NPC_ACK = 2041;
+
+    // Movement constants
     private static final float MOVE_BROADCAST_RADIUS = 80.0f;
     private static final int MOVE_BROADCAST_MAX_PLAYERS = 120;
+    private static final double DEFAULT_PLAYER_SPEED = 5.0; // units per second
+    private static final double SPEED_TOLERANCE = 1.15; // 15% tolerance for network latency
+
+    // Anti-cheat violation tracking (in-memory for simplicity, should use Redis in production)
+    private final Map<Long, SpeedViolationTracker> violationTrackers = new ConcurrentHashMap<>();
+
+    /**
+     * Tracks speed violations for anti-cheat
+     */
+    private static class SpeedViolationTracker {
+        long lastViolationTime;
+        int violationCount;
+        long firstViolationTime;
+
+        void recordViolation() {
+            long now = System.currentTimeMillis();
+            if (firstViolationTime == 0) {
+                firstViolationTime = now;
+            }
+            lastViolationTime = now;
+            violationCount++;
+
+            // Reset counter if more than 5 minutes since first violation
+            if (now - firstViolationTime > 300_000) {
+                violationCount = 1;
+                firstViolationTime = now;
+            }
+        }
+
+        boolean shouldKick() {
+            return violationCount >= 2;
+        }
+
+        boolean shouldBan() {
+            return violationCount >= 3;
+        }
+    }
 
     @Override
     public int[] interests() {
@@ -224,16 +275,24 @@ public class WorldHandler implements MessageHandler {
     }
 
     /**
-     * Handle movement request
+     * Handle movement request with anti-cheat validation
      */
     private void handleMove(PlayerSession session, byte[] payload) {
         try {
             Msgworld.PB_CSMoveReq req = Msgworld.PB_CSMoveReq.parseFrom(payload);
 
-            log.debug("[World] Move - roleId: {}, from: ({},{},{}), to: ({},{},{})", 
+            log.debug("[World] Move - roleId: {}, from: ({},{},{}), to: ({},{},{})",
                     session.getRoleId(),
                     req.getStartPos().getX(), req.getStartPos().getY(), req.getStartPos().getZ(),
                     req.getEndPos().getX(), req.getEndPos().getY(), req.getEndPos().getZ());
+
+            // Anti-cheat: Validate movement speed
+            if (!validateMovementSpeed(session, req)) {
+                log.warn("[AntiCheat] Invalid movement detected for roleId={}", session.getRoleId());
+                // Still send ack to prevent client desyncing, but log violation
+                sendMoveAck(session, req.getEndPos(), -1); // Error code -1 for cheat detection
+                return;
+            }
 
             // Call world service via gRPC to update position (<25ms target)
             gameWorldGrpcClient.updatePosition(
@@ -247,12 +306,7 @@ public class WorldHandler implements MessageHandler {
             );
 
             // Send move acknowledgment
-            Msgworld.PB_SCMoveAck.Builder ackBuilder = Msgworld.PB_SCMoveAck.newBuilder();
-            ackBuilder.setRetCode(0);
-            ackBuilder.setPosition(req.getEndPos());
-            ackBuilder.setTimestamp(System.currentTimeMillis());
-
-            Emitters.emit(session, MSGID_MOVE_ACK, ackBuilder.build().toByteArray());
+            sendMoveAck(session, req.getEndPos(), 0);
 
             // Broadcast movement to other players in view
             broadcastObjectMove(session, req);
@@ -263,45 +317,187 @@ public class WorldHandler implements MessageHandler {
     }
 
     /**
-     * Handle pickup item request
+     * Validate movement speed to detect speed hacking
+     */
+    private boolean validateMovementSpeed(PlayerSession session, Msgworld.PB_CSMoveReq req) {
+        Long roleId = session.getRoleId();
+        long currentTime = System.currentTimeMillis();
+
+        // Get last movement data from session
+        Long lastMoveTime = session.getLastMoveTimestamp();
+        Msgworld.PB_Position lastPos = session.getLastPosition();
+
+        // First movement - allow it
+        if (lastMoveTime == null || lastPos == null) {
+            session.setLastMoveTimestamp(currentTime);
+            session.setLastPosition(req.getEndPos());
+            return true;
+        }
+
+        // Calculate distance moved
+        double distance = calculateDistance(
+                lastPos.getX(), lastPos.getY(), lastPos.getZ(),
+                req.getEndPos().getX(), req.getEndPos().getY(), req.getEndPos().getZ()
+        );
+
+        // Calculate time elapsed (in seconds)
+        double timeDiff = (currentTime - lastMoveTime) / 1000.0;
+
+        // Ignore very small time differences (< 50ms) to avoid false positives
+        if (timeDiff < 0.05) {
+            return true;
+        }
+
+        // Get player's max speed
+        double maxSpeed = getPlayerMaxSpeed(roleId);
+
+        // Calculate actual speed
+        double actualSpeed = distance / timeDiff;
+
+        // Validate with tolerance
+        double allowedSpeed = maxSpeed * SPEED_TOLERANCE;
+
+        if (actualSpeed > allowedSpeed) {
+            log.warn("[AntiCheat] Speed hack detected! roleId={}, actual={:.2f}, allowed={:.2f}, distance={:.2f}, time={:.2f}s",
+                    roleId, actualSpeed, allowedSpeed, distance, timeDiff);
+
+            // Record violation
+            SpeedViolationTracker tracker = violationTrackers.computeIfAbsent(roleId, k -> new SpeedViolationTracker());
+            tracker.recordViolation();
+
+            // TODO: Implement kick/ban logic
+            if (tracker.shouldBan()) {
+                log.error("[AntiCheat] BANNING player roleId={} for {} speed violations", roleId, tracker.violationCount);
+                // banPlayer(roleId, "Speed hacking");
+                // kickPlayer(session);
+            } else if (tracker.shouldKick()) {
+                log.warn("[AntiCheat] Should kick player roleId={} for {} speed violations", roleId, tracker.violationCount);
+                // kickPlayer(session);
+            }
+
+            return false;
+        }
+
+        // Update last move data
+        session.setLastMoveTimestamp(currentTime);
+        session.setLastPosition(req.getEndPos());
+
+        return true;
+    }
+
+    /**
+     * Calculate distance between two 3D points
+     */
+    private double calculateDistance(float x1, float y1, float z1, float x2, float y2, float z2) {
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        double dz = z2 - z1;
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    /**
+     * Get player's maximum movement speed from role-service
+     */
+    private double getPlayerMaxSpeed(Long roleId) {
+        try {
+            OtherRoleDTOs.OtherRoleInfo roleInfo =
+                    roleFeign.getOtherRole(null, String.valueOf(roleId));
+
+            if (roleInfo != null && roleInfo.attributes() != null && roleInfo.attributes().speed() != null) {
+                // Convert speed attribute to units/sec (assume speed is in points, 100 points = 1 unit/sec)
+                return roleInfo.attributes().speed() * 0.01;
+            }
+        } catch (Exception e) {
+            log.debug("[AntiCheat] Failed to get speed for roleId={}: {}", roleId, e.getMessage());
+        }
+
+        // Fallback to default speed
+        return DEFAULT_PLAYER_SPEED;
+    }
+
+    /**
+     * Send move acknowledgment
+     */
+    private void sendMoveAck(PlayerSession session, Msgworld.PB_Position position, int retCode) {
+        try {
+            Msgworld.PB_SCMoveAck.Builder ackBuilder = Msgworld.PB_SCMoveAck.newBuilder();
+            ackBuilder.setRetCode(retCode);
+            ackBuilder.setPosition(position);
+            ackBuilder.setTimestamp(System.currentTimeMillis());
+
+            Emitters.emit(session, MSGID_MOVE_ACK, ackBuilder.build().toByteArray());
+        } catch (Exception e) {
+            log.error("[World] Error sending move ack: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Handle pickup item request with gRPC and bag integration
      */
     private void handlePickupItem(PlayerSession session, byte[] payload) {
         try {
             Msgworld.PB_CSPickupItemReq req = Msgworld.PB_CSPickupItemReq.parseFrom(payload);
             long itemUid = req.getItemUid();
+            Long roleId = session.getRoleId();
 
-            log.info("[World] Pickup item - roleId: {}, itemUid: {}", session.getRoleId(), itemUid);
+            log.info("[World] Pickup item - roleId: {}, itemUid: {}", roleId, itemUid);
 
-            // ⚠️ FIX: set auth token trước khi gọi Feign (FeignAuthInterceptor đọc từ ThreadLocal này)
-            // Thiếu bước này → 401 Unauthorized → world-service từ chối request
-            FeignTokenHolder.set(session.getSessionId());
-            String result;
-            try {
-                result = worldFeign.pickupItem(session.getRoleId(), itemUid);
-            } finally {
-                FeignTokenHolder.clear();
-            }
+            // Get current player position from session
+            Msgworld.PB_Position lastPos = session.getLastPosition();
+            float playerX = lastPos != null ? lastPos.getX() : 0.0f;
+            float playerY = lastPos != null ? lastPos.getY() : 0.0f;
+            float playerZ = lastPos != null ? lastPos.getZ() : 0.0f;
 
-            // Parse result (format: "itemId:count" or "error")
+            // Call gRPC to pickup item from world
+            PickupItemResponse resp = gameWorldGrpcClient.pickupItem(
+                    roleId,
+                    itemUid,
+                    session.getCurrentSceneId(),
+                    playerX, playerY, playerZ
+            );
+
             Msgworld.PB_SCPickupItemAck.Builder ackBuilder = Msgworld.PB_SCPickupItemAck.newBuilder();
 
-            if (result != null && result.contains(":")) {
-                String[] parts = result.split(":");
-                int itemId = Integer.parseInt(parts[0]);
-                int count = Integer.parseInt(parts[1]);
+            if (resp.getSuccess()) {
+                int itemId = resp.getItemId();
+                int quantity = resp.getQuantity();
+
+                // Add item to player's bag
+                try {
+                    BagDTOs.AddItemReq addItemReq = BagDTOs.AddItemReq.builder()
+                            .itemId(itemId)
+                            .num(quantity)
+                            .build();
+
+                    bagFeign.add(String.valueOf(roleId), addItemReq);
+
+                    log.info("[World] Added item {} x{} to bag for roleId={}", itemId, quantity, roleId);
+
+                    // Refresh bag item in UI
+                    refreshBagItem(session, roleId, itemId);
+
+                } catch (Exception e) {
+                    log.error("[World] Failed to add item to bag for roleId={}: {}", roleId, e.getMessage());
+                    // Still acknowledge pickup success (item removed from world)
+                    // but player may need to contact support for missing item
+                }
 
                 ackBuilder.setRetCode(0);
                 ackBuilder.setRetMsg("Success");
                 ackBuilder.setItemUid(itemUid);
                 ackBuilder.setItemId(itemId);
-                ackBuilder.setItemCount(count);
+                ackBuilder.setItemCount(quantity);
 
-                log.info("[World] Pickup item success - roleId: {}, itemId: {}, count: {}",
-                        session.getRoleId(), itemId, count);
+                log.info("[World] Pickup item success - roleId: {}, itemId: {}, count: {}", roleId, itemId, quantity);
+
             } else {
+                // Pickup failed (item not found, out of range, etc.)
                 ackBuilder.setRetCode(1);
-                ackBuilder.setRetMsg("Item not found or cannot pickup");
+                ackBuilder.setRetMsg(resp.getErrorMessage());
                 ackBuilder.setItemUid(itemUid);
+
+                log.warn("[World] Pickup item failed - roleId: {}, itemUid: {}, error: {}",
+                        roleId, itemUid, resp.getErrorCode());
             }
 
             Emitters.emit(session, MSGID_PICKUP_ITEM_ACK, ackBuilder.build().toByteArray());
@@ -313,39 +509,118 @@ public class WorldHandler implements MessageHandler {
     }
 
     /**
-     * Handle interact with NPC request
+     * Refresh specific bag item in client UI
+     */
+    private void refreshBagItem(PlayerSession session, Long roleId, int itemId) {
+        try {
+            List<BagDTOs.ItemView> bagItems = bagFeign.list(String.valueOf(roleId));
+            if (bagItems != null) {
+                long count = bagItems.stream()
+                        .filter(item -> item.getItemId() != null && item.getItemId() == itemId)
+                        .mapToLong(item -> item.getNum() == null ? 0L : item.getNum().longValue())
+                        .sum();
+
+                Emitters.sendKnapsackSingleInfo(session, itemId, count);
+                log.debug("[World] Refreshed bag item {} (count={}) for roleId={}", itemId, count, roleId);
+            }
+        } catch (Exception e) {
+            log.warn("[World] Failed to refresh bag item for roleId={}: {}", roleId, e.getMessage());
+        }
+    }
+
+    /**
+     * Handle interact with NPC request with gRPC
      */
     private void handleInteractNpc(PlayerSession session, byte[] payload) {
         try {
             Msgworld.PB_CSInteractNpcReq req = Msgworld.PB_CSInteractNpcReq.parseFrom(payload);
             int npcId = req.getNpcId();
             int interactType = req.getInteractType();
+            Long roleId = session.getRoleId();
 
-            log.info("[World] Interact NPC - roleId: {}, npcId: {}, type: {}",
-                    session.getRoleId(), npcId, interactType);
+            log.info("[World] Interact NPC - roleId: {}, npcId: {}, type: {}", roleId, npcId, interactType);
 
-            // ⚠️ FIX: set auth token trước khi gọi Feign
-            FeignTokenHolder.set(session.getSessionId());
-            try {
-                worldFeign.interactNpc(session.getRoleId(), npcId, interactType);
-            } finally {
-                FeignTokenHolder.clear();
+            // Call gRPC to interact with NPC
+            InteractNpcResponse resp = gameWorldGrpcClient.interactNpc(
+                    roleId,
+                    npcId,
+                    interactType,
+                    session.getCurrentSceneId()
+            );
+
+            Msgworld.PB_SCInteractNpcAck.Builder ackBuilder = Msgworld.PB_SCInteractNpcAck.newBuilder();
+
+            if (resp.getSuccess()) {
+                ackBuilder.setRetCode(0);
+                ackBuilder.setRetMsg("Success");
+                ackBuilder.setNpcId(npcId);
+                ackBuilder.setInteractType(interactType);
+
+                log.info("[World] Interact NPC success - roleId: {}, npcId: {}, npcType: {}",
+                        roleId, npcId, resp.getNpcType());
+
+                // Route to appropriate handler based on NPC type
+                handleNpcInteractionResult(session, roleId, npcId, resp);
+
+            } else {
+                // Interaction failed (NPC not found, out of range, etc.)
+                ackBuilder.setRetCode(1);
+                ackBuilder.setRetMsg(resp.getErrorMessage());
+                ackBuilder.setNpcId(npcId);
+                ackBuilder.setInteractType(interactType);
+
+                log.warn("[World] Interact NPC failed - roleId: {}, npcId: {}, error: {}",
+                        roleId, npcId, resp.getErrorCode());
             }
 
-            // Send interact acknowledgment
-            Msgworld.PB_SCInteractNpcAck.Builder ackBuilder = Msgworld.PB_SCInteractNpcAck.newBuilder();
-            ackBuilder.setRetCode(0);
-            ackBuilder.setRetMsg("Success");
-            ackBuilder.setNpcId(npcId);
-            ackBuilder.setInteractType(interactType);
-
             Emitters.emit(session, MSGID_INTERACT_NPC_ACK, ackBuilder.build().toByteArray());
-
-            log.info("[World] Interact NPC success - roleId: {}, npcId: {}", session.getRoleId(), npcId);
 
         } catch (Exception e) {
             log.error("[World] Error handling interact NPC: {}", e.getMessage(), e);
             sendInteractNpcError(session);
+        }
+    }
+
+    /**
+     * Handle NPC interaction result based on NPC type
+     */
+    private void handleNpcInteractionResult(PlayerSession session, Long roleId, int npcId, InteractNpcResponse resp) {
+        try {
+            String npcType = resp.getNpcType();
+
+            // Route to appropriate subsystem based on NPC type
+            switch (npcType) {
+                case "QUEST":
+                    // TODO: Forward to quest handler when quest system is implemented
+                    log.debug("[World] Quest NPC interaction for roleId={}, npcId={}", roleId, npcId);
+                    break;
+
+                case "SHOP":
+                    // TODO: Forward to shop handler when shop system is implemented
+                    log.debug("[World] Shop NPC interaction for roleId={}, npcId={}", roleId, npcId);
+                    break;
+
+                case "DIALOGUE":
+                    // TODO: Send dialogue content to client
+                    log.debug("[World] Dialogue NPC interaction for roleId={}, npcId={}", roleId, npcId);
+                    break;
+
+                case "TELEPORT":
+                    // TODO: Handle teleport to target location
+                    log.debug("[World] Teleport NPC interaction for roleId={}, npcId={}", roleId, npcId);
+                    break;
+
+                case "BUFF":
+                    // TODO: Apply buff to player
+                    log.debug("[World] Buff NPC interaction for roleId={}, npcId={}", roleId, npcId);
+                    break;
+
+                default:
+                    log.warn("[World] Unknown NPC type '{}' for npcId={}", npcType, npcId);
+            }
+
+        } catch (Exception e) {
+            log.error("[World] Error handling NPC interaction result: {}", e.getMessage(), e);
         }
     }
 
