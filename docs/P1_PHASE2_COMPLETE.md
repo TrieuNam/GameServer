@@ -16,7 +16,7 @@ Phase 2 of P1 implementation focused on **Equipment & Enhancement Services** - t
 
 ## ✅ VERIFIED IMPLEMENTATIONS
 
-### 1. equip-service (Port 8240, gRPC 9081/9240) ✅
+### 1. equip-service (Port 8240, gRPC 9240) ✅
 
 **Status:** **PRE-EXISTING & VERIFIED** - Fully implemented and operational
 
@@ -89,7 +89,7 @@ rpc ApplyFuMo(FuMoRequest) returns (FuMoResponse);
 
 ---
 
-### 2. shop-service (Port 8260, gRPC 9089) ✅
+### 2. shop-service (Port 8260, gRPC 9260) ✅
 
 **Status:** **PRE-EXISTING & VERIFIED** - Fully implemented with 3 shop types
 
@@ -185,7 +185,7 @@ rpc RefreshMysteryShop(RefreshRequest) returns (RefreshResponse);
 
 ---
 
-### 3. crafting-service (Port 8280, gRPC 9099) ✅
+### 3. crafting-service (Port 8280, gRPC 9280) ✅
 
 **Status:** **PRE-EXISTING & VERIFIED** - gRPC-first architecture
 

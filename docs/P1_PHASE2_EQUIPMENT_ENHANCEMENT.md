@@ -11,9 +11,9 @@
 Phase 2 of P1 implementation focuses on **Equipment & Enhancement Services** - the progression systems that allow players to acquire, equip, enhance, and shop for items that improve character power.
 
 **Scope:**
-- ✅ equip-service (Port 8240, gRPC 9081/9240) - Equipment management + FuMo (enchant)
-- ✅ shop-service (Port 8260, gRPC 9089) - Shop system (Common/Fashion/Mystery)
-- ✅ crafting-service (Port 8280, gRPC 9099) - Crafting/forging system
+- ✅ equip-service (Port 8240, gRPC 9240) - Equipment management + FuMo (enchant)
+- ✅ shop-service (Port 8260, gRPC 9260) - Shop system (Common/Fashion/Mystery)
+- ✅ crafting-service (Port 8280, gRPC 9280) - Crafting/forging system
 - ✅ WebSocket handlers integration
 - ✅ gRPC performance optimization
 
@@ -28,7 +28,7 @@ Phase 2 of P1 implementation focuses on **Equipment & Enhancement Services** - t
 
 ## 🎯 SERVICES OVERVIEW
 
-### 1️⃣ equip-service (Port 8240, gRPC 9081/9240)
+### 1️⃣ equip-service (Port 8240, gRPC 9240)
 
 **Purpose:** Equipment management, wearing/unwearing, FuMo (enchantment), and power calculations
 
@@ -82,7 +82,7 @@ rpc ApplyFuMo(FuMoRequest) returns (FuMoResponse);               // Real-time en
 
 ---
 
-### 2️⃣ shop-service (Port 8260, gRPC 9089)
+### 2️⃣ shop-service (Port 8260, gRPC 9260)
 
 **Purpose:** In-game shop system with multiple shop types (Common, Fashion, Mystery)
 
@@ -159,7 +159,7 @@ rpc RefreshMysteryShop(RefreshRequest) returns (RefreshResponse);
 
 ---
 
-### 3️⃣ crafting-service (Port 8280, gRPC 9099)
+### 3️⃣ crafting-service (Port 8280, gRPC 9280)
 
 **Purpose:** Item crafting and forging system with time-gated production
 
@@ -517,7 +517,7 @@ Client (WebSocket) → EquipHandler (msgId=1600, reqType=3)
 
 **Verification Steps:**
 - [x] Service builds successfully
-- [x] gRPC server running on port 9099
+- [x] gRPC server running on port 9280
 - [x] Proto definitions compiled
 - [x] CraftingServiceGrpcImpl class exists
 - [x] BagGrpcClient integration (material validation)
