@@ -3,7 +3,11 @@ package com.SouthMillion.webSocket_server.handler.mail;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.service.client.BagFeign;
+import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
 import com.SouthMillion.webSocket_server.service.grpc.MailGrpcClient;
+import org.SouthMillion.dto.bag.BagDTOs;
+import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.SouthMillion.grpc.common.ResponseStatus;
 import org.SouthMillion.proto.mail.*;
 import com.google.protobuf.ByteString;
@@ -13,6 +17,8 @@ import org.springframework.stereotype.Component;
 import org.SouthMillion.proto.msgmail.Msgmail;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Handles mail operations from the client.
@@ -30,6 +36,8 @@ import reactor.core.publisher.Mono;
 public class MailHandler implements MessageHandler {
 
     private final MailGrpcClient mailGrpcClient;
+    private final BagFeign bagFeign;
+    private final WalletHttpClient walletHttpClient;
 
     private static final int OP_GET_LIST        = 0;
     private static final int OP_GET_DETAIL      = 1;
@@ -132,6 +140,14 @@ public class MailHandler implements MessageHandler {
     private void handleFetch(PlayerSession session, Long roleId, long mailId, int mailType) {
         try {
             ClaimAttachmentResponse resp = mailGrpcClient.claimAttachment(mailId);
+
+            if (resp.getSuccess() && resp.getClaimedCount() > 0) {
+                // Distribute rewards to player's bag and wallet
+                distributeRewards(session, roleId, resp.getClaimedList());
+                log.info("[Mail] Claimed {} attachments from mailId={} for roleId={}",
+                        resp.getClaimedCount(), mailId, roleId);
+            }
+
             sendFetchAck(session, mailType, (int) mailId, resp.getSuccess() ? 0 : -1);
         } catch (Exception e) {
             log.error("[Mail] handleFetch error for mailId={}", mailId, e);
@@ -160,6 +176,15 @@ public class MailHandler implements MessageHandler {
     private void handleFetchAll(PlayerSession session, Long roleId) {
         try {
             FetchAllAttachmentsResponse resp = mailGrpcClient.fetchAllAttachments(String.valueOf(roleId));
+
+            if (resp.getSuccess() && resp.getClaimedCount() > 0) {
+                log.info("[Mail] Fetched all attachments: {} items claimed for roleId={}",
+                        resp.getClaimedCount(), roleId);
+                // Note: FetchAllAttachments doesn't return detailed rewards in current proto
+                // Rewards are distributed server-side. Just refresh player state.
+                refreshPlayerState(session, roleId);
+            }
+
             sendFetchAck(session, 0, 0, resp.getSuccess() ? 0 : -1);
         } catch (Exception e) {
             log.error("[Mail] handleFetchAll error for roleId={}", roleId, e);
@@ -199,6 +224,152 @@ public class MailHandler implements MessageHandler {
             Emitters.emit(session, 9506, resp.toByteArray());
         } catch (Exception e) {
             log.error("[Mail] sendFetchAck failed", e);
+        }
+    }
+
+    /**
+     * Distribute rewards from mail attachments to player's bag and wallet.
+     *
+     * @param session Player session
+     * @param roleId Player role ID
+     * @param attachments List of claimed attachments with items and currency
+     */
+    private void distributeRewards(PlayerSession session, Long roleId, List<MailAttachmentData> attachments) {
+        if (attachments == null || attachments.isEmpty()) {
+            return;
+        }
+
+        List<Integer> updatedItemIds = new ArrayList<>();
+
+        for (MailAttachmentData attachment : attachments) {
+            try {
+                // Distribute items to bag
+                if (attachment.getItemId() > 0 && attachment.getQuantity() > 0) {
+                    BagDTOs.AddItemReq itemReq = BagDTOs.AddItemReq.builder()
+                            .itemId(attachment.getItemId())
+                            .num(attachment.getQuantity())
+                            .build();
+
+                    bagFeign.add(String.valueOf(roleId), itemReq);
+                    updatedItemIds.add(attachment.getItemId());
+
+                    log.debug("[Mail] Added item {} x{} to bag for roleId={}",
+                            attachment.getItemId(), attachment.getQuantity(), roleId);
+                }
+
+                // Distribute currency to wallet
+                if (attachment.getCurrencyAmount() > 0 && !attachment.getCurrencyType().isBlank()) {
+                    long currencyItemId = parseCurrencyType(attachment.getCurrencyType());
+                    if (currencyItemId > 0) {
+                        List<WalletDTOs.Change> changes = List.of(
+                                WalletDTOs.Change.builder()
+                                        .itemId(currencyItemId)
+                                        .amount(attachment.getCurrencyAmount())
+                                        .build()
+                        );
+
+                        WalletDTOs.BatchReq walletReq = WalletDTOs.BatchReq.builder()
+                                .roleId(String.valueOf(roleId))
+                                .changes(changes)
+                                .idemKey("mail.reward:" + roleId + ":" + System.currentTimeMillis())
+                                .reason(9551) // Mail operation
+                                .reasonType(3) // Fetch attachment
+                                .build();
+
+                        walletHttpClient.batchAdd(walletReq);
+                        updatedItemIds.add((int) currencyItemId);
+
+                        log.debug("[Mail] Added {} {} to wallet for roleId={}",
+                                attachment.getCurrencyAmount(), attachment.getCurrencyType(), roleId);
+                    }
+                }
+
+            } catch (Exception e) {
+                log.error("[Mail] Failed to distribute reward for roleId={}: {}", roleId, e.getMessage());
+                // Continue processing other attachments even if one fails
+            }
+        }
+
+        // Refresh affected items in client UI
+        refreshBagItems(session, roleId, updatedItemIds);
+        refreshWalletBalance(session, roleId);
+    }
+
+    /**
+     * Parse currency type string to wallet item ID.
+     * Common types: "gold" = 1, "diamond" = 2, "bindDiamond" = 3
+     */
+    private long parseCurrencyType(String currencyType) {
+        if (currencyType == null || currencyType.isBlank()) {
+            return 0;
+        }
+        return switch (currencyType.toLowerCase()) {
+            case "gold" -> 1L;
+            case "diamond" -> 2L;
+            case "binddiamond", "bind_diamond" -> 3L;
+            default -> {
+                try {
+                    yield Long.parseLong(currencyType);
+                } catch (NumberFormatException e) {
+                    log.warn("[Mail] Unknown currency type: {}", currencyType);
+                    yield 0L;
+                }
+            }
+        };
+    }
+
+    /**
+     * Refresh specific bag items in client UI.
+     */
+    private void refreshBagItems(PlayerSession session, Long roleId, List<Integer> itemIds) {
+        if (itemIds == null || itemIds.isEmpty()) {
+            return;
+        }
+
+        try {
+            List<BagDTOs.ItemView> bagItems = bagFeign.list(String.valueOf(roleId));
+            if (bagItems != null) {
+                for (Integer itemId : itemIds) {
+                    long count = bagItems.stream()
+                            .filter(item -> item.getItemId() != null && item.getItemId() == itemId)
+                            .mapToLong(item -> item.getNum() == null ? 0L : item.getNum().longValue())
+                            .sum();
+
+                    Emitters.sendKnapsackSingleInfo(session, itemId, count);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Mail] Failed to refresh bag items for roleId={}: {}", roleId, e.getMessage());
+        }
+    }
+
+    /**
+     * Refresh wallet balances in client UI.
+     */
+    private void refreshWalletBalance(PlayerSession session, Long roleId) {
+        try {
+            WalletDTOs.BalancesResp walletResp = walletHttpClient.info(String.valueOf(roleId));
+            if (walletResp != null && walletResp.balances() != null) {
+                Emitters.sendWalletBalances(session, walletResp.balances());
+                log.debug("[Mail] Refreshed wallet balances for roleId={}", roleId);
+            }
+        } catch (Exception e) {
+            log.warn("[Mail] Failed to refresh wallet balance for roleId={}: {}", roleId, e.getMessage());
+        }
+    }
+
+    /**
+     * Refresh complete player state after fetch all operation.
+     */
+    private void refreshPlayerState(PlayerSession session, Long roleId) {
+        refreshWalletBalance(session, roleId);
+
+        // Optionally refresh entire bag
+        try {
+            List<BagDTOs.ItemView> bagItems = bagFeign.list(String.valueOf(roleId));
+            Emitters.sendKnapsackAllInfo(session, bagItems);
+        } catch (Exception e) {
+            log.warn("[Mail] Failed to refresh bag for roleId={}: {}", roleId, e.getMessage());
         }
     }
 
