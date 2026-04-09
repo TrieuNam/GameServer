@@ -57,12 +57,15 @@ public class CombatServiceGrpcImpl extends CombatServiceGrpc.CombatServiceImplBa
             }
             
             // Calculate combat
-            com.SouthMillion.battleserver_service.dto.CombatResult result = 
+            com.SouthMillion.battleserver_service.dto.CombatResult result =
                     combatService.calculateCombat(internalRequest);
-            
-            // Publish combat result event to Kafka
+
+            // Publish combat result event to Kafka (legacy format)
             publishCombatEvent(request.getAttackerRoleId(), result, request.getCombatType());
-            
+
+            // Publish dual-perspective events (new standardized format)
+            publishDualPerspectiveEvents(result, request.getCombatType());
+
             // Convert result to proto response
             org.SouthMillion.grpc.combat.CombatResponse response = convertToProtoResponse(result);
             
@@ -431,16 +434,16 @@ public class CombatServiceGrpcImpl extends CombatServiceGrpc.CombatServiceImplBa
     }
     
     /**
-     * Publish combat result event to Kafka
+     * Publish combat result event to Kafka (Legacy single-perspective)
      */
-    private void publishCombatEvent(long roleId, 
+    private void publishCombatEvent(long roleId,
                                     com.SouthMillion.battleserver_service.dto.CombatResult result,
                                     String combatType) {
         try {
             // winnerId is Long in DTO, so compare as numeric values to avoid false negatives.
             boolean isVictory = result.getWinnerId() != null && result.getWinnerId() == roleId;
             Integer duration = result.getDuration() != null ? result.getDuration().intValue() : 0;
-            
+
                         long totalDamage = 0L;
                         int comboMax = 0;
                         int currentCombo = 0;
@@ -466,7 +469,7 @@ public class CombatServiceGrpcImpl extends CombatServiceGrpc.CombatServiceImplBa
 
                         String enemyType = (combatType != null && combatType.toUpperCase().contains("PVP"))
                                         ? "PLAYER" : "MONSTER";
-            
+
             eventPublisher.publishCombatResult(
                     Long.valueOf(roleId),
                     (combatType == null || combatType.isEmpty()) ? "PVE" : combatType,
@@ -483,10 +486,144 @@ public class CombatServiceGrpcImpl extends CombatServiceGrpc.CombatServiceImplBa
                     0L, // EXP calculated separately
                     null  // Items list null
             );
-            
+
             log.debug("Published combat event for roleId={}, victory={}", roleId, isVictory);
         } catch (Exception e) {
             log.warn("Failed to publish combat event: {}", e.getMessage());
+            // Don't fail combat on publish error
+        }
+    }
+
+    /**
+     * Publish dual-perspective combat events (New standardized approach)
+     * Publishes events from both attacker and defender viewpoints
+     */
+    private void publishDualPerspectiveEvents(com.SouthMillion.battleserver_service.dto.CombatResult result,
+                                              String combatType) {
+        try {
+            String combatId = java.util.UUID.randomUUID().toString();
+            long timestamp = System.currentTimeMillis();
+            int durationMs = result.getDuration() != null ? result.getDuration().intValue() : 0;
+
+            // Calculate statistics from combat rounds
+            long attackerDamage = 0L;
+            long defenderDamage = 0L;
+            int comboMax = 0;
+            int currentCombo = 0;
+
+            if (result.getCombatRounds() != null) {
+                for (com.SouthMillion.battleserver_service.dto.CombatRound round : result.getCombatRounds()) {
+                    if (round.getDamage() != null) {
+                        if (round.getAttackerId().equals(result.getAttackerId())) {
+                            attackerDamage += round.getDamage();
+                        } else {
+                            defenderDamage += round.getDamage();
+                        }
+
+                        if (round.getDamage() > 0) {
+                            currentCombo++;
+                            comboMax = Math.max(comboMax, currentCombo);
+                        } else {
+                            currentCombo = 0;
+                        }
+                    }
+                }
+            }
+
+            // Build attacker combatant info
+            com.SouthMillion.battleserver_service.dto.CombatEvent.Combatant attacker =
+                    com.SouthMillion.battleserver_service.dto.CombatEvent.Combatant.builder()
+                            .roleId(result.getAttackerId())
+                            .name("Player" + result.getAttackerId()) // Name would come from player service
+                            .level(0) // Level would come from player service
+                            .power(0L) // Power would come from player service
+                            .damage(attackerDamage)
+                            .damageTaken(defenderDamage)
+                            .healing(0L)
+                            .finalHp(result.getAttackerFinalHp())
+                            .survived(result.getAttackerFinalHp() > 0)
+                            .build();
+
+            // Build defender combatant info
+            com.SouthMillion.battleserver_service.dto.CombatEvent.Combatant defender =
+                    com.SouthMillion.battleserver_service.dto.CombatEvent.Combatant.builder()
+                            .roleId(result.getDefenderId())
+                            .name("Player" + result.getDefenderId())
+                            .level(0)
+                            .power(0L)
+                            .damage(defenderDamage)
+                            .damageTaken(attackerDamage)
+                            .healing(0L)
+                            .finalHp(result.getDefenderFinalHp())
+                            .survived(result.getDefenderFinalHp() > 0)
+                            .build();
+
+            // Determine winner
+            Long winnerId = result.getWinnerId();
+            String winnerSide = winnerId.equals(result.getAttackerId()) ? "ATTACKER" :
+                               (winnerId.equals(result.getDefenderId()) ? "DEFENDER" : "DRAW");
+
+            // Build combat result
+            com.SouthMillion.battleserver_service.dto.CombatEvent.CombatResult combatResult =
+                    com.SouthMillion.battleserver_service.dto.CombatEvent.CombatResult.builder()
+                            .winnerId(winnerId)
+                            .winnerSide(winnerSide)
+                            .totalRounds(result.getTotalRounds())
+                            .xpGained(0L) // XP calculated separately
+                            .goldGained(0L) // Gold calculated separately
+                            .comboMax(comboMax)
+                            .build();
+
+            // Build attacker perspective event
+            com.SouthMillion.battleserver_service.dto.CombatEvent attackerEvent =
+                    com.SouthMillion.battleserver_service.dto.CombatEvent.builder()
+                            .eventType("COMBAT_RESULT")
+                            .eventVersion("1.0")
+                            .timestamp(timestamp)
+                            .combatId(combatId)
+                            .sessionId(null)
+                            .combatType(combatType != null ? combatType : "PVE")
+                            .duration(durationMs)
+                            .attacker(attacker)
+                            .defender(defender)
+                            .result(combatResult)
+                            .metadata(Map.of("server", "battleserver-service"))
+                            .perspective("ATTACKER")
+                            .isWinner(winnerId.equals(result.getAttackerId()))
+                            .build();
+
+            // Build defender perspective event
+            com.SouthMillion.battleserver_service.dto.CombatEvent defenderEvent =
+                    com.SouthMillion.battleserver_service.dto.CombatEvent.builder()
+                            .eventType("COMBAT_RESULT")
+                            .eventVersion("1.0")
+                            .timestamp(timestamp)
+                            .combatId(combatId)
+                            .sessionId(null)
+                            .combatType(combatType != null ? combatType : "PVE")
+                            .duration(durationMs)
+                            .attacker(attacker)
+                            .defender(defender)
+                            .result(combatResult)
+                            .metadata(Map.of("server", "battleserver-service"))
+                            .perspective("DEFENDER")
+                            .isWinner(winnerId.equals(result.getDefenderId()))
+                            .build();
+
+            // Publish both perspectives
+            eventPublisher.publishDualPerspective(
+                    combatId,
+                    result.getAttackerId(),
+                    result.getDefenderId(),
+                    attackerEvent,
+                    defenderEvent
+            );
+
+            log.debug("[Combat] Published dual-perspective events for combatId={}, attacker={}, defender={}",
+                    combatId, result.getAttackerId(), result.getDefenderId());
+
+        } catch (Exception e) {
+            log.warn("[Combat] Failed to publish dual-perspective events: {}", e.getMessage());
             // Don't fail combat on publish error
         }
     }

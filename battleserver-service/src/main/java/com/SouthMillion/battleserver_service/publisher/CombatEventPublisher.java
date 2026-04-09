@@ -1,5 +1,6 @@
 package com.SouthMillion.battleserver_service.publisher;
 
+import com.SouthMillion.battleserver_service.dto.CombatEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.event.combat.CombatResultEvent;
@@ -16,6 +17,8 @@ import java.util.UUID;
  * - Achievement unlocking (combo milestones, kill counts)
  * - Quest progress (kill X enemies)
  * - Analytics and anti-cheat
+ *
+ * Supports dual-perspective event publishing with partition keys.
  */
 @Slf4j
 @Component
@@ -23,8 +26,9 @@ import java.util.UUID;
 public class CombatEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    
+
     private static final String TOPIC_COMBAT_RESULT = "combat.result";
+    private static final String TOPIC_COMBAT_EVENT = "combat.event";
 
     /**
      * Publish combat result event
@@ -141,5 +145,58 @@ public class CombatEventPublisher {
                 0L, // EXP calculated separately
                 null  // Items calculated separately
         );
+    }
+
+    /**
+     * Publish standardized CombatEvent with partition key
+     * Used for dual-perspective event publishing
+     *
+     * @param topic Topic name
+     * @param partitionKey Partition key (typically roleId)
+     * @param event Combat event
+     */
+    public void publishWithKey(String topic, String partitionKey, CombatEvent event) {
+        try {
+            kafkaTemplate.send(topic, partitionKey, event);
+
+            log.debug("Published CombatEvent to topic={}, partition key={}, combatId={}, perspective={}",
+                    topic, partitionKey, event.getCombatId(), event.getPerspective());
+
+        } catch (Exception e) {
+            log.error("Failed to publish CombatEvent to topic={}, key={}: {}",
+                    topic, partitionKey, e.getMessage(), e);
+            // Don't throw - publishing failure shouldn't break combat flow
+        }
+    }
+
+    /**
+     * Publish dual-perspective combat events
+     * Publishes one event for attacker perspective and one for defender perspective
+     *
+     * @param combatId Unique combat identifier
+     * @param attackerId Attacker role ID
+     * @param defenderId Defender role ID
+     * @param attackerEvent Event from attacker's perspective
+     * @param defenderEvent Event from defender's perspective
+     */
+    public void publishDualPerspective(String combatId,
+                                       Long attackerId,
+                                       Long defenderId,
+                                       CombatEvent attackerEvent,
+                                       CombatEvent defenderEvent) {
+        try {
+            // Publish attacker perspective with attacker's roleId as partition key
+            publishWithKey(TOPIC_COMBAT_EVENT, String.valueOf(attackerId), attackerEvent);
+
+            // Publish defender perspective with defender's roleId as partition key
+            publishWithKey(TOPIC_COMBAT_EVENT, String.valueOf(defenderId), defenderEvent);
+
+            log.info("[Combat] Published dual-perspective events for combatId={}, attacker={}, defender={}",
+                    combatId, attackerId, defenderId);
+
+        } catch (Exception e) {
+            log.error("[Combat] Failed to publish dual-perspective events for combatId={}: {}",
+                    combatId, e.getMessage(), e);
+        }
     }
 }
