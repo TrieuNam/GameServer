@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BagGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BagGrpcClient.class);
+
     @GrpcClient("bag-service")
     private BagServiceGrpc.BagServiceBlockingStub bagServiceStub;
 

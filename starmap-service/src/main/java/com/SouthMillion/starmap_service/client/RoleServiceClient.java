@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 /**
  * Feign client for role-service to sync player capability
  */
-@FeignClient(name = "role-service")
+@FeignClient(name = "role-service", contextId = "starmapRoleCapabilityClient")
 public interface RoleServiceClient {
 
     /**

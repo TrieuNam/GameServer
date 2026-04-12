@@ -37,6 +37,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class TerritoryHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TerritoryHandler.class);
+
     private final TerritoryGrpcClient territoryGrpcClient;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;

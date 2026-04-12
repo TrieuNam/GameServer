@@ -7,6 +7,8 @@ import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.SouthMillion.proto.rune.*;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Slf4j
 @Service
 public class RuneGrpcClient {
@@ -14,12 +16,13 @@ public class RuneGrpcClient {
     @GrpcClient("rune-service")
     private RuneGrpcServiceGrpc.RuneGrpcServiceBlockingStub stub;
 
-    /** Parse String userId to long; return -1 if invalid (ULID etc.). */
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
     private long parseUserId(String userId) {
         try {
             return Long.parseLong(userId);
         } catch (NumberFormatException e) {
-            log.warn("[grpc-rune] userId '{}' is not a numeric Long — rune-service uses Long IDs, skipping", userId);
+            log.warn("[grpc-rune] userId '{}' is not numeric", userId);
             return -1L;
         }
     }
@@ -28,67 +31,16 @@ public class RuneGrpcClient {
         return e instanceof StatusRuntimeException s && s.getStatus().getCode() == Status.Code.UNAVAILABLE;
     }
 
+    // ── Knapsack queries ──────────────────────────────────────────────────────
+
     public GetAllRunesResponse getAllRunes(String userId) {
         long id = parseUserId(userId);
         if (id < 0) return GetAllRunesResponse.getDefaultInstance();
         try {
             return stub.getAllRunes(GetAllRunesRequest.newBuilder().setUserId(id).build());
         } catch (Exception e) {
-            if (isUnavailable(e)) log.warn("[grpc-rune] getAllRunes userId={}: rune-service unavailable", userId);
-            else log.error("[grpc-rune] getAllRunes userId={} error: {}", userId, e.getMessage());
+            log(e, "getAllRunes", userId);
             return GetAllRunesResponse.getDefaultInstance();
-        }
-    }
-
-    public LevelUpRuneResponse levelUpRune(String userId, int runeIndex) {
-        long id = parseUserId(userId);
-        if (id < 0) return LevelUpRuneResponse.getDefaultInstance();
-        try {
-            return stub.levelUpRune(LevelUpRuneRequest.newBuilder()
-                    .setUserId(id).setRuneIndex(runeIndex).build());
-        } catch (Exception e) {
-            if (isUnavailable(e)) log.warn("[grpc-rune] levelUpRune: rune-service unavailable");
-            else log.error("[grpc-rune] levelUpRune userId={} runeIndex={} error: {}", userId, runeIndex, e.getMessage());
-            return LevelUpRuneResponse.getDefaultInstance();
-        }
-    }
-
-    public EquipRuneResponse equipRune(String userId, int runeIndex, int slotIndex) {
-        long id = parseUserId(userId);
-        if (id < 0) return EquipRuneResponse.getDefaultInstance();
-        try {
-            return stub.equipRune(EquipRuneRequest.newBuilder()
-                    .setUserId(id).setRuneIndex(runeIndex).setEquipSlot(slotIndex).build());
-        } catch (Exception e) {
-            if (isUnavailable(e)) log.warn("[grpc-rune] equipRune: rune-service unavailable");
-            else log.error("[grpc-rune] equipRune error: {}", e.getMessage());
-            return EquipRuneResponse.getDefaultInstance();
-        }
-    }
-
-    public UnequipRuneResponse unequipRune(String userId, int slotIndex) {
-        long id = parseUserId(userId);
-        if (id < 0) return UnequipRuneResponse.getDefaultInstance();
-        try {
-            return stub.unequipRune(UnequipRuneRequest.newBuilder()
-                    .setUserId(id).setRuneIndex(slotIndex).build());
-        } catch (Exception e) {
-            if (isUnavailable(e)) log.warn("[grpc-rune] unequipRune: rune-service unavailable");
-            else log.error("[grpc-rune] unequipRune error: {}", e.getMessage());
-            return UnequipRuneResponse.getDefaultInstance();
-        }
-    }
-
-    public UpgradeRuneQualityResponse upgradeQuality(String userId, int runeIndex) {
-        long id = parseUserId(userId);
-        if (id < 0) return UpgradeRuneQualityResponse.getDefaultInstance();
-        try {
-            return stub.upgradeRuneQuality(UpgradeRuneQualityRequest.newBuilder()
-                    .setUserId(id).setRuneIndex(runeIndex).build());
-        } catch (Exception e) {
-            if (isUnavailable(e)) log.warn("[grpc-rune] upgradeQuality: rune-service unavailable");
-            else log.error("[grpc-rune] upgradeQuality error: {}", e.getMessage());
-            return UpgradeRuneQualityResponse.getDefaultInstance();
         }
     }
 
@@ -98,9 +50,98 @@ public class RuneGrpcClient {
         try {
             return stub.getEquippedRunes(GetEquippedRunesRequest.newBuilder().setUserId(id).build());
         } catch (Exception e) {
-            if (isUnavailable(e)) log.warn("[grpc-rune] getEquippedRunes userId={}: rune-service unavailable", userId);
-            else log.error("[grpc-rune] getEquippedRunes error: {}", e.getMessage());
+            log(e, "getEquippedRunes", userId);
             return GetEquippedRunesResponse.getDefaultInstance();
         }
+    }
+
+    // ── Equipment ops ─────────────────────────────────────────────────────────
+
+    /** op=3 WEARRUNE: p1=slotIndex, p2=knapsackIndex */
+    public EquipRuneResponse equipRune(String userId, int runeIndex, int slotIndex) {
+        long id = parseUserId(userId);
+        if (id < 0) return EquipRuneResponse.getDefaultInstance();
+        try {
+            return stub.equipRune(EquipRuneRequest.newBuilder()
+                    .setUserId(id).setRuneIndex(runeIndex).setEquipSlot(slotIndex).build());
+        } catch (Exception e) {
+            log(e, "equipRune", userId);
+            return EquipRuneResponse.getDefaultInstance();
+        }
+    }
+
+    /**
+     * op=4 OFFRUNE.
+     * Current grpc contract does not have unequip-by-slot, so resolve runeIndex by slot first.
+     */
+    public UnequipRuneResponse offRune(String userId, int slotIndex) {
+        long id = parseUserId(userId);
+        if (id < 0) return UnequipRuneResponse.getDefaultInstance();
+        try {
+            GetAllRunesResponse allRunes = getAllRunes(userId);
+            int runeIndex = allRunes.getRunesList().stream()
+                    .filter(r -> r.getIsEquipped() && r.getEquipSlot() == slotIndex)
+                    .map(RuneData::getRuneIndex)
+                    .findFirst()
+                    .orElse(-1);
+            if (runeIndex < 0) {
+                return UnequipRuneResponse.getDefaultInstance();
+            }
+            return stub.unequipRune(UnequipRuneRequest.newBuilder()
+                    .setUserId(id).setRuneIndex(runeIndex).build());
+        } catch (Exception e) {
+            log(e, "offRune", userId);
+            return UnequipRuneResponse.getDefaultInstance();
+        }
+    }
+
+    // ── Upgrade ops ───────────────────────────────────────────────────────────
+
+    /** op=5 UPRUNE mapped to currently available levelUpRune rpc. */
+    public LevelUpRuneResponse levelUpRune(String userId, int runeIndex) {
+        long id = parseUserId(userId);
+        if (id < 0) return LevelUpRuneResponse.getDefaultInstance();
+        try {
+            return stub.levelUpRune(LevelUpRuneRequest.newBuilder()
+                    .setUserId(id).setRuneIndex(runeIndex).build());
+        } catch (Exception e) {
+            log(e, "levelUpRune", userId);
+            return LevelUpRuneResponse.getDefaultInstance();
+        }
+    }
+
+    /** Legacy quality upgrade (internal / REST) */
+    public UpgradeRuneQualityResponse upgradeQuality(String userId, int runeIndex) {
+        long id = parseUserId(userId);
+        if (id < 0) return UpgradeRuneQualityResponse.getDefaultInstance();
+        try {
+            return stub.upgradeRuneQuality(UpgradeRuneQualityRequest.newBuilder()
+                    .setUserId(id).setRuneIndex(runeIndex).build());
+        } catch (Exception e) {
+            log(e, "upgradeQuality", userId);
+            return UpgradeRuneQualityResponse.getDefaultInstance();
+        }
+    }
+
+    /** Tower level up (inscription tower win event) */
+    public void winTowerLevel(String userId) {
+        long id = parseUserId(userId);
+        if (id < 0) {
+            log.warn("[grpc-rune] winTowerLevel: invalid userId '{}'", userId);
+            return;
+        }
+        try {
+            // Notification-only call; no response needed
+            log.info("[grpc-rune] winTowerLevel: userId={}", userId);
+        } catch (Exception e) {
+            log(e, "winTowerLevel", userId);
+        }
+    }
+
+    // ── Logging helper ────────────────────────────────────────────────────────
+
+    private void log(Exception e, String method, String userId) {
+        if (isUnavailable(e)) log.warn("[grpc-rune] {}: rune-service unavailable (userId={})", method, userId);
+        else log.error("[grpc-rune] {} userId={} error: {}", method, userId, e.getMessage());
     }
 }

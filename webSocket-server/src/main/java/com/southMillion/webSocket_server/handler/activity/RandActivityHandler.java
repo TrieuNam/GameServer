@@ -65,6 +65,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RandActivityHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RandActivityHandler.class);
+
     private final ActivityFeign activityFeign;
 
     @Override
@@ -78,18 +80,19 @@ public class RandActivityHandler implements MessageHandler {
             try {
                 Msgrandactivity.PB_CSRandActivityOperaReq req =
                         Msgrandactivity.PB_CSRandActivityOperaReq.parseFrom(payload);
-                int activityType = req.hasRandActivityType() ? req.getRandActivityType() : 0;
+                int clientActivityType = req.hasRandActivityType() ? req.getRandActivityType() : 0;
+                int dispatchActivityType = normalizeActivityType(clientActivityType);
                 int operaType    = req.hasOperaType()        ? req.getOperaType()        : 0;
                 int param1       = req.hasParam1()           ? req.getParam1()           : 0;
                 int param2       = req.hasParam2()           ? req.getParam2()           : 0;
                 int param3       = req.hasParam3()           ? req.getParam3()           : 0;
                 String roleId = String.valueOf(session.getRoleId());
 
-                log.debug("[RandActivity] actType={}, op={}, p1={}, roleId={}",
-                        activityType, operaType, param1, roleId);
+                log.debug("[RandActivity] clientActType={}, dispatchActType={}, op={}, p1={}, roleId={}",
+                        clientActivityType, dispatchActivityType, operaType, param1, roleId);
 
                 Map<String, Object> body = new HashMap<>();
-                body.put("activityType", activityType);
+                body.put("activityType", dispatchActivityType);
                 body.put("operaType",    operaType);
                 body.put("param1",       param1);
                 body.put("param2",       param2);
@@ -100,11 +103,12 @@ public class RandActivityHandler implements MessageHandler {
                     data = activityFeign.randActivity(String.valueOf(roleId), body);
                     if (data == null) data = Map.of();
                 } catch (Exception e) {
-                    log.error("[RandActivity] backend error actType={} roleId={}", activityType, roleId, e);
+                    log.error("[RandActivity] backend error clientActType={} dispatchActType={} roleId={}",
+                            clientActivityType, dispatchActivityType, roleId, e);
                     data = Map.of();
                 }
 
-                dispatchResponse(session, activityType, data);
+                dispatchResponse(session, dispatchActivityType, clientActivityType, data);
 
             } catch (Exception e) {
                 log.error("[RandActivity] Error for roleId={}", session.getRoleId(), e);
@@ -117,9 +121,46 @@ public class RandActivityHandler implements MessageHandler {
 
     // ===== Dispatch to specific proto builder =====
 
-    private void dispatchResponse(PlayerSession session, int activityType,
-                                  Map<String, Object> data) throws Exception {
-        switch (activityType) {
+    private int normalizeActivityType(int activityType) {
+        return switch (activityType) {
+            case 2049 -> 10; // BoxFund
+            case 2050 -> 11; // LevelFund
+            case 2051 -> 15; // CommodityGuild
+            case 2052 -> 12; // FirstCharge
+            case 2053 -> 13; // LeiChong
+            case 2054 -> 14; // DailyGift
+            case 2055 -> 16; // MonthlyCard
+            case 2056 -> 17; // LuckyGift
+            case 2057 -> 20; // InviteFriend
+            case 2058 -> 18; // WeekendRecharge
+            case 2059 -> 19; // CaveLoot
+            case 2060 -> 21; // BoxManor
+            case 2061 -> 22; // ScoreFund
+            case 2062 -> 23; // TodayShare
+            case 2063 -> 24; // FaZhenGala
+            case 2064 -> 26; // GuMoChengJiu
+            case 2065 -> 27; // InscripeChengJiu
+            case 2066 -> 25; // StarMapGala
+            case 2067 -> 28; // ChaoZhiXianLi
+            case 2068 -> 29; // NewServerCompetition
+            case 2069 -> 30; // WeekHaoLi
+            case 2070 -> 32; // LianChongZengLi
+            case 2071 -> 33; // WarOrder
+            case 2072 -> 34; // WeekLianChong
+            case 2073 -> 35; // AdEquity
+            case 2074 -> 37; // ShenQiDuoBao
+            case 2075 -> 38; // TianXuanZhiLi
+            case 2076 -> 39; // TerritoryGift
+            case 2077 -> 40; // JiFenChouJiang
+            case 2078 -> 41; // ShouChongDingZhi
+            case 2079 -> 42; // ZhuanShuLiBaoRuKou
+            default -> activityType;
+        };
+    }
+
+    private void dispatchResponse(PlayerSession session, int dispatchActivityType,
+                                  int clientActivityType, Map<String, Object> data) throws Exception {
+        switch (dispatchActivityType) {
             case 1  -> sendChongZhi(session, data);
             case 10 -> sendBoxFund(session, data);
             case 11 -> sendLevelFund(session, data);
@@ -160,9 +201,9 @@ public class RandActivityHandler implements MessageHandler {
             case 46 -> sendFillBlank(session, data);
             case 47 -> sendMingXiang(session, data);
             default -> {
-                log.warn("[RandActivity] Unknown activityType={}", activityType);
+                log.warn("[RandActivity] Unknown activityType client={} dispatch={}", clientActivityType, dispatchActivityType);
                 Emitters.emit(session, 3003, Msgrandactivity.PB_SCActivityStatus.newBuilder()
-                                .setActivityType(activityType).setStatus(0).build().toByteArray());
+                                .setActivityType(clientActivityType).setStatus(0).build().toByteArray());
             }
         }
     }

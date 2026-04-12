@@ -39,6 +39,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class BlockHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BlockHandler.class);
+
     private final BlockFeign blockFeign;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;

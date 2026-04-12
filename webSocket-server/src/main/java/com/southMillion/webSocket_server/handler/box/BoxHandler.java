@@ -6,7 +6,6 @@ import com.SouthMillion.webSocket_server.handler.bag.BagHandler;
 import com.SouthMillion.webSocket_server.handler.role.RoleServiceHandler;
 import com.SouthMillion.webSocket_server.handler.task.TaskHandler;
 import com.SouthMillion.webSocket_server.net.Emitters;
-import com.SouthMillion.webSocket_server.service.BagUpdateGate;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.net.MsgIds;
 import com.SouthMillion.webSocket_server.service.TaskCondition;
@@ -34,7 +33,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -58,6 +57,8 @@ import java.util.function.Supplier;
 @RequiredArgsConstructor
 public class BoxHandler implements MessageHandler, LazyLoadHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BoxHandler.class);
+
     private final BoxFeign boxFeign;
     private final EquipHttpClient equipHttpClient;
     private final BagHandler bagHandler;
@@ -66,7 +67,6 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
     private final TaskHandler taskHandler;
     private final TaskProgressPublisher taskProgressPublisher;
     private final WalletHttpClient walletHttpClient;
-    private final BagUpdateGate bagUpdateGate;
     private final reactor.core.scheduler.Scheduler feignVtScheduler;
 
     private static final int REQ_OPEN     = 1;
@@ -78,9 +78,13 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
     private static final int REQ_DECOMPOSE = 7;
     private static final int REQ_LEVEL_REWARD = 8;
 
-    /** Box UI refresh calls are best-effort and must not stall open/wear/sell flows. */
-    @Value("${box.ws.fetch-timeout-ms:200}")
-    private long boxFetchTimeoutMs = 200L;
+    /**
+     * Box UI refresh calls are best-effort and must not stall open/wear/sell flows.
+     * Default raised from 200ms because normal service-discovery + Feign calls on local/dev
+     * routinely take a few hundred milliseconds, which was causing box info to be skipped.
+     */
+    @Value("${box.ws.fetch-timeout-ms:1500}")
+    private long boxFetchTimeoutMs = 1500L;
 
     @Override
     public int[] interests() {
@@ -107,17 +111,21 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
         // Old: sendCurrentInfo() → sendCurrentSetting() → sendPendingEquipInfo() (sequential, ~1500ms)
         // New: Mono.zip all calls (parallel, ~600ms - 60% faster)
         return Mono.zip(
-                bestEffortFetchMono(() -> boxFeign.info(roleId), roleId, "info"),
-                bestEffortFetchMono(() -> boxFeign.getSetting(roleId), roleId, "getSetting"),
+                bestEffortFetchMono(() -> boxFeign.info(roleId), roleId, "info")
+                        .defaultIfEmpty(BoxDTOs.InfoResp.builder().build()),
+                bestEffortFetchMono(() -> boxFeign.getSetting(roleId), roleId, "getSetting")
+                        .defaultIfEmpty(BoxDTOs.BoxSettingResp.builder().build()),
                 bestEffortFetchMono(() -> boxFeign.getCompareState(roleId), roleId, "getCompareState")
-                        .defaultIfEmpty(null),
+                        .map(Optional::of)
+                        .defaultIfEmpty(Optional.empty()),
                 bestEffortFetchMono(() -> boxFeign.equipInfo(roleId), roleId, "equipInfo")
-                        .defaultIfEmpty(null)
+                        .map(Optional::of)
+                        .defaultIfEmpty(Optional.empty())
         ).flatMap(tuple -> {
             BoxDTOs.InfoResp info = tuple.getT1();
             BoxDTOs.BoxSettingResp setting = tuple.getT2();
-            BoxDTOs.BoxCompareStateResp compareState = tuple.getT3();
-            BoxDTOs.EquipInfo equipInfo = tuple.getT4();
+            BoxDTOs.BoxCompareStateResp compareState = tuple.getT3().orElse(null);
+            BoxDTOs.EquipInfo equipInfo = tuple.getT4().orElse(null);
 
             // Send current info (1616)
             sendCurrentInfoFromResp(session, info);
@@ -473,11 +481,11 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
 
     private int normalizeOpenCount(int param) {
         // Compatibility:
-        // - legacy clients often send 0/1 as open-mode flags (single/five)
+        // - legacy LineR clients send 0/1 as open-mode flags (single/five)
         // - some clients send 1/2 as mode indexes (single/five)
         // - explicit numeric count supports only 5 for multi-open
         if (param <= 0) return 1;
-        if (param == 2 || param == 5) return 5;
+        if (param == 1 || param == 2 || param >= 5) return 5;
         return 1;
     }
 
@@ -496,8 +504,9 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
                 clearCompareStateSafely(roleId, "wear success");
                 sendEquipInfo(session, buildEmptyEquipInfo());
                 sendEquipList(session, roleId);
-                // Equip từ Box đã cộng/trừ stat ở backend -> push lại role attrs để client refresh chỉ số ngay.
-                pushRoleAttr(session);
+                // BoxService.wear() auto-sells the replaced old equip, so refresh both role attrs
+                // and wallet immediately to keep the top bar and exp state in sync.
+                refreshRoleAndWalletAfterSell(session, roleId);
             } else {
                 String msg = (wearResp == null) ? "NULL_RESP" : String.valueOf(wearResp.getMessage());
                 log.warn("[Box] wear not ok roleId={} msg={}", roleId, msg);
@@ -596,6 +605,14 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
     private void handleDecompose(PlayerSession session, Long roleId) {
         try {
             BoxDTOs.DecomposeResp resp = boxFeign.decompose(roleId);
+
+            if (resp != null && resp.isOk()) {
+                // Decompose clears the pending box item in box-service, so the client must receive
+                // an empty 1615 immediately to close BoxEquipView and avoid replaying stale compare data.
+                clearCompareStateSafely(roleId, "decompose success");
+                sendEquipInfo(session, buildEmptyEquipInfo());
+                pushRoleAttr(session);
+            }
 
             Msgbox.PB_SCBoxSellInfo.Builder sellInfo = Msgbox.PB_SCBoxSellInfo.newBuilder();
             if (resp != null) {
@@ -1033,46 +1050,60 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
     }
 
     private void pushRoleAttr(PlayerSession session) {
-        Thread.ofVirtual().start(() -> {
-            try {
-                roleServiceHandler.pushRoleState(session)
-                        .onErrorResume(ex -> {
-                            log.debug("[Box] pushRoleAttr skipped roleId={} ex={}", session.getRoleId(), ex.toString());
-                            return Mono.empty();
-                        })
-                        .block(Duration.ofSeconds(5));
-            } catch (Exception e) {
-                log.debug("[Box] pushRoleAttr error roleId={} ex={}", session.getRoleId(), e.toString());
-            }
-        });
+        if (session == null) {
+            return;
+        }
+        try {
+            roleServiceHandler.pushRoleState(session)
+                    .onErrorResume(ex -> {
+                        log.debug("[Box] pushRoleAttr skipped roleId={} ex={}", session.getRoleId(), ex.toString());
+                        return Mono.empty();
+                    })
+                    .block(Duration.ofSeconds(5));
+        } catch (Exception e) {
+            log.debug("[Box] pushRoleAttr error roleId={} ex={}", session.getRoleId(), e.toString());
+        }
+    }
+
+    private void pushRoleAttrAsync(PlayerSession session) {
+        if (session == null) {
+            return;
+        }
+        Thread.ofVirtual().start(() -> pushRoleAttr(session));
     }
 
     private void pushWalletBalance(PlayerSession session, Long roleId) {
-        if (roleId == null) {
+        if (session == null || roleId == null) {
             return;
         }
-        Thread.ofVirtual().start(() -> {
-            try {
-                WalletDTOs.BalancesResp walletResp = walletHttpClient.info(String.valueOf(roleId));
-                if (walletResp != null && walletResp.balances() != null) {
-                    Emitters.sendWalletBalances(session, walletResp.balances());
-                }
-            } catch (Exception e) {
-                log.debug("[Box] pushWalletBalance skipped roleId={} ex={}", roleId, e.toString());
+        try {
+            WalletDTOs.BalancesResp walletResp = walletHttpClient.info(String.valueOf(roleId));
+            if (walletResp != null && walletResp.balances() != null) {
+                Emitters.sendWalletBalances(session, walletResp.balances());
             }
-        });
+        } catch (Exception e) {
+            log.debug("[Box] pushWalletBalance skipped roleId={} ex={}", roleId, e.toString());
+        }
+    }
+
+    private void pushWalletBalanceAsync(PlayerSession session, Long roleId) {
+        if (session == null || roleId == null) {
+            return;
+        }
+        Thread.ofVirtual().start(() -> pushWalletBalance(session, roleId));
     }
 
     private void refreshRoleAndWalletAfterSell(PlayerSession session, Long roleId) {
+        // Push the refreshed role/coin state immediately so the sell popup and top-bar stay in sync.
         pushRoleAttr(session);
         pushWalletBalance(session, roleId);
 
-        // Best-effort retry shortly after first push to mitigate stale reads/cache races.
+        // Keep one short best-effort retry for slower downstream commits/caches.
         Mono.delay(Duration.ofMillis(250))
                 .onErrorResume(ex -> Mono.empty())
                 .subscribe(ignored -> {
-                    pushRoleAttr(session);
-                    pushWalletBalance(session, roleId);
+                    pushRoleAttrAsync(session);
+                    pushWalletBalanceAsync(session, roleId);
                 });
     }
 
@@ -1080,48 +1111,22 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
         if (session == null || roleId == null) {
             return;
         }
-
-        // Arm a one-shot gate: allow exactly one UI bag update for this open flow.
-        // If the first push succeeds, the later duplicate bag-changed update is skipped.
-        // If the first push fails, the fallback update is still allowed through.
-        if (bagUpdateGate != null) {
-            bagUpdateGate.arm(roleId);
-        }
-
-        // Keep the rescue retry, but only when the first immediate push actually failed.
-        // If the first push succeeds, a blind delayed second 1505 can arrive late and overwrite
-        // the fresher 1506 from BagChangedConsumer, which is what caused the box count rollback.
-        boolean immediatePushSucceeded = pushBagSnapshot(session, roleId, "initial");
-        if (!immediatePushSucceeded) {
-            Mono.delay(Duration.ofMillis(300))
-                    .onErrorResume(ex -> Mono.empty())
-                    .subscribe(ignored -> pushBagSnapshotAsync(session, roleId));
-        }
+        pushBagSnapshot(session, roleId, "initial");
     }
 
     private boolean pushBagSnapshot(PlayerSession session, Long roleId, String phase) {
-        AtomicBoolean success = new AtomicBoolean(true);
         try {
             bagHandler.pushAll(session)
-                    .doOnError(ex -> success.set(false))
                     .onErrorResume(ex -> {
                         log.debug("[Box] refreshBagAfterOpen {} skipped roleId={} ex={}", phase, roleId, ex.toString());
                         return Mono.empty();
                     })
                     .block(Duration.ofSeconds(2));
-            boolean delivered = success.get();
-            if (delivered && bagUpdateGate != null) {
-                bagUpdateGate.markDelivered(roleId);
-            }
-            return delivered;
+            return true;
         } catch (Exception e) {
             log.debug("[Box] refreshBagAfterOpen {} failed roleId={} ex={}", phase, roleId, e.toString());
             return false;
         }
-    }
-
-    private void pushBagSnapshotAsync(PlayerSession session, Long roleId) {
-        Thread.ofVirtual().start(() -> pushBagSnapshot(session, roleId, "retry"));
     }
 
     private int clampPositiveInt(long value) {

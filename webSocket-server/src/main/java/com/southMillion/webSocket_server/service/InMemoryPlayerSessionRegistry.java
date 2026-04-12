@@ -11,6 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class InMemoryPlayerSessionRegistry implements PlayerSessionRegistry {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(InMemoryPlayerSessionRegistry.class);
+
     // wsId -> session
     private final Map<String, PlayerSession> byWs = new ConcurrentHashMap<>();
 

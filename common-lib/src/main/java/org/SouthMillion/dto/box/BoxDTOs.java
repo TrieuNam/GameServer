@@ -514,5 +514,114 @@ public class BoxDTOs {
     public static class WaBaoBookListInfo {
         private List<Integer> activateFlagList;
     }
+
+    // ===== WaBao CS Request DTOs (new operations 1-17) ==================
+
+    /** CS 1640 Op 1: unlock map */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class UnlockMapReq {
+        @NotBlank private String roleId;
+        @Min(0) private int mapId;
+    }
+
+    /** CS 1640 Op 2: enter map */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class EnterMapReq {
+        @NotBlank private String roleId;
+        @Min(0) private int mapId;
+    }
+
+    /** CS 1640 Op 3: excavate/wa_bao (raw response from backend, wrapped) */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ExcavateResp {
+        private EquipRolled item;   // item excavated
+        private String message;
+    }
+
+    /** CS 1640 Op 5: put item into collection */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PutCollectionReq {
+        @NotBlank private String roleId;
+        @Min(0) private int itemType;
+        @Min(0) @Max(5) private int index;
+    }
+
+    /** CS 1640 Op 6: sell item from collection */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class CollectionSellReq {
+        @NotBlank private String roleId;
+        @Min(0) private int itemType;
+        @Min(0) @Max(5) private int index;
+    }
+
+    /** CS 1640 Op 10: refresh task */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class FreshTaskReq {
+        @NotBlank private String roleId;
+        @Min(0) private int index;
+    }
+
+    /** CS 1640 Op 11: fetch task reward */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class FetchTaskReq {
+        @NotBlank private String roleId;
+        @Min(0) private int index;
+    }
+
+    /** CS 1640 Op 12: tool level up */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ToolUpLevelReq {
+        @NotBlank private String roleId;
+        @Min(0) private int toolType;
+    }
+
+    /** CS 1640 Op 13: tool grade up */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ToolUpGradeReq {
+        @NotBlank private String roleId;
+        @Min(0) private int toolType;
+    }
+
+    /** CS 1640 Op 14: put item into collection book */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class PutCollectionBookReq {
+        @NotBlank private String roleId;
+        @Min(0) private int handbookType;
+    }
+
+    /** CS 1640 Op 15: collection book level up */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class CollectionBookLevelUpReq {
+        @NotBlank private String roleId;
+        @Min(0) private int handbookType;
+    }
+
+    /** CS 1640 Op 16: activate book */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class ActivateBookReq {
+        @NotBlank private String roleId;
+        @Min(0) private int orbMap;
+        @Min(0) private int handbookType;
+    }
+
+    /** CS 1640 Op 17: fetch collection level reward */
+    @Getter @Setter @NoArgsConstructor
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class FetchCollectionLevelRewardReq {
+        @NotBlank private String roleId;
+        @Min(1) private int rewardLevel;
+    }
 }
 

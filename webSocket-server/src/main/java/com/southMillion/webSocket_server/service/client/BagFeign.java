@@ -28,6 +28,10 @@ public interface BagFeign {
     @PostMapping("/grant")
     List<BagDTOs.ItemView> grant(@RequestBody BagDTOs.GrantReq req);
 
+    /** Lấy tiến trình recycle (level + exp) — dùng cho bootstrap push 1686 */
+    @GetMapping("/{roleId}/recycle-progress")
+    Map<String, Object> getRecycleProgress(@PathVariable("roleId") String roleId);
+
     /** Item recycle (物品回收) — consume items, return {level, exp} */
     @PostMapping("/{roleId}/recycle")
     Map<String, Object> recycleItems(@PathVariable("roleId") String roleId,

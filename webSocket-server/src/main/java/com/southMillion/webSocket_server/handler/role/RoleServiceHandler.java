@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.role.RoleDTOs;
 import org.SouthMillion.dto.role.other.OtherRoleDTOs;
 import org.SouthMillion.dto.role.settings.SettingsDTOs;
+import org.SouthMillion.dto.role.settings.SystemSettings;
 import org.SouthMillion.proto.Msgother.Msgother;
 import org.SouthMillion.proto.Msgrole.Msgrole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +38,8 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class RoleServiceHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RoleServiceHandler.class);
+
     private final RoleFeign roleFeign;
     private final ShiZhuangFeign shiZhuangFeign;
     private final MountFeign mountFeign;
@@ -45,7 +48,7 @@ public class RoleServiceHandler implements MessageHandler {
     private final TaskProgressPublisher taskProgressPublisher;
 
     /** Setter injection with @Lazy to break the potential construction-order coupling. */
-    @Setter(onMethod_ = {@Autowired, @Lazy})
+    @Setter(onMethod = @__({@Autowired, @Lazy}))
     private TaskHandler taskHandler;
 
     @Override
@@ -68,7 +71,7 @@ public class RoleServiceHandler implements MessageHandler {
                     log.warn("[role-attr] pushAll error: {}", e.toString());
                     return Mono.empty();
                 })
-                .then();
+                .then(pushSystemSettings(ps));
     }
 
     /**
@@ -77,8 +80,12 @@ public class RoleServiceHandler implements MessageHandler {
      * Emits:
      *  - 1400 PB_SCRoleInfoAck (authoritative snapshot)
      *  - 1402 PB_SCRoleExpChange (snapshot-style with change_exp=0)
-     *  - 1403 PB_SCRoleLevelChange (snapshot-style)
      *  - 1401 PB_SCRoleAttrList (via pushAll)
+    *
+    * NOTE:
+    *  - This method must NOT emit 1403 (PB_SCRoleLevelChange).
+    *  - 1403 is reserved for true level delta notifications only
+    *    (see emitLevelChangeIfAny) so client levelup popup semantics remain correct.
      */
     public Mono<Void> pushRoleState(PlayerSession ps) {
         if (blank(ps.getUserId()) || ps.getRoleId() == null) return Mono.empty();
@@ -89,22 +96,15 @@ public class RoleServiceHandler implements MessageHandler {
                     RoleDTOs.RoleResp role = selectCurrentRole(list, ps.getRoleId());
                     if (role == null) return;
 
+                    emitLevelChangeFromSessionCacheIfAny(ps, role);
                     emitRoleInfoAck(ps, role);
 
                     long curExp = role.getCurExp() != null ? role.getCurExp() : 0L;
-                    int level = role.getLevel() != null ? role.getLevel() : 1;
-
                     Msgrole.PB_SCRoleExpChange exp = Msgrole.PB_SCRoleExpChange.newBuilder()
                             .setChangeExp(0L)
                             .setCurExp(curExp)
                             .build();
                     Emitters.emit(ps, MsgIds.SC_ROLE_EXP_CHANGE, exp);
-
-                    Msgrole.PB_SCRoleLevelChange lvl = Msgrole.PB_SCRoleLevelChange.newBuilder()
-                            .setLevel(level)
-                            .setExp(curExp)
-                            .build();
-                    Emitters.emit(ps, MsgIds.SC_ROLE_LEVEL_CHANGE, lvl);
                 })
                 .onErrorResume(e -> {
                     log.warn("[role-state] snapshot push failed: {}", e.toString());
@@ -170,29 +170,68 @@ public class RoleServiceHandler implements MessageHandler {
         if (req == null) return Mono.empty();
 
         List<SettingsDTOs.SystemSettingItem> items = req.getSystemSetListList().stream()
-                .map(x -> new SettingsDTOs.SystemSettingItem(String.valueOf(x.getSystemSetType()), x.getSystemSetParam()))
+                .map(this::toRoleSettingItem)
+                .filter(Objects::nonNull)
                 .toList();
         var body = new SettingsDTOs.SystemSetReq(ps.getUserId(), items);
 
         return FeignCall.withToken(ps.getSessionId(), "role.settings",
                         () -> roleFeign.applySettings(body))
-                .doOnNext(resp -> {
-                    // Echo 1461
-                    Msgrole.PB_SCRoleSystemSetInfo.Builder b = Msgrole.PB_SCRoleSystemSetInfo.newBuilder();
-                    for (var it : items) {
-                        int type = safeInt(it.key());
-                        int param = (it.value() instanceof Number n) ? n.intValue() : safeInt(String.valueOf(it.value()));
-                        b.addSystemSetList(Msgrole.PB_system_set.newBuilder()
-                                .setSystemSetType(type)
-                                .setSystemSetParam(param));
-                    }
-                    Emitters.emit(ps, MsgIds.SC_ROLE_SYSTEM_SET_INFO, b.build());
-                })
+                .doOnNext(resp -> emitSystemSettings(ps, resp))
                 // Lấy attr & capability mới → phát 1401 (notify_reason: CHANGE=1)
                 .then(FeignCall.withToken(ps.getSessionId(), "other-role.self",
                         () -> roleFeign.getOtherRole(ps.getUserId(), ps.getRoleId() != null ? String.valueOf(ps.getRoleId()) : null)))
                 .doOnNext(info -> emitAttrListFromOtherRoleInfo(ps, info, /*notifyReason=*/1))
                 .then();
+    }
+
+    private Mono<Void> pushSystemSettings(PlayerSession ps) {
+        if (blank(ps.getUserId())) {
+            return Mono.empty();
+        }
+        SettingsDTOs.SystemSetReq body = new SettingsDTOs.SystemSetReq(ps.getUserId(), List.of());
+        return FeignCall.withToken(ps.getSessionId(), "role.settings.fetch",
+                        () -> roleFeign.applySettings(body))
+                .doOnNext(resp -> emitSystemSettings(ps, resp))
+                .onErrorResume(e -> {
+                    log.warn("[role-settings] pushAll error: {}", e.toString());
+                    return Mono.empty();
+                })
+                .then();
+    }
+
+    private void emitSystemSettings(PlayerSession ps, SettingsDTOs.SystemSetResp resp) {
+        SystemSettings settings = resp != null && resp.settings() != null ? resp.settings() : SystemSettings.defaults();
+
+        Msgrole.PB_SCRoleSystemSetInfo.Builder b = Msgrole.PB_SCRoleSystemSetInfo.newBuilder();
+        b.addSystemSetList(Msgrole.PB_system_set.newBuilder()
+                .setSystemSetType(0)
+                .setSystemSetParam(toLegacyToggleParam(settings.getMusicOn())));
+        b.addSystemSetList(Msgrole.PB_system_set.newBuilder()
+                .setSystemSetType(1)
+                .setSystemSetParam(toLegacyToggleParam(settings.getSfxOn())));
+        b.addSystemSetList(Msgrole.PB_system_set.newBuilder()
+                .setSystemSetType(2)
+                .setSystemSetParam(toLegacyToggleParam(settings.getVibrateOn())));
+        Emitters.emit(ps, MsgIds.SC_ROLE_SYSTEM_SET_INFO, b.build());
+    }
+
+    private SettingsDTOs.SystemSettingItem toRoleSettingItem(Msgrole.PB_system_set item) {
+        if (item == null) {
+            return null;
+        }
+        int type = item.getSystemSetType();
+        int param = item.getSystemSetParam();
+        return switch (type) {
+            case 0 -> new SettingsDTOs.SystemSettingItem("music", param == 0);
+            case 1 -> new SettingsDTOs.SystemSettingItem("sfx", param == 0);
+            case 2 -> new SettingsDTOs.SystemSettingItem("vibrate", param == 0);
+            default -> new SettingsDTOs.SystemSettingItem(String.valueOf(type), param);
+        };
+    }
+
+    private int toLegacyToggleParam(Boolean enabled) {
+        return Boolean.FALSE.equals(enabled) ? 1 : 0;
     }
 
     /* ======================= OTHER ROLE ======================= */
@@ -378,7 +417,41 @@ public class RoleServiceHandler implements MessageHandler {
         if (ps == null || role == null) {
             return;
         }
+        ps.setLastKnownRoleLevel(role.getLevel());
+        ps.setLastKnownRoleExp(role.getCurExp() != null ? role.getCurExp() : 0L);
         Emitters.sendRoleInfoAck(ps, role, buildAppearance(role));
+    }
+
+    private void emitLevelChangeFromSessionCacheIfAny(PlayerSession ps, RoleDTOs.RoleResp after) {
+        if (ps == null || after == null) {
+            return;
+        }
+        Integer bl = ps.getLastKnownRoleLevel();
+        Integer al = after.getLevel();
+        if (bl == null || al == null || Objects.equals(bl, al)) {
+            return;
+        }
+
+        long curExp = (after.getCurExp() != null) ? after.getCurExp() : 0L;
+        Msgrole.PB_SCRoleLevelChange out = Msgrole.PB_SCRoleLevelChange.newBuilder()
+                .setLevel(al)
+                .setExp(curExp)
+                .build();
+        Emitters.emit(ps, MsgIds.SC_ROLE_LEVEL_CHANGE, out);
+
+        if (taskHandler != null) {
+            try {
+                taskHandler.pushLevelUpProgress(ps, bl, al);
+            } catch (Exception e) {
+                log.debug("[role] pushLevelUpProgress cache-path failed roleId={} ex={}", ps.getRoleId(), e.toString());
+            }
+        } else {
+            try {
+                taskProgressPublisher.publish(ps.getRoleId(), "level_up", al, "role-level-change-cache");
+            } catch (Exception e) {
+                log.debug("[role] taskProgressPublisher level_up cache-path failed roleId={} ex={}", ps.getRoleId(), e.toString());
+            }
+        }
     }
 
     private Msgrole.PB_SCRoleInfoAck buildRoleInfoAck(RoleDTOs.RoleResp role) {

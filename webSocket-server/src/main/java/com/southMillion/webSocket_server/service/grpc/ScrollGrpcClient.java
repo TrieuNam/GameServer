@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class ScrollGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ScrollGrpcClient.class);
+
     @GrpcClient("scroll-service")
     private ScrollServiceGrpc.ScrollServiceBlockingStub stub;
 

@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class PagodaGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PagodaGrpcClient.class);
+
     @GrpcClient("pagoda-service")
     private PagodaServiceGrpc.PagodaServiceBlockingStub stub;
 

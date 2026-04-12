@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class ChatGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ChatGrpcClient.class);
+
     @GrpcClient("chat-service")
     private ChatServiceGrpc.ChatServiceBlockingStub stub;
 

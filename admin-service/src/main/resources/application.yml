@@ -88,3 +88,7 @@ doctor:
     command-template: "$prompt = Get-Content -Raw '{promptFile}'; gh copilot -p $prompt"
   build:
     command: "mvn -DskipTests compile"
+
+gameserver:
+  cds:
+    enabled: false   # Dev default: disable .jsa/CDS to avoid stale lock issues during frequent rebuilds

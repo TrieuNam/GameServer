@@ -36,6 +36,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChatHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ChatHandler.class);
+
     private final ChatFeign chatFeign;
 
     // Chat operation types from Frontend

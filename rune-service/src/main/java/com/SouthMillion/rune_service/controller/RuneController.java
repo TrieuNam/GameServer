@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Rune Controller
@@ -28,6 +29,14 @@ public class RuneController {
         log.debug("GET /api/rune/{}", userId);
         List<Rune> runes = runeService.getAllRunes(userId);
         return ResponseEntity.ok(runes);
+    }
+
+    @PostMapping("/{userId}/box-draw")
+    public ResponseEntity<Map<String, Object>> drawBox(
+            @PathVariable Long userId,
+            @RequestParam Integer type) {
+        log.info("POST /api/rune/{}/box-draw - type={}", userId, type);
+        return ResponseEntity.ok(runeService.drawBox(userId, type));
     }
     
     @GetMapping("/{userId}/{runeIndex}")

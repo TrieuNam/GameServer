@@ -45,6 +45,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FormationHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FormationHandler.class);
+
     /** op=1: save formation slots. */
     private static final int OP_SAVE_SLOTS  = 1;
     /** op=2: upgrade formation level. */

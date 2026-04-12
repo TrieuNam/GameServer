@@ -39,6 +39,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ShopHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ShopHandler.class);
+
     private final ShopFeign shopFeign;
     private final BagFeign bagFeign;
     private final WalletHttpClient walletHttpClient;
@@ -55,6 +57,7 @@ public class ShopHandler implements MessageHandler {
     // Mystery shop operation types
     private static final int MYSTERY_OP_REFRESH = 0;  // Refresh/list mystery shop
     private static final int MYSTERY_OP_BUY = 1;      // Buy mystery item
+    private static final int MYSTERY_OP_OPEN = 2;     // Open/list mystery shop (client compatibility)
 
     @Override
     public int[] interests() {
@@ -360,6 +363,7 @@ public class ShopHandler implements MessageHandler {
             switch (opType) {
                 case MYSTERY_OP_REFRESH -> handleListMystery(session, roleId, param);
                 case MYSTERY_OP_BUY -> handleBuyMystery(session, roleId, param);
+                case MYSTERY_OP_OPEN -> handleListMystery(session, roleId, param);
                 default -> {
                     log.warn("[Shop] Unknown mystery shop operation: {}", opType);
                     sendMysteryShopErrorResponse(session);

@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagDTOs;
 import org.SouthMillion.dto.wallet.WalletDTOs;
+import org.SouthMillion.proto.Msgbattle.Msgbattle;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -30,6 +31,8 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class TrialHandler implements MessageHandler {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TrialHandler.class);
 
     private final TrialGrpcClient trialGrpcClient;
     private final ObjectMapper objectMapper;
@@ -80,6 +83,13 @@ public class TrialHandler implements MessageHandler {
 
                 case OP_COMPLETE_TRIAL:
                     result = handleCompleteTrial(roleId, trialId, payload);
+                    // Send trial battle report with stars if completion was successful
+                    if (result instanceof Map resultMap && (boolean) resultMap.getOrDefault("success", false)) {
+                        Object trialRecord = resultMap.get("trialRecord");
+                        if (trialRecord instanceof Map trialMap) {
+                            sendBattleReportWithStars(session, trialMap);
+                        }
+                    }
                     break;
 
                 case OP_FAIL_TRIAL:
@@ -184,6 +194,37 @@ public class TrialHandler implements MessageHandler {
         } catch (Exception e) {
             log.error("[trial] Error completing trial", e);
             return Map.of("success", false, "error", e.getMessage());
+        }
+    }
+
+    /**
+     * Send trial battle report with stars to client
+     */
+    private void sendBattleReportWithStars(PlayerSession session, Map<String, Object> trialRecord) {
+        try {
+            if (trialRecord == null) {
+                log.warn("[trial] No trial record to report");
+                return;
+            }
+
+            // Extract trial completion data from record
+            int starsEarned = ((Number) trialRecord.getOrDefault("stars", 1)).intValue();
+            boolean isFirstClear = (boolean) trialRecord.getOrDefault("isFirstClear", false);
+            long baseReward = ((Number) trialRecord.getOrDefault("baseReward", 0L)).longValue();
+            long expEarned = ((Number) trialRecord.getOrDefault("expEarned", 0L)).longValue();
+
+            Msgbattle.PB_SCBattleReport.Builder reportBuilder = Msgbattle.PB_SCBattleReport.newBuilder()
+                    .setBattleResultType(1)  // 1 = WIN (trial completed)
+                    .setBattleModeType(1)    // 1 = Trial
+                    .setTotalDamage(0);
+
+            Msgbattle.PB_SCBattleReport report = reportBuilder.build();
+            Emitters.emit(session, 11003, report.toByteArray());  // MsgId 11003 = PB_SCBattleReport
+
+                log.debug("[trial] Sent battle report for roleId={}, stars={}, expEarned={}, baseReward={}, isFirstClear={}",
+                    session.getRoleId(), starsEarned, expEarned, baseReward, isFirstClear);
+        } catch (Exception e) {
+            log.warn("[trial] Failed to send trial battle report: {}", e.getMessage());
         }
     }
 

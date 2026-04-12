@@ -81,6 +81,22 @@ public class ShopService {
         return (x == null || x.isNull()) ? def : x.asText();
     }
 
+    private static Iterable<JsonNode> configItems(JsonNode root, String... arrayFields) {
+        if (root == null || root.isNull()) {
+            return List.of();
+        }
+        if (root.isArray()) {
+            return root;
+        }
+        for (String arrayField : arrayFields) {
+            JsonNode arr = root.get(arrayField);
+            if (arr != null && arr.isArray()) {
+                return arr;
+            }
+        }
+        return List.of();
+    }
+
     private static int asInt(Object value, int def) {
         if (value instanceof Number num) return num.intValue();
         try { return value == null ? def : Integer.parseInt(String.valueOf(value)); } catch (Exception e) { return def; }
@@ -164,7 +180,7 @@ public class ShopService {
     // ===================== LIST COMMON =====================
     public ResultDTO<ShopDTOs.ShopListResp> listCommon(ShopDTOs.ListCommonReq req) {
         JsonNode root = cfg.common();
-        Iterable<JsonNode> arr = root.isArray() ? root : root.withArray("list");
+        Iterable<JsonNode> arr = configItems(root, "shop", "list");
 
         List<ShopDTOs.ShopItem> items = StreamSupport.stream(arr.spliterator(), false)
                 .filter(n -> asInt(n, "page", -1) == req.page())
@@ -205,7 +221,7 @@ public class ShopService {
     // ===================== LIST CLOTH =====================
     public ResultDTO<ShopDTOs.ShopListResp> listCloth(ShopDTOs.ListClothReq req) {
         JsonNode root = cfg.cloth();
-        Iterable<JsonNode> arr = root.isArray() ? root : root.withArray("list");
+        Iterable<JsonNode> arr = configItems(root, "shop", "list");
 
         List<ShopDTOs.ShopItem> items = StreamSupport.stream(arr.spliterator(), false)
                 .filter(n -> asInt(n, "shop_type", -1) == req.page())
@@ -242,7 +258,7 @@ public class ShopService {
     public ResultDTO<ShopDTOs.ShopListResp> listMystery(int level, Integer slotsOverride) {
         int slots = (slotsOverride != null && slotsOverride > 0) ? slotsOverride : shenmiSlots;
         JsonNode root = cfg.shenmi();
-        JsonNode arr = root.isArray() ? root : root.withArray("shop");
+        Iterable<JsonNode> arr = configItems(root, "shop", "list");
 
         List<JsonNode> candidates = new ArrayList<>();
         for (JsonNode n : arr) {
@@ -280,7 +296,7 @@ public class ShopService {
         int level = resolveLevel(roleId, null);
         
         JsonNode root = cfg.shenmi();
-        JsonNode arr = root.isArray() ? root : root.withArray("shop");
+        Iterable<JsonNode> arr = configItems(root, "shop", "list");
 
         List<JsonNode> candidates = new ArrayList<>();
         for (JsonNode n : arr) {
@@ -476,7 +492,7 @@ public class ShopService {
     }
 
     private CfgLine findFrom(JsonNode root, String key, int value, boolean isCloth) {
-        Iterable<JsonNode> arr = root.isArray() ? root : root.withArray("list");
+        Iterable<JsonNode> arr = configItems(root, "shop", "list");
         for (JsonNode n : arr) {
             if (asInt(n, key, -9999) == value) {
                 long priceItemId = asLong(n, "exchange_item_id", asLong(n, "buy_item", 0));

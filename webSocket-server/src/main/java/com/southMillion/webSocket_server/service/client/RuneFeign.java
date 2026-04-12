@@ -111,4 +111,8 @@ public interface RuneFeign {
      */
     @GetMapping("/api/rune/{userId}/power")
     ResponseEntity<Long> getTotalPower(@PathVariable("userId") Long userId);
+
+    @PostMapping("/api/rune/{userId}/box-draw")
+    ResponseEntity<Map<String, Object>> drawBox(@PathVariable("userId") Long userId,
+                                                @RequestParam("type") Integer type);
 }

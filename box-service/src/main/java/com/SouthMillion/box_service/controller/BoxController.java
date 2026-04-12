@@ -124,4 +124,102 @@ public class BoxController {
     public BoxDTOs.WaBaoBookListInfo wabaoBook(@RequestParam("roleId") Long roleId) {
         return svc.getWaBaoBookListInfo(roleId);
     }
+
+    // ── WaBao CS Operation Endpoints ──
+
+    /** Op 3: excavate/wa_bao (core gacha operation) */
+    @PostMapping("/wabao/excavate")
+    public BoxDTOs.ExcavateResp excavate(@RequestParam("roleId") Long roleId) {
+        return svc.excavate(roleId);
+    }
+
+    /** Op 1: unlock map */
+    @PostMapping("/wabao/unlock-map")
+    public BoxDTOs.OkResp unlockMap(@RequestParam("roleId") Long roleId, @RequestParam("mapId") int mapId) {
+        return svc.unlockMap(roleId, mapId);
+    }
+
+    /** Op 2: enter map */
+    @PostMapping("/wabao/enter-map")
+    public BoxDTOs.OkResp enterMap(@RequestParam("roleId") Long roleId, @RequestParam("mapId") int mapId) {
+        return svc.enterMap(roleId, mapId);
+    }
+
+    /** Op 5: put collection (place item in collection cabinet) */
+    @PostMapping("/wabao/put-collection")
+    public BoxDTOs.OkResp putCollection(@Valid @RequestBody BoxDTOs.PutCollectionReq req) {
+        return svc.putCollection(req);
+    }
+
+    /** Op 6: collection sell (remove and sell collection item) */
+    @PostMapping("/wabao/collection-sell")
+    public BoxDTOs.OkResp collectionSell(@Valid @RequestBody BoxDTOs.CollectionSellReq req) {
+        return svc.collectionSell(req);
+    }
+
+    /** Op 7: buy collection upgrade */
+    @PostMapping("/wabao/collection-buy")
+    public BoxDTOs.OkResp collectionBuy(@Valid @RequestBody BoxDTOs.SimpleReq req) {
+        return svc.collectionBuy(req);
+    }
+
+    /** Op 8: collection level up */
+    @PostMapping("/wabao/collection-level-up")
+    public BoxDTOs.OkResp collectionLevelUp(@Valid @RequestBody BoxDTOs.SimpleReq req) {
+        return svc.collectionLevelUp(req);
+    }
+
+    /** Op 9: collection quicken */
+    @PostMapping("/wabao/collection-quicken")
+    public BoxDTOs.OkResp collectionQuicken(@Valid @RequestBody BoxDTOs.QuickenReq req) {
+        return svc.collectionQuicken(req);
+    }
+
+    /** Op 10: refresh task (get new daily task) */
+    @PostMapping("/wabao/fresh-task")
+    public BoxDTOs.OkResp freshTask(@Valid @RequestBody BoxDTOs.FreshTaskReq req) {
+        return svc.freshTask(req);
+    }
+
+    /** Op 11: fetch task reward (claim task completion reward) */
+    @PostMapping("/wabao/fetch-task")
+    public BoxDTOs.OkResp fetchTask(@Valid @RequestBody BoxDTOs.FetchTaskReq req) {
+        return svc.fetchTask(req);
+    }
+
+    /** Op 12: tool level up */
+    @PostMapping("/wabao/tool-up-level")
+    public BoxDTOs.OkResp toolUpLevel(@Valid @RequestBody BoxDTOs.ToolUpLevelReq req) {
+        return svc.toolUpLevel(req);
+    }
+
+    /** Op 13: tool grade up */
+    @PostMapping("/wabao/tool-up-grade")
+    public BoxDTOs.OkResp toolUpGrade(@Valid @RequestBody BoxDTOs.ToolUpGradeReq req) {
+        return svc.toolUpGrade(req);
+    }
+
+    /** Op 14: put item in collection book */
+    @PostMapping("/wabao/put-collection-book")
+    public BoxDTOs.OkResp putCollectionBook(@Valid @RequestBody BoxDTOs.PutCollectionBookReq req) {
+        return svc.putCollectionBook(req);
+    }
+
+    /** Op 15: collection book level up */
+    @PostMapping("/wabao/collection-book-level-up")
+    public BoxDTOs.OkResp collectionBookLevelUp(@Valid @RequestBody BoxDTOs.CollectionBookLevelUpReq req) {
+        return svc.collectionBookLevelUp(req);
+    }
+
+    /** Op 16: activate book */
+    @PostMapping("/wabao/activate-book")
+    public BoxDTOs.OkResp activateBook(@Valid @RequestBody BoxDTOs.ActivateBookReq req) {
+        return svc.activateBook(req);
+    }
+
+    /** Op 17: fetch collection level reward */
+    @PostMapping("/wabao/fetch-collection-level-reward")
+    public BoxDTOs.OkResp fetchCollectionLevelReward(@Valid @RequestBody BoxDTOs.FetchCollectionLevelRewardReq req) {
+        return svc.fetchCollectionLevelReward(req);
+    }
 }

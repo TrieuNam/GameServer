@@ -102,4 +102,9 @@ public interface PetService {
      * Claim pet dungeon reward
      */
     java.util.Map<String, Object> claimPetDungeonReward(String userId, Integer dungeonId);
+
+    /**
+     * Paid pet treasure draw used by BoxDraw popup.
+     */
+    java.util.Map<String, Object> drawTreasure(String userId, Integer type);
 }

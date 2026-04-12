@@ -69,8 +69,9 @@ public class ShiZhuangController {
     // API nâng cấp thời trang
     @PostMapping("/levelup")
     public ResponseEntity<?> levelUp(@RequestParam String roleId,
-                                     @RequestParam Integer clothesId) {
-        service.levelUpClothes(roleId, clothesId);
+                                     @RequestParam Integer clothesId,
+                                     @RequestParam(value = "consumeMode", required = false, defaultValue = "0") Integer consumeMode) {
+        service.levelUpClothes(roleId, clothesId, consumeMode);
         return ResponseEntity.ok().build();
     }
 

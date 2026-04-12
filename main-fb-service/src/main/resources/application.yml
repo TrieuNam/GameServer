@@ -49,7 +49,8 @@ logging:
     com.SouthMillion: DEBUG
 
 mainfb:
-  stamina-item-id: 50001
+  stamina-enabled: false  # keep off until a real main-fb stamina item is explicitly wired
+  stamina-item-id: 0  # disabled by default; legacy 50001 mapping is invalid for main-fb
 
 app:
   kafka:

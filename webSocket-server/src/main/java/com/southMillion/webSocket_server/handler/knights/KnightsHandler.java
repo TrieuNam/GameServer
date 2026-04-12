@@ -26,6 +26,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class KnightsHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(KnightsHandler.class);
+
     private final KnightsGrpcClient knightsGrpcClient;
     private final ObjectMapper objectMapper;
 

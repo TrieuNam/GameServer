@@ -29,6 +29,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GemHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GemHandler.class);
+
     private final GemGrpcClient gemGrpcClient;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;

@@ -31,6 +31,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RequiredArgsConstructor
 public class StartupDependencyReadiness {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StartupDependencyReadiness.class);
+
     private final DiscoveryClient discoveryClient;
     private final StartupConfigRedisPreloader configRedisPreloader;
     private final ObjectMapper objectMapper;

@@ -50,6 +50,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class TaskHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TaskHandler.class);
+
     private final TaskFeign taskFeign;
     private final TaskProgressPublisher taskProgressPublisher;
     private final BagFeign bagFeign;
@@ -374,8 +376,7 @@ public class TaskHandler implements MessageHandler {
         // Wallet is updated synchronously by task-service, so push it right away.
         pushWalletBalance(session, roleId);
 
-        // Bag rewards can still race with the async grant flow. Try one immediate full-bag push first.
-        // If that first push succeeds, do not schedule a blind second UI refresh.
+        // Try one immediate full-bag push first.
         // If it fails, keep the fallback retry so the later update can still recover the UI state.
         boolean immediateBagPushSucceeded = pushBagState(session, roleId);
         if (immediateBagPushSucceeded) {

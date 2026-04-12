@@ -26,6 +26,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class ScrollHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ScrollHandler.class);
+
     private final ScrollGrpcClient scrollGrpcClient;
 
     private static final int OP_GET_INFO  = 0;

@@ -456,6 +456,7 @@ public class AngelServiceGrpcImpl extends AngelGrpcServiceGrpc.AngelGrpcServiceI
         if (angel.getAppearanceId() != null) {
             builder.setAppearanceId(angel.getAppearanceId());
         }
+        builder.setAppearanceLevel(angel.getAppearanceLevel());
         
         return builder.build();
     }

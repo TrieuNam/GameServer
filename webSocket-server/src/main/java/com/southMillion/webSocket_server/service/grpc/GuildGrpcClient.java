@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class GuildGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GuildGrpcClient.class);
+
     @GrpcClient("guild-service")
     private GuildServiceGrpc.GuildServiceBlockingStub stub;
 

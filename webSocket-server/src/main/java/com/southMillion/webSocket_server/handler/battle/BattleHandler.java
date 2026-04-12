@@ -6,10 +6,13 @@ import com.SouthMillion.webSocket_server.constant.MessageIds;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.handler.rune.RuneHandler;
 import com.SouthMillion.webSocket_server.service.grpc.BattleServerGrpcClient;
+import com.SouthMillion.webSocket_server.service.grpc.RuneGrpcClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.grpc.combat.CombatActionResponse;
+import org.SouthMillion.grpc.combat.CombatantResult;
 import org.SouthMillion.grpc.combat.CombatResponse;
 import org.SouthMillion.grpc.combat.CombatResult;
 import org.SouthMillion.grpc.combat.CombatSession;
@@ -44,6 +47,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BattleHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BattleHandler.class);
+
     private static final int OP_CALCULATE_COMBAT = 1;
     private static final int OP_START_SESSION = 2;
     private static final int OP_EXECUTE_ACTION = 3;
@@ -62,7 +67,12 @@ public class BattleHandler implements MessageHandler {
     private static final int ERROR_NOT_YOUR_TURN = 1009;
     private static final int ERROR_COOLDOWN_ACTIVE = 1010;
 
+    /** Client ENUM_BATTLE.HERO_BATTLE_TYPE_INSCRIPTION_TOWER = 7 */
+    private static final int COMBAT_TYPE_INSCRIPTION_TOWER = 7;
+
     private final BattleServerGrpcClient battleServerGrpcClient;
+    private final RuneGrpcClient runeGrpcClient;
+    private final RuneHandler runeHandler;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -95,7 +105,7 @@ public class BattleHandler implements MessageHandler {
                         resp = handleExecuteAction(roleId, req);
                         break;
                     case OP_END_SESSION:
-                        resp = handleEndSession(req);
+                        resp = handleEndSession(session, roleId, req);
                         break;
                     default:
                         resp = error(ERROR_INVALID_ACTION, "UNSUPPORTED_OP", "Unsupported battle operation: " + op);
@@ -210,11 +220,14 @@ public class BattleHandler implements MessageHandler {
         return ok(data);
     }
 
-    private Map<String, Object> handleEndSession(Map<String, Object> req) {
+    private Map<String, Object> handleEndSession(PlayerSession session, Long roleId, Map<String, Object> req) {
         String sessionId = getString(req, "sessionId", "");
         if (sessionId.isBlank()) {
             return error(ERROR_SESSION_NOT_FOUND, "SESSION_ID_REQUIRED", "sessionId is required");
         }
+
+        // Client sends combatType in the end-session request so we know what kind of battle ended
+        int combatTypeCode = getInt(req, "combatType", 0);
 
         String endReason = getString(req, "endReason", "NORMAL_END");
         CombatResult result = battleServerGrpcClient.endCombat(sessionId, endReason);
@@ -223,14 +236,45 @@ public class BattleHandler implements MessageHandler {
             return error(ERROR_SESSION_NOT_FOUND, "END_FAILED", "endCombat failed");
         }
 
+        // ── Post-battle hooks ─────────────────────────────────────────────────
+        if (result.getAttackerWins() && combatTypeCode == COMBAT_TYPE_INSCRIPTION_TOWER) {
+            handleInscriptionTowerWin(session, roleId);
+        }
+
+        // Calculate total damage from all combatants
+        long totalDamage = 0L;
+        if (result.getResultsList() != null) {
+            for (CombatantResult combatant : result.getResultsList()) {
+                totalDamage += combatant.getDamageDealt();
+            }
+        }
+
         Map<String, Object> data = new HashMap<>();
         data.put("sessionId", result.getSessionId());
         data.put("attackerWins", result.getAttackerWins());
         data.put("totalRounds", result.getTotalRounds());
+        data.put("totalDamage", totalDamage);
         data.put("durationMs", result.getCombatDurationMs());
         data.put("statusCode", result.getStatus().getCode());
         data.put("statusMessage", result.getStatus().getMessage());
         return ok(data);
+    }
+
+    /**
+     * Called when INSCRIPTION_TOWER battle ends with attacker win.
+     * Increments tower_level, awards clearance rewards, push updated rune info.
+     */
+    private void handleInscriptionTowerWin(PlayerSession session, Long roleId) {
+        if (roleId == null) return;
+        try {
+            String userId = String.valueOf(roleId);
+            runeGrpcClient.winTowerLevel(userId);
+            log.info("[Battle] Inscription tower win processed for roleId={}", roleId);
+            // Push updated PB_SCRuneInfo (1670) so client reflects new tower_level + rewards
+            runeHandler.pushAll(session).subscribe();
+        } catch (Exception e) {
+            log.error("[Battle] Failed to process inscription tower win for roleId={}: {}", roleId, e.getMessage());
+        }
     }
 
     private BattleServerGrpcClient.CombatContextInfo buildContext(Map<String, Object> req) {
@@ -367,6 +411,7 @@ public class BattleHandler implements MessageHandler {
             case 3 -> "TRIAL";
             case 4 -> "DUNGEON";
             case 5 -> "BOSS";
+            case COMBAT_TYPE_INSCRIPTION_TOWER -> "INSCRIPTION_TOWER";
             default -> "PVP";
         };
     }

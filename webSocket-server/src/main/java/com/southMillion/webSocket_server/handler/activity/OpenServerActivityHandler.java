@@ -31,6 +31,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OpenServerActivityHandler implements MessageHandler, LazyLoadHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(OpenServerActivityHandler.class);
+
     private final ActivityFeign activityFeign;
     private final reactor.core.scheduler.Scheduler feignVtScheduler;
 

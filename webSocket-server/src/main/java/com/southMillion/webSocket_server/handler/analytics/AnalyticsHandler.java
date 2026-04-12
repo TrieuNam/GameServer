@@ -26,6 +26,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AnalyticsHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AnalyticsHandler.class);
+
     private static final int SESSION_ID_MAX_LENGTH = 50;
 
     private final AnalyticsFeign analyticsFeign;

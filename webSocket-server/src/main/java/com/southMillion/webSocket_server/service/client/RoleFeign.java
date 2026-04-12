@@ -51,6 +51,9 @@ public interface RoleFeign {
                                              @RequestParam(value="roleId", required=false) String roleId);
 
     // Limit Core / Breakthrough (限界突破)
+    @GetMapping("/api/role/{roleId}/limit-core")
+    Map<String, Object> getLimitCoreInfo(@PathVariable("roleId") String roleId);
+
     @PostMapping("/api/role/{roleId}/limit-core")
     Map<String, Object> limitCore(@PathVariable("roleId") String roleId,
                                   @RequestBody Map<String, Object> body);

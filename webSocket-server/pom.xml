@@ -168,6 +168,15 @@
                 <configuration>
                     <source>21</source>
                     <target>21</target>
+                    <compilerArgs>
+                        <arg>-Alombok.log.fieldName=log</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
                     <testIncludes>
                         <testInclude>**/BoxHandlerTest.java</testInclude>
                         <testInclude>**/EquipHandlerTest.java</testInclude>
@@ -177,6 +186,13 @@
                         <testInclude>**/TrialHandlerTest.java</testInclude>
                         <testInclude>**/EscortHandlerTest.java</testInclude>
                         <testInclude>**/MainFbHandlerTest.java</testInclude>
+                        <testInclude>**/RandActivityHandlerTest.java</testInclude>
+                        <testInclude>**/AngelHandlerTest.java</testInclude>
+                        <testInclude>**/RoleServiceHandlerTest.java</testInclude>
+                        <testInclude>**/PetHandlerTest.java</testInclude>
+                        <testInclude>**/RuneHandlerTest.java</testInclude>
+                        <testInclude>**/OtherHandlerTest.java</testInclude>
+                        <testInclude>**/LingZhuHandlerTest.java</testInclude>
                     </testIncludes>
                 </configuration>
             </plugin>
@@ -193,6 +209,13 @@
                         <include>**/TrialHandlerTest.java</include>
                         <include>**/EscortHandlerTest.java</include>
                         <include>**/MainFbHandlerTest.java</include>
+                        <include>**/RandActivityHandlerTest.java</include>
+                        <include>**/AngelHandlerTest.java</include>
+                        <include>**/RoleServiceHandlerTest.java</include>
+                        <include>**/PetHandlerTest.java</include>
+                        <include>**/RuneHandlerTest.java</include>
+                        <include>**/OtherHandlerTest.java</include>
+                        <include>**/LingZhuHandlerTest.java</include>
                     </includes>
                 </configuration>
             </plugin>

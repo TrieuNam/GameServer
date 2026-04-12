@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class KnightsGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(KnightsGrpcClient.class);
+
     @GrpcClient("knights-service")
     private KnightsServiceGrpc.KnightsServiceBlockingStub stub;
 

@@ -26,6 +26,14 @@ import java.util.Map;
 @UtilityClass
 public class Emitters {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(Emitters.class);
+
+    // Legacy client currency ids:
+    // - server wallet uses 1=gold, 2=diamond
+    // - current client UI expects 40000=gold, 40001=diamond
+    private static final int CLIENT_GOLD_ITEM_ID = 40000;
+    private static final int CLIENT_DIAMOND_ITEM_ID = 40001;
+
     /* =========================================================
      * Core emit helpers
      * ========================================================= */
@@ -167,7 +175,7 @@ public class Emitters {
     /** Gửi thông báo “số lượng vật phẩm không đủ”. */
     public static void sendItemNotEnoughNotice(PlayerSession ps, int itemId) {
         var msg = Msgknapsack.PB_SCItemNotEnoughNotice.newBuilder()
-                .setItemId(itemId)
+                .setItemId(toClientCurrencyItemId(itemId))
                 .build();
         emit(ps, MsgIds.SC_ITEM_NOT_ENOUGH_NOTICE, msg.toByteArray());
     }
@@ -186,7 +194,7 @@ public class Emitters {
     public static void sendWalletBalances(PlayerSession ps, Map<Long, Long> balances) {
         if (ps == null || balances == null || balances.isEmpty()) return;
         for (Map.Entry<Long, Long> entry : balances.entrySet()) {
-            int itemId = entry.getKey().intValue();
+            int itemId = toClientCurrencyItemId(entry.getKey());
             long amount = entry.getValue() != null ? entry.getValue() : 0L;
             sendKnapsackSingleInfo(ps, itemId, amount);
         }
@@ -197,11 +205,21 @@ public class Emitters {
      * Convenience wrapper over {@link #sendKnapsackSingleInfo}.
      */
     public static void sendCurrencyUpdate(PlayerSession ps, long itemId, long balance) {
-        sendKnapsackSingleInfo(ps, (int) itemId, balance);
+        sendKnapsackSingleInfo(ps, toClientCurrencyItemId(itemId), balance);
     }
 
     /* =========================================================     * Helpers
      * ========================================================= */
+    private static int toClientCurrencyItemId(long itemId) {
+        if (itemId == 1L) {
+            return CLIENT_GOLD_ITEM_ID;
+        }
+        if (itemId == 2L) {
+            return CLIENT_DIAMOND_ITEM_ID;
+        }
+        return (int) itemId;
+    }
+
     private static int safeParseInt(Object v, int def) {
         try { return Integer.parseInt(String.valueOf(v)); } catch (Exception e) { return def; }
     }

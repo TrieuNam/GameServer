@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class AngelGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AngelGrpcClient.class);
+
     @GrpcClient("angel-service")
     private AngelGrpcServiceGrpc.AngelGrpcServiceBlockingStub stub;
 

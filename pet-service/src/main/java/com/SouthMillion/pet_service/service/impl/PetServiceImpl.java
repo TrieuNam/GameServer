@@ -1,12 +1,15 @@
 package com.SouthMillion.pet_service.service.impl;
 
 import com.SouthMillion.pet_service.client.BagClient;
+import com.SouthMillion.pet_service.client.RoleClient;
 import com.SouthMillion.pet_service.client.WalletClient;
+import com.SouthMillion.pet_service.config.PetTreasureConfigProvider;
 import com.SouthMillion.pet_service.exception.*;
 import com.SouthMillion.pet_service.model.dto.*;
 import com.SouthMillion.pet_service.model.entity.*;
 import com.SouthMillion.pet_service.repository.*;
 import com.SouthMillion.pet_service.service.PetService;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -17,11 +20,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 /**
@@ -39,6 +45,8 @@ public class PetServiceImpl implements PetService {
     private final PetDungeonRepository petDungeonRepository;
     private final BagClient bagClient;
     private final WalletClient walletClient;
+    private final RoleClient roleClient;
+    private final PetTreasureConfigProvider petTreasureConfigProvider;
 
     // Virtual Thread executor for parallel operations
     private final Executor virtualExecutor = Executors.newVirtualThreadPerTaskExecutor();
@@ -59,6 +67,8 @@ public class PetServiceImpl implements PetService {
                           PetDungeonRepository petDungeonRepository,
                           BagClient bagClient,
                           WalletClient walletClient,
+                          RoleClient roleClient,
+                          PetTreasureConfigProvider petTreasureConfigProvider,
                           MeterRegistry meterRegistry) {
         this.petRepository = petRepository;
         this.tsGemRepository = tsGemRepository;
@@ -68,6 +78,8 @@ public class PetServiceImpl implements PetService {
         this.petDungeonRepository = petDungeonRepository;
         this.bagClient = bagClient;
         this.walletClient = walletClient;
+        this.roleClient = roleClient;
+        this.petTreasureConfigProvider = petTreasureConfigProvider;
 
         // Initialize metrics
         this.gradeUpTimer = Timer.builder("pet.gradeup.duration")
@@ -175,13 +187,7 @@ public class PetServiceImpl implements PetService {
         Pet pet = getPet(userId, petIndex);
         
         // Check role level via Feign client
-        Integer roleLevel = 300; // Default
-        try {
-            // roleLevel = roleClient.getRoleLevel(userId);
-            // For now use default until role-service client is integrated
-        } catch (Exception e) {
-            log.warn("Failed to get role level, using default: {}", e.getMessage());
-        }
+        Integer roleLevel = fetchRoleLevel(userId);
         
         int targetLevel = pet.getLevel() + num;
         if (targetLevel > roleLevel) {
@@ -710,10 +716,180 @@ public class PetServiceImpl implements PetService {
         return result;
     }
 
+    @Override
+    @Transactional
+    public Map<String, Object> drawTreasure(String userId, Integer type) {
+        int drawType = normalizeDrawType(type);
+        JsonNode config = petTreasureConfigProvider.getConfig();
+        if (config == null) {
+            throw new PetServiceException("Pet treasure config unavailable");
+        }
+
+        JsonNode otherList = config.path("other");
+        JsonNode other = otherList.isArray() && !otherList.isEmpty() ? otherList.get(0) : null;
+        int rewardNum = readInt(other, "reward_num", 3);
+        long cost = switch (drawType) {
+            case 1 -> readLong(other, "price1", 0L);
+            case 2 -> readLong(other, "price2", 0L);
+            default -> 0L;
+        };
+        if (cost > 0L) {
+            consumeDiamonds(userId, cost, "pet_treasure_draw");
+        }
+
+        List<BagDTOs.GrantItem> rewards = rollPetTreasureRewards(config.path("pet_treasure"), fetchRoleLevel(userId), drawType, rewardNum);
+        if (rewards.isEmpty()) {
+            throw new PetServiceException("No rewards configured for pet treasure draw");
+        }
+
+        BagDTOs.GrantReq request = BagDTOs.GrantReq.builder()
+                .userId(userId)
+                .roleId(userId)
+                .items(rewards)
+                .eventId(UUID.randomUUID().toString())
+                .source("pet_treasure_draw")
+                .reason("pet_treasure_draw")
+                .build();
+        bagClient.grantItems(request);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", true);
+        result.put("drawType", drawType);
+        result.put("rewards", rewards.stream().map(item -> {
+            Map<String, Object> reward = new HashMap<>();
+            reward.put("itemId", item.getItemId());
+            reward.put("num", item.getNum());
+            return reward;
+        }).collect(Collectors.toList()));
+        return result;
+    }
+
     private com.SouthMillion.pet_service.model.entity.PetDungeon getOrCreatePetDungeon(String userId) {
         return petDungeonRepository.findByUserId(userId).orElseGet(() ->
                 petDungeonRepository.save(
                         com.SouthMillion.pet_service.model.entity.PetDungeon.builder()
                                 .userId(userId).passLevel(0).fetchFlag(0L).build()));
+    }
+
+    private int normalizeDrawType(Integer type) {
+        if (type == null || type < 0 || type > 2) {
+            return 0;
+        }
+        return type;
+    }
+
+    private List<BagDTOs.GrantItem> rollPetTreasureRewards(JsonNode rewardsNode, int roleLevel, int drawType, int rewardNum) {
+        List<JsonNode> pool = new ArrayList<>();
+        if (rewardsNode != null && rewardsNode.isArray()) {
+            for (JsonNode node : rewardsNode) {
+                if (readInt(node, "type", -1) != drawType) {
+                    continue;
+                }
+                int levelMin = readInt(node, "level_min", 1);
+                int levelMax = readInt(node, "level_max", Integer.MAX_VALUE);
+                if (roleLevel < levelMin || roleLevel > levelMax) {
+                    continue;
+                }
+                if (readInt(node, "rate", 0) <= 0) {
+                    continue;
+                }
+                pool.add(node);
+            }
+        }
+
+        List<BagDTOs.GrantItem> rolled = new ArrayList<>();
+        for (int i = 0; i < Math.max(1, rewardNum); i++) {
+            JsonNode selected = pickWeighted(pool);
+            if (selected == null) {
+                break;
+            }
+            JsonNode wins = selected.path("win");
+            if (!wins.isArray()) {
+                continue;
+            }
+            for (JsonNode win : wins) {
+                int itemId = readInt(win, "item_id", 0);
+                int num = readInt(win, "num", 0);
+                if (itemId <= 0 || num <= 0) {
+                    continue;
+                }
+                rolled.add(BagDTOs.GrantItem.builder().itemId(itemId).num(num).build());
+            }
+        }
+        return rolled;
+    }
+
+    private JsonNode pickWeighted(List<JsonNode> pool) {
+        if (pool == null || pool.isEmpty()) {
+            return null;
+        }
+        int totalWeight = 0;
+        for (JsonNode node : pool) {
+            totalWeight += Math.max(0, readInt(node, "rate", 0));
+        }
+        if (totalWeight <= 0) {
+            return null;
+        }
+        int roll = ThreadLocalRandom.current().nextInt(totalWeight);
+        int cumulative = 0;
+        for (JsonNode node : pool) {
+            cumulative += Math.max(0, readInt(node, "rate", 0));
+            if (roll < cumulative) {
+                return node;
+            }
+        }
+        return pool.get(pool.size() - 1);
+    }
+
+    private int fetchRoleLevel(String userId) {
+        try {
+            var response = roleClient.getPlayerLevel(userId);
+            if (response != null && response.getBody() != null) {
+                return Math.max(1, response.getBody());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to get role level for userId={}, fallback to 300: {}", userId, e.getMessage());
+        }
+        return 300;
+    }
+
+    private int readInt(JsonNode node, String field, int defaultValue) {
+        if (node == null) {
+            return defaultValue;
+        }
+        JsonNode value = node.path(field);
+        if (value.isMissingNode() || value.isNull()) {
+            return defaultValue;
+        }
+        if (value.isNumber()) {
+            return value.intValue();
+        }
+        if (value.isTextual()) {
+            try {
+                return Integer.parseInt(value.asText());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return defaultValue;
+    }
+
+    private long readLong(JsonNode node, String field, long defaultValue) {
+        if (node == null) {
+            return defaultValue;
+        }
+        JsonNode value = node.path(field);
+        if (value.isMissingNode() || value.isNull()) {
+            return defaultValue;
+        }
+        if (value.isNumber()) {
+            return value.longValue();
+        }
+        if (value.isTextual()) {
+            try {
+                return Long.parseLong(value.asText());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return defaultValue;
     }
 }

@@ -22,6 +22,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ShenQiHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ShenQiHandler.class);
+
     private final ArtifactFeign artifactFeign;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;

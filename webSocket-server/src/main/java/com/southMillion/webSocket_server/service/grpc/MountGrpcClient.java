@@ -14,6 +14,8 @@ import java.util.List;
 @Service
 public class MountGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MountGrpcClient.class);
+
     @GrpcClient("mount-service")
     private MountServiceGrpc.MountServiceBlockingStub stub;
 

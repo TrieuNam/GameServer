@@ -14,6 +14,7 @@ import org.SouthMillion.dto.bag.BagDTOs;
 import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.SouthMillion.grpc.escort.*;
 import org.SouthMillion.proto.Msgescort.Msgescort;
+import org.SouthMillion.proto.Msgrole.Msgrole;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -29,20 +30,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EscortHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(EscortHandler.class);
+
     private final EscortGrpcClient escortGrpcClient;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;
     private final BagFeign bagFeign;
     private final WalletHttpClient walletHttpClient;
 
-    private static final int OP_GET_INFO      = 1;
-    private static final int OP_GET_SHIP_LIST = 2;
-    private static final int OP_START         = 3;
-    private static final int OP_COMPLETE      = 4;
-    private static final int OP_ROB           = 5;
-    private static final int OP_SPEEDUP       = 6;
-    private static final int OP_GET_HISTORY   = 7;
-    private static final int OP_GET_INTERCEPT_LIST = 8;
+    // Client contract from ESCORT_OPER_TYPE (0-based)
+    private static final int OP_SHIP_UP = 0;
+    private static final int OP_SET_SAIL = 1;
+    private static final int OP_INTERCEPT = 2;
+    private static final int OP_HELP = 3;
+    private static final int OP_GET_SHIP_LIST = 4;
+    private static final int OP_GET_HISTORY = 5;
+    private static final int OP_GET_INTERCEPT_LIST = 6;
+    private static final int OP_GET_SHIP_INFO = 7;
+    private static final int OP_CLAIM_REWARD = 8;
+    private static final int OP_BOSS_FIGHT = 9;
+    private static final int OP_HARM_REWARD = 10;
+
+    // Client contract from ESCORT_RET_TYPE (0-based)
+    private static final int RET_SHIP_UP = 0;
+    private static final int RET_SET_SAIL = 1;
+    private static final int RET_TARGET_INTERCEPT = 2;
+    private static final int RET_HELP = 3;
 
     @Override
     public int[] interests() { return new int[]{9620}; }
@@ -64,14 +77,19 @@ public class EscortHandler implements MessageHandler {
                 Long roleId = session.getRoleId();
                 log.debug("[Escort] op={} p1={} roleId={}", type, p1, roleId);
                 switch (type) {
-                    case OP_GET_INFO           -> handleGetInfo(session, roleId);
+                    case OP_SHIP_UP            -> handleShipUp(session, roleId);
+                    case OP_SET_SAIL           -> handleStart(session, roleId, p1);
+                    case OP_INTERCEPT          -> handleRob(session, roleId, p1);
+                    case OP_HELP               -> handleSpeedup(session, roleId, p1);
                     case OP_GET_SHIP_LIST      -> handleGetShipList(session, roleId);
-                    case OP_START              -> handleStart(session, roleId, p1);
-                    case OP_COMPLETE           -> handleComplete(session, roleId);
-                    case OP_ROB                -> handleRob(session, roleId, p1);
-                    case OP_SPEEDUP            -> handleSpeedup(session, roleId, p1);
                     case OP_GET_HISTORY        -> handleGetHistory(session, roleId);
                     case OP_GET_INTERCEPT_LIST -> handleGetInterceptList(session, roleId);
+                    case OP_GET_SHIP_INFO      -> handleGetShipInfo(session, roleId, p1);
+                    case OP_CLAIM_REWARD       -> handleComplete(session, roleId);
+                    case OP_BOSS_FIGHT, OP_HARM_REWARD -> {
+                        log.info("[Escort] Unimplemented op={} roleId={}", type, roleId);
+                        sendRet(session, type, -1, 0);
+                    }
                     default -> { log.warn("[Escort] Unknown op={}", type); sendRet(session, type, -1, 0); }
                 }
             } catch (Exception e) {
@@ -96,7 +114,21 @@ public class EscortHandler implements MessageHandler {
             Emitters.emit(session, 9622, b.build().toByteArray());
         } catch (Exception e) {
             log.error("[Escort] handleGetInfo error", e);
-            sendRet(session, OP_GET_INFO, -1, 0);
+            sendRet(session, 0, -1, 0);
+        }
+    }
+
+    // ─── op=0: Ship up → 9621 PB_SCEscortRet(type=SHIP_UP) ─────────────
+    private void handleShipUp(PlayerSession session, Long roleId) {
+        try {
+            EscortActionResponse resp = escortGrpcClient.upgradeShip(roleId);
+            sendRet(session, RET_SHIP_UP, resp.getP1(), resp.getP2());
+            if (resp.getSuccess()) {
+                handleGetInfo(session, roleId);
+            }
+        } catch (Exception e) {
+            log.error("[Escort] handleShipUp error", e);
+            sendRet(session, RET_SHIP_UP, 0, 0);
         }
     }
 
@@ -105,7 +137,9 @@ public class EscortHandler implements MessageHandler {
         try {
             EscortShipListResponse resp = escortGrpcClient.getShipList(roleId);
             Msgescort.PB_SCEscortShipListInfo.Builder b = Msgescort.PB_SCEscortShipListInfo.newBuilder();
-            b.addMyShip(buildShipData(resp.getMyShip()));
+            if (resp.hasMyShip() && resp.getMyShip().getShipKey() > 0) {
+                b.addMyShip(buildShipData(resp.getMyShip()));
+            }
             for (EscortShipData ship : resp.getShipListList()) {
                 b.addShipList(buildShipData(ship));
             }
@@ -120,14 +154,14 @@ public class EscortHandler implements MessageHandler {
     private void handleStart(PlayerSession session, Long roleId, int shipLevel) {
         try {
             EscortActionResponse resp = escortGrpcClient.startEscort(roleId, shipLevel);
-            sendRet(session, OP_START, resp.getSuccess() ? 0 : -1, resp.getP1());
+            sendRet(session, RET_SET_SAIL, resp.getSuccess() ? 0 : -1, resp.getP1());
             if (resp.getSuccess()) {
                 publishTaskProgress(roleId, taskActionConditionMapping.escortStartTaskKey(), "websocket-escort-start");
                 handleGetShipList(session, roleId);
             }
         } catch (Exception e) {
             log.error("[Escort] handleStart error", e);
-            sendRet(session, OP_START, -1, 0);
+            sendRet(session, RET_SET_SAIL, -1, 0);
         }
     }
 
@@ -135,7 +169,7 @@ public class EscortHandler implements MessageHandler {
     private void handleComplete(PlayerSession session, Long roleId) {
         try {
             EscortActionResponse resp = escortGrpcClient.claimReward(roleId);
-            sendRet(session, OP_COMPLETE, resp.getSuccess() ? 0 : -1, resp.getP1());
+            sendRet(session, OP_CLAIM_REWARD, resp.getSuccess() ? 0 : -1, resp.getP1());
             if (resp.getSuccess()) {
                 publishTaskProgress(roleId, taskActionConditionMapping.escortCompleteTaskKey(), "websocket-escort-complete");
                 syncPostClaimState(session, roleId);
@@ -143,7 +177,7 @@ public class EscortHandler implements MessageHandler {
             }
         } catch (Exception e) {
             log.error("[Escort] handleComplete error", e);
-            sendRet(session, OP_COMPLETE, -1, 0);
+            sendRet(session, OP_CLAIM_REWARD, -1, 0);
         }
     }
 
@@ -151,13 +185,13 @@ public class EscortHandler implements MessageHandler {
     private void handleRob(PlayerSession session, Long roleId, int targetUid) {
         try {
             EscortActionResponse resp = escortGrpcClient.interceptEscort(roleId, 0, targetUid);
-            sendRet(session, OP_ROB, resp.getSuccess() ? 0 : -1, targetUid);
+            sendRet(session, RET_TARGET_INTERCEPT, resp.getSuccess() ? 0 : -1, targetUid);
             if (resp.getSuccess()) {
                 publishTaskProgress(roleId, taskActionConditionMapping.escortRobTaskKey(), "websocket-escort-rob");
             }
         } catch (Exception e) {
             log.error("[Escort] handleRob error", e);
-            sendRet(session, OP_ROB, -1, 0);
+            sendRet(session, RET_TARGET_INTERCEPT, -1, 0);
         }
     }
 
@@ -165,10 +199,10 @@ public class EscortHandler implements MessageHandler {
     private void handleSpeedup(PlayerSession session, Long roleId, int targetUid) {
         try {
             EscortActionResponse resp = escortGrpcClient.helpEscort(roleId, 0, targetUid);
-            sendRet(session, OP_SPEEDUP, resp.getSuccess() ? 0 : -1, targetUid);
+            sendRet(session, RET_HELP, resp.getSuccess() ? 0 : -1, targetUid);
         } catch (Exception e) {
             log.error("[Escort] handleSpeedup error", e);
-            sendRet(session, OP_SPEEDUP, -1, 0);
+            sendRet(session, RET_HELP, -1, 0);
         }
     }
 
@@ -197,15 +231,41 @@ public class EscortHandler implements MessageHandler {
             Msgescort.PB_SCEscortInterceptListInfo.Builder b =
                     Msgescort.PB_SCEscortInterceptListInfo.newBuilder();
             for (EscortInterceptData item : resp.getListList()) {
-                Msgescort.PB_SCEscortInterceptData.Builder ib =
-                        Msgescort.PB_SCEscortInterceptData.newBuilder();
-                ib.setShip(buildShipData(item.getShip()));
-                b.addList(ib);
+                b.addList(buildInterceptData(item));
             }
             Emitters.emit(session, 9625, b.build().toByteArray());
         } catch (Exception e) {
             log.error("[Escort] handleGetInterceptList error", e);
             sendRet(session, OP_GET_INTERCEPT_LIST, -1, 0);
+        }
+    }
+
+    // ─── op=7: Ship info by ship_key → 9626 PB_SCEscortShipInfo ─────────
+    private void handleGetShipInfo(PlayerSession session, Long roleId, int shipKey) {
+        try {
+            EscortInterceptListResponse resp = escortGrpcClient.getInterceptList(roleId);
+            for (EscortInterceptData item : resp.getListList()) {
+                if (item.getShip().getShipKey() == shipKey) {
+                    Msgescort.PB_SCEscortShipInfo info = Msgescort.PB_SCEscortShipInfo.newBuilder()
+                            .setInfo(buildInterceptData(item))
+                            .build();
+                    Emitters.emit(session, 9626, info.toByteArray());
+                    return;
+                }
+            }
+
+            Msgescort.PB_SCEscortShipData shipData = Msgescort.PB_SCEscortShipData.newBuilder()
+                    .setShipKey(shipKey)
+                    .build();
+            Msgescort.PB_SCEscortInterceptData emptyInfo = Msgescort.PB_SCEscortInterceptData.newBuilder()
+                    .setShip(shipData)
+                    .build();
+            Msgescort.PB_SCEscortShipInfo info = Msgescort.PB_SCEscortShipInfo.newBuilder()
+                    .setInfo(emptyInfo)
+                    .build();
+            Emitters.emit(session, 9626, info.toByteArray());
+        } catch (Exception e) {
+            log.error("[Escort] handleGetShipInfo error roleId={} shipKey={}", roleId, shipKey, e);
         }
     }
 
@@ -218,6 +278,24 @@ public class EscortHandler implements MessageHandler {
                 .setOverTime((int) s.getOverTime())
                 .setShipKey(s.getShipKey())
                 .setIsHelp(s.getIsHelp())
+                .build();
+    }
+
+    private Msgescort.PB_SCEscortInterceptData buildInterceptData(EscortInterceptData item) {
+        Msgrole.PB_RoleInfo.Builder role = Msgrole.PB_RoleInfo.newBuilder();
+        if (item.getRoleId() > 0) {
+            role.setRoleId((int) item.getRoleId());
+        }
+        if (!item.getRoleName().isBlank()) {
+            role.setName(com.google.protobuf.ByteString.copyFromUtf8(item.getRoleName()));
+        }
+        if (item.getLevel() > 0) {
+            role.setLevel(item.getLevel());
+        }
+
+        return Msgescort.PB_SCEscortInterceptData.newBuilder()
+                .setRoleInfo(role.build())
+                .setShip(buildShipData(item.getShip()))
                 .build();
     }
 

@@ -43,6 +43,7 @@ public class EscortServiceImpl implements EscortService {
     private static final int DEFAULT_DAILY_LIMIT = 10;
     private static final int DEFAULT_FREE_REFRESHES = 3;
     private static final int MISSION_DURATION_HOURS = 2;
+    private static final int MAX_SHIP_LEVEL = 5;
     
     @Override
     public List<EscortMission> getAllMissions(String userId) {
@@ -448,6 +449,19 @@ public class EscortServiceImpl implements EscortService {
         EscortStats saved = statsRepository.save(stats);
         log.debug("[Escort] recordHelp userId={} helpCount={}", userId, saved.getHelpCount());
         return saved;
+    }
+
+    @Override
+    @Transactional
+    public int upgradeShipLevel(String userId) {
+        EscortStats stats = getOrCreateStats(userId);
+        int current = stats.getCurrentShipLevel() != null ? stats.getCurrentShipLevel() : 0;
+        if (current >= MAX_SHIP_LEVEL) {
+            return current;
+        }
+        stats.setCurrentShipLevel(current + 1);
+        EscortStats saved = statsRepository.save(stats);
+        return saved.getCurrentShipLevel() != null ? saved.getCurrentShipLevel() : current + 1;
     }
 
     @Override

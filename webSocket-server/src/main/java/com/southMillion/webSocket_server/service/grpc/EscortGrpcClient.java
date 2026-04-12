@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class EscortGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(EscortGrpcClient.class);
+
     @GrpcClient("escort-service")
     private EscortServiceGrpc.EscortServiceBlockingStub stub;
 
@@ -32,6 +34,16 @@ public class EscortGrpcClient {
             if (isUnavailable(e)) log.warn("[grpc-escort] getEscortInfo: escort-service unavailable");
             else log.error("[grpc-escort] getEscortInfo error: {}", e.getMessage());
             return EscortInfoResponse.getDefaultInstance();
+        }
+    }
+
+    public EscortActionResponse upgradeShip(Long roleId) {
+        try {
+            return stub.upgradeShip(EscortInfoRequest.newBuilder().setRoleId(roleId).build());
+        } catch (StatusRuntimeException e) {
+            if (isUnavailable(e)) log.warn("[grpc-escort] upgradeShip: escort-service unavailable");
+            else log.error("[grpc-escort] upgradeShip error: {}", e.getMessage());
+            return EscortActionResponse.getDefaultInstance();
         }
     }
 

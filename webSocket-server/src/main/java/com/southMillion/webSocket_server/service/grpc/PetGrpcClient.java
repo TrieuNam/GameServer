@@ -14,6 +14,8 @@ import java.util.List;
 @Service
 public class PetGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PetGrpcClient.class);
+
     @GrpcClient("pet-service")
     private PetServiceGrpc.PetServiceBlockingStub stub;
 

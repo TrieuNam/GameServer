@@ -354,10 +354,14 @@ public class LoginSnapshotService {
     }
 
     @Getter
-    @RequiredArgsConstructor
     public static class SnapshotAssessment {
         private final String status;
         private final List<String> staleModules;
+
+        public SnapshotAssessment(String status, List<String> staleModules) {
+            this.status = status;
+            this.staleModules = staleModules;
+        }
 
         public static SnapshotAssessment hit() {
             return new SnapshotAssessment("HIT", List.of());

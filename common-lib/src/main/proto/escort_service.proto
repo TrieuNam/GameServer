@@ -11,6 +11,7 @@ option java_package = "org.SouthMillion.grpc.escort";
 
 service EscortService {
   rpc GetEscortInfo(EscortInfoRequest) returns (EscortInfoResponse);
+  rpc UpgradeShip(EscortInfoRequest) returns (EscortActionResponse);
   rpc GetShipList(EscortInfoRequest) returns (EscortShipListResponse);
   rpc StartEscort(StartEscortRequest) returns (EscortActionResponse);
   rpc InterceptEscort(InterceptRequest) returns (EscortActionResponse);

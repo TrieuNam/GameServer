@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RoleGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RoleGrpcClient.class);
+
     @GrpcClient("role-service")
     private RoleServiceGrpc.RoleServiceBlockingStub roleServiceStub;
 

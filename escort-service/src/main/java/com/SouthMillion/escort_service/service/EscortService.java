@@ -51,6 +51,9 @@ public interface EscortService {
     /** Record a help action and persist immediately */
     EscortStats recordHelp(String userId);
 
+    /** Increase current ship level by 1 (max capped), returns new level or current if capped. */
+    int upgradeShipLevel(String userId);
+
     /**
      * Auto-complete all IN_PROGRESS missions for a user that have reached maximum
      * progress (or set progress = distance so they can be claimed).

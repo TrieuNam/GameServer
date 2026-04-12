@@ -11,7 +11,7 @@ import java.util.Optional;
  * Feign client for role-service
  * Query player level and attributes for star map requirements
  */
-@FeignClient(name = "role-service", path = "/api/role")
+@FeignClient(name = "role-service", contextId = "starmapRoleQueryClient", path = "/api/role")
 public interface RoleClient {
 
     /**

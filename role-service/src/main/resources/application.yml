@@ -59,31 +59,10 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
 
-    consumer:
-      group-id: ${ROLE_CONSUMER_GROUP:role-service}
-      auto-offset-reset: earliest
-      enable-auto-commit: false
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "org.SouthMillion.dto.role.event"
-        spring.json.value.default.type: org.SouthMillion.dto.role.event.BagGrantEvent
-
-    listener:
-      ack-mode: manual_immediate
-
 management:
   endpoints:
     web.exposure.include: health,info,metrics,env,threaddump,loggers
   endpoint.health.probes.enabled: true
-
-app:
-  kafka:
-    bag-grant-topic: ${BAG_GRANT_TOPIC:gameh5.bag.grant}
-    bag-changed-topic: gameh5.bag.changed
-    consumer:
-      concurrency: ${ROLE_CONCURRENCY:2}
-  kafka.idempotent-ttl-sec: 600
 
 eureka:
   instance:

@@ -294,8 +294,8 @@ public class AngelServiceImpl implements AngelService {
             throw new AngelServiceException("Angel not unlocked", "NOT_UNLOCKED");
         }
         
-        // Validate appearance is set
-        if (angel.getAppearanceId() == null || angel.getAppearanceId() <= 0) {
+        // Legacy client treats default appearance seq=0 as a valid activatable skin.
+        if (angel.getAppearanceId() == null || angel.getAppearanceId() < 0) {
             throw new AngelServiceException("No appearance set", "NO_APPEARANCE");
         }
         

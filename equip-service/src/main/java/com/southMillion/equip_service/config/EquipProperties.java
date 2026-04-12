@@ -36,4 +36,23 @@ public class EquipProperties {
     private int fumoMaxLevel = 50;
     private int fumoBaseExp  = 100;
     private int fumoGrowExp  = 50;
+    private int fumoSlotCount = 12;
+    private int fumoAddExpPerClick = 20;
+    private int fumoTransformPowderItemId = 40900;
+    private int fumoTransformFaliItemId = 40901;
+    private int fumoTransformShengmingItemId = 40902;
+    private int fumoTransformMoheItemId = 40903;
+    private int fumoTransformFaliPowderCost = 75;
+    private int fumoTransformShengmingPowderCost = 75;
+    private int fumoTransformMohePowderCost = 375;
+    private int fumoCostPowderItemId = 40900;
+    private int fumoCostCoreItemId = 40903;
+    private int fumoCostFaliItemId = 40901;
+    private int fumoCostShengmingItemId = 40902;
+    private int fumoCostPowderBase = 375;
+    private int fumoCostPowderStep = 125;
+    private int fumoCostCoreBase = 5;
+    private int fumoCostCoreThresholdLevel = 15;
+    private int fumoCostSecondaryBase = 2;
+    private int fumoCostSecondaryStep = 2;
 }

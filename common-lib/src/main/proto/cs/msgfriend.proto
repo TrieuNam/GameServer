@@ -75,3 +75,27 @@ message SC_FRIEND_NOTIFICATION {
     optional FriendInfo friendInfo = 2; // Friend info
     optional RequestInfo requestInfo = 3; // Request info (for newRequest)
 }
+
+// Friend ranking related messages
+message GetFriendRankRequest {
+    optional string role_id = 1;        // Player requesting friend rankings
+    optional int32 ranking_type = 2;    // 1=Power, 2=Level, 3=Arena, 4=Guild, 5=Pet, 6=Mount, 7=PVP, 8=Wealth
+    optional int32 limit = 3;           // Max friends to return (default 10)
+}
+
+message FriendRankEntry {
+    optional int32 rank = 1;            // Friend's rank in the ranking
+    optional string friend_id = 2;      // Friend's role ID
+    optional string friend_name = 3;    // Friend's name
+    optional int32 level = 4;           // Friend's level
+    optional int64 score = 5;           // Friend's score in this ranking type
+    optional bool online = 6;           // Friend's online status
+    optional string guild_name = 7;     // Friend's guild name
+}
+
+message GetFriendRankResponse {
+    optional bool success = 1;          // 0=success, other=failure
+    optional string message = 2;        // Response message
+    repeated FriendRankEntry rankings = 3; // List of ranked friends
+    optional FriendRankEntry my_rank = 4;  // Requesting player's rank (for context)
+}

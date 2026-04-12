@@ -1,11 +1,13 @@
 package com.SouthMillion.webSocket_server.handler.arena;
 
+import com.SouthMillion.webSocket_server.constant.MessageIds;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.client.BagFeign;
 import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
 import com.SouthMillion.webSocket_server.service.grpc.ArenaGrpcClient;
+import org.SouthMillion.proto.Msgarena.Msgarena;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,5 +79,35 @@ class ArenaHandlerTest {
 
         verify(bagFeign, atLeastOnce()).list("2001");
         verify(walletHttpClient, atLeastOnce()).info("2001");
+    }
+
+    @Test
+    void handleLegacyRefreshRequestRoutesToOpponents() {
+        when(arenaGrpcClient.getArenaInfo(2001L)).thenReturn(Map.of());
+        when(arenaGrpcClient.getOpponents(2001L, 5)).thenReturn(List.of());
+
+        Msgarena.PB_CSArenaReq req = Msgarena.PB_CSArenaReq.newBuilder()
+                .setType(1)
+                .build();
+
+        arenaHandler.handle(playerSession, MessageIds.CS_ARENA_REQ, req.toByteArray()).block();
+
+        verify(arenaGrpcClient, atLeastOnce()).getOpponents(2001L, 5);
+        verify(arenaGrpcClient, never()).challenge(2001L, 0);
+        verify(arenaGrpcClient, never()).getBattleHistory(2001L, 0, 10);
+    }
+
+    @Test
+    void handleLegacyReportRequestRoutesToBattleHistory() {
+        when(arenaGrpcClient.getBattleHistory(2001L, 0, 10)).thenReturn(List.of());
+
+        Msgarena.PB_CSArenaReq req = Msgarena.PB_CSArenaReq.newBuilder()
+                .setType(2)
+                .build();
+
+        arenaHandler.handle(playerSession, MessageIds.CS_ARENA_REQ, req.toByteArray()).block();
+
+        verify(arenaGrpcClient).getBattleHistory(2001L, 0, 10);
+        verify(arenaGrpcClient, never()).challenge(2001L, 0);
     }
 }

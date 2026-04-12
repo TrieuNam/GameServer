@@ -19,6 +19,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ShopGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ShopGrpcClient.class);
+
     @GrpcClient("shop-service")
     private ShopServiceGrpc.ShopServiceBlockingStub shopServiceStub;
 

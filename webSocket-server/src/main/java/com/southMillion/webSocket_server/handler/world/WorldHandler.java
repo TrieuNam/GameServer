@@ -8,6 +8,8 @@ import com.SouthMillion.webSocket_server.service.PlayerSessionRegistry;
 import com.SouthMillion.webSocket_server.service.client.BagFeign;
 import com.SouthMillion.webSocket_server.service.client.RoleFeign;
 import com.SouthMillion.webSocket_server.service.grpc.GameWorldGrpcClient;
+import com.SouthMillion.webSocket_server.service.grpc.InteractNpcResponse;
+import com.SouthMillion.webSocket_server.service.grpc.PickupItemResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagDTOs;
@@ -58,6 +60,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @RequiredArgsConstructor
 public class WorldHandler implements MessageHandler {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WorldHandler.class);
 
     private final GameWorldGrpcClient gameWorldGrpcClient;
     private final BagFeign bagFeign;
@@ -403,7 +407,7 @@ public class WorldHandler implements MessageHandler {
             OtherRoleDTOs.OtherRoleInfo roleInfo =
                     roleFeign.getOtherRole(null, String.valueOf(roleId));
 
-            if (roleInfo != null && roleInfo.attributes() != null && roleInfo.attributes().speed() != null) {
+            if (roleInfo != null && roleInfo.attributes() != null) {
                 // Convert speed attribute to units/sec (assume speed is in points, 100 points = 1 unit/sec)
                 return roleInfo.attributes().speed() * 0.01;
             }
@@ -462,16 +466,23 @@ public class WorldHandler implements MessageHandler {
                 int itemId = resp.getItemId();
                 int quantity = resp.getQuantity();
 
-                // Add item to player's bag
+                // Add item to player's bag only if the world service has not already granted it
                 try {
-                    BagDTOs.AddItemReq addItemReq = BagDTOs.AddItemReq.builder()
-                            .itemId(itemId)
-                            .num(quantity)
-                            .build();
+                    if (!resp.isBagGranted()) {
+                        BagDTOs.GrantReq grantReq = BagDTOs.GrantReq.builder()
+                                .roleId(String.valueOf(roleId))
+                                .items(List.of(BagDTOs.GrantItem.builder()
+                                        .itemId(itemId)
+                                        .num(quantity)
+                                        .build()))
+                                .reason("world_pickup")
+                                .build();
 
-                    bagFeign.add(String.valueOf(roleId), addItemReq);
-
-                    log.info("[World] Added item {} x{} to bag for roleId={}", itemId, quantity, roleId);
+                        bagFeign.grant(grantReq);
+                        log.info("[World] Added item {} x{} to bag for roleId={}", itemId, quantity, roleId);
+                    } else {
+                        log.info("[World] Item {} x{} was already granted by world-service for roleId={}", itemId, quantity, roleId);
+                    }
 
                     // Refresh bag item in UI
                     refreshBagItem(session, roleId, itemId);

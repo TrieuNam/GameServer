@@ -21,6 +21,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RankHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RankHandler.class);
+
     private final LeaderboardFeign leaderboardFeign;
 
     private static final int RANK_POWER = 1;

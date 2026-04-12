@@ -35,6 +35,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MailHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MailHandler.class);
+
     private final MailGrpcClient mailGrpcClient;
     private final BagFeign bagFeign;
     private final WalletHttpClient walletHttpClient;
@@ -245,12 +247,16 @@ public class MailHandler implements MessageHandler {
             try {
                 // Distribute items to bag
                 if (attachment.getItemId() > 0 && attachment.getQuantity() > 0) {
-                    BagDTOs.AddItemReq itemReq = BagDTOs.AddItemReq.builder()
-                            .itemId(attachment.getItemId())
-                            .num(attachment.getQuantity())
+                    BagDTOs.GrantReq itemReq = BagDTOs.GrantReq.builder()
+                            .roleId(String.valueOf(roleId))
+                            .items(List.of(BagDTOs.GrantItem.builder()
+                                    .itemId(attachment.getItemId())
+                                    .num(attachment.getQuantity())
+                                    .build()))
+                            .reason("mail_attachment")
                             .build();
 
-                    bagFeign.add(String.valueOf(roleId), itemReq);
+                    bagFeign.grant(itemReq);
                     updatedItemIds.add(attachment.getItemId());
 
                     log.debug("[Mail] Added item {} x{} to bag for roleId={}",

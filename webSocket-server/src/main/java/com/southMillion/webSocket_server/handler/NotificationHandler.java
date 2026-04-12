@@ -25,6 +25,8 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class NotificationHandler implements MessageHandler {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(NotificationHandler.class);
     
     private final NotificationFeign notificationFeign;
     private final ObjectMapper objectMapper;

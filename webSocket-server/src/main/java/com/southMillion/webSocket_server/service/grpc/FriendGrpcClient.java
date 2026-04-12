@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class FriendGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FriendGrpcClient.class);
+
     @GrpcClient("friend-service")
     private FriendServiceGrpc.FriendServiceBlockingStub stub;
 

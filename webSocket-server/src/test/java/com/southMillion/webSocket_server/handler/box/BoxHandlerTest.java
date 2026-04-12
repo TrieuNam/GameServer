@@ -27,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Schedulers;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -81,6 +82,7 @@ class BoxHandlerTest {
                 .build());
         Mockito.lenient().when(boxFeign.getSetting(any())).thenReturn(BoxDTOs.BoxSettingResp.builder().build());
         Mockito.lenient().when(boxFeign.equipInfo(any())).thenReturn(BoxDTOs.EquipInfo.builder().build());
+        ReflectionTestUtils.setField(boxHandler, "feignVtScheduler", Schedulers.boundedElastic());
     }
 
     @Test
@@ -104,6 +106,23 @@ class BoxHandlerTest {
         assertEquals("2001", openReqCaptor.getValue().getRoleId());
         assertEquals(1, openReqCaptor.getValue().getCount());
         assertEquals(1, openReqCaptor.getValue().getRoleLevel());
+    }
+
+    @Test
+    @DisplayName("Open box maps legacy param=1 to five-open count")
+    void handleOpen_paramOneUsesFiveOpenCount() {
+        when(boxFeign.open(any())).thenReturn(BoxDTOs.OpenResp.builder().build());
+
+        Msgbox.PB_CSBoxReq req = Msgbox.PB_CSBoxReq.newBuilder()
+                .setReqType(1)
+                .setParam(1)
+                .build();
+
+        assertDoesNotThrow(() -> boxHandler.handle(playerSession, 1610, req.toByteArray()).block());
+
+        ArgumentCaptor<BoxDTOs.OpenReq> openReqCaptor = ArgumentCaptor.forClass(BoxDTOs.OpenReq.class);
+        verify(boxFeign).open(openReqCaptor.capture());
+        assertEquals(5, openReqCaptor.getValue().getCount());
     }
 
     @Test
@@ -141,12 +160,11 @@ class BoxHandlerTest {
     }
 
     @Test
-    @DisplayName("Open box retries bag refresh once when the first immediate push fails")
-    void handleOpen_retriesBagRefreshWhenImmediatePushFails() throws Exception {
+    @DisplayName("Open box keeps a single authoritative bag refresh even when the first push fails")
+    void handleOpen_keepsSingleBagRefreshWhenImmediatePushFails() throws Exception {
         when(boxFeign.open(any())).thenReturn(BoxDTOs.OpenResp.builder().build());
         when(bagHandler.pushAll(playerSession))
-                .thenReturn(Mono.error(new RuntimeException("bag temporarily unavailable")))
-                .thenReturn(Mono.empty());
+                .thenReturn(Mono.error(new RuntimeException("bag temporarily unavailable")));
 
         Msgbox.PB_CSBoxReq req = Msgbox.PB_CSBoxReq.newBuilder()
                 .setReqType(1)
@@ -156,7 +174,7 @@ class BoxHandlerTest {
         assertDoesNotThrow(() -> boxHandler.handle(playerSession, 1610, req.toByteArray()).block());
         Thread.sleep(450L);
 
-        verify(bagHandler, times(2)).pushAll(playerSession);
+        verify(bagHandler, times(1)).pushAll(playerSession);
     }
 
     @Test
@@ -232,6 +250,54 @@ class BoxHandlerTest {
     }
 
     @Test
+    @DisplayName("pushAll keeps real box info when box-service responses take a few hundred milliseconds")
+    void pushAll_moderatelySlowResponses_stillSendReturnedBoxInfo() throws Exception {
+        when(boxFeign.info(2001L)).thenAnswer(inv -> {
+            Thread.sleep(300L);
+            return BoxDTOs.InfoResp.builder()
+                    .boxLevel(7)
+                    .boxBuyTimes(2)
+                    .openBoxTotal(9)
+                    .levelFetchFlag(1)
+                    .build();
+        });
+        when(boxFeign.getSetting(2001L)).thenAnswer(inv -> {
+            Thread.sleep(300L);
+            return BoxDTOs.BoxSettingResp.builder().build();
+        });
+        when(boxFeign.getCompareState(2001L)).thenAnswer(inv -> {
+            Thread.sleep(300L);
+            return null;
+        });
+        when(boxFeign.equipInfo(2001L)).thenAnswer(inv -> {
+            Thread.sleep(300L);
+            return BoxDTOs.EquipInfo.builder().build();
+        });
+
+        assertDoesNotThrow(() -> boxHandler.pushAll(playerSession).block());
+
+        ArgumentCaptor<byte[]> frameCaptor = ArgumentCaptor.forClass(byte[].class);
+        verify(outbound, atLeastOnce()).tryEmitNext(frameCaptor.capture());
+
+        Msgbox.PB_SCBoxInfo boxInfo = frameCaptor.getAllValues().stream()
+                .map(PacketCodec::decode)
+                .filter(java.util.Objects::nonNull)
+                .filter(decoded -> decoded.msgId() == 1616)
+                .findFirst()
+                .map(decoded -> {
+                    try {
+                        return Msgbox.PB_SCBoxInfo.parseFrom(decoded.payload());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .orElseThrow(() -> new AssertionError("Expected SC 1616 box info packet"));
+
+        assertEquals(7, boxInfo.getBoxLevel());
+        assertEquals(2, boxInfo.getBuyTimes());
+    }
+
+    @Test
     @DisplayName("Open box pushes immediate task snapshot when publish fails")
     void handleOpen_publishFails_pushesImmediateTaskSnapshot() {
         when(taskProgressPublisher.publish(eq(2001L), eq("open_box"), eq(1), eq("websocket-box-open")))
@@ -275,6 +341,45 @@ class BoxHandlerTest {
     }
 
     @Test
+    @DisplayName("Decompose success clears compare popup and refreshes role state")
+    void handleDecompose_success_clearsEquipPopupAndPushesRoleState() throws Exception {
+        when(boxFeign.decompose(2001L)).thenReturn(BoxDTOs.DecomposeResp.builder()
+                .ok(true)
+                .message("Decomposed")
+                .gotItemId(77)
+                .gotNum(2)
+                .gotExp(10)
+                .build());
+
+        Msgbox.PB_CSBoxReq decomposeReq = Msgbox.PB_CSBoxReq.newBuilder()
+                .setReqType(7)
+                .build();
+
+        assertDoesNotThrow(() -> boxHandler.handle(playerSession, 1610, decomposeReq.toByteArray()).block());
+
+        ArgumentCaptor<byte[]> frameCaptor = ArgumentCaptor.forClass(byte[].class);
+        verify(outbound, atLeastOnce()).tryEmitNext(frameCaptor.capture());
+
+        Msgbox.PB_SCBoxEquipInfo equipInfo = frameCaptor.getAllValues().stream()
+                .map(PacketCodec::decode)
+                .filter(java.util.Objects::nonNull)
+                .filter(decoded -> decoded.msgId() == 1615)
+                .findFirst()
+                .map(decoded -> {
+                    try {
+                        return Msgbox.PB_SCBoxEquipInfo.parseFrom(decoded.payload());
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .orElseThrow(() -> new AssertionError("Expected SC 1615 empty equip packet after decompose"));
+
+        assertEquals(-1, equipInfo.getEquipInfo().getEquipType());
+        assertEquals(0, equipInfo.getEquipInfo().getItemId());
+        verify(roleServiceHandler, atLeastOnce()).pushRoleState(playerSession);
+    }
+
+    @Test
     @DisplayName("Wear success publishes green-quality task progress for box-equip flow")
     void handleEquip_success_publishesGreenQualityTaskProgress() {
         when(boxFeign.getCompareState(2001L)).thenReturn(BoxDTOs.BoxCompareStateResp.builder()
@@ -304,6 +409,19 @@ class BoxHandlerTest {
 
         verify(boxFeign).wear(any());
         verify(boxFeign).clearCompareState(2001L);
+    }
+
+    @Test
+    @DisplayName("Wear success refreshes wallet after auto-sell old equip")
+    void handleEquip_success_refreshesWalletState() {
+        when(boxFeign.wear(any())).thenReturn(BoxDTOs.OkResp.builder().ok(true).message("OK").build());
+
+        Msgbox.PB_CSBoxReq wearReq = Msgbox.PB_CSBoxReq.newBuilder().setReqType(2).build();
+
+        assertDoesNotThrow(() -> boxHandler.handle(playerSession, 1610, wearReq.toByteArray()).block());
+
+        verify(walletHttpClient, atLeastOnce()).info("2001");
+        verify(roleServiceHandler, atLeastOnce()).pushRoleState(playerSession);
     }
 
         @Test

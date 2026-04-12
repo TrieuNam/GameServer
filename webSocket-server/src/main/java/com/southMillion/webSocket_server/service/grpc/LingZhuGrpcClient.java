@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class LingZhuGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LingZhuGrpcClient.class);
+
     @GrpcClient("lingzhu-service")
     private LingZhuServiceGrpc.LingZhuServiceBlockingStub stub;
 
@@ -44,6 +46,16 @@ public class LingZhuGrpcClient {
         } catch (Exception e) {
             if (isUnavailable(e)) log.warn("[grpc-lingzhu] sweep: lingzhu-service unavailable");
             else log.error("[grpc-lingzhu] sweep error: {}", e.getMessage());
+            return GenericResponse.newBuilder().setSuccess(false).build();
+        }
+    }
+
+    public GenericResponse finishChallenge(long roleId, int stage, int level) {
+        try {
+            return stub.finishChallenge(FinishChallengeRequest.newBuilder().setRoleId(roleId).setStage(stage).setLevel(level).build());
+        } catch (Exception e) {
+            if (isUnavailable(e)) log.warn("[grpc-lingzhu] finishChallenge: lingzhu-service unavailable");
+            else log.error("[grpc-lingzhu] finishChallenge error: {}", e.getMessage());
             return GenericResponse.newBuilder().setSuccess(false).build();
         }
     }

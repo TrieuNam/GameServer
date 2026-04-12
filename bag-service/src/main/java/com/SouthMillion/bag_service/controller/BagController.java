@@ -57,6 +57,12 @@ public class BagController {
                 .body(out);
     }
 
+    /** Lấy tiến trình recycle hiện tại (level + exp) — không thay đổi dữ liệu, dùng cho bootstrap 1686 */
+    @GetMapping("/{roleId}/recycle-progress")
+    public ResponseEntity<Map<String, Object>> recycleProgress(@PathVariable String roleId) {
+        return ResponseEntity.ok(svc.getRecycleProgress(Long.valueOf(roleId)));
+    }
+
     /** Item recycle (物品回收): consume items, award recycle exp, return level+exp */
     @PostMapping("/{roleId}/recycle")
     public ResponseEntity<Map<String, Object>> recycle(

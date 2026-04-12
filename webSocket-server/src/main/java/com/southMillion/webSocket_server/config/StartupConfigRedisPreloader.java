@@ -43,6 +43,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RequiredArgsConstructor
 public class StartupConfigRedisPreloader {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StartupConfigRedisPreloader.class);
+
     private final ConfigSnapshotLookupService configLookup;
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper;

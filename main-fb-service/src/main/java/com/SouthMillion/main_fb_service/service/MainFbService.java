@@ -41,8 +41,13 @@ public class MainFbService {
     private final StringRedisTemplate redis;
     private final TaskProgressPublisher taskProgressPublisher;
 
-    @Value("${mainfb.stamina-item-id:50001}")
+    @Value("${mainfb.stamina-enabled:false}")
+    private boolean STAMINA_ENABLED;
+
+    @Value("${mainfb.stamina-item-id:0}")
     private Long STAMINA_ITEM_ID;
+
+    private static final long LEGACY_INVALID_STAMINA_ITEM_ID = 50001L;
 
     private static String settleKey(String battleId) { return "mainfb:settle:" + battleId; }
 
@@ -97,22 +102,8 @@ public class MainFbService {
         // Validate unlock
         validateUnlock(req.getPlayerId(), req.getStage(), req.getLevel());
 
-        int cost = 0;
-        if (c.getNow_box() != null && !c.getNow_box().isEmpty()) {
-            cost = Integer.parseInt(c.getNow_box());
-            if (cost > 0) {
-                long roleId = Long.parseLong(req.getPlayerId());
-                var consumeReq = BagConsumeReq.builder()
-                        .userId(roleId)
-                        .roleId(roleId)
-                        .itemId(STAMINA_ITEM_ID.intValue())
-                        .amount(cost)
-                        .source("mainfb.enterStage")
-                        .idemKey(ReqId.gen())
-                        .build();
-                itemFeign.consumeItem(consumeReq);
-            }
-        }
+        int cost = safeInt(c.getNow_box());
+        consumeConfiguredStamina(req.getPlayerId(), cost, "mainfb.enterStage");
 
         var inst = gameworldFeign.createInstance(
                 new GameworldFeignClient.CreateInstanceReq(req.getPlayerId(), req.getStage(), req.getLevel()));
@@ -159,23 +150,7 @@ public class MainFbService {
         publishDungeonProgressSnapshot(req.getPlayerId(), clearedDungeonProgress);
 
         // phát thưởng ải
-        if (!rewards.isEmpty()) {
-            long roleId = Long.parseLong(req.getPlayerId());
-            var bagItems = rewards.stream()
-                    .map(s -> BagAddItemReq.Item.builder()
-                            .itemId(s.itemId().intValue())
-                            .amount(s.count())
-                            .build())
-                    .toList();
-            var addReq = BagAddItemReq.builder()
-                    .userId(roleId)
-                    .roleId(roleId)
-                    .items(bagItems)
-                    .source("mainfb.finishStage")
-                    .idemKey(ReqId.gen())
-                    .build();
-            itemFeign.addItemsBulk(addReq);
-        }
+        grantRewards(req.getPlayerId(), rewards, "mainfb.finishStage");
         return rewards;
     }
 
@@ -195,41 +170,14 @@ public class MainFbService {
         int maxQuick = safeInt(c.getQuick_num());
         if (maxQuick > 0 && times > maxQuick) times = maxQuick;
         int quickCost = calcQuickCost(c.getQuick_expend(), times);
-        if (quickCost > 0) {
-            long roleId = Long.parseLong(req.getPlayerId());
-            var consumeReq = BagConsumeReq.builder()
-                    .userId(roleId)
-                    .roleId(roleId)
-                    .itemId(STAMINA_ITEM_ID.intValue())
-                    .amount(quickCost)
-                    .source("mainfb.sweep")
-                    .idemKey(ReqId.gen())
-                    .build();
-            itemFeign.consumeItem(consumeReq);
-        }
+        consumeConfiguredStamina(req.getPlayerId(), quickCost, "mainfb.sweep");
 
         List<ItemStackDTO> base = mapDrops(c.getWin());
         List<ItemStackDTO> total = new ArrayList<>();
         for (int i = 0; i < times; i++) total.addAll(base);
         total = aggregate(total);
 
-        if (!total.isEmpty()) {
-            long roleId = Long.parseLong(req.getPlayerId());
-            var bagItems = total.stream()
-                    .map(s -> BagAddItemReq.Item.builder()
-                            .itemId(s.itemId().intValue())
-                            .amount(s.count())
-                            .build())
-                    .toList();
-            var addReq = BagAddItemReq.builder()
-                    .userId(roleId)
-                    .roleId(roleId)
-                    .items(bagItems)
-                    .source("mainfb.sweep")
-                    .idemKey(ReqId.gen())
-                    .build();
-            itemFeign.addItemsBulk(addReq);
-        }
+        grantRewards(req.getPlayerId(), total, "mainfb.sweep");
 
         MainFbDTOs.SweepResp resp = new MainFbDTOs.SweepResp();
         resp.setRewards(total.stream().map(s -> {
@@ -254,23 +202,7 @@ public class MainFbService {
         if (cleared < need) throw new IllegalStateException("Chưa đủ số ải vượt để nhận thưởng chương");
 
         List<ItemStackDTO> rewards = mapDrops(jdr.getWin());
-        if (!rewards.isEmpty()) {
-            long roleId = Long.parseLong(playerId);
-            var bagItems = rewards.stream()
-                    .map(s -> BagAddItemReq.Item.builder()
-                            .itemId(s.itemId().intValue())
-                            .amount(s.count())
-                            .build())
-                    .toList();
-            var addReq = BagAddItemReq.builder()
-                    .userId(roleId)
-                    .roleId(roleId)
-                    .items(bagItems)
-                    .source("mainfb.chapterReward")
-                    .idemKey(ReqId.gen())
-                    .build();
-            itemFeign.addItemsBulk(addReq);
-        }
+        grantRewards(playerId, rewards, "mainfb.chapterReward");
 
         rec.markClaimed();
         chapterRepo.save(rec);
@@ -312,6 +244,74 @@ public class MainFbService {
         if (!taskProgressPublisher.publish(playerId, "complete_dungeon", clearedDungeonProgress, "main-fb-service")) {
             log.warn("[MainFb] Failed to publish dungeon progress snapshot for player {} progress={}",
                     playerId, clearedDungeonProgress);
+        }
+    }
+
+    private void consumeConfiguredStamina(String playerId, int cost, String source) {
+        if (cost <= 0) {
+            return;
+        }
+        if (!STAMINA_ENABLED) {
+            log.debug("[MainFb] Stamina consume skipped for playerId={} source={} because mainfb.stamina-enabled=false",
+                    playerId, source);
+            return;
+        }
+        if (Objects.equals(STAMINA_ITEM_ID, LEGACY_INVALID_STAMINA_ITEM_ID)) {
+            log.warn("[MainFb] Stamina consume skipped for playerId={} source={} because itemId={} is a legacy invalid config value",
+                    playerId, source, STAMINA_ITEM_ID);
+            return;
+        }
+        if (STAMINA_ITEM_ID == null || STAMINA_ITEM_ID <= 0) {
+            log.debug("[MainFb] Stamina consume skipped for playerId={} source={} because mainfb.stamina-item-id is disabled ({})",
+                    playerId, source, STAMINA_ITEM_ID);
+            return;
+        }
+
+        long roleId = resolveInternalRoleId(playerId);
+        var consumeReq = BagConsumeReq.builder()
+                .userId(roleId)
+                .roleId(roleId)
+                .itemId(STAMINA_ITEM_ID.intValue())
+                .amount(cost)
+                .source(source)
+                .idemKey(ReqId.gen())
+                .build();
+        itemFeign.consumeItem(consumeReq);
+    }
+
+    private void grantRewards(String playerId, List<ItemStackDTO> rewards, String source) {
+        if (rewards == null || rewards.isEmpty()) {
+            return;
+        }
+
+        long roleId = resolveInternalRoleId(playerId);
+        var bagItems = rewards.stream()
+                .map(s -> BagAddItemReq.Item.builder()
+                        .itemId(s.itemId().intValue())
+                        .amount(s.count())
+                        .build())
+                .toList();
+        var addReq = BagAddItemReq.builder()
+                .userId(roleId)
+                .roleId(roleId)
+                .items(bagItems)
+                .source(source)
+                .idemKey(ReqId.gen())
+                .build();
+        itemFeign.addItemsBulk(addReq);
+    }
+
+    private long resolveInternalRoleId(String playerId) {
+        if (playerId == null || playerId.isBlank()) {
+            throw new IllegalArgumentException("playerId is required");
+        }
+        try {
+            return Long.parseLong(playerId);
+        } catch (NumberFormatException ignored) {
+            long fallbackRoleId = Integer.toUnsignedLong(playerId.hashCode());
+            log.debug("[MainFb] Non-numeric playerId='{}'; using synthetic roleId={} for internal bag calls",
+                    playerId, fallbackRoleId);
+            return fallbackRoleId;
         }
     }
 

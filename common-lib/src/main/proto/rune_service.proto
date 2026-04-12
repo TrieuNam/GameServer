@@ -9,110 +9,213 @@ option java_package = "org.SouthMillion.proto.rune";
 option java_outer_classname = "RuneServiceProto";
 
 service RuneGrpcService {
-  rpc GetAllRunes(GetAllRunesRequest) returns (GetAllRunesResponse);
-  rpc GetRune(GetRuneRequest) returns (GetRuneResponse);
-  rpc CreateRune(CreateRuneRequest) returns (CreateRuneResponse);
-  rpc LevelUpRune(LevelUpRuneRequest) returns (LevelUpRuneResponse);
-  rpc UpgradeRuneQuality(UpgradeRuneQualityRequest) returns (UpgradeRuneQualityResponse);
-  rpc EquipRune(EquipRuneRequest) returns (EquipRuneResponse);
-  rpc UnequipRune(UnequipRuneRequest) returns (UnequipRuneResponse);
+  // ── Knapsack queries ─────────────────────────────────────────────────────
+  rpc GetAllRunes(GetAllRunesRequest)           returns (GetAllRunesResponse);
+  rpc GetRune(GetRuneRequest)                   returns (GetRuneResponse);
   rpc GetEquippedRunes(GetEquippedRunesRequest) returns (GetEquippedRunesResponse);
+
+  // ── Rune creation ─────────────────────────────────────────────────────────
+  rpc CreateRune(CreateRuneRequest)             returns (CreateRuneResponse);
+
+  // ── Equipment ops (client op 3 / op 4) ───────────────────────────────────
+  rpc EquipRune(EquipRuneRequest)               returns (EquipRuneResponse);
+  rpc UnequipRune(UnequipRuneRequest)           returns (UnequipRuneResponse);
+  /** op=4 OFFRUNE: 脱下铭文 by slot index */
+  rpc UnequipRuneBySlot(UnequipBySlotRequest)   returns (UnequipBySlotResponse);
+
+  // ── Upgrade (client op 5) ─────────────────────────────────────────────────
+  /** op=5 UPRUNE: 铭文升级 — consumes up_item (70100) from bag */
+  rpc UpRune(UpRuneRequest)                     returns (UpRuneResponse);
+
+  // ── Legacy upgrade ops (used internally / REST) ────────────────────────
+  rpc LevelUpRune(LevelUpRuneRequest)           returns (LevelUpRuneResponse);
+  rpc UpgradeRuneQuality(UpgradeRuneQualityRequest) returns (UpgradeRuneQualityResponse);
+
+  // ── Decompose (client op 6) ───────────────────────────────────────────────
+  rpc DecomposeRunes(DecomposeRunesRequest)     returns (DecomposeRunesResponse);
+
+  // ── Tower state ───────────────────────────────────────────────────────────
+  rpc GetTowerState(TowerStateRequest)          returns (TowerStateResponse);
+  /** op=1 FETCHDAYREWARD: 领取每日奖励 */
+  rpc FetchDayReward(TowerStateRequest)         returns (TowerStateResponse);
+  /** op=7 PASS_REWARD: 领取通关章节奖励 */
+  rpc PassReward(TowerStateRequest)             returns (TowerStateResponse);
+  /** Called by battle-service on INSCRIPTION_TOWER win */
+  rpc WinTowerLevel(TowerStateRequest)          returns (TowerStateResponse);
+
+  // ── Turntable (client op 2) ───────────────────────────────────────────────
+  rpc Turntable(TurntableRequest)               returns (TurntableResponse);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared rune snapshot
+// ─────────────────────────────────────────────────────────────────────────────
 message RuneData {
-  int64 id = 1;
-  int64 user_id = 2;
-  int32 rune_index = 3;
-  int32 rune_id = 4;
-  int32 level = 5;
-  int32 quality = 6;
-  int32 star_level = 7;
-  int64 exp = 8;
-  bool is_equipped = 9;
-  int32 equip_slot = 10;
+  int64 id              = 1;
+  int64 user_id         = 2;
+  int32 rune_index      = 3;
+  int32 rune_id         = 4;
+  int32 level           = 5;
+  int32 quality         = 6;
+  int32 star_level      = 7;
+  int64 exp             = 8;
+  bool  is_equipped     = 9;
+  int32 equip_slot      = 10;
   int32 refinement_level = 11;
-  int64 combat_power = 12;
-  int64 created_at = 13;
-  int64 updated_at = 14;
+  int64 combat_power    = 12;
+  int64 created_at      = 13;
+  int64 updated_at      = 14;
 }
 
-message GetAllRunesRequest {
-  int64 user_id = 1;
+/** Tower / turntable player state snapshot */
+message TowerStateData {
+  int32 tower_level       = 1;
+  int32 turntable_num     = 2;
+  int32 turntable_flag    = 3;
+  int32 turntable_round   = 4;
+  int32 daily_reward      = 5;
+  int32 pass_reward_index = 6;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// GetAllRunes
+// ─────────────────────────────────────────────────────────────────────────────
+message GetAllRunesRequest  { int64 user_id = 1; }
 message GetAllRunesResponse {
   common.ResponseStatus status = 1;
-  repeated RuneData runes = 2;
+  repeated RuneData runes      = 2;
 }
 
-message GetRuneRequest {
-  int64 user_id = 1;
-  int32 rune_index = 2;
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
+// GetRune
+// ─────────────────────────────────────────────────────────────────────────────
+message GetRuneRequest  { int64 user_id = 1; int32 rune_index = 2; }
 message GetRuneResponse {
   common.ResponseStatus status = 1;
-  RuneData rune = 2;
+  RuneData rune                = 2;
 }
 
-message CreateRuneRequest {
-  int64 user_id = 1;
-  int32 rune_id = 2;
-  int32 quality = 3;
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
+// CreateRune
+// ─────────────────────────────────────────────────────────────────────────────
+message CreateRuneRequest  { int64 user_id = 1; int32 rune_id = 2; int32 quality = 3; }
 message CreateRuneResponse {
   common.ResponseStatus status = 1;
-  RuneData rune = 2;
+  RuneData rune                = 2;
 }
 
-message LevelUpRuneRequest {
-  int64 user_id = 1;
-  int32 rune_index = 2;
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
+// LevelUpRune (legacy / internal)
+// ─────────────────────────────────────────────────────────────────────────────
+message LevelUpRuneRequest  { int64 user_id = 1; int32 rune_index = 2; }
 message LevelUpRuneResponse {
   common.ResponseStatus status = 1;
-  RuneData rune = 2;
-  int64 exp_cost = 3;
+  RuneData rune                = 2;
+  int64    exp_cost            = 3;
 }
 
-message UpgradeRuneQualityRequest {
-  int64 user_id = 1;
-  int32 rune_index = 2;
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
+// UpgradeRuneQuality (legacy / internal)
+// ─────────────────────────────────────────────────────────────────────────────
+message UpgradeRuneQualityRequest  { int64 user_id = 1; int32 rune_index = 2; }
 message UpgradeRuneQualityResponse {
   common.ResponseStatus status = 1;
-  RuneData rune = 2;
+  RuneData rune                = 2;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// EquipRune  (op=3 WEARRUNE)
+// ─────────────────────────────────────────────────────────────────────────────
 message EquipRuneRequest {
-  int64 user_id = 1;
-  int32 rune_index = 2;
-  int32 equip_slot = 3;
+  int64 user_id    = 1;
+  int32 rune_index = 2;  // knapsack index (p2 from client)
+  int32 equip_slot = 3;  // slot index     (p1 from client)
 }
-
 message EquipRuneResponse {
   common.ResponseStatus status = 1;
-  RuneData rune = 2;
+  RuneData rune                = 2;
 }
 
-message UnequipRuneRequest {
-  int64 user_id = 1;
-  int32 rune_index = 2;
-}
-
+// ─────────────────────────────────────────────────────────────────────────────
+// UnequipRune (by knapsack index — legacy / internal)
+// ─────────────────────────────────────────────────────────────────────────────
+message UnequipRuneRequest  { int64 user_id = 1; int32 rune_index = 2; }
 message UnequipRuneResponse {
   common.ResponseStatus status = 1;
-  string message = 2;
+  string message               = 2;
 }
 
-message GetEquippedRunesRequest {
-  int64 user_id = 1;
+// ─────────────────────────────────────────────────────────────────────────────
+// UnequipRuneBySlot  (op=4 OFFRUNE — unequip by equipment slot)
+// ─────────────────────────────────────────────────────────────────────────────
+message UnequipBySlotRequest  { int64 user_id = 1; int32 equip_slot = 2; }
+message UnequipBySlotResponse {
+  common.ResponseStatus status = 1;
+  int32 freed_rune_index       = 2;  // knapsack index that was freed
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// GetEquippedRunes
+// ─────────────────────────────────────────────────────────────────────────────
+message GetEquippedRunesRequest  { int64 user_id = 1; }
 message GetEquippedRunesResponse {
   common.ResponseStatus status = 1;
-  repeated RuneData runes = 2;
+  repeated RuneData runes      = 2;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// UpRune  (op=5 UPRUNE — upgrade by consuming 70100 crystals)
+// ─────────────────────────────────────────────────────────────────────────────
+message UpRuneRequest {
+  int64 user_id    = 1;
+  int32 rune_index = 2;  // knapsack index (p1 from client)
+}
+message UpRuneResponse {
+  common.ResponseStatus status = 1;
+  RuneData rune                = 2;
+  int32 new_level              = 3;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DecomposeRunes  (op=6 DECOMPOSE)
+// ─────────────────────────────────────────────────────────────────────────────
+message DecomposeRunesRequest {
+  int64          user_id         = 1;
+  repeated int32 knapsack_indices = 2;  // p1_list: rune knapsack slots to decompose
+  repeated int32 crystal_item_ids = 3;  // p2_list: exp-crystal item IDs to decompose
+}
+message DecomposeRunesResponse {
+  common.ResponseStatus status  = 1;
+  int32 refund_item_id          = 2;   // 70100
+  int32 refund_amount           = 3;   // total crystals returned
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Tower state ops  (op=1 daily, op=7 pass, battle win)
+// ─────────────────────────────────────────────────────────────────────────────
+message TowerStateRequest  { int64 user_id = 1; }
+message TowerStateResponse {
+  common.ResponseStatus status = 1;
+  TowerStateData state         = 2;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Turntable  (op=2 TURNTABLE)
+// ─────────────────────────────────────────────────────────────────────────────
+message TurntableRequest {
+  int64 user_id = 1;
+  int32 count   = 2;  // number of spins (p1 from client)
+}
+message TurntableReward {
+  int32 item_id = 1;
+  int32 num     = 2;
+}
+message TurntableSpinResult {
+  int32                   slot_bit      = 1;  // which bit was set this spin (1-based cur_index)
+  repeated TurntableReward rewards      = 2;
+}
+message TurntableResponse {
+  common.ResponseStatus          status       = 1;
+  TowerStateData                 state        = 2;
+  repeated TurntableSpinResult   spin_results = 3;
 }

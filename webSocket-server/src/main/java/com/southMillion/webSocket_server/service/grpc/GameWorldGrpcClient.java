@@ -1,6 +1,8 @@
 package com.SouthMillion.webSocket_server.service.grpc;
 
+import com.SouthMillion.webSocket_server.service.client.WorldFeign;
 import io.grpc.StatusRuntimeException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.SouthMillion.grpc.gameworld.*;
@@ -15,7 +17,12 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class GameWorldGrpcClient {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GameWorldGrpcClient.class);
+
+    private final WorldFeign worldFeign;
 
     @GrpcClient("gameworld-service")
     private GameWorldServiceGrpc.GameWorldServiceBlockingStub gameWorldServiceStub;
@@ -211,80 +218,112 @@ public class GameWorldGrpcClient {
     }
 
     /**
-     * Pickup item from world
-     * @return PickupItemResponse with item details or error code
+     * Pickup item from world.
+     * Temporary REST fallback because `gameworld_service.proto` does not define pickup RPCs yet.
      */
     public PickupItemResponse pickupItem(Long roleId, long itemUid, int zoneId, float playerX, float playerY, float playerZ) {
         try {
-            Position playerPosition = Position.newBuilder()
-                    .setX(playerX)
-                    .setY(playerY)
-                    .setZ(playerZ)
-                    .build();
+            String rawResult = worldFeign.pickupItem(roleId, itemUid);
 
-            PickupItemRequest request = PickupItemRequest.newBuilder()
-                    .setRoleId(roleId)
-                    .setItemUid(itemUid)
-                    .setZoneId(zoneId)
-                    .setPlayerPosition(playerPosition)
-                    .build();
-
-            PickupItemResponse response = gameWorldServiceStub
-                    .withDeadlineAfter(3, TimeUnit.SECONDS)
-                    .pickupItem(request);
-
-            if (response.getSuccess()) {
-                log.info("Player {} picked up item {}: itemId={}, quantity={}",
-                        roleId, itemUid, response.getItemId(), response.getQuantity());
-            } else {
-                log.warn("Player {} failed to pickup item {}: errorCode={}",
-                        roleId, itemUid, response.getErrorCode());
+            if (rawResult == null || rawResult.isBlank()) {
+                log.warn("Empty pickup response for role {} item {} in zone {}", roleId, itemUid, zoneId);
+                return PickupItemResponse.builder()
+                        .success(false)
+                        .errorCode("EMPTY_RESPONSE")
+                        .errorMessage("World service returned empty pickup response")
+                        .build();
             }
 
-            return response;
-        } catch (StatusRuntimeException e) {
+            String result = rawResult.trim();
+            if (result.startsWith("ERROR:")) {
+                String message = result.substring("ERROR:".length()).trim();
+                log.warn("Pickup failed for role {} item {} in zone {}: {}", roleId, itemUid, zoneId, message);
+                return PickupItemResponse.builder()
+                        .success(false)
+                        .errorCode("WORLD_SERVICE_ERROR")
+                        .errorMessage(message.isEmpty() ? "Pickup failed" : message)
+                        .build();
+            }
+
+            String[] parts = result.split(":", 2);
+            if (parts.length != 2) {
+                log.warn("Unexpected pickup response format for role {} item {}: {}", roleId, itemUid, result);
+                return PickupItemResponse.builder()
+                        .success(false)
+                        .errorCode("PARSE_ERROR")
+                        .errorMessage("Unexpected pickup response: " + result)
+                        .build();
+            }
+
+            int itemId = Integer.parseInt(parts[0].trim());
+            int quantity = Integer.parseInt(parts[1].trim());
+
+            log.info("Player {} picked up item {} via world-service fallback: itemId={}, quantity={}, zoneId={}, pos=({}, {}, {})",
+                    roleId, itemUid, itemId, quantity, zoneId, playerX, playerY, playerZ);
+
+            return PickupItemResponse.builder()
+                    .success(true)
+                    .itemId(itemId)
+                    .quantity(quantity)
+                    .isBagGranted(true)
+                    .build();
+        } catch (NumberFormatException e) {
+            log.error("Failed to parse pickup response for role {} item {}", roleId, itemUid, e);
+            return PickupItemResponse.builder()
+                    .success(false)
+                    .errorCode("PARSE_ERROR")
+                    .errorMessage("Invalid pickup response format")
+                    .build();
+        } catch (Exception e) {
             log.error("Failed to pickup item {} for role: {}", itemUid, roleId, e);
-            return PickupItemResponse.newBuilder()
-                    .setSuccess(false)
-                    .setErrorCode("GRPC_ERROR")
-                    .setErrorMessage(e.getMessage())
+            return PickupItemResponse.builder()
+                    .success(false)
+                    .errorCode("WORLD_SERVICE_EXCEPTION")
+                    .errorMessage(e.getMessage() == null ? "World service call failed" : e.getMessage())
                     .build();
         }
     }
 
     /**
-     * Interact with NPC
-     * @return InteractNpcResponse with interaction result
+     * Interact with NPC.
+     * Temporary REST fallback because `gameworld_service.proto` does not define NPC interaction RPCs yet.
      */
     public InteractNpcResponse interactNpc(Long roleId, int npcId, int interactType, int zoneId) {
         try {
-            InteractNpcRequest request = InteractNpcRequest.newBuilder()
-                    .setRoleId(roleId)
-                    .setNpcId(npcId)
-                    .setInteractType(interactType)
-                    .setZoneId(zoneId)
-                    .build();
+            Boolean success = worldFeign.interactNpc(roleId, npcId, interactType);
 
-            InteractNpcResponse response = gameWorldServiceStub
-                    .withDeadlineAfter(3, TimeUnit.SECONDS)
-                    .interactNpc(request);
-
-            if (response.getSuccess()) {
-                log.info("Player {} interacted with NPC {}: type={}, npcType={}",
-                        roleId, npcId, interactType, response.getNpcType());
-            } else {
-                log.warn("Player {} failed to interact with NPC {}: errorCode={}",
-                        roleId, npcId, response.getErrorCode());
+            if (Boolean.TRUE.equals(success)) {
+                String npcType = resolveNpcType(interactType);
+                log.info("Player {} interacted with NPC {} via world-service fallback: type={}, npcType={}, zoneId={}",
+                        roleId, npcId, interactType, npcType, zoneId);
+                return InteractNpcResponse.builder()
+                        .success(true)
+                        .npcType(npcType)
+                        .build();
             }
 
-            return response;
-        } catch (StatusRuntimeException e) {
+            log.warn("Player {} failed to interact with NPC {} in zone {}", roleId, npcId, zoneId);
+            return InteractNpcResponse.builder()
+                    .success(false)
+                    .errorCode("WORLD_SERVICE_ERROR")
+                    .errorMessage("NPC interaction failed")
+                    .build();
+        } catch (Exception e) {
             log.error("Failed to interact with NPC {} for role: {}", npcId, roleId, e);
-            return InteractNpcResponse.newBuilder()
-                    .setSuccess(false)
-                    .setErrorCode("GRPC_ERROR")
-                    .setErrorMessage(e.getMessage())
+            return InteractNpcResponse.builder()
+                    .success(false)
+                    .errorCode("WORLD_SERVICE_EXCEPTION")
+                    .errorMessage(e.getMessage() == null ? "World service call failed" : e.getMessage())
                     .build();
         }
+    }
+
+    private String resolveNpcType(int interactType) {
+        return switch (interactType) {
+            case 1 -> "DIALOGUE";
+            case 2 -> "SHOP";
+            case 3 -> "QUEST";
+            default -> "UNKNOWN";
+        };
     }
 }

@@ -44,6 +44,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FriendHandler implements MessageHandler, LazyLoadHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(FriendHandler.class);
+
     private final FriendFeign friendFeign;
 
     // Friend operation types from Frontend

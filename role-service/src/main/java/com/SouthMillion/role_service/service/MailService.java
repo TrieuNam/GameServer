@@ -1,11 +1,13 @@
 package com.SouthMillion.role_service.service;
 
 import com.SouthMillion.role_service.entity.Mail;
+import com.SouthMillion.role_service.entity.Role;
 import com.SouthMillion.role_service.repository.MailRepository;
-import com.SouthMillion.role_service.service.producer.BagEventProducer;
+import com.SouthMillion.role_service.repository.RoleRepository;
+import com.SouthMillion.role_service.service.client.BagFeign;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.SouthMillion.dto.role.event.BagGrantEvent;
+import org.SouthMillion.dto.bag.BagAddItemReq;
 import org.SouthMillion.dto.role.mail.MailDTOs;
 import org.SouthMillion.dto.role.mail.MailItem;
 import org.springframework.stereotype.Service;
@@ -21,7 +23,8 @@ import java.util.List;
 public class MailService {
 
     private final MailRepository repo;
-    private final BagEventProducer bagEventProducer;
+    private final RoleRepository roleRepo;
+    private final BagFeign bagFeign;
 
     @Transactional(readOnly = true)
     public MailDTOs.MailListResp list(String userId) {
@@ -58,34 +61,53 @@ public class MailService {
         if (m.isFetched()) {
             return new MailDTOs.FetchMailResp(mailId, true, m.getItems());
         }
-        // Grant items from mail via bag-service Kafka event
+
         if (m.getItems() != null && !m.getItems().isEmpty()) {
-            List<BagGrantEvent.Item> bagItems = new ArrayList<>();
-            for (MailItem mi : m.getItems()) {
-                if ("ITEM".equalsIgnoreCase(mi.getType())) {
-                    try {
-                        bagItems.add(BagGrantEvent.Item.builder()
-                                .itemId(Integer.parseInt(mi.getItemId()))
-                                .num((int) mi.getCount())
-                                .bind(false)
-                                .expireAt(null)
-                                .build());
-                    } catch (NumberFormatException ex) {
-                        log.warn("[Mail] Non-numeric itemId='{}' for userId={}, skipping bag grant",
-                                mi.getItemId(), userId);
+            // Resolve roleId from userId (take first/primary role)
+            Long roleId = roleRepo.findByUserIdOrderByRoleIdAsc(userId)
+                    .stream().findFirst().map(Role::getRoleId).orElse(null);
+            if (roleId == null) {
+                log.warn("[Mail] No role found for userId={}, skipping bag grant for mailId={}", userId, mailId);
+            } else {
+                List<BagAddItemReq.Item> bagItems = new ArrayList<>();
+                for (MailItem mi : m.getItems()) {
+                    if ("ITEM".equalsIgnoreCase(mi.getType())) {
+                        try {
+                            bagItems.add(BagAddItemReq.Item.builder()
+                                    .itemId(Integer.parseInt(mi.getItemId()))
+                                    .amount((int) mi.getCount())
+                                    .bound(false)
+                                    .build());
+                        } catch (NumberFormatException ex) {
+                            log.warn("[Mail] Non-numeric itemId='{}' for userId={}, skipping", mi.getItemId(), userId);
+                        }
+                    } else {
+                        // CURRENCY type: wallet-service integration pending
+                        log.info("[Mail] Currency reward itemId={} count={} for userId={} (wallet grant pending)",
+                                mi.getItemId(), mi.getCount(), userId);
                     }
-                } else {
-                    // CURRENCY type: wallet-service integration pending
-                    log.info("[Mail] Currency reward itemId={} count={} for userId={} (wallet grant pending)",
-                            mi.getItemId(), mi.getCount(), userId);
+                }
+                if (!bagItems.isEmpty()) {
+                    try {
+                        BagAddItemReq req = BagAddItemReq.builder()
+                                .userId(0L) // userId is UUID string in role-service; bag-service only uses this as audit field
+                                .roleId(roleId)
+                                .items(bagItems)
+                                .source("mail-reward")
+                                .idemKey(mailId) // mailId as idempotency key — safe to retry
+                                .build();
+                        bagFeign.add(req);
+                        log.info("[Mail] Granted {} bag items via REST for userId={} roleId={} mailId={}",
+                                bagItems.size(), userId, roleId, mailId);
+                    } catch (Exception e) {
+                        log.error("[Mail] Failed to grant bag items for userId={} roleId={} mailId={}: {}",
+                                userId, roleId, mailId, e.getMessage());
+                        throw new IllegalStateException("Bag grant failed, mail fetch aborted: " + e.getMessage());
+                    }
                 }
             }
-            if (!bagItems.isEmpty()) {
-                bagEventProducer.publishGrant(userId, mailId, bagItems, "mail-reward");
-                log.info("[Mail] Published {} bag items for userId={}, mailId={}",
-                        bagItems.size(), userId, mailId);
-            }
         }
+
         m.setFetched(true);
         m.setRead(true);
         repo.save(m);

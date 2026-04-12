@@ -21,6 +21,8 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class LocalizationHandler implements MessageHandler {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LocalizationHandler.class);
     
     private final LocalizationFeign localizationFeign;
     private final ObjectMapper objectMapper;

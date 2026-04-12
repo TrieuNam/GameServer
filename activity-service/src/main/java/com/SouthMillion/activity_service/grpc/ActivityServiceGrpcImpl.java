@@ -1,6 +1,7 @@
 package com.SouthMillion.activity_service.grpc;
 
 import com.SouthMillion.activity_service.service.ActivityService;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -20,12 +21,36 @@ public class ActivityServiceGrpcImpl extends ActivityServiceGrpc.ActivityService
 
     @Override
     public void handleRandActivity(RandActivityRequest request, StreamObserver<GenericResponse> observer) {
-        log.info("[ActivityGrpc] HandleRandActivity: roleId={} type={}", request.getRoleId(), request.getActivityType());
+        log.info("[ActivityGrpc] HandleRandActivity: roleId={} type={} op={} params={}",
+                request.getRoleId(), request.getActivityType(), request.getOp(), request.getParamsJson());
         try {
+            int operaType = parseIntSafe(request.getOp());
+            int param1 = 0;
+            int param2 = 0;
+            int param3 = 0;
+
+            String paramsJson = request.getParamsJson();
+            if (paramsJson != null && !paramsJson.isBlank()) {
+                try {
+                    JsonNode root = objectMapper.readTree(paramsJson);
+                    if (root.isArray()) {
+                        param1 = root.path(0).asInt(0);
+                        param2 = root.path(1).asInt(0);
+                        param3 = root.path(2).asInt(0);
+                    } else if (root.isObject()) {
+                        param1 = root.path("param1").asInt(0);
+                        param2 = root.path("param2").asInt(0);
+                        param3 = root.path("param3").asInt(0);
+                    }
+                } catch (Exception parseError) {
+                    log.warn("[ActivityGrpc] Could not parse paramsJson='{}'", paramsJson, parseError);
+                }
+            }
+
             Map<String, Object> result = activityService.handleRandActivity(
                     request.getRoleId(),
                     request.getActivityType(),
-                    0, 0, 0, 0);
+                    operaType, param1, param2, param3);
             boolean ok = Boolean.TRUE.equals(result.get("success"));
             String json = objectMapper.writeValueAsString(result);
             observer.onNext(GenericResponse.newBuilder()
@@ -35,6 +60,17 @@ public class ActivityServiceGrpcImpl extends ActivityServiceGrpc.ActivityService
             log.error("[ActivityGrpc] HandleRandActivity error", e);
             observer.onNext(GenericResponse.newBuilder().setSuccess(false).setMessage(e.getMessage()).build());
             observer.onCompleted();
+        }
+    }
+
+    private int parseIntSafe(String value) {
+        if (value == null || value.isBlank()) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException e) {
+            return 0;
         }
     }
 

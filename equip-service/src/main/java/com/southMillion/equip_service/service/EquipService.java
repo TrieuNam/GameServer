@@ -759,7 +759,26 @@ public class EquipService {
                     roleId, hpDelta, attackDelta, defenseDelta, speedDelta, e.getMessage());
         }
     }
-    public EquipDTOs.OkResp bagSell(Long roleId, int equipType) {
+    public EquipDTOs.OkResp bagSell(Long roleId, int equipType, Integer itemId) {
+        if (itemId != null && itemId > 0) {
+            var consume = BagConsumeReq.builder()
+                    .userId(1L)
+                    .roleId(roleId)
+                    .itemId(itemId)
+                    .amount(1)
+                    .source("bag_sell")
+                    .build();
+            var resp = bagFeign.consume(consume);
+            if (!isConsumeSuccess(resp)) {
+                return EquipDTOs.OkResp.NG("ITEM_NOT_ENOUGH");
+            }
+            return EquipDTOs.OkResp.OK();
+        }
+
+        if (equipType < 0) {
+            return EquipDTOs.OkResp.NG("BAD_PARAM");
+        }
+
         var req = new EquipDTOs.UnequipReq();
         req.setRoleId(String.valueOf(roleId));
         req.setEquipType(equipType);

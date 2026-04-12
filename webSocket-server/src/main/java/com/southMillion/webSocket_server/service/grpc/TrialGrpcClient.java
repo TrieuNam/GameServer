@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TrialGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TrialGrpcClient.class);
+
     @GrpcClient("trial-service")
     private TrialServiceGrpc.TrialServiceBlockingStub trialServiceStub;
 

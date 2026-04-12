@@ -11,6 +11,7 @@ import com.SouthMillion.webSocket_server.service.client.RoleFeign;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.role.advertisment.AdvertisementDTOs;
+import org.SouthMillion.proto.Msgknapsack.Msgknapsack;
 import org.SouthMillion.proto.Msgother.Msgother;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -33,6 +34,11 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class OtherHandler implements MessageHandler {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(OtherHandler.class);
+
+    private static final int LIMIT_CORE_TYPES = 6;
+    private static final int GET_TYPE_CORECRISIS_BOX = 93;
 
     private final ActivityFeign activityFeign;
     private final BagFeign bagFeign;
@@ -76,12 +82,62 @@ public class OtherHandler implements MessageHandler {
             request.put("p1",   req.getP1());
             Map<String, Object> result = roleFeign.limitCore(String.valueOf(roleId), request);
             if (result != null) {
-                if (result.get("level") instanceof Number n) builder.addCoreLevel(n.intValue());
+                // Read all 6 core levels
+                if (result.get("coreLevels") instanceof List<?> levels) {
+                    for (Object lv : levels) {
+                        builder.addCoreLevel(lv instanceof Number n ? n.intValue() : 0);
+                    }
+                }
+                // DRAW (type=1): also emit 1507 PB_SCGetItemNotice with drawn chips
+                if (req.getType() == 1 && result.get("drawnItems") instanceof List<?> items && !items.isEmpty()) {
+                        Msgknapsack.PB_SCGetItemNotice.Builder notice = Msgknapsack.PB_SCGetItemNotice.newBuilder()
+                            .setGetType(GET_TYPE_CORECRISIS_BOX); // PUT_REASON_CORECRISIS_BOX (client BagEnum.GET_TYPE)
+                    for (Object obj : items) {
+                        if (obj instanceof Map<?, ?> m) {
+                            int itemId = m.get("itemId") instanceof Number n ? n.intValue() : 0;
+                            int num    = m.get("num")    instanceof Number n ? n.intValue() : 0;
+                            if (itemId > 0 && num > 0) {
+                                notice.addItemList(Msgknapsack.PB_ItemData.newBuilder()
+                                        .setItemId(itemId).setNum(num).build());
+                            }
+                        }
+                    }
+                    Emitters.emit(session, MsgIds.SC_GET_ITEM_NOTICE, notice.build().toByteArray());
+                }
             }
         } catch (Exception e) {
             log.error("[LimitCore] Error calling backend", e);
         }
+        ensureLimitCoreLevels(builder);
         Emitters.emit(session, MsgIds.SC_LIMIT_CORE_INFO, builder.build().toByteArray());
+    }
+
+    /**
+     * Push 1468 PB_SCLimitCoreInfo to player — called at login bootstrap.
+     */
+    public Mono<Void> pushLimitCoreInfo(PlayerSession session) {
+        return Mono.fromRunnable(() -> {
+            Long roleId = session.getRoleId();
+            Msgother.PB_SCLimitCoreInfo.Builder builder = Msgother.PB_SCLimitCoreInfo.newBuilder();
+            try {
+                Map<String, Object> result = roleFeign.getLimitCoreInfo(String.valueOf(roleId));
+                if (result != null && result.get("coreLevels") instanceof List<?> levels) {
+                    for (Object lv : levels) {
+                        builder.addCoreLevel(lv instanceof Number n ? n.intValue() : 0);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("[LimitCore] pushLimitCoreInfo failed roleId={}: {}", roleId, e.getMessage());
+            }
+            ensureLimitCoreLevels(builder);
+            Emitters.emit(session, MsgIds.SC_LIMIT_CORE_INFO, builder.build().toByteArray());
+        });
+    }
+
+    private void ensureLimitCoreLevels(Msgother.PB_SCLimitCoreInfo.Builder builder) {
+        while (builder.getCoreLevelCount() < LIMIT_CORE_TYPES) {
+            builder.addCoreLevel(0);
+        }
     }
 
     // 1655 → 1656: DuoBao (夺宝)
@@ -151,24 +207,125 @@ public class OtherHandler implements MessageHandler {
         Emitters.emit(session, 1662, builder.build().toByteArray());
     }
 
-    // 1685 → 1686: Item recycle level-up
+    // 1685 → 1686 + 1687 + 1688: Item recycle level-up
     private void handleItemRecycle(PlayerSession session, byte[] payload) throws Exception {
         Msgother.PB_CSItemRecycleLevelUpReq req = Msgother.PB_CSItemRecycleLevelUpReq.parseFrom(payload);
         Long roleId = session.getRoleId();
+        List<Integer> itemIds = req.getItemIdsList();
 
-        log.info("[ItemRecycle] items={} roleId={}", req.getItemIdsList(), roleId);
+        log.info("[ItemRecycle] items={} roleId={}", itemIds, roleId);
 
-        Msgother.PB_SCItemRecycleInfo.Builder builder = Msgother.PB_SCItemRecycleInfo.newBuilder();
+        // 1686: level + exp sau khi recycle
+        Msgother.PB_SCItemRecycleInfo.Builder infoBuilder = Msgother.PB_SCItemRecycleInfo.newBuilder();
         try {
-            Map<String, Object> result = bagFeign.recycleItems(String.valueOf(roleId), req.getItemIdsList());
+            Map<String, Object> result = bagFeign.recycleItems(String.valueOf(roleId), itemIds);
             if (result != null) {
-                if (result.get("level") instanceof Number n) builder.setLevel(n.intValue());
-                if (result.get("exp") instanceof Number n)   builder.setExp(n.longValue());
+                if (result.get("level") instanceof Number n) infoBuilder.setLevel(n.intValue());
+                if (result.get("exp") instanceof Number n)   infoBuilder.setExp(n.longValue());
             }
         } catch (Exception e) {
             log.error("[ItemRecycle] Error calling backend", e);
         }
-        Emitters.emit(session, 1686, builder.build().toByteArray());
+        Emitters.emit(session, 1686, infoBuilder.build().toByteArray());
+
+        // 1688: thông báo từng item đã bị consume (num = 0 = đã dùng hết 1 unit)
+        // + 1687: danh sách bag hiện tại sau recycle
+        try {
+            List<org.SouthMillion.dto.bag.BagDTOs.ItemView> bagList =
+                    bagFeign.list(String.valueOf(roleId));
+
+            // Build map itemId -> remaining num để gửi 1688 chính xác
+            Map<Integer, Long> remainingMap = new java.util.HashMap<>();
+            if (bagList != null) {
+                for (org.SouthMillion.dto.bag.BagDTOs.ItemView iv : bagList) {
+                    if (iv.getItemId() != null) {
+                        remainingMap.merge(iv.getItemId(),
+                                iv.getNum() != null ? iv.getNum().longValue() : 0L, Long::sum);
+                    }
+                }
+            }
+
+            // 1688 — một message cho mỗi item đã recycle
+            for (Integer itemId : itemIds) {
+                long remaining = remainingMap.getOrDefault(itemId, 0L);
+                Msgother.PB_SCItemRecycleOneInfo oneInfo = Msgother.PB_SCItemRecycleOneInfo.newBuilder()
+                        .setItemData(org.SouthMillion.proto.Msgknapsack.Msgknapsack.PB_ItemData.newBuilder()
+                                .setItemId(itemId)
+                                .setNum(remaining)
+                                .build())
+                        .build();
+                Emitters.emit(session, 1688, oneInfo.toByteArray());
+            }
+
+            // 1687 — full list sau recycle
+            Msgother.PB_SCItemRecycleListInfo.Builder listBuilder =
+                    Msgother.PB_SCItemRecycleListInfo.newBuilder();
+            if (bagList != null) {
+                for (org.SouthMillion.dto.bag.BagDTOs.ItemView iv : bagList) {
+                    if (iv.getItemId() != null) {
+                        listBuilder.addItemList(
+                                org.SouthMillion.proto.Msgknapsack.Msgknapsack.PB_ItemData.newBuilder()
+                                        .setItemId(iv.getItemId())
+                                        .setNum(iv.getNum() != null ? iv.getNum().longValue() : 0L)
+                                        .build());
+                    }
+                }
+            }
+            Emitters.emit(session, 1687, listBuilder.build().toByteArray());
+        } catch (Exception e) {
+            log.warn("[ItemRecycle] Error pushing 1687/1688 for roleId={}: {}", roleId, e.getMessage());
+        }
+    }
+
+    /**
+     * Push 1686 PB_SCItemRecycleInfo (level + exp) — gọi khi login bootstrap.
+     */
+    public Mono<Void> pushRecycleInfo(PlayerSession session) {
+        return Mono.fromRunnable(() -> {
+            Long roleId = session.getRoleId();
+            Msgother.PB_SCItemRecycleInfo.Builder builder = Msgother.PB_SCItemRecycleInfo.newBuilder();
+            try {
+                Map<String, Object> result = bagFeign.getRecycleProgress(String.valueOf(roleId));
+                if (result != null) {
+                    if (result.get("level") instanceof Number n) builder.setLevel(n.intValue());
+                    if (result.get("exp") instanceof Number n)   builder.setExp(n.longValue());
+                }
+            } catch (Exception e) {
+                log.warn("[ItemRecycle] pushRecycleInfo failed roleId={}: {}", roleId, e.getMessage());
+                builder.setLevel(1).setExp(0);
+            }
+            Emitters.emit(session, 1686, builder.build().toByteArray());
+        });
+    }
+
+    /**
+     * Push 1687 PB_SCItemRecycleListInfo (bag items list) — gọi khi login bootstrap.
+     * Client dùng CfgItemRetrieve để lọc những item nào có thể recycle.
+     */
+    public Mono<Void> pushRecycleListInfo(PlayerSession session) {
+        return Mono.fromRunnable(() -> {
+            Long roleId = session.getRoleId();
+            Msgother.PB_SCItemRecycleListInfo.Builder builder =
+                    Msgother.PB_SCItemRecycleListInfo.newBuilder();
+            try {
+                List<org.SouthMillion.dto.bag.BagDTOs.ItemView> bagList =
+                        bagFeign.list(String.valueOf(roleId));
+                if (bagList != null) {
+                    for (org.SouthMillion.dto.bag.BagDTOs.ItemView iv : bagList) {
+                        if (iv.getItemId() != null) {
+                            builder.addItemList(
+                                    org.SouthMillion.proto.Msgknapsack.Msgknapsack.PB_ItemData.newBuilder()
+                                            .setItemId(iv.getItemId())
+                                            .setNum(iv.getNum() != null ? iv.getNum().longValue() : 0L)
+                                            .build());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("[ItemRecycle] pushRecycleListInfo failed roleId={}: {}", roleId, e.getMessage());
+            }
+            Emitters.emit(session, 1687, builder.build().toByteArray());
+        });
     }
 
     // 1690 → 1691: Pet dungeon (宠物副本)

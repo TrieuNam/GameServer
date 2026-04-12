@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class TaskProgressEventConsumer {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TaskProgressEventConsumer.class);
+
     private final PlayerSessionRegistry sessions;
     private final TaskHandler taskHandler;
 

@@ -26,6 +26,8 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class ConfigSnapshotLookupService {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ConfigSnapshotLookupService.class);
+
     private final StringRedisTemplate redis;
     private final ConfigFeign configFeign;
     private final ObjectMapper objectMapper;

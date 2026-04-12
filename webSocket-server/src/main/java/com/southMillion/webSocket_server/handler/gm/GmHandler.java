@@ -31,6 +31,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GmHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GmHandler.class);
+
     private final GmFeign gmFeign;
     private final ObjectMapper objectMapper;
 

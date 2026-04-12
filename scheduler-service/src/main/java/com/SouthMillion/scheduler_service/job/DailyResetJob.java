@@ -1,6 +1,7 @@
 package com.SouthMillion.scheduler_service.job;
 
 import com.SouthMillion.scheduler_service.client.GiftServiceClient;
+import com.SouthMillion.scheduler_service.client.RuneServiceClient;
 import com.SouthMillion.scheduler_service.client.ShopServiceClient;
 import com.SouthMillion.scheduler_service.client.TaskServiceClient;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ public class DailyResetJob {
     private final TaskServiceClient taskServiceClient;
     private final ShopServiceClient shopServiceClient;
     private final GiftServiceClient giftServiceClient;
+    private final RuneServiceClient runeServiceClient;
 
     @Scheduled(cron = "${scheduler.daily-reset-cron:0 0 0 * * ?}")
     public void executeDailyReset() {
@@ -27,6 +29,7 @@ public class DailyResetJob {
         resetDailyShop();
         resetArenaAttempts();
         distributeDailyRewards();
+        resetRuneDailyReward();
 
         log.info("Daily reset completed at {}", LocalDateTime.now());
     }
@@ -61,6 +64,15 @@ public class DailyResetJob {
             log.info("[DailyReset] Daily rewards distributed successfully");
         } catch (Exception e) {
             log.error("[DailyReset] Failed to distribute daily rewards: {}", e.getMessage());
+        }
+    }
+
+    private void resetRuneDailyReward() {
+        try {
+            runeServiceClient.resetDailyReward();
+            log.info("[DailyReset] Rune daily reward flag reset successfully");
+        } catch (Exception e) {
+            log.error("[DailyReset] Failed to reset rune daily reward: {}", e.getMessage());
         }
     }
 }

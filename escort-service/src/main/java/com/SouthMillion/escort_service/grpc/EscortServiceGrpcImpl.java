@@ -11,7 +11,6 @@ import net.devh.boot.grpc.server.service.GrpcService;
 import org.SouthMillion.grpc.escort.*;
 
 import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
@@ -24,6 +23,7 @@ import java.util.List;
 public class EscortServiceGrpcImpl extends EscortServiceGrpc.EscortServiceImplBase {
 
     private final EscortService escortService;
+    private static final int MAX_SHIP_LEVEL = 5;
 
     // ─── GetEscortInfo ─────────────────────────────────────────────────────────
     // SC:9622 PB_SCEscortRoleInfo — called on login push and op=1
@@ -53,6 +53,35 @@ public class EscortServiceGrpcImpl extends EscortServiceGrpc.EscortServiceImplBa
         }
     }
 
+    // ─── UpgradeShip ──────────────────────────────────────────────────────────
+    // SC:9621 PB_SCEscortRet(type=SHIP_UP)
+    @Override
+    public void upgradeShip(EscortInfoRequest request,
+                            StreamObserver<EscortActionResponse> responseObserver) {
+        String roleId = String.valueOf(request.getRoleId());
+        log.debug("[EscortGrpc] upgradeShip roleId={}", roleId);
+        try {
+            EscortStats before = escortService.initializeStats(roleId);
+            int oldLevel = safeInt(before.getCurrentShipLevel(), 0);
+            int newLevel = escortService.upgradeShipLevel(roleId);
+            boolean upgraded = newLevel > oldLevel;
+            responseObserver.onNext(EscortActionResponse.newBuilder()
+                    .setSuccess(upgraded)
+                    .setP1(upgraded ? 1 : 0)
+                    .setP2(newLevel)
+                    .build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            log.error("[EscortGrpc] upgradeShip error roleId={}", roleId, e);
+            responseObserver.onNext(EscortActionResponse.newBuilder()
+                    .setSuccess(false)
+                    .setP1(0)
+                    .setP2(0)
+                    .build());
+            responseObserver.onCompleted();
+        }
+    }
+
     // ─── GetShipList ───────────────────────────────────────────────────────────
     // SC:9623 PB_SCEscortShipListInfo — called on op=2
     @Override
@@ -66,21 +95,37 @@ public class EscortServiceGrpcImpl extends EscortServiceGrpc.EscortServiceImplBa
 
             // be_intercept=int32, is_help=int32 → use 0/1
             EscortShipData myShip = EscortShipData.newBuilder()
-                    .setShip(shipLevel).setUid(0)
+                    .setShip(shipLevel).setUid(Math.toIntExact(request.getRoleId()))
                     .setBeIntercept(0).setOverTime(0).setShipKey(0).setIsHelp(0)
                     .build();
 
-            EscortShipListResponse.Builder builder = EscortShipListResponse.newBuilder().setMyShip(myShip);
-
             List<EscortMission> active = escortService.getActiveMissions(roleId);
+            EscortMission myActive = active.isEmpty() ? null : active.get(0);
+            if (myActive != null) {
+                long myOverTime = myActive.getExpiryTime() != null
+                        ? myActive.getExpiryTime().toEpochSecond(ZoneOffset.UTC)
+                        : 0L;
+                myShip = EscortShipData.newBuilder()
+                        .setShip(shipLevel)
+                        .setUid(Math.toIntExact(request.getRoleId()))
+                        .setBeIntercept(0)
+                        .setOverTime(Math.max(0, myOverTime))
+                        .setShipKey(safeInt(myActive.getShipKey(), 0))
+                        .setIsHelp(0)
+                        .build();
+            }
+
+            EscortShipListResponse.Builder builder = EscortShipListResponse.newBuilder();
+            if (myActive != null) {
+                builder.setMyShip(myShip);
+            }
+
             for (EscortMission m : active) {
-                int overtime = 0;
-                if (m.getExpiryTime() != null) {
-                    overtime = (int) java.time.Instant.now()
-                            .until(m.getExpiryTime().toInstant(ZoneOffset.UTC), ChronoUnit.SECONDS);
-                }
+                long overtime = m.getExpiryTime() != null
+                        ? m.getExpiryTime().toEpochSecond(ZoneOffset.UTC)
+                        : 0L;
                 builder.addShipList(EscortShipData.newBuilder()
-                        .setShip(shipLevel).setUid(0)
+                        .setShip(shipLevel).setUid(safeLongToInt(m.getUserId(), 0))
                         .setBeIntercept(0)
                         .setOverTime(Math.max(0, overtime))
                         .setShipKey(safeInt(m.getShipKey(), 0))
@@ -105,15 +150,22 @@ public class EscortServiceGrpcImpl extends EscortServiceGrpc.EscortServiceImplBa
         String roleId = String.valueOf(request.getRoleId());
         log.debug("[EscortGrpc] startEscort roleId={} shipLevel={}", roleId, request.getShipLevel());
         try {
+            EscortStats stats = escortService.initializeStats(roleId);
+            int shipLevel = safeInt(stats.getCurrentShipLevel(), 0);
+            int quality = Math.max(1, Math.min(MAX_SHIP_LEVEL, shipLevel + 1));
+
             List<EscortMission> available = escortService.getAllMissions(roleId).stream()
                     .filter(m -> m.getStatus() == 0)
                     .toList();
 
             EscortMission mission;
             if (available.isEmpty()) {
-                mission = escortService.generateMission(roleId, 1);
+                mission = escortService.generateMission(roleId, quality);
             } else {
-                mission = available.get(0);
+                mission = available.stream()
+                        .filter(m -> m.getQuality() != null && m.getQuality() == quality)
+                        .findFirst()
+                        .orElseGet(() -> escortService.generateMission(roleId, quality));
             }
 
             EscortMission started = escortService.startMission(roleId, mission.getId());
@@ -223,11 +275,10 @@ public class EscortServiceGrpcImpl extends EscortServiceGrpc.EscortServiceImplBa
             List<EscortMission> completed = escortService.getCompletedMissions(roleId);
             EscortReportListResponse.Builder builder = EscortReportListResponse.newBuilder();
             for (EscortMission m : completed) {
-                // report_list = repeated bytes → encode missionId as 4-byte ByteString
-                int missionId = safeInt(m.getMissionId(), 0);
-                builder.addReportList(ByteString.copyFrom(new byte[]{
-                        (byte)(missionId >> 24), (byte)(missionId >> 16),
-                        (byte)(missionId >> 8),  (byte) missionId}));
+                int quality = safeInt(m.getQuality(), 1);
+                long rewardGold = m.getRewardGold() != null ? m.getRewardGold() : 0L;
+                String report = String.format("Escort Lv%d completed, reward gold %d", quality, rewardGold);
+                builder.addReportList(ByteString.copyFromUtf8(report));
                 long ts = m.getCompletionTime() != null
                         ? m.getCompletionTime().toEpochSecond(ZoneOffset.UTC) : 0L;
                 builder.addReportTime(ts);
@@ -255,19 +306,23 @@ public class EscortServiceGrpcImpl extends EscortServiceGrpc.EscortServiceImplBa
 
             EscortInterceptListResponse.Builder builder = EscortInterceptListResponse.newBuilder();
             for (EscortMission m : active) {
-                int overtime = 0;
-                if (m.getExpiryTime() != null) {
-                    overtime = (int) java.time.Instant.now()
-                            .until(m.getExpiryTime().toInstant(ZoneOffset.UTC), ChronoUnit.SECONDS);
-                }
+                long overtime = m.getExpiryTime() != null
+                        ? m.getExpiryTime().toEpochSecond(ZoneOffset.UTC)
+                        : 0L;
                 EscortShipData ship = EscortShipData.newBuilder()
-                        .setShip(shipLevel).setUid(0)
+                        .setShip(shipLevel).setUid(safeLongToInt(m.getUserId(), 0))
                         .setBeIntercept(0)
                         .setOverTime(Math.max(0, overtime))
                         .setShipKey(safeInt(m.getShipKey(), 0))
                         .setIsHelp(0)
                         .build();
-                builder.addList(EscortInterceptData.newBuilder().setShip(ship).build());
+                long ownerId = m.getUserId() != null ? m.getUserId() : 0L;
+                builder.addList(EscortInterceptData.newBuilder()
+                        .setRoleId(ownerId)
+                        .setRoleName("Role-" + ownerId)
+                        .setLevel(1)
+                        .setShip(ship)
+                        .build());
             }
 
             responseObserver.onNext(builder.build());
@@ -282,5 +337,15 @@ public class EscortServiceGrpcImpl extends EscortServiceGrpc.EscortServiceImplBa
     // ─── Helper ───────────────────────────────────────────────────────────────
     private static int safeInt(Integer val, int defaultVal) {
         return val != null ? val : defaultVal;
+    }
+
+    private static int safeLongToInt(Long val, int defaultVal) {
+        if (val == null) {
+            return defaultVal;
+        }
+        if (val > Integer.MAX_VALUE || val < Integer.MIN_VALUE) {
+            return defaultVal;
+        }
+        return val.intValue();
     }
 }

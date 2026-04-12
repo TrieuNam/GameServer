@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class TerritoryGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TerritoryGrpcClient.class);
+
     @GrpcClient("territory-service")
     private TerritoryServiceGrpc.TerritoryServiceBlockingStub stub;
 

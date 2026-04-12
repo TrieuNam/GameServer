@@ -35,7 +35,7 @@ public class BlockStateService {
     }
 
     @Transactional
-    public Map<String, Object> inlay(Long roleId, Integer mapId, Integer posX, Integer posY, Integer blockIndex) {
+    public Map<String, Object> inlay(Long roleId, Integer mapId, Integer blockIndex, Integer posX, Integer posY) {
         RoleBlockState state = getOrCreateState(roleId);
         List<BlockNode> blocks = blockNodeRepo.findByRoleId(roleId);
         
@@ -65,8 +65,7 @@ public class BlockStateService {
         node.setPosX(n(posX));
         node.setPosY(n(posY));
         blockNodeRepo.save(node);
-        
-        state.setWearingMapId(node.getMapId());
+
         stateRepo.save(state);
         
         blocks = blockNodeRepo.findByRoleId(roleId);
@@ -76,9 +75,14 @@ public class BlockStateService {
     @Transactional
     public Map<String, Object> remove(Long roleId, Integer mapId, Integer blockIndex) {
         RoleBlockState state = getOrCreateState(roleId);
-        blockNodeRepo.deleteByRoleIdAndMapIdAndBlockIndex(roleId, n(mapId), n(blockIndex));
-        stateRepo.save(state);
-        
+        blockNodeRepo.findByRoleIdAndMapIdAndBlockIndex(roleId, n(mapId), n(blockIndex))
+            .ifPresent(node -> {
+                node.setMapId(0);
+                node.setPosX(0);
+                node.setPosY(0);
+                blockNodeRepo.save(node);
+            });
+
         List<BlockNode> blocks = blockNodeRepo.findByRoleId(roleId);
         return toResponse(state, blocks, RET_REMOVE);
     }
@@ -97,30 +101,27 @@ public class BlockStateService {
             return toResponse(state, blocks, RET_COMPOSE_FAIL);
         }
 
-        // Remove consumed blocks
-        indexes.forEach(idx -> 
-            blockNodeRepo.deleteByRoleIdAndMapIdAndBlockIndex(roleId, null, idx)
-        );
+        // Remove consumed blocks (delete by roleId + blockIndex, regardless of mapId)
+        indexes.forEach(idx -> blockNodeRepo.deleteByRoleIdAndBlockIndex(roleId, idx));
 
-        // Create composed block
+        // Create composed block (uninstalled, sitting in bag)
         int newIndex = state.getNextBlockIndex();
         BlockNode composed = BlockNode.builder()
             .roleId(roleId)
             .blockId(2000 + newIndex)
-            .mapId(n(mapId))
+            .mapId(0)
             .blockIndex(newIndex)
             .posX(0)
             .posY(0)
             .color(9)
             .build();
         blockNodeRepo.save(composed);
-        
+
         state.setNextBlockIndex(newIndex + 1);
-        state.setWearingMapId(composed.getMapId());
         stateRepo.save(state);
-        
-        blocks = blockNodeRepo.findByRoleId(roleId);
-        return toResponse(state, blocks, RET_COMPOSE);
+
+        // Return only the newly composed block so client can push it without duplicating existing blocks
+        return toResponse(state, List.of(composed), RET_COMPOSE);
     }
 
     @Transactional

@@ -28,6 +28,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WsGatewayHandler implements WebSocketHandler {
 
+        private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WsGatewayHandler.class);
+
     private final HandlerRegistry registry;
     private final InMemoryPlayerSessionRegistry sessionRegistry;
     private final AnalyticsHandler analyticsHandler;

@@ -1,5 +1,6 @@
 package com.SouthMillion.task_service.service;
 
+import com.SouthMillion.task_service.exception.FashionBusinessException;
 import com.SouthMillion.task_service.entity.ShiZhuangEntity;
 import com.SouthMillion.task_service.entity.model_clothes.PlayerClothesEntity;
 import com.SouthMillion.task_service.mapper.PlayerClothesMapper;
@@ -7,6 +8,7 @@ import com.SouthMillion.task_service.repository.PlayerClothesRepository;
 import com.SouthMillion.task_service.repository.ShiZhuangRepository;
 import com.SouthMillion.task_service.service.cache.ShiZhuangCacheService;
 import com.SouthMillion.task_service.service.client.ConfigFeignClient;
+import com.SouthMillion.task_service.service.client.ItemFeignClient;
 import com.SouthMillion.shizhuang_service.client.WalletFeignClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
@@ -41,12 +44,15 @@ import java.util.stream.Collectors;
 public class ShiZhuangService {
     private static final String MODEL_CLOTHES_PATH = "gameworld/logicconfig/model_clothes.json";
     private static final String CLOTH_SHOP_PATH = "gameworld/logicconfig/cloth_shop.json";
+    private static final int ITEM_ID_GOLD = 40000;
+    private static final int ITEM_ID_PAID_GOLD = 40001;
 
     private final ShiZhuangRepository repo;
     private final ShiZhuangCacheService cache;
 
     private final PlayerClothesRepository playerClothesRepository;
     private final ConfigFeignClient configFeignClient;
+    private final ItemFeignClient itemFeignClient;
     private final WalletFeignClient walletFeignClient;
     private final StringRedisTemplate redis;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -191,7 +197,7 @@ public class ShiZhuangService {
             CompletableFuture<Void> goldFuture = CompletableFuture.runAsync(() -> {
                 Boolean hasGold = walletFeignClient.hasEnough(playyerId, "gold", buyMoney.longValue());
                 if (!Boolean.TRUE.equals(hasGold)) {
-                    throw new IllegalArgumentException("Không đủ vàng để mua thời trang");
+                    throw FashionBusinessException.notEnoughCurrency(ITEM_ID_GOLD, "Không đủ vàng để mua thời trang");
                 }
                 walletFeignClient.deductCurrency(Map.of(
                         "roleId", playyerId,
@@ -208,7 +214,7 @@ public class ShiZhuangService {
             CompletableFuture<Void> diamondFuture = CompletableFuture.runAsync(() -> {
                 Boolean hasDiamond = walletFeignClient.hasEnough(playyerId, "paid_gold", addPayGold.longValue());
                 if (!Boolean.TRUE.equals(hasDiamond)) {
-                    throw new IllegalArgumentException("Không đủ kim cương để mua thời trang");
+                    throw FashionBusinessException.notEnoughCurrency(ITEM_ID_PAID_GOLD, "Không đủ kim cương để mua thời trang");
                 }
                 walletFeignClient.deductCurrency(Map.of(
                         "roleId", playyerId,
@@ -222,7 +228,15 @@ public class ShiZhuangService {
 
         // Wait for all parallel deductions to complete
         if (!deductionFutures.isEmpty()) {
-            CompletableFuture.allOf(deductionFutures.toArray(new CompletableFuture[0])).join();
+            try {
+                CompletableFuture.allOf(deductionFutures.toArray(new CompletableFuture[0])).join();
+            } catch (CompletionException ex) {
+                Throwable cause = ex.getCause();
+                if (cause instanceof RuntimeException runtimeException) {
+                    throw runtimeException;
+                }
+                throw ex;
+            }
         }
 
         // Update vào bảng sở hữu thời trang
@@ -316,24 +330,132 @@ public class ShiZhuangService {
 
     // Nâng cấp thời trang
     @Transactional
-    public void levelUpClothes(String playyerId, Integer clothesId) {
+    public void levelUpClothes(String playyerId, Integer clothesId, Integer consumeMode) {
         long parsedPlayerId = parsePlayerId(playyerId);
-        PlayerClothesEntity entity = playerClothesRepository.findByPlayerIdAndClothesId(parsedPlayerId, clothesId)
-                .orElseThrow(() -> new RuntimeException("Chưa sở hữu thời trang này"));
+        int mode = consumeMode == null ? 0 : consumeMode;
+        ClothesDTO cfg = getClothesConfig(clothesId);
+        Optional<PlayerClothesEntity> optionalEntity = playerClothesRepository.findByPlayerIdAndClothesId(parsedPlayerId, clothesId);
+        if (optionalEntity.isEmpty()) {
+            consumeActivationCost(playyerId, cfg, mode);
+            PlayerClothesEntity activated = PlayerClothesEntity.builder()
+                .playerId(parsedPlayerId)
+                .clothesId(clothesId)
+                .level(1)
+                .wearing(false)
+                .build();
+            playerClothesRepository.save(activated);
+            log.info("[ShiZhuang] Activated clothesId={} at level=1 for player={}, mode={}", clothesId, playyerId, mode);
+            return;
+        }
+
+        PlayerClothesEntity entity = optionalEntity.get();
         List<ClothesUpDTO> upList = loadClothesUpConfig();
         int nextLevel = entity.getLevel() + 1;
         ClothesUpDTO upCfg = upList.stream()
                 .filter(c -> c.getClothesId().equals(clothesId) && c.getLevel() == nextLevel)
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Không có config nâng cấp cho level tiếp theo"));
-        // Material check: upCfg specifies required upgrade materials
-        // NOTE: If ClothesUpDTO exposes material fields (e.g., getUpItemId/getUpItemNum),
-        // use ItemFeignClient to check and consume them here (see AngelService for pattern).
-        log.info("[ShiZhuang] Upgrading clothesId={} to level={} for player={} (material check pending DTO fields)",
+                .orElseThrow(() -> FashionBusinessException.invalidRequest("Không có config nâng cấp cho level tiếp theo"));
+        if (upCfg.getUpItemId() != null && upCfg.getUpItemNum() != null && upCfg.getUpItemNum() > 0) {
+            if (itemFeignClient.isNotEnough(playyerId, upCfg.getUpItemId(), upCfg.getUpItemNum())) {
+                throw FashionBusinessException.notEnoughItem(upCfg.getUpItemId(), "Không đủ vật phẩm nâng cấp thời trang");
+            }
+            boolean consumed = itemFeignClient.consume(playyerId, upCfg.getUpItemId(), upCfg.getUpItemNum());
+            if (!consumed) {
+                throw FashionBusinessException.notEnoughItem(upCfg.getUpItemId(), "Trừ vật phẩm nâng cấp thời trang thất bại");
+            }
+        }
+
+        if (upCfg.getGoldCost() != null && upCfg.getGoldCost() > 0) {
+            if (!Boolean.TRUE.equals(walletFeignClient.hasEnough(playyerId, "gold", upCfg.getGoldCost().longValue()))) {
+                throw FashionBusinessException.notEnoughCurrency(ITEM_ID_GOLD, "Không đủ vàng nâng cấp thời trang");
+            }
+            walletFeignClient.deductCurrency(Map.of(
+                    "roleId", playyerId,
+                    "currencyType", "gold",
+                    "amount", upCfg.getGoldCost().longValue()
+            ));
+        }
+
+        log.info("[ShiZhuang] Upgrading clothesId={} to level={} for player={} with configured costs", 
                 clothesId, nextLevel, playyerId);
         entity.setLevel(nextLevel);
         playerClothesRepository.save(entity);
     }
+
+    private void consumeActivationCost(String playerId, ClothesDTO cfg, int mode) {
+        if (mode == 1) {
+            ActivationCost cost = resolveActivationJihuoCost(cfg.getClothesId());
+            if (cost == null || cost.itemId() <= 0 || cost.count() <= 0) {
+                throw FashionBusinessException.invalidRequest("Thiếu cấu hình jihuo để kích hoạt bằng tiền");
+            }
+            if (itemFeignClient.isNotEnough(playerId, cost.itemId(), cost.count())) {
+                throw FashionBusinessException.notEnoughItem(cost.itemId(), "Không đủ tài nguyên kích hoạt thời trang");
+            }
+            boolean consumed = itemFeignClient.consume(playerId, cost.itemId(), cost.count());
+            if (!consumed) {
+                throw FashionBusinessException.notEnoughItem(cost.itemId(), "Trừ tài nguyên kích hoạt thất bại");
+            }
+            return;
+        }
+
+        if (cfg.getClothesItem() == null || cfg.getClothesItem() <= 0) {
+            throw FashionBusinessException.invalidRequest("Thiếu cấu hình vật phẩm thời trang để kích hoạt");
+        }
+        if (itemFeignClient.isNotEnough(playerId, cfg.getClothesItem(), 1)) {
+            throw FashionBusinessException.notEnoughItem(cfg.getClothesItem(), "Không đủ vật phẩm thời trang để kích hoạt");
+        }
+        boolean consumed = itemFeignClient.consume(playerId, cfg.getClothesItem(), 1);
+        if (!consumed) {
+            throw FashionBusinessException.notEnoughItem(cfg.getClothesItem(), "Trừ vật phẩm thời trang thất bại");
+        }
+    }
+
+    private ActivationCost resolveActivationJihuoCost(Integer clothesId) {
+        if (clothesId == null || clothesId <= 0) {
+            return null;
+        }
+        JsonNode root = loadConfigNode(MODEL_CLOTHES_PATH);
+        if (root == null || !root.has("clothes")) {
+            return null;
+        }
+        JsonNode clothes = root.get("clothes");
+        if (clothes == null || !clothes.isArray()) {
+            return null;
+        }
+        for (JsonNode entry : clothes) {
+            if (parseIntNode(entry.get("clothes_id"), 0) != clothesId) {
+                continue;
+            }
+            JsonNode jihuo = entry.get("jihuo");
+            if (jihuo == null || !jihuo.isArray() || jihuo.isEmpty()) {
+                return null;
+            }
+            JsonNode first = jihuo.get(0);
+            int itemId = parseIntNode(first.get("item_id"), 0);
+            int count = parseIntNode(first.get("num"), 0);
+            return new ActivationCost(itemId, count);
+        }
+        return null;
+    }
+
+    private int parseIntNode(JsonNode node, int defaultValue) {
+        if (node == null || node.isNull()) {
+            return defaultValue;
+        }
+        if (node.isInt() || node.isLong()) {
+            return node.intValue();
+        }
+        if (node.isTextual()) {
+            try {
+                return Integer.parseInt(node.asText());
+            } catch (Exception ignored) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    }
+
+    private record ActivationCost(int itemId, int count) {}
 
     // Lấy danh sách thời trang sở hữu
     public List<PlayerClothesDTO> getClothes(String playyerId) {
@@ -344,21 +466,22 @@ public class ShiZhuangService {
     }
 
     private void applyAppearanceSlot(Map<String, Integer> appearance, List<PlayerClothesEntity> entries, String fieldName) {
-        PlayerClothesEntity selected = pickDisplayedClothes(entries);
+        // Only explicit wearing=true should drive appearance; otherwise keep default slot value (0).
+        PlayerClothesEntity selected = pickWearingClothes(entries);
         if (selected != null && selected.getClothesId() != null) {
             appearance.put(fieldName, selected.getClothesId());
         }
     }
 
-    private PlayerClothesEntity pickDisplayedClothes(List<PlayerClothesEntity> entries) {
+    private PlayerClothesEntity pickWearingClothes(List<PlayerClothesEntity> entries) {
         if (entries == null || entries.isEmpty()) {
             return null;
         }
         return entries.stream()
                 .filter(Objects::nonNull)
+                .filter(entity -> Boolean.TRUE.equals(entity.getWearing()))
                 .max(Comparator
-                        .comparingInt((PlayerClothesEntity entity) -> Boolean.TRUE.equals(entity.getWearing()) ? 1 : 0)
-                        .thenComparingInt(entity -> entity.getLevel() != null ? entity.getLevel() : 0)
+                        .comparingInt((PlayerClothesEntity entity) -> entity.getLevel() != null ? entity.getLevel() : 0)
                         .thenComparingLong(entity -> entity.getId() != null ? entity.getId() : 0L))
                 .orElse(null);
     }

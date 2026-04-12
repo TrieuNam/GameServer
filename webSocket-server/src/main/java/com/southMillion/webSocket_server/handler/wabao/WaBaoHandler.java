@@ -30,22 +30,43 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class WaBaoHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WaBaoHandler.class);
+
     private final BoxFeign boxFeign;
     private final TaskProgressPublisher taskProgressPublisher;
 
-    private static final int OP_GET_INFO       = 1;
-    private static final int OP_OPEN           = 2;
-    private static final int OP_WEAR           = 3;
-    private static final int OP_SELL           = 4;
-    private static final int OP_BUY            = 5;
-    private static final int OP_LEVEL_UP       = 6;
-    private static final int OP_QUICKEN        = 7;
-    private static final int OP_LEVEL_REWARD   = 8;
-    private static final int OP_LUCK_INFO      = 9;
-    private static final int OP_LUCK_RECEIVE   = 10;
-    private static final int OP_DECOMPOSE      = 11;
-    private static final int OP_GET_SETTING    = 12;
-    private static final int OP_GET_EQUIP_INFO = 13;
+    // Fish/WaBao Operations (from FishConfig.ts)
+    private static final int OP_UNLOCK_MAP     = 1;   // unlock_map
+    private static final int OP_ENTER_MAP      = 2;   // enter_map
+    private static final int OP_WA_BAO         = 3;   // wa_bao (CORE excavation)
+    private static final int OP_SELL           = 4;   // sell
+    private static final int OP_PUT_COLLECTION = 5;   // put_collection
+    private static final int OP_COLLECTION_SELL = 6;  // collection_sell
+    private static final int OP_COLLECTION_BUY = 7;   // collection_buy (WAS: OP_BUY)
+    private static final int OP_COLLECTION_UP  = 8;   // collection_up (WAS: OP_LEVEL_UP)
+    private static final int OP_COLLECTION_QUICKEN = 9; // collection_quicken (WAS: OP_QUICKEN)
+    private static final int OP_FRESH_TASK     = 10;  // fresh_task (WAS: OP_LUCK_RECEIVE)
+    private static final int OP_FETCH_TASK     = 11;  // fetch_task (WAS: OP_DECOMPOSE)
+    private static final int OP_TOOL_UP_LEVEL  = 12;  // tool_up_level (WAS: OP_GET_SETTING)
+    private static final int OP_TOOL_UP_GRADE  = 13;  // tool_up_grade (WAS: OP_GET_EQUIP_INFO)
+    private static final int OP_PUT_COLLECTION_BOOK = 14;    // put_collection_book
+    private static final int OP_COLLECTION_BOOK_LEVEL_UP = 15; // collection_book_level_up
+    private static final int OP_ACTIVATE_BOOK  = 16;  // activate_book
+    private static final int OP_FETCH_COLLECTION_LEVEL_REWARD = 17; // fetch_collection_level_reward
+    
+    // Legacy operations (kept for backward compatibility if needed)
+    private static final int OP_GET_INFO       = 1;   // DEPRECATED: now OP_UNLOCK_MAP
+    private static final int OP_OPEN           = 2;   // DEPRECATED: now OP_ENTER_MAP
+    private static final int OP_WEAR           = 3;   // DEPRECATED: now OP_WA_BAO
+    private static final int OP_LEVEL_UP       = 6;   // DEPRECATED: now OP_COLLECTION_UP
+    private static final int OP_LEVEL_REWARD   = 8;   // DEPRECATED: renamed to FETCH_COLLECTION_LEVEL_REWARD
+    private static final int OP_FISH_QUICKEN_OR_LUCK_INFO = 9; // DEPRECATED
+    private static final int OP_LUCK_RECEIVE   = 10;  // DEPRECATED: now OP_FRESH_TASK
+    private static final int OP_DECOMPOSE      = 11;  // DEPRECATED: now OP_FETCH_TASK
+    private static final int OP_GET_SETTING    = 12;  // DEPRECATED: now OP_TOOL_UP_LEVEL
+    private static final int OP_GET_EQUIP_INFO = 13;  // DEPRECATED: now OP_TOOL_UP_GRADE
+    private static final int OP_BUY            = 5;   // DEPRECATED: now OP_COLLECTION_BUY
+    private static final int OP_QUICKEN        = 7;   // DEPRECATED: now OP_COLLECTION_QUICKEN
 
     @Override
     public int[] interests() {
@@ -68,19 +89,37 @@ public class WaBaoHandler implements MessageHandler {
                     log.debug("[WaBao] op={}, p1={}, roleId={}", opType, param1, roleId);
 
                     switch (opType) {
-                        case OP_GET_INFO       -> handleGetInfo(session, roleId);
-                        case OP_OPEN           -> handleOpen(session, roleId, param1);
-                        case OP_WEAR           -> handleWear(session, roleId);
+                        // Map System
+                        case OP_UNLOCK_MAP     -> handleUnlockMap(session, roleId, param1);
+                        case OP_ENTER_MAP      -> handleEnterMap(session, roleId, param1);
+                        
+                        // Core Excavation (CRITICAL)
+                        case OP_WA_BAO         -> handleWaBao(session, roleId);
+                        
+                        // Item Management
                         case OP_SELL           -> handleSell(session, roleId);
-                        case OP_BUY            -> handleBuy(session, roleId);
-                        case OP_LEVEL_UP       -> handleLevelUp(session, roleId);
-                        case OP_QUICKEN        -> handleQuicken(session, roleId, param1);
-                        case OP_LEVEL_REWARD   -> handleLevelReward(session, roleId, param1);
-                        case OP_LUCK_INFO      -> handleLuckInfo(session, roleId);
-                        case OP_LUCK_RECEIVE   -> handleLuckReceive(session, roleId, param1);
-                        case OP_DECOMPOSE      -> handleDecompose(session, roleId);
-                        case OP_GET_SETTING    -> handleGetSetting(session, roleId);
-                        case OP_GET_EQUIP_INFO -> handleGetEquipInfo(session, roleId);
+                        case OP_PUT_COLLECTION -> handlePutCollection(session, roleId, param1, req.hasParam2() ? req.getParam2() : 0);
+                        case OP_COLLECTION_SELL -> handleCollectionSell(session, roleId, param1, req.hasParam2() ? req.getParam2() : 0);
+                        
+                        // Collection Upgrades
+                        case OP_COLLECTION_BUY -> handleCollectionBuy(session, roleId);
+                        case OP_COLLECTION_UP  -> handleCollectionLevelUp(session, roleId);
+                        case OP_COLLECTION_QUICKEN -> handleCollectionQuicken(session, roleId, param1);
+                        
+                        // Tasks
+                        case OP_FRESH_TASK     -> handleFreshTask(session, roleId, param1);
+                        case OP_FETCH_TASK     -> handleFetchTask(session, roleId, param1);
+                        
+                        // Tools
+                        case OP_TOOL_UP_LEVEL  -> handleToolUpLevel(session, roleId, param1);
+                        case OP_TOOL_UP_GRADE  -> handleToolUpGrade(session, roleId, param1);
+                        
+                        // Handbook/Collection Book
+                        case OP_PUT_COLLECTION_BOOK -> handlePutCollectionBook(session, roleId, param1);
+                        case OP_COLLECTION_BOOK_LEVEL_UP -> handleCollectionBookLevelUp(session, roleId, param1);
+                        case OP_ACTIVATE_BOOK  -> handleActivateBook(session, roleId, param1, req.hasParam2() ? req.getParam2() : 0);
+                        case OP_FETCH_COLLECTION_LEVEL_REWARD -> handleFetchCollectionLevelReward(session, roleId, param1);
+                        
                         default -> {
                             log.warn("[WaBao] Unknown op={}", opType);
                             sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
@@ -120,7 +159,73 @@ public class WaBaoHandler implements MessageHandler {
         }
     }
 
-    // op=1: get info → 1642 PB_SCWaBaoInfo
+    // ═══════════════════════════════════════════════════════════════════════
+    // MAP SYSTEM (Operations 1-2)
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // op=1: unlock map
+    private void handleUnlockMap(PlayerSession session, Long roleId, int mapId) {
+        try {
+            BoxDTOs.OkResp ok = boxFeign.unlockMap(roleId, mapId);
+            if (ok != null && ok.isOk()) {
+                log.debug("[WaBao] Map {} unlocked for roleId={}", mapId, roleId);
+                reportTaskProgress(roleId, "map_unlock", 1);
+            }
+            sendMapInfo(session);
+        } catch (Exception e) {
+            log.error("[WaBao] handleUnlockMap error mapId={}", mapId, e);
+            sendMapInfo(session);
+        }
+    }
+    
+    // op=2: enter map
+    private void handleEnterMap(PlayerSession session, Long roleId, int mapId) {
+        try {
+            BoxDTOs.OkResp ok = boxFeign.enterMap(roleId, mapId);
+            if (ok != null && ok.isOk()) {
+                log.debug("[WaBao] Entered map {} for roleId={}", mapId, roleId);
+            }
+            sendMapInfo(session);
+        } catch (Exception e) {
+            log.error("[WaBao] handleEnterMap error mapId={}", mapId, e);
+            sendMapInfo(session);
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // CORE EXCAVATION (Operation 3 - CRITICAL)
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // op=3: wa_bao (excavate/dig for treasure) ← CORE GAME MECHANIC
+    private void handleWaBao(PlayerSession session, Long roleId) {
+        try {
+            BoxDTOs.ExcavateResp result = boxFeign.excavate(roleId);
+            log.debug("[WaBao] Excavate result for roleId={}: {}", roleId, result);
+            
+            if (result != null && result.getItem() != null) {
+                // Send excavated item
+                sendItemInfo(session, buildItemInfoFromExcavate(result.getItem()));
+                // Track task progress
+                reportTaskProgress(roleId, TaskCondition.OPEN_BOX.taskKey(), 1);
+            }
+            // Send updated collection info
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleWaBao error", e);
+            sendItemInfo(session, Msgwabao.PB_SCWaBaoItemInfo.newBuilder().setResult(0).build());
+        }
+    }
+    
+    // Helper to build item info from excavate result
+    private Msgwabao.PB_SCWaBaoItemInfo buildItemInfoFromExcavate(BoxDTOs.EquipRolled rolled) {
+        return buildItemInfoFromEquip(rolled);
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // LEGACY: op=1 as getInfo (kept for backward compatibility)
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // op=1: get info → 1642 PB_SCWaBaoInfo (DEPRECATED: use map operations)
     private void handleGetInfo(PlayerSession session, Long roleId) {
         try {
             BoxDTOs.InfoResp info = boxFeign.info(roleId);
@@ -139,7 +244,57 @@ public class WaBaoHandler implements MessageHandler {
         }
     }
 
-    // op=2: open box → 1644 PB_SCWaBaoItemInfo
+    // ═══════════════════════════════════════════════════════════════════════
+    // ITEM MANAGEMENT (Operations 4-6)
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // op=4: sell item
+    private void handleSell(PlayerSession session, Long roleId) {
+        try {
+            BoxDTOs.SellReq req = new BoxDTOs.SellReq();
+            req.setRoleId(String.valueOf(roleId));
+            boxFeign.sell(req);
+            sendClearItemInfo(session);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleSell error", e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // op=5: put item into collection
+    private void handlePutCollection(PlayerSession session, Long roleId, int itemType, int index) {
+        try {
+            BoxDTOs.PutCollectionReq req = new BoxDTOs.PutCollectionReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setItemType(itemType);
+            req.setIndex(Math.max(0, Math.min(index, 5)));
+            boxFeign.putCollection(req);
+            sendCollectionList(session);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handlePutCollection error itemType={} index={}", itemType, index, e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // op=6: sell from collection
+    private void handleCollectionSell(PlayerSession session, Long roleId, int itemType, int index) {
+        try {
+            BoxDTOs.CollectionSellReq req = new BoxDTOs.CollectionSellReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setItemType(itemType);
+            req.setIndex(Math.max(0, Math.min(index, 5)));
+            boxFeign.collectionSell(req);
+            sendCollectionList(session);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleCollectionSell error itemType={} index={}", itemType, index, e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // LEGACY: op=2 open box (kept for backward compatibility)
     private void handleOpen(PlayerSession session, Long roleId, int count) {
         try {
             BoxDTOs.OpenReq req = new BoxDTOs.OpenReq();
@@ -173,7 +328,183 @@ public class WaBaoHandler implements MessageHandler {
         taskProgressPublisher.publish(roleId, taskKey, delta, "websocket-wabao");
     }
 
-    // op=3: wear item
+    // ═══════════════════════════════════════════════════════════════════════
+    // COLLECTION UPGRADES (Operations 7-9)
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // op=7: buy collection upgrade
+    private void handleCollectionBuy(PlayerSession session, Long roleId) {
+        try {
+            BoxDTOs.SimpleReq req = new BoxDTOs.SimpleReq();
+            req.setRoleId(String.valueOf(roleId));
+            boxFeign.collectionBuy(req);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleCollectionBuy error", e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // op=8: collection level up
+    private void handleCollectionLevelUp(PlayerSession session, Long roleId) {
+        try {
+            BoxDTOs.SimpleReq req = new BoxDTOs.SimpleReq();
+            req.setRoleId(String.valueOf(roleId));
+            boxFeign.collectionLevelUp(req);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleCollectionLevelUp error", e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // op=9: quicken collection level up (param1 = times)
+    private void handleCollectionQuicken(PlayerSession session, Long roleId, int num) {
+        try {
+            BoxDTOs.QuickenReq req = new BoxDTOs.QuickenReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setNum(Math.max(1, num));
+            boxFeign.collectionQuicken(req);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleCollectionQuicken error", e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // TASK SYSTEM (Operations 10-11)
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // op=10: refresh task (param1 = index)
+    private void handleFreshTask(PlayerSession session, Long roleId, int index) {
+        try {
+            BoxDTOs.FreshTaskReq req = new BoxDTOs.FreshTaskReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setIndex(Math.max(0, index));
+            boxFeign.freshTask(req);
+            sendTaskInfo(session);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleFreshTask error index={}", index, e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // op=11: fetch task reward (param1 = index)
+    private void handleFetchTask(PlayerSession session, Long roleId, int index) {
+        try {
+            BoxDTOs.FetchTaskReq req = new BoxDTOs.FetchTaskReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setIndex(Math.max(0, index));
+            boxFeign.fetchTask(req);
+            sendTaskInfo(session);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleFetchTask error index={}", index, e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // TOOL SYSTEM (Operations 12-13)
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // op=12: tool level up (param1 = tool_type)
+    private void handleToolUpLevel(PlayerSession session, Long roleId, int toolType) {
+        try {
+            BoxDTOs.ToolUpLevelReq req = new BoxDTOs.ToolUpLevelReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setToolType(toolType);
+            boxFeign.toolUpLevel(req);
+            sendToolInfo(session);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleToolUpLevel error toolType={}", toolType, e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // op=13: tool up grade (param1 = tool_type)
+    private void handleToolUpGrade(PlayerSession session, Long roleId, int toolType) {
+        try {
+            BoxDTOs.ToolUpGradeReq req = new BoxDTOs.ToolUpGradeReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setToolType(toolType);
+            boxFeign.toolUpGrade(req);
+            sendToolInfo(session);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleToolUpGrade error toolType={}", toolType, e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════
+    // HANDBOOK/COLLECTION BOOK (Operations 14-17)
+    // ═══════════════════════════════════════════════════════════════════════
+    
+    // op=14: put item into collection book (param1 = handbook_type)
+    private void handlePutCollectionBook(PlayerSession session, Long roleId, int handbookType) {
+        try {
+            BoxDTOs.PutCollectionBookReq req = new BoxDTOs.PutCollectionBookReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setHandbookType(handbookType);
+            boxFeign.putCollectionBook(req);
+            sendCollectionBookInfo(session);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handlePutCollectionBook error handbookType={}", handbookType, e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // op=15: collection book level up (param1 = handbook_type)
+    private void handleCollectionBookLevelUp(PlayerSession session, Long roleId, int handbookType) {
+        try {
+            BoxDTOs.CollectionBookLevelUpReq req = new BoxDTOs.CollectionBookLevelUpReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setHandbookType(handbookType);
+            boxFeign.collectionBookLevelUp(req);
+            sendBookListInfo(session);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleCollectionBookLevelUp error handbookType={}", handbookType, e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // op=16: activate book (param1 = orb_map, param2 = handbook_type)
+    private void handleActivateBook(PlayerSession session, Long roleId, int orbMap, int handbookType) {
+        try {
+            BoxDTOs.ActivateBookReq req = new BoxDTOs.ActivateBookReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setOrbMap(orbMap);
+            req.setHandbookType(handbookType);
+            boxFeign.activateBook(req);
+            sendBookListInfo(session);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleActivateBook error orbMap={} handbookType={}", orbMap, handbookType, e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // op=17: fetch collection level reward (param1 = reward_level)
+    private void handleFetchCollectionLevelReward(PlayerSession session, Long roleId, int rewardLevel) {
+        try {
+            BoxDTOs.FetchCollectionLevelRewardReq req = new BoxDTOs.FetchCollectionLevelRewardReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setRewardLevel(Math.max(1, rewardLevel));
+            boxFeign.fetchCollectionLevelReward(req);
+            handleGetInfo(session, roleId);
+        } catch (Exception e) {
+            log.error("[WaBao] handleFetchCollectionLevelReward error rewardLevel={}", rewardLevel, e);
+            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
+        }
+    }
+    
+    // LEGACY: op=3 wear item (kept for backward compatibility)
     private void handleWear(PlayerSession session, Long roleId) {
         try {
             BoxDTOs.WearReq req = new BoxDTOs.WearReq();
@@ -198,20 +529,6 @@ public class WaBaoHandler implements MessageHandler {
             handleGetInfo(session, roleId);
         } catch (Exception e) {
             log.error("[WaBao] handleWear error", e);
-            sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
-        }
-    }
-
-    // op=4: sell item
-    private void handleSell(PlayerSession session, Long roleId) {
-        try {
-            BoxDTOs.SellReq req = new BoxDTOs.SellReq();
-            req.setRoleId(String.valueOf(roleId));
-            boxFeign.sell(req);
-            sendClearItemInfo(session);
-            handleGetInfo(session, roleId);
-        } catch (Exception e) {
-            log.error("[WaBao] handleSell error", e);
             sendInfo(session, Msgwabao.PB_SCWaBaoInfo.newBuilder().build());
         }
     }

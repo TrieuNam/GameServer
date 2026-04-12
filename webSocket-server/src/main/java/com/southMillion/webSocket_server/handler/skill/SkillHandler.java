@@ -46,6 +46,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SkillHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SkillHandler.class);
+
     private final SkillFeign skillFeign;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;

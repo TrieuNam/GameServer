@@ -3,12 +3,14 @@ package com.SouthMillion.webSocket_server.handler.pet;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
+import com.SouthMillion.webSocket_server.net.MsgIds;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
 import com.SouthMillion.webSocket_server.service.TaskCondition;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.client.PetFeign;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.SouthMillion.proto.Msgknapsack.Msgknapsack;
 import org.springframework.stereotype.Component;
 import org.SouthMillion.proto.Msgpet.Msgpet;
 import reactor.core.publisher.Mono;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 public class PetHandler implements MessageHandler {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PetHandler.class);
 
     private final PetFeign petFeign;
     private final TaskProgressPublisher taskProgressPublisher;
@@ -64,6 +68,7 @@ public class PetHandler implements MessageHandler {
                     case 3 -> handleUpgradePet(session, roleId, req);
                     case 4 -> handleEvolvePet(session, roleId, req);
                     case 5 -> handleSetActivePet(session, roleId, req);
+                    case 12 -> handleTreasureDraw(session, roleId, req);
                     default -> {
                         log.warn("[Pet] Unknown operation: {}", operation);
                         sendErrorResponse(session);
@@ -193,6 +198,21 @@ public class PetHandler implements MessageHandler {
         }
     }
 
+    private void handleTreasureDraw(PlayerSession session, Long roleId, Msgpet.PB_CSRolePetReq req) {
+        try {
+            int drawType = req.hasParam1() ? req.getParam1() : 0;
+            Map<String, Object> result = petFeign.drawTreasure(String.valueOf(roleId), drawType);
+            if (result != null && Boolean.TRUE.equals(result.get("success"))) {
+                sendRewardNotice(session, 89, result.get("rewards"));
+            } else {
+                sendErrorResponse(session);
+            }
+        } catch (Exception e) {
+            log.error("[Pet] Error in handleTreasureDraw", e);
+            sendErrorResponse(session);
+        }
+    }
+
     // ---- helpers ----
 
     @SuppressWarnings("unchecked")
@@ -248,6 +268,43 @@ public class PetHandler implements MessageHandler {
 
     private void sendErrorResponse(PlayerSession session) {
         sendResponse(session, Msgpet.PB_SCRolePetAllInfo.newBuilder().build());
+    }
+
+    @SuppressWarnings("unchecked")
+    private void sendRewardNotice(PlayerSession session, int getType, Object rewardsObj) {
+        if (!(rewardsObj instanceof List<?> rewards) || rewards.isEmpty()) {
+            return;
+        }
+        Msgknapsack.PB_SCGetItemNotice.Builder notice = Msgknapsack.PB_SCGetItemNotice.newBuilder()
+                .setGetType(getType);
+        int added = 0;
+        for (Object rewardObj : rewards) {
+            if (!(rewardObj instanceof Map<?, ?> reward)) {
+                continue;
+            }
+            int itemId = readMapInt((Map<?, ?>) reward, "itemId", "item_id");
+            int num = readMapInt((Map<?, ?>) reward, "num", "amount");
+            if (itemId <= 0 || num <= 0) {
+                continue;
+            }
+            notice.addItemList(Msgknapsack.PB_ItemData.newBuilder()
+                    .setItemId(itemId)
+                    .setNum(num)
+                    .build());
+            added++;
+        }
+        if (added <= 0) {
+            return;
+        }
+        Emitters.emit(session, MsgIds.SC_GET_ITEM_NOTICE, notice.build().toByteArray());
+    }
+
+    private int readMapInt(Map<?, ?> map, String primaryKey, String fallbackKey) {
+        Object value = map.get(primaryKey);
+        if (!(value instanceof Number) && fallbackKey != null) {
+            value = map.get(fallbackKey);
+        }
+        return value instanceof Number ? ((Number) value).intValue() : 0;
     }
 
     private void handleOneKeyUpLevelGem(PlayerSession session, Long roleId, byte[] payload) {

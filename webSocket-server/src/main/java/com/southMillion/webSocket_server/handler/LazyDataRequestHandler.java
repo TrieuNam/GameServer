@@ -43,6 +43,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class LazyDataRequestHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LazyDataRequestHandler.class);
+
     private final List<LazyLoadHandler> lazyHandlers;
     private final Map<String, LazyLoadHandler> handlerRegistry = new ConcurrentHashMap<>();
 

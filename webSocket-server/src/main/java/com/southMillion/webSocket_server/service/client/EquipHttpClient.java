@@ -39,6 +39,9 @@ public interface EquipHttpClient {
     @PostMapping("/fumo/activate")
     EquipFumoDTOs.FumoOneResp fumoActivate(@RequestBody EquipFumoDTOs.ActivateReq req);
 
+    @PostMapping("/fumo/transform")
+    EquipFumoDTOs.OkResp fumoTransform(@RequestBody Map<String, Object> body);
+
     @PostMapping("/bag-sell")
     Map<String, Object> bagSell(@RequestBody Map<String, Object> body);
 

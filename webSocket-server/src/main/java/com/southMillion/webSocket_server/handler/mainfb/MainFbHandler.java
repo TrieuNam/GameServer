@@ -13,12 +13,15 @@ import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.SouthMillion.proto.Msgbattle.Msgbattle;
 import org.SouthMillion.proto.Msgmainfb.Msgmainfb;
 import org.SouthMillion.proto.mainfb.EnterStageResponse;
+import org.SouthMillion.proto.mainfb.FinishStageResponse;
 import org.SouthMillion.proto.mainfb.GetCurrentTaskResponse;
 import org.SouthMillion.proto.mainfb.GetProgressResponse;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Handles main story dungeon (主线副本) operations.
@@ -33,15 +36,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MainFbHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MainFbHandler.class);
+
     private final MainFbGrpcClient mainFbGrpcClient;
     private final BagFeign bagFeign;
     private final WalletHttpClient walletHttpClient;
 
     private static final int OP_CHALLENGE         = 0;      // 挑战当前主线关卡
     private static final int OP_CLAIM_REWARD      = 1;      // 领取阶段奖励
+    private static final int OP_FINISH            = 5;      // 上报战斗结果 (WIN)
     private static final int MSG_SC_MAIN_FB_INFO  = 2006;
     private static final int MSG_SC_BATTLE_REPORT = 11003;
     private static final int MAIN_FB_BATTLE_MODE  = 0;
+
+    /** Pending battle info stored when challenge starts; consumed when finish arrives. */
+    private final Map<Long, PendingBattle> pendingBattles = new ConcurrentHashMap<>();
+    private record PendingBattle(String battleId, int stage, int level) {}
 
     @Override
     public int[] interests() {
@@ -75,6 +85,7 @@ public class MainFbHandler implements MessageHandler {
                 switch (type) {
                     case OP_CHALLENGE    -> handleChallenge(session, roleId);
                     case OP_CLAIM_REWARD -> handleClaimReward(session, roleId);
+                    case OP_FINISH       -> handleFinish(session, roleId);
                     default -> {
                         log.warn("[MainFb] Unknown op={}", type);
                         sendInfo(session, Msgmainfb.PB_SCMainFbInfo.newBuilder().build());
@@ -123,10 +134,67 @@ public class MainFbHandler implements MessageHandler {
                     .setBattleFileName(enterResp.getBattleId())
                     .build();
             Emitters.emit(session, MSG_SC_BATTLE_REPORT, report.toByteArray());
+            pendingBattles.put(roleId, new PendingBattle(enterResp.getBattleId(), stage, level));
             log.info("[MainFb] Started stage {}-{} for roleId={}, battleId={}", stage, level, roleId, enterResp.getBattleId());
         } catch (Exception e) {
             log.error("[MainFb] handleChallenge error for roleId={}", roleId, e);
             sendInfo(session, buildProgressInfo(roleId));
+        }
+    }
+
+    // op=5: Client reports WIN result — update progress, grant rewards, advance task
+    private void handleFinish(PlayerSession session, Long roleId) {
+        PendingBattle pending = pendingBattles.remove(roleId);
+        if (pending == null) {
+            log.warn("[MainFb] handleFinish: no pending battle for roleId={}", roleId);
+            sendInfo(session, buildProgressInfo(roleId));
+            return;
+        }
+        try {
+            FinishStageResponse resp = mainFbGrpcClient.finishStage(
+                    String.valueOf(roleId), pending.battleId(), pending.stage(), pending.level(), 0);
+            
+            // Build and send battle report with rewards
+            sendBattleReportWithRewards(session, resp);
+            
+            syncPostClaimState(session, roleId);
+            sendInfo(session, buildProgressInfo(roleId));
+            log.info("[MainFb] Finished stage {}-{} for roleId={}, battleId={}, rewards={}",
+                    pending.stage(), pending.level(), roleId, pending.battleId(), resp.getRewardsCount());
+        } catch (Exception e) {
+            log.error("[MainFb] handleFinish error for roleId={}", roleId, e);
+            sendInfo(session, buildProgressInfo(roleId));
+        }
+    }
+
+    // Helper method to construct and send battle report with rewards
+    private void sendBattleReportWithRewards(PlayerSession session, FinishStageResponse resp) {
+        try {
+            Msgbattle.PB_SCBattleReport.Builder reportBuilder = Msgbattle.PB_SCBattleReport.newBuilder()
+                    .setBattleResultType(1)  // 1 = WIN (only called on victory)
+                    .setBattleModeType(MAIN_FB_BATTLE_MODE)
+                    .setTotalDamage(0);  // MainFb doesn't track battle damage
+            
+            // Map rewards from FinishStageResponse to PB_SCBattleReport
+            if (resp != null && resp.getRewardsCount() > 0) {
+                resp.getRewardsList().forEach(itemStack -> {
+                    int rewardItemId = (int) Math.max(0L, Math.min(Integer.MAX_VALUE, itemStack.getItemId()));
+                    int rewardNum = (int) Math.max(0L, Math.min(Integer.MAX_VALUE, itemStack.getCount()));
+                    reportBuilder.addRewardList(
+                        Msgbattle.PB_SCBattleReward.newBuilder()
+                            .setItemId(rewardItemId)
+                            .setItemNum(rewardNum)
+                            .build()
+                    );
+                });
+            }
+            
+            Msgbattle.PB_SCBattleReport report = reportBuilder.build();
+            Emitters.emit(session, MSG_SC_BATTLE_REPORT, report.toByteArray());
+            log.debug("[MainFb] Sent battle report with {} rewards to roleId={}", 
+                    resp.getRewardsCount(), session.getRoleId());
+        } catch (Exception e) {
+            log.warn("[MainFb] Failed to send battle report: {}", e.getMessage());
         }
     }
 

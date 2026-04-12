@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagDTOs;
 import org.SouthMillion.dto.wallet.WalletDTOs;
+import org.SouthMillion.proto.Msgbattle.Msgbattle;
 import org.SouthMillion.proto.Msgarena.Msgarena;
 import org.SouthMillion.proto.Msgrole.Msgrole;
 import org.springframework.stereotype.Component;
@@ -33,9 +34,10 @@ import java.util.Map;
  *   9611 PB_SCArenaInfo, 9612 PB_SCArenaReportList
  *   9614 PB_SCCrossArenaInfo,  9615 PB_SCCrossArenaReportList, 9616 PB_SCCrossArenaFightRet
  *
- * Arena ops (type field):
- *   1=GET_INFO  2=CHALLENGE(p1=opponentId)  3=GET_RANKING
- *   4=CLAIM_REWARDS  5=GET_OPPONENTS  6=BUY_CHALLENGE  7=GET_BATTLE_HISTORY
+ * Arena ops (legacy LineR client `ARENA_OP_TYPE`):
+ *   0=FIGHT(via battle flow) 1=REFRESH 2=REPORT 3=BOX_REWARD(p1=seq)
+ *   4=REVENGE(via battle flow) 5=ARENA_OP_INFO
+ * Compatibility fallback still accepts service-side 6=BUY_CHALLENGE and 7=GET_BATTLE_HISTORY.
  *
  * Cross Arena ops (type field):
  *   0=GET_INFO  1=CHALLENGE(p1=targetIndex)  2=REFRESH  3=REVENGE(p1=targetIndex)
@@ -44,6 +46,8 @@ import java.util.Map;
 @Component
 @RequiredArgsConstructor
 public class ArenaHandler implements MessageHandler {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ArenaHandler.class);
 
     private final ArenaGrpcClient arenaGrpcClient;
     private final TaskProgressPublisher taskProgressPublisher;
@@ -84,14 +88,25 @@ public class ArenaHandler implements MessageHandler {
             int param = req.hasP1() ? req.getP1() : 0;
 
             switch (type) {
-                case 1 -> handleGetArenaInfo(session);
-                case 2 -> handleChallenge(session, param);
-                case 3 -> handleGetRanking(session);
-                case 4 -> handleClaimRewards(session);
-                case 5 -> handleGetOpponents(session);
+                case 1, 5 -> handleGetOpponents(session);
+                case 2 -> {
+                    if (param > 0) {
+                        handleChallenge(session, param);
+                    } else {
+                        handleGetBattleHistory(session);
+                    }
+                }
+                case 3 -> {
+                    if (param > 0) {
+                        handleClaimRewards(session, param);
+                    } else {
+                        handleGetRanking(session);
+                    }
+                }
+                case 4 -> handleClaimRewards(session, param);
                 case 6 -> handleBuyChallenge(session);
                 case 7 -> handleGetBattleHistory(session);
-                default -> log.warn("[arena] Unknown operation type: {}", type);
+                default -> handleGetArenaInfo(session);
             }
 
         } catch (Exception e) {
@@ -179,18 +194,7 @@ public class ArenaHandler implements MessageHandler {
             // Build response
             Msgarena.PB_SCArenaInfo.Builder builder = Msgarena.PB_SCArenaInfo.newBuilder();
 
-            if (result != null) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> player = (Map<String, Object>) result.get("player");
-                if (player != null) {
-                    Object rank = player.get("rank");
-                    if (rank instanceof Number) builder.setNowRank(((Number) rank).intValue());
-                    Object rating = player.get("rating");
-                    if (rating instanceof Number) builder.setNowScore(((Number) rating).intValue());
-                }
-                Object challenges = result.get("challengesRemaining");
-                if (challenges instanceof Number) builder.setFightTimes(((Number) challenges).longValue());
-            }
+            populateArenaSummary(builder, result);
 
             // Send response
             Emitters.emit(session, MessageIds.SC_ARENA_INFO, builder.build().toByteArray());
@@ -212,14 +216,55 @@ public class ArenaHandler implements MessageHandler {
                 publishTaskProgress(session.getRoleId(), taskActionConditionMapping.arenaWinTaskKey(), "websocket-arena-win");
             }
 
+            // Send battle report with arena fight result
+            sendBattleReport(session, result);
+
             // Send updated arena info
             handleGetArenaInfo(session);
 
-            log.info("[arena] Challenge completed: roleId={}, opponent={}", 
-                    session.getRoleId(), opponentId);
+            log.info("[arena] Challenge completed: roleId={}, opponent={}, victory={}", 
+                    session.getRoleId(), opponentId, victory);
 
         } catch (Exception e) {
             log.error("[arena] Failed to challenge opponent={}", opponentId, e);
+        }
+    }
+
+    /**
+     * Send arena battle report to client
+     */
+    private void sendBattleReport(PlayerSession session, Map<String, Object> battleResult) {
+        try {
+            if (battleResult == null) {
+                log.warn("[arena] No battle result to report");
+                return;
+            }
+
+            boolean victory = (boolean) battleResult.getOrDefault("victory", false);
+            int ratingChange = ((Number) battleResult.getOrDefault("ratingChange", 0)).intValue();
+
+            Msgbattle.PB_SCBattleReport.Builder reportBuilder = Msgbattle.PB_SCBattleReport.newBuilder()
+                    .setBattleResultType(victory ? 1 : 0)  // 1=WIN, 0=LOSE
+                    .setBattleModeType(2)  // 2 = Arena PvP
+                    .setScoreChange(ratingChange);
+
+            // Add battle details if available
+            @SuppressWarnings("unchecked")
+            Map<String, Object> battleDetails = (Map<String, Object>) battleResult.get("battleDetails");
+            if (battleDetails != null) {
+                Object damage = battleDetails.get("totalDamage");
+                if (damage instanceof Number) {
+                    reportBuilder.setTotalDamage(((Number) damage).longValue());
+                }
+            }
+
+            Msgbattle.PB_SCBattleReport report = reportBuilder.build();
+            Emitters.emit(session, 11003, report.toByteArray());  // MsgId 11003 = PB_SCBattleReport
+            
+            log.debug("[arena] Sent battle report for roleId={}, victory={}, ratingChange={}", 
+                    session.getRoleId(), victory, ratingChange);
+        } catch (Exception e) {
+            log.warn("[arena] Failed to send battle report: {}", e.getMessage());
         }
     }
 
@@ -271,9 +316,14 @@ public class ArenaHandler implements MessageHandler {
      * OP4: Claim rewards
      */
     private void handleClaimRewards(PlayerSession session) {
+        handleClaimRewards(session, 0);
+    }
+
+    private void handleClaimRewards(PlayerSession session, int rewardParam) {
         try {
             Long roleId = session.getRoleId();
-            Map<String, Object> result = arenaGrpcClient.claimRewards(roleId, "DAILY");
+            String rewardType = rewardParam > 0 ? "WEEKLY_JOIN_" + rewardParam : "DAILY";
+            Map<String, Object> result = arenaGrpcClient.claimRewards(roleId, rewardType);
             if (rewardClaimed(result)) {
                 syncPostClaimState(session, roleId);
             }
@@ -281,7 +331,7 @@ public class ArenaHandler implements MessageHandler {
             // Send updated arena info
             handleGetArenaInfo(session);
 
-            log.info("[arena] Rewards claimed: roleId={}", roleId);
+            log.info("[arena] Rewards claimed: roleId={}, rewardType={}", roleId, rewardType);
 
         } catch (Exception e) {
             log.error("[arena] Failed to claim rewards", e);
@@ -299,18 +349,7 @@ public class ArenaHandler implements MessageHandler {
             Map<String, Object> arenaResult = arenaGrpcClient.getArenaInfo(session.getRoleId());
             Msgarena.PB_SCArenaInfo.Builder builder = Msgarena.PB_SCArenaInfo.newBuilder();
 
-            if (arenaResult != null) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> player = (Map<String, Object>) arenaResult.get("player");
-                if (player != null) {
-                    Object rank = player.get("rank");
-                    if (rank instanceof Number) builder.setNowRank(((Number) rank).intValue());
-                    Object rating = player.get("rating");
-                    if (rating instanceof Number) builder.setNowScore(((Number) rating).intValue());
-                }
-                Object challenges = arenaResult.get("challengesRemaining");
-                if (challenges instanceof Number) builder.setFightTimes(((Number) challenges).longValue());
-            }
+            populateArenaSummary(builder, arenaResult);
 
             if (opponents != null) {
                 for (Map<String, Object> opp : opponents) {
@@ -407,6 +446,50 @@ public class ArenaHandler implements MessageHandler {
         } catch (Exception e) {
             log.error("[arena] Failed to get battle history", e);
         }
+    }
+
+    private void populateArenaSummary(Msgarena.PB_SCArenaInfo.Builder builder, Map<String, Object> arenaResult) {
+        if (builder == null || arenaResult == null) {
+            return;
+        }
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> player = (Map<String, Object>) arenaResult.get("player");
+        if (player != null) {
+            Object rank = player.get("rank");
+            if (rank instanceof Number) {
+                builder.setNowRank(((Number) rank).intValue());
+            }
+            Object rating = player.get("rating");
+            if (rating instanceof Number) {
+                builder.setNowScore(((Number) rating).intValue());
+            }
+
+            Object weekBoxProgress = arenaResult.get("weekBoxProgress");
+            if (weekBoxProgress instanceof Number) {
+                builder.setWeekBoxProgress(((Number) weekBoxProgress).intValue());
+            } else {
+                int progress = numberAsInt(player.get("wins")) + numberAsInt(player.get("losses"));
+                builder.setWeekBoxProgress(Math.max(progress, 0));
+            }
+
+            Object weekBoxFetchFlag = arenaResult.get("weekBoxFetchFlag");
+            if (!(weekBoxFetchFlag instanceof Number)) {
+                weekBoxFetchFlag = player.get("weekBoxFetchFlag");
+            }
+            if (weekBoxFetchFlag instanceof Number) {
+                builder.setWeekBoxFetchFlag(((Number) weekBoxFetchFlag).intValue());
+            }
+        }
+
+        Object challenges = arenaResult.get("challengesRemaining");
+        if (challenges instanceof Number) {
+            builder.setFightTimes(((Number) challenges).longValue());
+        }
+    }
+
+    private int numberAsInt(Object value) {
+        return value instanceof Number number ? number.intValue() : 0;
     }
 
     private void syncPostClaimState(PlayerSession session, Long roleId) {

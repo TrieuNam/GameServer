@@ -13,8 +13,11 @@ service LingZhuService {
   // Get all lingzhu progress for a role
   rpc GetAll(GetAllRequest) returns (GetAllResponse);
 
-  // Challenge a stage level
+  // Challenge a stage level (validate only – does not update passLevel)
   rpc Challenge(ChallengeRequest) returns (GenericResponse);
+
+  // Finish a challenge after winning the battle (updates passLevel)
+  rpc FinishChallenge(FinishChallengeRequest) returns (GenericResponse);
 
   // Sweep (auto-clear) a stage multiple times
   rpc Sweep(SweepRequest) returns (GenericResponse);
@@ -36,6 +39,12 @@ message SweepRequest {
   int64 role_id = 1;
   int32 stage = 2;
   int32 count = 3;
+}
+
+message FinishChallengeRequest {
+  int64 role_id = 1;
+  int32 stage = 2;
+  int32 level = 3;
 }
 
 // Response Messages

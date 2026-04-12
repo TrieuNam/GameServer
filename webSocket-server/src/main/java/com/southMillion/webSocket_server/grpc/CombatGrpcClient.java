@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CombatGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CombatGrpcClient.class);
+
     @GrpcClient("battle-service")
     private CombatServiceGrpc.CombatServiceBlockingStub combatServiceStub;
 

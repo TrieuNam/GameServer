@@ -104,6 +104,8 @@ public interface MsgIds {
     int SC_FRIEND_REQUEST            = 1903; // PB_SCFriendRequest
     int SC_FRIEND_SEARCH             = 1904; // PB_SCFriendSearch
     int SC_FRIEND_ONLINE             = 1905; // PB_SCFriendOnline
+    int CS_FRIEND_RANK_REQ           = 1906; // PB_CSFriendRankReq
+    int SC_FRIEND_RANK_LIST          = 1907; // PB_SCFriendRankList
 
     // ===== Rank / Leaderboard (msgrank.proto: 9601-9602)
     int SC_RANK_LIST                 = 9601; // PB_SCRankList

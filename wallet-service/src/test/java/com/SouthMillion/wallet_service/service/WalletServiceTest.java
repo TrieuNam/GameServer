@@ -96,6 +96,28 @@ class WalletServiceTest {
         }
 
         @Test
+        @DisplayName("TC-WAL-002 [P] Meta isVirtual dang boolean van nap gold thanh cong")
+        void batchAdd_booleanVirtualFlag_success() {
+            given(ledRepo.findByIdemKey(anyString())).willReturn(Optional.empty());
+            given(itemMeta.batchMeta(anyList()))
+                    .willReturn(Map.of(1, Map.of("isVirtual", true)));
+
+            WalletAccount acc = account(10L, 500L);
+            given(accRepo.findByRoleIdAndItemId(ROLE_LONG_ID, GOLD_ITEM_ID))
+                    .willReturn(Optional.of(acc));
+            given(accRepo.applyDeltaIfEnough(eq(10L), eq(100L), anyLong())).willReturn(1);
+
+            WalletAccount updated = account(10L, 600L);
+            given(accRepo.findById(10L)).willReturn(Optional.of(updated));
+            given(ledRepo.save(any(WalletLedger.class))).willAnswer(inv -> inv.getArgument(0));
+
+            WalletDTOs.MutateResp resp = walletService.batchAdd(batchReq(100L, "idem-add-bool"));
+
+            assertThat(resp.ok()).isTrue();
+            assertThat(resp.newBalances()).containsEntry(GOLD_ITEM_ID, 600L);
+        }
+
+        @Test
         @DisplayName("TC-WAL-003 [I] Idempotency – cung idemKey goi lan 2 tra ve balance hien tai")
         void batchAdd_idempotent_returnsCurrent() {
             WalletLedger existingLed = new WalletLedger();
@@ -115,7 +137,6 @@ class WalletServiceTest {
         @Test
         @DisplayName("TC-WAL-004 [N] Item khong phai virtual currency tra ve ok=false")
         void batchAdd_nonVirtualItem_returnsFail() {
-            given(ledRepo.findByIdemKey(any())).willReturn(Optional.empty());
             given(itemMeta.batchMeta(anyList()))
                     .willReturn(Map.of(1, Map.of("isVirtual", 0)));
 
@@ -128,7 +149,6 @@ class WalletServiceTest {
         @Test
         @DisplayName("TC-WAL-005 [N] Amount am tra ve ok=false")
         void batchAdd_negativeAmount_returnsFail() {
-            given(ledRepo.findByIdemKey(any())).willReturn(Optional.empty());
             given(itemMeta.batchMeta(anyList()))
                     .willReturn(Map.of(1, Map.of("isVirtual", 1)));
 
@@ -173,7 +193,6 @@ class WalletServiceTest {
         @Test
         @DisplayName("TC-WAL-012 [N] So du khong du – nem IllegalStateException")
         void batchCost_insufficientFunds_throws() {
-            given(ledRepo.findByIdemKey(any())).willReturn(Optional.empty());
             given(itemMeta.batchMeta(anyList()))
                     .willReturn(Map.of(1, Map.of("isVirtual", 1)));
 
@@ -205,7 +224,6 @@ class WalletServiceTest {
         @Test
         @DisplayName("TC-WAL-011 [B] Tru toan bo so du – balance = 0")
         void batchCost_allBalance_balanceIsZero() {
-            given(ledRepo.findByIdemKey(any())).willReturn(Optional.empty());
             given(itemMeta.batchMeta(anyList()))
                     .willReturn(Map.of(1, Map.of("isVirtual", 1)));
 

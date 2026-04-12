@@ -23,6 +23,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RechargeConfigHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(RechargeConfigHandler.class);
+
     private final ActivityFeign activityFeign;
 
     @Override

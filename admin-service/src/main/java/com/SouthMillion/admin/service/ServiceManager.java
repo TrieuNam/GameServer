@@ -37,6 +37,9 @@ public class ServiceManager {
     @Value("${gameserver.base.path:D:/project/serverGame/GameServer}")
     private String baseGameServerPath;
 
+    @Value("${gameserver.cds.enabled:false}")
+    private boolean cdsEnabled;
+
     /**
      * Map to track running processes: serviceName -> Process
      */
@@ -245,6 +248,10 @@ public class ServiceManager {
 
             log.info("✅ Service stopped: {}", serviceName);
 
+            // Best-effort cleanup: once the JVM is down, delete the service's CDS archive so
+            // Windows `mvn clean` won't fail on a stale locked `*-cds.jsa` file.
+            deleteCdsArchive(serviceName);
+
             // Stop Docker container if required
             if (config.getRequiresDocker() && config.getContainerName() != null) {
                 log.info("🐳 Stopping Docker container: {}", config.getContainerName());
@@ -380,51 +387,51 @@ public class ServiceManager {
         List<String> command = new ArrayList<>();
         command.add("java");
 
-        // Add Thin Launcher support - CRITICAL for reduced JAR sizes
-        command.add("-Dthin.root=../repository");
-        log.info("🎯 Thin Launcher enabled: dependencies will load from ../repository/");
-
         // Add JVM args
         if (config.getJvmArgs() != null && !config.getJvmArgs().isEmpty()) {
             command.addAll(Arrays.asList(config.getJvmArgs().split("\\s+")));
         } else {
-            // ULTRA-LOW MEMORY MODE - For weak machines running 51 services
-            // Trade-off: Slower performance, frequent GC, but can run on 8-16 GB RAM
-            String profile = config.getDescription(); // Use description as profile hint
-            
-            if (profile != null && (profile.contains("gateway") || profile.contains("eureka") || profile.contains("config"))) {
-                // CRITICAL TIER: Infrastructure services (128-512 MB) for 50 services on 35GB RAM
+            // Fallback tier detection — use serviceName (reliable) not description (fragile)
+            String svcName = config.getServiceName();
+
+            if (svcName.contains("eureka") || svcName.contains("gateway") || svcName.contains("config") || svcName.contains("webSocket")) {
+                // CRITICAL TIER: Infrastructure services
                 command.add("-Xms128m");
-                command.add("-Xmx512m");
-                command.add("-XX:+UseG1GC");
-                command.add("-XX:MetaspaceSize=96m");
-                command.add("-XX:MaxMetaspaceSize=192m");
-                command.add("-Xss2m");  // FIXED: Java 21 + Spring Boot 3.5.3 needs 2MB stack
-                command.add("-XX:MaxGCPauseMillis=200");
-                log.info("🔥 CRITICAL profile: -Xms128m -Xmx512m -Xss2m (target: 250-450 MB RAM)");
-            } else if (profile != null && (profile.contains("analytics") || profile.contains("scheduler") || 
-                       profile.contains("file") || profile.contains("localization") || profile.contains("moderation"))) {
-                // ULTRA-LOW TIER: Background services (128-256 MB) for 50 services on 35GB RAM
-                command.add("-Xms64m");
                 command.add("-Xmx256m");
-                command.add("-XX:+UseG1GC");
-                command.add("-XX:MetaspaceSize=64m");
-                command.add("-XX:MaxMetaspaceSize=128m");
-                command.add("-Xss2m");  // FIXED: Java 21 + Spring Boot 3.5.3 needs 2MB stack
-                command.add("-XX:MaxGCPauseMillis=200");
-                command.add("-XX:+UseStringDeduplication");
-                log.info("⚡ ULTRA-LOW profile: -Xms64m -Xmx256m -Xss2m (target: 120-230 MB RAM)");
+                command.add("-Xss2m");
+                log.info("🔥 CRITICAL profile: -Xms128m -Xmx256m -Xss2m");
+            } else if (svcName.contains("analytics") || svcName.contains("scheduler") ||
+                       svcName.contains("file") || svcName.contains("localization") || svcName.contains("moderation")) {
+                // BACKGROUND TIER: Low-traffic support services
+                command.add("-Xms48m");
+                command.add("-Xmx96m");
+                command.add("-Xss2m");
+                log.info("⚡ BACKGROUND profile: -Xms48m -Xmx96m -Xss2m");
             } else {
-                // MINIMAL TIER: Most services (128-384 MB) for 50 services on 35GB RAM
-                command.add("-Xms128m");
-                command.add("-Xmx384m");
-                command.add("-XX:+UseG1GC");
-                command.add("-XX:MetaspaceSize=96m");
-                command.add("-XX:MaxMetaspaceSize=192m");
-                command.add("-Xss2m");  // FIXED: Java 21 + Spring Boot 3.5.3 needs 2MB stack
-                command.add("-XX:MaxGCPauseMillis=200");
-                command.add("-XX:+UseStringDeduplication");
-                log.info("🎯 MINIMAL profile: -Xms128m -Xmx384m -Xss2m (target: 180-350 MB RAM)");
+                // STANDARD TIER: Game feature services
+                command.add("-Xms64m");
+                command.add("-Xmx128m");
+                command.add("-Xss2m");
+                log.info("🎯 STANDARD profile: -Xms64m -Xmx128m -Xss2m");
+            }
+        }
+
+        // Raise known-too-small service profiles before appending shared optimization flags.
+        ensureServiceJvmFloor(config.getServiceName(), command);
+
+        // Always append memory-saving flags that are missing from DB jvm_args.
+        // These flags are NOT set in any service's jvm_args column, so appending is safe.
+        // Last-wins rule: if a flag appears twice, the last value wins — no crash.
+        appendMemoryOptimizationFlags(command);
+
+        // CDS (Class Data Sharing): optional and disabled by default in dev.
+        // Enable with `gameserver.cds.enabled=true` when you want startup optimization.
+        if (cdsEnabled) {
+            String cdsArchivePath = resolveCdsArchivePath(config.getServiceName());
+            File cdsArchive = new File(cdsArchivePath);
+            if (cdsArchive.exists()) {
+                command.add("-XX:SharedArchiveFile=" + cdsArchivePath);
+                log.info("📦 CDS archive attached: {}", cdsArchivePath);
             }
         }
 
@@ -529,7 +536,13 @@ public class ServiceManager {
         } else {
             log.info("✅ JAR file exists: {}", jarFile.getAbsolutePath());
         }
-        
+
+        // Prepare CDS archive on first start only when the feature is enabled.
+        // On subsequent starts, the archive is already attached above via -XX:SharedArchiveFile.
+        if (cdsEnabled) {
+            prepareCdsArchive(config, jarFile);
+        }
+
         command.add("-jar");
         command.add(jarFile.getAbsolutePath());
         log.info("📦 JAR: {}", jarFile.getAbsolutePath());
@@ -676,6 +689,349 @@ public class ServiceManager {
         }
     }
     
+    /**
+     * Guardrail for services that are known to become unstable with the legacy low-memory defaults.
+     * Bag/role services load a much larger Spring + mapper surface and routinely exhaust the
+     * standard 64m/128m fallback profile plus a 128m metaspace cap.
+     */
+    private void ensureServiceJvmFloor(String serviceName, List<String> command) {
+        if (serviceName == null) {
+            return;
+        }
+
+        String normalizedService = serviceName.trim().toLowerCase(Locale.ROOT);
+        if (!"role-service".equals(normalizedService) && !"bag-service".equals(normalizedService)) {
+            return;
+        }
+
+        upsertJvmMemoryArg(command, "-Xms", 256);
+        upsertJvmMemoryArg(command, "-Xmx", 512);
+        upsertJvmMemoryArg(command, "-XX:MetaspaceSize=", 128);
+        upsertJvmMemoryArg(command, "-XX:MaxMetaspaceSize=", 256);
+    }
+
+    private void upsertJvmMemoryArg(List<String> command, String prefix, int minimumMb) {
+        for (int i = 0; i < command.size(); i++) {
+            String arg = command.get(i);
+            if (!arg.startsWith(prefix)) {
+                continue;
+            }
+
+            Integer currentMb = parseJvmMemoryInMb(arg.substring(prefix.length()));
+            if (currentMb == null || currentMb < minimumMb) {
+                command.set(i, prefix + minimumMb + "m");
+            }
+            return;
+        }
+
+        command.add(prefix + minimumMb + "m");
+    }
+
+    private Integer parseJvmMemoryInMb(String rawValue) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return null;
+        }
+
+        String value = rawValue.trim().toLowerCase(Locale.ROOT);
+        try {
+            if (value.endsWith("g")) {
+                return Integer.parseInt(value.substring(0, value.length() - 1)) * 1024;
+            }
+            if (value.endsWith("m")) {
+                return Integer.parseInt(value.substring(0, value.length() - 1));
+            }
+            if (value.endsWith("k")) {
+                return Math.max(1, Integer.parseInt(value.substring(0, value.length() - 1)) / 1024);
+            }
+            return Integer.parseInt(value) / (1024 * 1024);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * Append only safe runtime flags.
+     *
+     * The previous aggressive low-memory caps (`ReservedCodeCacheSize=64m`,
+     * `MaxMetaspaceSize=128m`, `CompressedClassSpaceSize=64m`) were reverted after
+     * causing `OutOfMemoryError: Metaspace` on Spring-heavy services such as bag/role.
+     */
+    private void appendMemoryOptimizationFlags(List<String> command) {
+        String joined = String.join(" ", command);
+
+        // Keep only non-capping flags that are generally safe for dev/runtime starts.
+        if (!joined.contains("spring.jmx.enabled")) {
+            command.add("-Dspring.jmx.enabled=false");
+        }
+
+        // Use G1GC for services with Xmx >= 256m.
+        // Use SerialGC for services with Xmx <= 128m to avoid unnecessary GC worker overhead.
+        if (!joined.contains("UseG1GC") && !joined.contains("UseSerialGC") && !joined.contains("UseZGC")) {
+            boolean isSmallHeap = joined.contains("Xmx64m") || joined.contains("Xmx96m") || joined.contains("Xmx128m");
+            if (isSmallHeap) {
+                command.add("-XX:+UseSerialGC");
+            } else {
+                command.add("-XX:+UseG1GC");
+                command.add("-XX:MaxGCPauseMillis=200");
+            }
+        }
+    }
+
+    /**
+     * Build CDS archive for a service if it doesn't exist yet.
+     *
+     * CDS (Class Data Sharing) — Java standard feature, works on any JDK 11+.
+     * Spring Boot 3.3+ integrates with CDS via -Dspring.context.exit=onRefresh.
+     * The training run starts the app, lets Spring build the ApplicationContext,
+     * dumps class metadata to a .jsa archive, then exits.
+     * On subsequent starts: -XX:SharedArchiveFile=<path> loads the archive,
+     * skipping class loading and verification → ~30-50% faster startup, ~15-25% less RAM.
+     *
+     * Why safe for this stack (Spring Cloud Netflix / JPA / Redis):
+     * CDS is a JVM-level optimization — it caches bytecode, not Spring beans.
+     * It works regardless of whether the library supports GraalVM native image.
+     */
+    public void prepareCdsArchive(ServiceConfig config, File jarFile) {
+        if (!cdsEnabled) {
+            log.debug("[CDS] disabled — skipping archive preparation for {}", config.getServiceName());
+            return;
+        }
+
+        String cdsArchivePath = resolveCdsArchivePath(config.getServiceName());
+        File cdsArchive = new File(cdsArchivePath);
+
+        if (cdsArchive.exists()) {
+            log.info("✅ CDS archive already exists for {}: {}", config.getServiceName(), cdsArchivePath);
+            return;
+        }
+
+        log.info("🏗️ Creating CDS archive for {} (first-time only, takes ~10s)...", config.getServiceName());
+
+        try {
+            File archiveDir = cdsArchive.getParentFile();
+            if (!archiveDir.exists()) {
+                archiveDir.mkdirs();
+            }
+
+            List<String> trainingCommand = new ArrayList<>();
+            trainingCommand.add("java");
+
+            // Same memory flags as normal start so the archive is consistent
+            if (config.getJvmArgs() != null && !config.getJvmArgs().isEmpty()) {
+                trainingCommand.addAll(Arrays.asList(config.getJvmArgs().split("\\s+")));
+            }
+            ensureServiceJvmFloor(config.getServiceName(), trainingCommand);
+            appendMemoryOptimizationFlags(trainingCommand);
+
+            // CDS training flags:
+            //   ArchiveClassesAtExit  — dump class metadata to archive on JVM exit
+            //   spring.context.exit   — Spring Boot 3.3+ exits cleanly after context refresh
+            trainingCommand.add("-XX:ArchiveClassesAtExit=" + cdsArchivePath);
+            trainingCommand.add("-Dspring.context.exit=onRefresh");
+
+            // Pass same Spring profile and datasource config so context initializes correctly
+            if (config.getAppArgs() != null && !config.getAppArgs().isEmpty()) {
+                trainingCommand.addAll(Arrays.asList(config.getAppArgs().split("\\s+")));
+            }
+
+            trainingCommand.add("-jar");
+            trainingCommand.add(jarFile.getAbsolutePath());
+
+            ProcessBuilder pb = new ProcessBuilder(trainingCommand);
+            pb.directory(jarFile.getParentFile());
+            pb.redirectErrorStream(true);
+
+            log.info("🏗️ CDS training command: {}", String.join(" ", trainingCommand));
+            Process trainingProcess = pb.start();
+
+            // Drain output so the process doesn't block on full pipe buffer
+            Thread drainer = new Thread(() -> {
+                try (BufferedReader r = new BufferedReader(new InputStreamReader(trainingProcess.getInputStream()))) {
+                    String line;
+                    while ((line = r.readLine()) != null) {
+                        log.debug("[CDS-train][{}] {}", config.getServiceName(), line);
+                    }
+                } catch (IOException ignored) {}
+            });
+            drainer.setDaemon(true);
+            drainer.start();
+
+            // Training run should finish in under 60 seconds
+            boolean done = trainingProcess.waitFor(60, TimeUnit.SECONDS);
+            if (!done) {
+                trainingProcess.destroyForcibly();
+                log.warn("⚠️ CDS training timed out for {} — skipping archive", config.getServiceName());
+                cdsArchive.delete();
+                return;
+            }
+
+            if (cdsArchive.exists() && cdsArchive.length() > 0) {
+                log.info("✅ CDS archive created for {}: {} ({} KB)",
+                        config.getServiceName(), cdsArchivePath, cdsArchive.length() / 1024);
+            } else {
+                log.warn("⚠️ CDS archive not created for {} (exit code: {}). Service will start without CDS.",
+                        config.getServiceName(), trainingProcess.exitValue());
+            }
+
+        } catch (Exception e) {
+            log.warn("⚠️ CDS archive creation failed for {}: {} — continuing without CDS",
+                    config.getServiceName(), e.getMessage());
+        }
+    }
+
+    /**
+     * Returns the path where the CDS archive for a service is stored.
+     * Archives are kept next to the jar in the target/ directory.
+     * Example: D:/project/serverGame/GameServer/user-service/target/user-service-cds.jsa
+     */
+    public String resolveCdsArchivePath(String serviceName) {
+        return baseGameServerPath + "/" + serviceName + "/target/" + serviceName + "-cds.jsa";
+    }
+
+    /**
+     * Check CDS archive status for all services.
+     * Returns a map: serviceName → CDS info (exists, size, jarExists)
+     */
+    public List<Map<String, Object>> getCdsStatus() {
+        List<ServiceConfig> services = configRepository.findAllByStartupOrder();
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (ServiceConfig config : services) {
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("serviceName", config.getServiceName());
+            entry.put("phase", config.getPhase());
+
+            // Check JAR
+            String jarPath = config.getJarPath();
+            File jarFile = (jarPath != null && !jarPath.isEmpty())
+                    ? new File(jarPath)
+                    : new File(baseGameServerPath, config.getServiceName() + "/target/" + config.getServiceName() + "-1.0.0.jar");
+            entry.put("jarExists", jarFile.exists());
+
+            // Check archive
+            File archive = new File(resolveCdsArchivePath(config.getServiceName()));
+            entry.put("archiveExists", archive.exists());
+            entry.put("archiveSizeKb", archive.exists() ? archive.length() / 1024 : 0);
+            entry.put("archivePath", archive.getAbsolutePath());
+
+            // Staleness check: archive older than jar means JAR was rebuilt → archive needs refresh
+            if (archive.exists() && jarFile.exists()) {
+                boolean stale = archive.lastModified() < jarFile.lastModified();
+                entry.put("stale", stale);
+            } else {
+                entry.put("stale", false);
+            }
+
+            result.add(entry);
+        }
+        return result;
+    }
+
+    /**
+     * Delete CDS archive for a single service (use after rebuilding the JAR or after stop).
+     * Returns true if deleted, false if it didn't exist or stayed locked.
+     */
+    public boolean deleteCdsArchive(String serviceName) {
+        File archive = new File(resolveCdsArchivePath(serviceName));
+        if (!archive.exists()) {
+            return false;
+        }
+
+        for (int attempt = 1; attempt <= 5; attempt++) {
+            if (archive.delete()) {
+                log.info("🗑️ CDS archive deleted for {}", serviceName);
+                return true;
+            }
+
+            log.warn("⚠️ CDS archive still locked for {} (attempt {}/5): {}",
+                    serviceName, attempt, archive.getAbsolutePath());
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        log.warn("⚠️ Failed to delete CDS archive for {} after retries: {}",
+                serviceName, archive.getAbsolutePath());
+        return false;
+    }
+
+    /**
+     * Warm CDS archives for all services that have a JAR but no archive yet.
+     * Runs training sequentially (not parallel) to avoid overwhelming DB connections.
+     * Services with stale archives (JAR newer than archive) are refreshed automatically.
+     *
+     * NOTE: Training run needs the service's dependencies (DB, Redis) to be running.
+     * Services whose training fails are skipped gracefully — they start without CDS.
+     */
+    @Async
+    public CompletableFuture<Map<String, String>> warmAllCdsArchives() {
+        log.info("🏗️ Starting CDS warm-up for all services...");
+        List<ServiceConfig> services = configRepository.findAllByStartupOrder();
+        Map<String, String> results = new LinkedHashMap<>();
+
+        if (!cdsEnabled) {
+            log.info("⏭️ CDS warm-up skipped because gameserver.cds.enabled=false");
+            for (ServiceConfig config : services) {
+                results.put(config.getServiceName(), "DISABLED");
+            }
+            return CompletableFuture.completedFuture(results);
+        }
+
+        for (ServiceConfig config : services) {
+            if (!config.getEnabled()) {
+                results.put(config.getServiceName(), "SKIPPED_DISABLED");
+                continue;
+            }
+
+            // Resolve JAR path
+            String jarPath = config.getJarPath();
+            File jarFile = (jarPath != null && !jarPath.isEmpty())
+                    ? new File(jarPath)
+                    : new File(baseGameServerPath, config.getServiceName() + "/target/" + config.getServiceName() + "-1.0.0.jar");
+
+            if (!jarFile.exists()) {
+                log.warn("⚠️ [CDS warm] JAR not found for {} — skipping", config.getServiceName());
+                results.put(config.getServiceName(), "SKIPPED_NO_JAR");
+                continue;
+            }
+
+            // Delete stale archive (JAR was rebuilt after archive was created)
+            File archive = new File(resolveCdsArchivePath(config.getServiceName()));
+            if (archive.exists() && archive.lastModified() < jarFile.lastModified()) {
+                log.info("🔄 [CDS warm] Stale archive detected for {} — deleting and recreating", config.getServiceName());
+                archive.delete();
+            }
+
+            if (archive.exists()) {
+                log.info("✅ [CDS warm] Archive already up-to-date for {}", config.getServiceName());
+                results.put(config.getServiceName(), "ALREADY_EXISTS");
+                continue;
+            }
+
+            log.info("🏗️ [CDS warm] Training: {} ...", config.getServiceName());
+            prepareCdsArchive(config, jarFile);
+
+            File freshArchive = new File(resolveCdsArchivePath(config.getServiceName()));
+            if (freshArchive.exists() && freshArchive.length() > 0) {
+                results.put(config.getServiceName(), "CREATED_" + freshArchive.length() / 1024 + "KB");
+            } else {
+                results.put(config.getServiceName(), "FAILED");
+            }
+        }
+
+        long created  = results.values().stream().filter(v -> v.startsWith("CREATED")).count();
+        long failed   = results.values().stream().filter(v -> v.equals("FAILED")).count();
+        long skipped  = results.values().stream().filter(v -> v.startsWith("SKIPPED")).count();
+        long existing = results.values().stream().filter(v -> v.equals("ALREADY_EXISTS")).count();
+        log.info("✅ CDS warm-up complete — created: {}, existing: {}, failed: {}, skipped: {}",
+                created, existing, failed, skipped);
+
+        return CompletableFuture.completedFuture(results);
+    }
+
     /**
      * Get DockerManager instance for direct access
      */

@@ -23,6 +23,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class MountHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MountHandler.class);
+
     private final MountFeign mountFeign;
     private final RoleServiceHandler roleServiceHandler;
     private final TaskProgressPublisher taskProgressPublisher;

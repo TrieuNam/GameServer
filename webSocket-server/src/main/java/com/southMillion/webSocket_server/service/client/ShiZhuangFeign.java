@@ -46,7 +46,8 @@ public interface ShiZhuangFeign {
      */
     @PostMapping("/api/shizhuang/levelup")
     void levelUpFashion(@RequestParam("roleId") String roleId,
-                        @RequestParam("clothesId") Integer clothesId);
+                        @RequestParam("clothesId") Integer clothesId,
+                        @RequestParam(value = "consumeMode", required = false, defaultValue = "0") Integer consumeMode);
 
     /**
      * Buy a fashion item from shop.

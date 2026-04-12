@@ -16,6 +16,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class HeartbeatTimeHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(HeartbeatTimeHandler.class);
+
     @Override
     public int[] interests() {
         return new int[]{ MsgIds.CS_HEARTBEAT_REQ, MsgIds.CS_TIME_REQ, MsgIds.CS_USER_LOGOUT };

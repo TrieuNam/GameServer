@@ -34,6 +34,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CraftingHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CraftingHandler.class);
+
     private final CraftingGrpcClient craftingGrpcClient;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;

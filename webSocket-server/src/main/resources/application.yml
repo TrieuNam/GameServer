@@ -78,8 +78,6 @@ app:
     startEpoch: 0        # epoch giây lần đầu mở server (để tính open_days)
     combineEpoch: 0      # epoch giây lần combine server (nếu có)
   kafka:
-    bag-grant-topic: gameh5.bag.grant
-    bag-changed-topic: gameh5.bag.changed
     task-progress-topic: task.progress.update
     concurrency: 3
   task-progress:

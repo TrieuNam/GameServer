@@ -87,7 +87,7 @@ class CombatEventTest {
     void testAttackerPerspectiveEvent() {
         CombatEvent event = createValidCombatEvent();
         event.setPerspective("ATTACKER");
-        event.setIsWinner(true);
+        event.setWinner(true);
 
         assertEquals("ATTACKER", event.getPerspective(), "perspective should be ATTACKER");
         assertTrue(event.isWinner(), "attacker should be winner");
@@ -97,7 +97,7 @@ class CombatEventTest {
     void testDefenderPerspectiveEvent() {
         CombatEvent event = createValidCombatEvent();
         event.setPerspective("DEFENDER");
-        event.setIsWinner(false);
+        event.setWinner(false);
 
         assertEquals("DEFENDER", event.getPerspective(), "perspective should be DEFENDER");
         assertFalse(event.isWinner(), "defender should not be winner");
@@ -132,13 +132,13 @@ class CombatEventTest {
         // Create attacker perspective
         CombatEvent attackerEvent = createValidCombatEvent();
         attackerEvent.setPerspective("ATTACKER");
-        attackerEvent.setIsWinner(true);
+        attackerEvent.setWinner(true);
 
         // Create defender perspective with same combatId
         CombatEvent defenderEvent = createValidCombatEvent();
         defenderEvent.setCombatId(attackerEvent.getCombatId());
         defenderEvent.setPerspective("DEFENDER");
-        defenderEvent.setIsWinner(false);
+        defenderEvent.setWinner(false);
 
         // Validate they share same combatId
         assertEquals(attackerEvent.getCombatId(), defenderEvent.getCombatId(),

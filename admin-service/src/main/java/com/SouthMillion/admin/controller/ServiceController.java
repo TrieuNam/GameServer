@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -415,6 +416,75 @@ public class ServiceController {
                 .serviceName("ALL-DATABASES")
                 .status(ServiceStatus.STARTING)
                 .message("Granting tpnam/121831 permissions on all running MySQL containers (async, ~20s)")
+                .success(true)
+                .timestamp(LocalDateTime.now())
+                .build());
+    }
+
+    // ==========================================
+    // CDS (Class Data Sharing) endpoints
+    // ==========================================
+
+    /**
+     * GET /api/services/cds/status
+     * Show CDS archive status for every service:
+     * whether archive exists, size (KB), whether it's stale (JAR newer than archive).
+     */
+    @GetMapping("/cds/status")
+    public ResponseEntity<Map<String, Object>> getCdsStatus() {
+        var rows = serviceManager.getCdsStatus();
+        long total    = rows.size();
+        long hasArchive = rows.stream().filter(r -> Boolean.TRUE.equals(r.get("archiveExists"))).count();
+        long stale    = rows.stream().filter(r -> Boolean.TRUE.equals(r.get("stale"))).count();
+        long noJar    = rows.stream().filter(r -> Boolean.FALSE.equals(r.get("jarExists"))).count();
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("summary", Map.of(
+                "total", total,
+                "archiveReady", hasArchive,
+                "stale", stale,
+                "noJar", noJar,
+                "missing", total - hasArchive
+        ));
+        response.put("services", rows);
+        response.put("timestamp", LocalDateTime.now());
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * POST /api/services/cds/warm-all
+     * Create CDS archives for all services that have a JAR but no (or stale) archive.
+     * Runs async — returns immediately. Check /cds/status to monitor progress.
+     *
+     * IMPORTANT: DB containers and Redis must be running before calling this,
+     * because the training run boots the full Spring ApplicationContext.
+     */
+    @PostMapping("/cds/warm-all")
+    public ResponseEntity<ServiceControlResponse> warmAllCds() {
+        log.info("🏗️ API request: warm CDS archives for all services");
+        serviceManager.warmAllCdsArchives();
+        return ResponseEntity.ok(ServiceControlResponse.builder()
+                .serviceName("ALL")
+                .status(ServiceStatus.STARTING)
+                .message("CDS warm-up started async. Monitor progress at GET /api/services/cds/status")
+                .success(true)
+                .timestamp(LocalDateTime.now())
+                .build());
+    }
+
+    /**
+     * DELETE /api/services/{serviceName}/cds
+     * Delete the CDS archive for one service (use after mvn package rebuilds the JAR).
+     * The next start of that service will run a new training run automatically.
+     */
+    @DeleteMapping("/{serviceName}/cds")
+    public ResponseEntity<ServiceControlResponse> deleteCdsArchive(@PathVariable String serviceName) {
+        log.info("🗑️ API request: delete CDS archive for {}", serviceName);
+        boolean deleted = serviceManager.deleteCdsArchive(serviceName);
+        return ResponseEntity.ok(ServiceControlResponse.builder()
+                .serviceName(serviceName)
+                .status(ServiceStatus.STOPPED)
+                .message(deleted ? "CDS archive deleted. Next start will recreate it." : "No archive found.")
                 .success(true)
                 .timestamp(LocalDateTime.now())
                 .build());

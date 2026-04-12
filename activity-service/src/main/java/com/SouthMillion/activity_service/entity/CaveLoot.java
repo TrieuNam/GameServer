@@ -21,17 +21,37 @@ public class CaveLoot {
     @Column(name = "role_id", nullable = false, unique = true)
     private Long roleId;
 
-    /** Number of free lottery attempts used (免费次数) */
+    /** Total lottery draw count (抽奖总次数); mapped to legacy DB column free_num */
     @Column(name = "free_num", nullable = false)
-    private Integer freeNum;
+    private Integer lotteryCount;
 
-    /** Recharge milestone rewards claimed (充值奖励标识): bitmask */
+    /** Recharge milestone rewards claimed bitmask (充值奖励标识); mapped to legacy DB column chongzhi_fetch_flag */
     @Column(name = "chongzhi_fetch_flag", nullable = false)
-    private Integer chongzhiFetchFlag;
+    private Integer chongzhiReceiveFlag;
 
-    /** Task completion rewards claimed (任务奖励标识): bitmask */
+    /** Legacy task fetch bitmask — superseded by rewardReceiveJson; kept for schema compat */
     @Column(name = "task_fetch_flag", nullable = false)
     private Long taskFetchFlag;
+
+    /** Player level when activity started (开服等级) */
+    @Column(name = "open_level")
+    private Integer openLevel;
+
+    /** Cumulative recharge amount (累计充值) */
+    @Column(name = "total_chongzhi")
+    private Integer totalChongzhi;
+
+    /** Shop item purchase counts JSON array indexed by seq */
+    @Column(name = "buy_times_json", columnDefinition = "TEXT")
+    private String buyTimesJson;
+
+    /** Task progress JSON array indexed by task_type */
+    @Column(name = "task_param_json", columnDefinition = "TEXT")
+    private String taskParamJson;
+
+    /** Task reward claimed count JSON array indexed by task_type */
+    @Column(name = "reward_receive_json", columnDefinition = "TEXT")
+    private String rewardReceiveJson;
 
     @UpdateTimestamp
     @Column(name = "updated_at")

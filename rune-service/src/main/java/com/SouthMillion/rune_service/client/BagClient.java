@@ -8,10 +8,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(name = "bag-service", path = "/api/bag")
 public interface BagClient {
-    
+
     @PostMapping("/{roleId}/items/use")
     void useItem(
         @PathVariable String roleId,
         @RequestBody BagDTOs.UseItemReq request
     );
+
+    /** Grant (give) items to a player — used for rewards, refunds, turntable prizes. */
+    @PostMapping("/grant")
+    void grantItems(@RequestBody BagDTOs.GrantReq request);
 }

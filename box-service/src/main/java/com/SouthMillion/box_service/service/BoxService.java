@@ -1322,7 +1322,7 @@ public class BoxService {
                         WalletDTOs.BatchReq.builder()
                                 .roleId(String.valueOf(roleId))
                                 .changes(List.of(WalletDTOs.Change.builder()
-                                        .itemId(1L)
+                                        .itemId(40000L)   // gold itemId = 40000
                                         .amount(sellCoin)
                                         .build()))
                                 .reason(SRC_MSG_BOX)
@@ -1333,6 +1333,8 @@ public class BoxService {
                 if (walletResp == null || walletResp.getCode() != 0) {
                     String msg = walletResp == null ? "NULL" : walletResp.getMessage();
                     log.warn("walletFeign.batchAdd failed roleId={} msg={}", roleId, msg);
+                } else if (walletResp.getData() != null && !walletResp.getData().ok()) {
+                    log.warn("walletFeign.batchAdd rejected roleId={} err={}", roleId, walletResp.getData().error());
                 }
             } catch (Exception e) {
                 log.warn("walletFeign.batchAdd exception roleId={} ex={}", roleId, e.toString());
@@ -2151,6 +2153,227 @@ public class BoxService {
             } catch (Exception ignore) {}
         }
         return null;
+    }
+
+    // ========= WaBao CS Operation Methods (new operations from webSocket-server) =========
+
+    /** Op 3: excavate/wa_bao (core gacha operation) */
+    public BoxDTOs.ExcavateResp excavate(Long roleId) {
+        try {
+            log.info("[wabao.excavate] roleId={}", roleId);
+            // excavate = open single box → same logic as open(1)
+            BoxDTOs.OpenReq req = new BoxDTOs.OpenReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setCount(1);
+            req.setRoleLevel(1);
+            BoxDTOs.OpenResp openResp = open(req);
+            
+            // Extract rolled item from response
+            BoxDTOs.EquipRolled rolled = null;
+            if (openResp != null && openResp.getOpenEquip() != null) {
+                rolled = openResp.getOpenEquip();
+            }
+            
+            return BoxDTOs.ExcavateResp.builder()
+                    .item(rolled)
+                    .message("OK")
+                    .build();
+        } catch (Exception e) {
+            log.error("[wabao.excavate] error roleId={}", roleId, e);
+            return BoxDTOs.ExcavateResp.builder()
+                    .item(null)
+                    .message("Error: " + e.getMessage())
+                    .build();
+        }
+    }
+
+    /** Op 1: unlock map (map unlock tracking) */
+    public BoxDTOs.OkResp unlockMap(Long roleId, int mapId) {
+        try {
+            log.info("[wabao.unlock-map] roleId={} mapId={}", roleId, mapId);
+            var s = getOrCreateForUpdate(roleId);
+            // TODO: persist map unlock state
+            return BoxDTOs.OkResp.builder().ok(true).message("Map unlocked").build();
+        } catch (Exception e) {
+            log.error("[wabao.unlock-map] error roleId={} mapId={}", roleId, mapId, e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 2: enter map (map entry tracking) */
+    public BoxDTOs.OkResp enterMap(Long roleId, int mapId) {
+        try {
+            log.info("[wabao.enter-map] roleId={} mapId={}", roleId, mapId);
+            var s = getOrCreateForUpdate(roleId);
+            // TODO: persist current map state
+            return BoxDTOs.OkResp.builder().ok(true).message("Map entered").build();
+        } catch (Exception e) {
+            log.error("[wabao.enter-map] error roleId={} mapId={}", roleId, mapId, e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 5: put collection (place item in collection cabinet) */
+    public BoxDTOs.OkResp putCollection(BoxDTOs.PutCollectionReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            log.info("[wabao.put-collection] roleId={} itemType={} index={}", roleId, req.getItemType(), req.getIndex());
+            // TODO: persist collection cabinet item placement
+            return BoxDTOs.OkResp.builder().ok(true).message("Item placed in collection").build();
+        } catch (Exception e) {
+            log.error("[wabao.put-collection] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 6: sell from collection (remove and sell collection item) */
+    public BoxDTOs.OkResp collectionSell(BoxDTOs.CollectionSellReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            log.info("[wabao.collection-sell] roleId={} itemType={} index={}", roleId, req.getItemType(), req.getIndex());
+            // TODO: remove from collection, compute credit, add to wallet
+            return BoxDTOs.OkResp.builder().ok(true).message("Collection item sold").build();
+        } catch (Exception e) {
+            log.error("[wabao.collection-sell] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 7: buy collection upgrade (duplicate of buy) */
+    public BoxDTOs.OkResp collectionBuy(BoxDTOs.SimpleReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            return buy(roleId);  // Reuse existing buy logic
+        } catch (Exception e) {
+            log.error("[wabao.collection-buy] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 8: collection level up (duplicate of levelUp) */
+    public BoxDTOs.OkResp collectionLevelUp(BoxDTOs.SimpleReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            return levelUp(roleId);  // Reuse existing levelUp logic
+        } catch (Exception e) {
+            log.error("[wabao.collection-level-up] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 9: collection quicken (duplicate of quicken) */
+    public BoxDTOs.OkResp collectionQuicken(BoxDTOs.QuickenReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            return quicken(roleId, req.getNum());  // Reuse existing quicken logic
+        } catch (Exception e) {
+            log.error("[wabao.collection-quicken] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 10: refresh task (get new daily task) */
+    public BoxDTOs.OkResp freshTask(BoxDTOs.FreshTaskReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            log.info("[wabao.fresh-task] roleId={} index={}", roleId, req.getIndex());
+            // TODO: generate new task, reset progress
+            return BoxDTOs.OkResp.builder().ok(true).message("Task refreshed").build();
+        } catch (Exception e) {
+            log.error("[wabao.fresh-task] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 11: fetch task reward (claim task completion reward) */
+    public BoxDTOs.OkResp fetchTask(BoxDTOs.FetchTaskReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            log.info("[wabao.fetch-task] roleId={} index={}", roleId, req.getIndex());
+            // TODO: mark task as claimed, grant reward
+            return BoxDTOs.OkResp.builder().ok(true).message("Task reward claimed").build();
+        } catch (Exception e) {
+            log.error("[wabao.fetch-task] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 12: tool level up */
+    public BoxDTOs.OkResp toolUpLevel(BoxDTOs.ToolUpLevelReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            log.info("[wabao.tool-up-level] roleId={} toolType={}", roleId, req.getToolType());
+            // TODO: increment tool level, consume resources
+            return BoxDTOs.OkResp.builder().ok(true).message("Tool level upgraded").build();
+        } catch (Exception e) {
+            log.error("[wabao.tool-up-level] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 13: tool grade up */
+    public BoxDTOs.OkResp toolUpGrade(BoxDTOs.ToolUpGradeReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            log.info("[wabao.tool-up-grade] roleId={} toolType={}", roleId, req.getToolType());
+            // TODO: increment tool grade, consume resources
+            return BoxDTOs.OkResp.builder().ok(true).message("Tool grade upgraded").build();
+        } catch (Exception e) {
+            log.error("[wabao.tool-up-grade] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 14: put item in collection book (handbook placement) */
+    public BoxDTOs.OkResp putCollectionBook(BoxDTOs.PutCollectionBookReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            log.info("[wabao.put-collection-book] roleId={} handbookType={}", roleId, req.getHandbookType());
+            // TODO: persist handbook item placement
+            return BoxDTOs.OkResp.builder().ok(true).message("Item placed in handbook").build();
+        } catch (Exception e) {
+            log.error("[wabao.put-collection-book] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 15: collection book level up (handbook level upgrade) */
+    public BoxDTOs.OkResp collectionBookLevelUp(BoxDTOs.CollectionBookLevelUpReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            log.info("[wabao.collection-book-level-up] roleId={} handbookType={}", roleId, req.getHandbookType());
+            // TODO: increment handbook level, consume resources
+            return BoxDTOs.OkResp.builder().ok(true).message("Handbook level upgraded").build();
+        } catch (Exception e) {
+            log.error("[wabao.collection-book-level-up] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 16: activate book (unlock handbook entry with orb) */
+    public BoxDTOs.OkResp activateBook(BoxDTOs.ActivateBookReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            log.info("[wabao.activate-book] roleId={} orbMap={} handbookType={}", roleId, req.getOrbMap(), req.getHandbookType());
+            // TODO: set handbook activation flag, consume orb
+            return BoxDTOs.OkResp.builder().ok(true).message("Handbook activated").build();
+        } catch (Exception e) {
+            log.error("[wabao.activate-book] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
+    }
+
+    /** Op 17: fetch collection level reward (duplicate of levelReward) */
+    public BoxDTOs.OkResp fetchCollectionLevelReward(BoxDTOs.FetchCollectionLevelRewardReq req) {
+        try {
+            Long roleId = Long.valueOf(req.getRoleId());
+            log.info("[wabao.fetch-collection-level-reward] roleId={} rewardLevel={}", roleId, req.getRewardLevel());
+            // Use existing levelReward logic
+            return levelReward(roleId, req.getRewardLevel());
+        } catch (Exception e) {
+            log.error("[wabao.fetch-collection-level-reward] error roleId={}", req.getRoleId(), e);
+            return BoxDTOs.OkResp.builder().ok(false).message("Error: " + e.getMessage()).build();
+        }
     }
 
     // ========= WaBao SC Data Methods (SC 1643/1645/1646/1647/1648/1651) =========

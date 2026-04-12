@@ -5,19 +5,25 @@ import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.service.TaskActionConditionMapping;
 import com.SouthMillion.webSocket_server.service.TaskProgressPublisher;
 import com.SouthMillion.webSocket_server.service.client.PetFeign;
+import org.SouthMillion.proto.Msgpet.Msgpet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import reactor.core.publisher.Sinks;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.*;
 
 /**
@@ -39,12 +45,16 @@ class PetHandlerTest {
     private PetHandler petHandler;
 
     private PlayerSession playerSession;
+    private Sinks.Many<byte[]> outbound;
 
     @BeforeEach
     void setUp() {
         playerSession = mock(PlayerSession.class);
-        when(playerSession.getUserId()).thenReturn(1001L);
-        when(playerSession.getRoleId()).thenReturn(2001L);
+        outbound = mock(Sinks.Many.class);
+        lenient().when(playerSession.getUserId()).thenReturn("1001");
+        lenient().when(playerSession.getRoleId()).thenReturn(2001L);
+        lenient().when(playerSession.getOutbound()).thenReturn(outbound);
+        lenient().when(outbound.tryEmitNext(any(byte[].class))).thenReturn(Sinks.EmitResult.OK);
     }
 
     @Test
@@ -53,27 +63,31 @@ class PetHandlerTest {
         
         assertNotNull(interests);
         assertEquals(2, interests.length);
-        assertEquals(MessageIds.CS_ROLE_PET_REQ, interests[0]);
+        assertEquals(2110, interests[0]);
     }
 
     @Test
     void testHandleWithNullRoleId() {
-        when(playerSession.getRoleId()).thenReturn(null);
+        lenient().when(playerSession.getRoleId()).thenReturn(null);
         
         assertDoesNotThrow(() -> 
-            petHandler.handle(playerSession, MessageIds.CS_ROLE_PET_REQ, new byte[0])
+            petHandler.handle(playerSession, 2110, new byte[0]).block()
         );
     }
 
     @Test
     void testHandlePetRequest() {
-        byte[] payload = new byte[16];
+        when(petFeign.getRolePets("2001")).thenReturn(Map.of("pets", List.of()));
+        Msgpet.PB_CSRolePetReq req = Msgpet.PB_CSRolePetReq.newBuilder()
+                .setReqType(1)
+                .build();
         
         assertDoesNotThrow(() -> 
-            petHandler.handle(playerSession, MessageIds.CS_ROLE_PET_REQ, payload)
+            petHandler.handle(playerSession, 2110, req.toByteArray()).block()
         );
         
-        verify(playerSession, atLeastOnce()).send(anyInt(), any(byte[].class));
+        verify(petFeign).getRolePets("2001");
+        verify(outbound, atLeastOnce()).tryEmitNext(any(byte[].class));
     }
 
     @Test
@@ -81,7 +95,7 @@ class PetHandlerTest {
         byte[] payload = new byte[8];
         
         assertDoesNotThrow(() -> 
-            petHandler.handle(playerSession, MessageIds.CS_PET_ONE_KEY_UP_LEVEL_GEM_REQ, payload)
+            petHandler.handle(playerSession, 2105, payload).block()
         );
     }
 
@@ -111,5 +125,59 @@ class PetHandlerTest {
         );
 
         verify(taskProgressPublisher, never()).publish(anyLong(), anyString(), anyInt(), anyString());
+    }
+
+    @Test
+    void handleTreasureDraw_shouldEmitRewardNotice() {
+        when(petFeign.drawTreasure("2001", 1)).thenReturn(Map.of(
+                "success", true,
+                "rewards", List.of(Map.of("itemId", 61002, "num", 1), Map.of("itemId", 70105, "num", 1))
+        ));
+
+        Msgpet.PB_CSRolePetReq req = Msgpet.PB_CSRolePetReq.newBuilder()
+                .setReqType(12)
+                .setParam1(1)
+                .build();
+
+        petHandler.handle(playerSession, 2110, req.toByteArray()).block();
+
+        ArgumentCaptor<byte[]> frames = ArgumentCaptor.forClass(byte[].class);
+        verify(petFeign).drawTreasure("2001", 1);
+        verify(outbound, atLeastOnce()).tryEmitNext(frames.capture());
+
+        List<Integer> emittedMsgIds = new ArrayList<>();
+        for (byte[] frame : frames.getAllValues()) {
+            var decoded = com.SouthMillion.webSocket_server.net.PacketCodec.decode(frame);
+            if (decoded != null) {
+                emittedMsgIds.add(decoded.msgId());
+            }
+        }
+        assertTrue(emittedMsgIds.contains(MessageIds.SC_GET_ITEM_NOTICE));
+    }
+
+    @Test
+    void handleTreasureDraw_shouldSendErrorResponseWhenFailed() {
+        when(petFeign.drawTreasure("2001", 1)).thenReturn(Map.of("success", false));
+
+        Msgpet.PB_CSRolePetReq req = Msgpet.PB_CSRolePetReq.newBuilder()
+                .setReqType(12)
+                .setParam1(1)
+                .build();
+
+        petHandler.handle(playerSession, 2110, req.toByteArray()).block();
+
+        ArgumentCaptor<byte[]> frames = ArgumentCaptor.forClass(byte[].class);
+        verify(petFeign).drawTreasure("2001", 1);
+        verify(outbound, atLeastOnce()).tryEmitNext(frames.capture());
+
+        List<Integer> emittedMsgIds = new ArrayList<>();
+        for (byte[] frame : frames.getAllValues()) {
+            var decoded = com.SouthMillion.webSocket_server.net.PacketCodec.decode(frame);
+            if (decoded != null) {
+                emittedMsgIds.add(decoded.msgId());
+            }
+        }
+        assertTrue(emittedMsgIds.contains(2101));
+        assertFalse(emittedMsgIds.contains(MessageIds.SC_GET_ITEM_NOTICE));
     }
 }

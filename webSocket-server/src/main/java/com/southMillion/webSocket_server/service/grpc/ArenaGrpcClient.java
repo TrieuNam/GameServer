@@ -21,6 +21,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ArenaGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ArenaGrpcClient.class);
+
     @GrpcClient("arena-service")
     private ArenaServiceGrpc.ArenaServiceBlockingStub arenaServiceStub;
 

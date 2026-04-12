@@ -18,6 +18,8 @@ import java.util.List;
 @Service
 public class CraftingGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CraftingGrpcClient.class);
+
     @GrpcClient("crafting-service")
     private CraftingServiceGrpc.CraftingServiceBlockingStub craftingServiceStub;
 

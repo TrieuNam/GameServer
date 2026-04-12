@@ -14,6 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class HandlerRegistry {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(HandlerRegistry.class);
+
     private final Map<Integer, MessageHandler> map = new ConcurrentHashMap<>();
 
     public HandlerRegistry(List<MessageHandler> handlers) {

@@ -14,6 +14,7 @@ service FriendService {
   rpc GetOnlineFriends(GetOnlineFriendsRequest) returns (OnlineFriendsResponse);
   rpc UpdateOnlineStatus(UpdateOnlineStatusRequest) returns (common.ResponseStatus);
   rpc GiveGift(GiveGiftRequest) returns (common.ResponseStatus);
+  rpc GetFriendRanking(GetFriendRankRequest) returns (GetFriendRankResponse);
 }
 
 message GetFriendListRequest { string role_id = 1; }
@@ -78,4 +79,27 @@ message OnlineStatusData {
   string role_name = 2;
   int32 level = 3;
   bool online = 4;
+}
+
+message GetFriendRankRequest {
+  string role_id = 1;
+  int32 ranking_type = 2;  // 1=Power, 2=Level, 3=Arena, 4=Guild, 5=Pet, 6=Mount, 7=PVP, 8=Wealth
+  int32 limit = 3;         // Max friends to return (default 10)
+}
+
+message FriendRankEntry {
+  int32 rank = 1;
+  string friend_id = 2;
+  string friend_name = 3;
+  int32 level = 4;
+  int64 score = 5;
+  bool online = 6;
+  string guild_name = 7;
+}
+
+message GetFriendRankResponse {
+  bool success = 1;
+  string message = 2;
+  repeated FriendRankEntry rankings = 3;
+  FriendRankEntry my_rank = 4;  // Requesting player's own rank among friends
 }

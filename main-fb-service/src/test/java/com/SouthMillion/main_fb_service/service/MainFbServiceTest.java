@@ -55,7 +55,8 @@ class MainFbServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(mainFbService, "STAMINA_ITEM_ID", 50001L);
+        ReflectionTestUtils.setField(mainFbService, "STAMINA_ITEM_ID", 5L);
+        ReflectionTestUtils.setField(mainFbService, "STAMINA_ENABLED", true);
         Mockito.lenient().when(taskProgressPublisher.publish(anyString(), anyString(), anyInt(), anyString()))
                 .thenReturn(true);
     }
@@ -218,6 +219,47 @@ class MainFbServiceTest {
 
             assertThat(result.getCost()).isEqualTo(10);
             then(itemFeign).should().consumeItem(any());
+        }
+
+        @Test
+        @DisplayName("TC-MAINFB-007A [P] Neu chua cau hinh stamina item thi van cho vao ai")
+        void enter_withDisabledStaminaConfig_skipsConsume() {
+            ReflectionTestUtils.setField(mainFbService, "STAMINA_ITEM_ID", 0L);
+            MaoxianConfig.Clearance c = clearance(1, 1, 10);
+            MainFbDTOs.EnterStageReq req = MainFbDTOs.EnterStageReq.builder()
+                    .playerId("p1").stage(1).level(1).build();
+            GameworldFeignClient.CreateInstanceResp resp =
+                    new GameworldFeignClient.CreateInstanceResp("battle-free", 9L, 9999999L);
+
+            given(cfg.findStage(1, 1)).willReturn(Optional.of(c));
+            given(gameworldFeign.createInstance(any())).willReturn(resp);
+
+            MainFbDTOs.EnterStageResp result = mainFbService.enter(req);
+
+            assertThat(result.getBattleId()).isEqualTo("battle-free");
+            assertThat(result.getCost()).isEqualTo(10);
+            then(itemFeign).should(never()).consumeItem(any());
+        }
+
+        @Test
+        @DisplayName("TC-MAINFB-007B [P] Tat stamina toggle thi van cho vao ai du itemId dang bi set")
+        void enter_withStaminaToggleOff_skipsConsumeEvenWhenItemIdConfigured() {
+            ReflectionTestUtils.setField(mainFbService, "STAMINA_ENABLED", false);
+            ReflectionTestUtils.setField(mainFbService, "STAMINA_ITEM_ID", 50001L);
+            MaoxianConfig.Clearance c = clearance(1, 1, 10);
+            MainFbDTOs.EnterStageReq req = MainFbDTOs.EnterStageReq.builder()
+                    .playerId("p1").stage(1).level(1).build();
+            GameworldFeignClient.CreateInstanceResp resp =
+                    new GameworldFeignClient.CreateInstanceResp("battle-toggle-off", 10L, 9999999L);
+
+            given(cfg.findStage(1, 1)).willReturn(Optional.of(c));
+            given(gameworldFeign.createInstance(any())).willReturn(resp);
+
+            MainFbDTOs.EnterStageResp result = mainFbService.enter(req);
+
+            assertThat(result.getBattleId()).isEqualTo("battle-toggle-off");
+            assertThat(result.getCost()).isEqualTo(10);
+            then(itemFeign).should(never()).consumeItem(any());
         }
 
         @Test

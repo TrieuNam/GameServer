@@ -17,6 +17,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class TaskProgressPublisher {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(TaskProgressPublisher.class);
+
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final TaskFeign taskFeign;
 

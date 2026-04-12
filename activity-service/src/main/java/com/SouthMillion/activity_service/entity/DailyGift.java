@@ -25,6 +25,10 @@ public class DailyGift {
     @Column(name = "buy_flag", nullable = false)
     private Long buyFlag;
 
+    /** Per-package purchase counts by package type index, encoded as JSON array. */
+    @Column(name = "buy_count_json", columnDefinition = "TEXT")
+    private String buyCountJson;
+
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

@@ -7,16 +7,27 @@ import com.SouthMillion.activity_service.repository.LoopMineRepository;
 import com.SouthMillion.activity_service.repository.CoreCrisisGameRepository;
 import com.SouthMillion.activity_service.repository.FillBlankRepository;
 import com.SouthMillion.activity_service.repository.MingXiangRepository;
+import com.SouthMillion.activity_service.client.AngelFeign;
+import com.SouthMillion.activity_service.client.BagFeign;
+import com.SouthMillion.activity_service.client.BoxFeign;
+import com.SouthMillion.activity_service.client.ConfigFeign;
+import com.SouthMillion.activity_service.client.RoleFeign;
 import com.SouthMillion.activity_service.client.WalletFeign;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.SouthMillion.dto.bag.BagDTOs;
+import org.SouthMillion.dto.box.BoxDTOs;
+import org.SouthMillion.dto.role.RoleDTOs;
 import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
@@ -74,7 +85,31 @@ public class ActivityService {
     @Autowired(required = false)
     private WalletFeign walletFeign;
 
+    @Autowired(required = false)
+    private AngelFeign angelFeign;
+
+    @Autowired(required = false)
+    private BagFeign bagFeign;
+
+    @Autowired(required = false)
+    private BoxFeign boxFeign;
+
+    @Autowired(required = false)
+    private ConfigFeign configFeign;
+
+    @Autowired(required = false)
+    private RoleFeign roleFeign;
+
     private static final long ACTIVITY_DURATION = 7L * 24 * 3600; // 7 days in seconds
+    private static final String BOX_FUND_CONFIG_PATH = "config/gameworld/logicconfig/randactivity/baoxiangjijin.json";
+    private volatile BoxFundConfig boxFundConfigCache;
+    private static final String LEVEL_FUND_CONFIG_PATH = "config/gameworld/logicconfig/randactivity/dengjijijin.json";
+    private volatile LevelFundConfig levelFundConfigCache;
+    private static final String DAILY_GIFT_CONFIG_PATH = "config/gameworld/logicconfig/randactivity/richanglibao.json";
+    private volatile List<DailyGiftCfgEntry> dailyGiftConfigCache;
+    private static final String CHEST_MANOR_CONFIG_PATH = "config/gameworld/logicconfig/randactivity/baoxiangzhuangyuan.json";
+    // Map<seq, JsonNode> loaded from baoxiangzhuangyuan.json "reward" array
+    private volatile Map<Integer, JsonNode> chestManorConfigCache;
 
     // ===== SevenDaySign =====
     public SevenDaySign getSevenDay(Long roleId) {
@@ -265,12 +300,14 @@ public class ActivityService {
      */
     public Map<String, Object> handleRandActivity(Long roleId, int activityType, int operaType,
                                                    int param1, int param2, int param3) {
-        log.info("[RandActivity] roleId={}, actType={}, op={}, p1={}", roleId, activityType, operaType, param1);
-        
-        return switch (activityType) {
+        int dispatchActivityType = normalizeActivityType(activityType);
+        log.info("[RandActivity] roleId={}, actType={}, dispatchActType={}, op={}, p1={}",
+                roleId, activityType, dispatchActivityType, operaType, param1);
+
+        return switch (dispatchActivityType) {
             case 1  -> handleRechargeInfo(roleId, operaType, param1, param2);
-            case 10 -> handleBoxFund(roleId, operaType, param1);
-            case 11 -> handleLevelFund(roleId, operaType, param1);
+            case 10 -> handleBoxFund(roleId, operaType, param1, param2);
+            case 11 -> handleLevelFund(roleId, operaType, param1, param2);
             case 12 -> handleFirstRecharge(roleId, operaType);
             case 13 -> handleAccumulatedRecharge(roleId, operaType, param1);
             case 14 -> handleDailyGift(roleId, operaType, param1);
@@ -278,7 +315,7 @@ public class ActivityService {
             case 16 -> handleMonthCard(roleId, operaType, param1, param2);
             case 17 -> handleLuckCourtesy(roleId, operaType, param1, param2);
             case 18 -> handleWeekendRecharge(roleId, operaType, param1);
-            case 19 -> handleCaveLoot(roleId, operaType, param1);
+            case 19 -> handleCaveLoot(roleId, operaType, param1, param2);
             case 20 -> handleFriendInvite(roleId, operaType, param1);
             case 21 -> handleChestManor(roleId, operaType, param1);
             case 22 -> handleCapacityFund(roleId, operaType, param1);
@@ -311,6 +348,43 @@ public class ActivityService {
                 log.warn("[RandActivity] Unimplemented activityType={}", activityType);
                 yield Map.of();
             }
+        };
+    }
+
+    private int normalizeActivityType(int activityType) {
+        return switch (activityType) {
+            case 2049 -> 10; // BoxFund
+            case 2050 -> 11; // LevelFund
+            case 2051 -> 15; // CommodityGuild
+            case 2052 -> 12; // FirstCharge
+            case 2053 -> 13; // LeiChong
+            case 2054 -> 14; // DailyGift
+            case 2055 -> 16; // MonthlyCard
+            case 2056 -> 17; // LuckyGift
+            case 2057 -> 20; // InviteFriend
+            case 2058 -> 18; // WeekendRecharge
+            case 2059 -> 19; // CaveLoot
+            case 2060 -> 21; // BoxManor
+            case 2061 -> 22; // ScoreFund
+            case 2062 -> 23; // TodayShare
+            case 2063 -> 24; // FaZhenGala
+            case 2064 -> 26; // GuMoChengJiu
+            case 2065 -> 27; // InscripeChengJiu
+            case 2066 -> 25; // StarMapGala
+            case 2067 -> 28; // ChaoZhiXianLi
+            case 2068 -> 29; // NewServerCompetition
+            case 2069 -> 30; // WeekHaoLi
+            case 2070 -> 32; // LianChongZengLi
+            case 2071 -> 33; // WarOrder
+            case 2072 -> 34; // WeekLianChong
+            case 2073 -> 35; // AdEquity
+            case 2074 -> 37; // ShenQiDuoBao
+            case 2075 -> 38; // TianXuanZhiLi
+            case 2076 -> 39; // TerritoryGift
+            case 2077 -> 40; // JiFenChouJiang
+            case 2078 -> 41; // ShouChongDingZhi
+            case 2079 -> 42; // ZhuanShuLiBaoRuKou
+            default -> activityType;
         };
     }
 
@@ -378,8 +452,8 @@ public class ActivityService {
                         .fetchFlag(0L)
                         .build()));
 
-        // opType: 1=GET_INFO, 2=CLAIM_MILESTONE (param1=milestone seq)
-        if (opType == 2) {
+        // opType: 0=GET_INFO (client), 1=CLAIM_MILESTONE (client) | legacy: 1=GET_INFO, 2=CLAIM_MILESTONE
+        if (opType == 1 || opType == 2) {
             long bit = 1L << param1;
             if ((acc.getFetchFlag() & bit) == 0) {
                 acc.setFetchFlag(acc.getFetchFlag() | bit);
@@ -453,40 +527,123 @@ public class ActivityService {
     // === Type 10: 宝箱基金 (Box Fund) ===
     
     @Transactional
-    private Map<String, Object> handleBoxFund(Long roleId, int opType, int param1) {
-        BoxFund fund = boxFundRepo.findByRoleId(roleId).orElseGet(() ->
+    private Map<String, Object> handleBoxFund(Long roleId, int opType, int param1, int param2) {
+        BoxFund fund = getOrCreateBoxFund(roleId);
+        BoxFundConfig config = getBoxFundConfig();
+
+        // client flow: opType 0=GET_INFO, 1=CLAIM_REWARD (param1=0 common / 1 senior, param2=seq)
+        // legacy flow: opType 2=BUY_PHASE, 3=CLAIM_COMMON (param1=seq), 4=CLAIM_SENIOR (param1=seq)
+        switch (opType) {
+            case 1 -> {
+                claimBoxFundReward(roleId, fund, config, param1, param2);
+            }
+            case 2 -> {
+                buyBoxFundPhase(roleId, fund, config, param1);
+            }
+            case 3 -> {
+                claimBoxFundReward(roleId, fund, config, 0, param1);
+            }
+            case 4 -> {
+                claimBoxFundReward(roleId, fund, config, 1, param1);
+            }
+        }
+
+        return boxFundSnapshot(fund);
+    }
+
+    private BoxFund getOrCreateBoxFund(Long roleId) {
+        return boxFundRepo.findByRoleId(roleId).orElseGet(() ->
                 boxFundRepo.save(BoxFund.builder()
                         .roleId(roleId)
                         .phaseBuyFlag(0)
                         .commonFetchFlag(0L)
                         .seniorFetchFlag(0L)
                         .build()));
+    }
 
-        // opType: 1=GET_INFO, 2=BUY_PHASE (param1=phase), 3=CLAIM_COMMON (param1=seq), 4=CLAIM_SENIOR (param1=seq)
-        switch (opType) {
-            case 2 -> { // BUY_PHASE
-                int bit = 1 << param1;
-                if ((fund.getPhaseBuyFlag() & bit) == 0) {
-                    fund.setPhaseBuyFlag(fund.getPhaseBuyFlag() | bit);
-                    boxFundRepo.save(fund);
-                }
-            }
-            case 3 -> { // CLAIM_COMMON
-                long bit = 1L << param1;
-                if ((fund.getCommonFetchFlag() & bit) == 0) {
-                    fund.setCommonFetchFlag(fund.getCommonFetchFlag() | bit);
-                    boxFundRepo.save(fund);
-                }
-            }
-            case 4 -> { // CLAIM_SENIOR
-                long bit = 1L << param1;
-                if ((fund.getSeniorFetchFlag() & bit) == 0) {
-                    fund.setSeniorFetchFlag(fund.getSeniorFetchFlag() | bit);
-                    boxFundRepo.save(fund);
-                }
-            }
+    private void buyBoxFundPhase(Long roleId, BoxFund fund, BoxFundConfig config, int phase) {
+        if (phase <= 0 || !config.phaseShowLevels.containsKey(phase)) {
+            log.warn("[BoxFund] roleId={} invalid phase buy request phase={}", roleId, phase);
+            return;
+        }
+        int roleLevel = getRoleLevel(roleId);
+        int showLevel = config.phaseShowLevels.getOrDefault(phase, Integer.MAX_VALUE);
+        if (roleLevel < showLevel) {
+            log.warn("[BoxFund] roleId={} phase={} locked by roleLevel={} showLevel={}",
+                    roleId, phase, roleLevel, showLevel);
+            return;
+        }
+        int bit = 1 << phase;
+        if ((fund.getPhaseBuyFlag() & bit) != 0) {
+            return;
+        }
+        fund.setPhaseBuyFlag(fund.getPhaseBuyFlag() | bit);
+        boxFundRepo.save(fund);
+    }
+
+    private void claimBoxFundReward(Long roleId, BoxFund fund, BoxFundConfig config, int rewardType, int seq) {
+        BoxFundGiftConfig gift = config.giftsBySeq.get(seq);
+        if (gift == null) {
+            log.warn("[BoxFund] roleId={} invalid claim seq={} rewardType={}", roleId, seq, rewardType);
+            return;
+        }
+        if (getBoxLevel(roleId) < gift.level()) {
+            log.warn("[BoxFund] roleId={} seq={} blocked by boxLevel<requiredLevel {}<{}",
+                    roleId, seq, getBoxLevel(roleId), gift.level());
+            return;
         }
 
+        long bit = 1L << seq;
+        if (rewardType == 0) {
+            if ((fund.getCommonFetchFlag() & bit) != 0) {
+                return;
+            }
+            if (!grantBoxFundItems(roleId, gift.ordinaryItems(), "box_fund_common")) {
+                return;
+            }
+            fund.setCommonFetchFlag(fund.getCommonFetchFlag() | bit);
+            boxFundRepo.save(fund);
+            return;
+        }
+
+        int phaseBit = 1 << gift.phase();
+        if ((fund.getPhaseBuyFlag() & phaseBit) == 0) {
+            log.warn("[BoxFund] roleId={} seq={} senior claim without purchase for phase={}",
+                    roleId, seq, gift.phase());
+            return;
+        }
+        if ((fund.getSeniorFetchFlag() & bit) != 0) {
+            return;
+        }
+        if (!grantBoxFundItems(roleId, gift.seniorItems(), "box_fund_senior")) {
+            return;
+        }
+        fund.setSeniorFetchFlag(fund.getSeniorFetchFlag() | bit);
+        boxFundRepo.save(fund);
+    }
+
+    private boolean grantBoxFundItems(Long roleId, List<BagDTOs.GrantItem> items, String reason) {
+        if (items == null || items.isEmpty()) {
+            return true;
+        }
+        if (bagFeign == null) {
+            log.error("[BoxFund] bagFeign unavailable for roleId={} reason={}", roleId, reason);
+            return false;
+        }
+        try {
+            BagDTOs.GrantReq request = new BagDTOs.GrantReq();
+            request.setRoleId(String.valueOf(roleId));
+            request.setItems(items);
+            request.setReason(reason);
+            bagFeign.grantItems(request);
+            return true;
+        } catch (Exception e) {
+            log.error("[BoxFund] grant failed roleId={} reason={} items={}", roleId, reason, items, e);
+            return false;
+        }
+    }
+
+    private Map<String, Object> boxFundSnapshot(BoxFund fund) {
         Map<String, Object> result = new HashMap<>();
         result.put("phaseBuyFlag", fund.getPhaseBuyFlag());
         result.put("commonFetchFlag", fund.getCommonFetchFlag());
@@ -494,48 +651,336 @@ public class ActivityService {
         return result;
     }
 
+    private int getRoleLevel(Long roleId) {
+        if (roleFeign == null) {
+            log.error("[BoxFund] roleFeign unavailable for roleId={}", roleId);
+            return 0;
+        }
+        try {
+            return roleFeign.detail(roleId)
+                    .map(RoleDTOs.RoleResp::getLevel)
+                    .filter(Objects::nonNull)
+                    .orElse(0);
+        } catch (Exception e) {
+            log.error("[BoxFund] failed to load role level for roleId={}", roleId, e);
+            return 0;
+        }
+    }
+
+    private int getBoxLevel(Long roleId) {
+        if (boxFeign == null) {
+            log.error("[BoxFund] boxFeign unavailable for roleId={}", roleId);
+            return 0;
+        }
+        try {
+            BoxDTOs.InfoResp info = boxFeign.info(roleId);
+            return info != null ? Math.max(info.getBoxLevel(), 0) : 0;
+        } catch (Exception e) {
+            log.error("[BoxFund] failed to load box level for roleId={}", roleId, e);
+            return 0;
+        }
+    }
+
+    private BoxFundConfig getBoxFundConfig() {
+        BoxFundConfig cached = boxFundConfigCache;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (this) {
+            if (boxFundConfigCache == null) {
+                boxFundConfigCache = loadBoxFundConfig();
+            }
+            return boxFundConfigCache;
+        }
+    }
+
+    private BoxFundConfig loadBoxFundConfig() {
+        if (configFeign == null) {
+            log.error("[BoxFund] configFeign unavailable, using empty config");
+            return BoxFundConfig.empty();
+        }
+        try {
+            ResponseEntity<byte[]> response = configFeign.getFile(BOX_FUND_CONFIG_PATH, null);
+            byte[] body = response != null ? response.getBody() : null;
+            if (body == null || body.length == 0) {
+                log.error("[BoxFund] empty config body path={}", BOX_FUND_CONFIG_PATH);
+                return BoxFundConfig.empty();
+            }
+            JsonNode root = objectMapper.readTree(new String(body, StandardCharsets.UTF_8));
+            Map<Integer, BoxFundGiftConfig> giftsBySeq = new HashMap<>();
+            Map<Integer, Integer> phaseShowLevels = new HashMap<>();
+
+            JsonNode giftConfigure = root.path("gift_configure");
+            if (giftConfigure.isArray()) {
+                for (JsonNode node : giftConfigure) {
+                    BoxFundGiftConfig gift = new BoxFundGiftConfig(
+                            readInt(node, "seq"),
+                            readInt(node, "phase"),
+                            readInt(node, "level"),
+                            parseGrantItems(node.get("ordinary_item")),
+                            parseGrantItems(node.get("senior_item"))
+                    );
+                    giftsBySeq.put(gift.seq(), gift);
+                }
+            }
+
+            JsonNode phaseConfigure = root.path("phase_configure");
+            if (phaseConfigure.isArray()) {
+                for (JsonNode node : phaseConfigure) {
+                    phaseShowLevels.put(readInt(node, "phase"), readInt(node, "show_level"));
+                }
+            }
+
+            return new BoxFundConfig(giftsBySeq, phaseShowLevels);
+        } catch (Exception e) {
+            log.error("[BoxFund] failed to load config path={}", BOX_FUND_CONFIG_PATH, e);
+            return BoxFundConfig.empty();
+        }
+    }
+
+    private List<BagDTOs.GrantItem> parseGrantItems(JsonNode node) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return List.of();
+        }
+        List<BagDTOs.GrantItem> items = new ArrayList<>();
+        if (node.isArray()) {
+            for (JsonNode child : node) {
+                addGrantItem(items, child);
+            }
+            return items;
+        }
+        addGrantItem(items, node);
+        return items;
+    }
+
+    private void addGrantItem(List<BagDTOs.GrantItem> items, JsonNode node) {
+        int itemId = readInt(node, "item_id");
+        int num = readInt(node, "num");
+        if (itemId <= 0 || num <= 0) {
+            return;
+        }
+        items.add(BagDTOs.GrantItem.builder().itemId(itemId).num(num).build());
+    }
+
+    private int readInt(JsonNode node, String field) {
+        JsonNode value = node != null ? node.get(field) : null;
+        if (value == null || value.isNull() || value.isMissingNode()) {
+            return 0;
+        }
+        if (value.isNumber()) {
+            return value.intValue();
+        }
+        String text = value.asText();
+        if (text == null || text.isBlank()) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(text.trim());
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    private record BoxFundGiftConfig(int seq, int phase, int level,
+                                     List<BagDTOs.GrantItem> ordinaryItems,
+                                     List<BagDTOs.GrantItem> seniorItems) {
+    }
+
+    private record BoxFundConfig(Map<Integer, BoxFundGiftConfig> giftsBySeq,
+                                 Map<Integer, Integer> phaseShowLevels) {
+        private static BoxFundConfig empty() {
+            return new BoxFundConfig(Map.of(), Map.of());
+        }
+    }
+
+    private record LevelFundGiftConfig(int seq, int phase, int level,
+                                       List<BagDTOs.GrantItem> ordinaryItems,
+                                       List<BagDTOs.GrantItem> seniorItems) {
+    }
+
+    private record LevelFundConfig(Map<Integer, LevelFundGiftConfig> giftsBySeq,
+                                   Map<Integer, Integer> phaseShowLevels) {
+        private static LevelFundConfig empty() {
+            return new LevelFundConfig(Map.of(), Map.of());
+        }
+    }
+
     // === Type 11: 等级基金 (Level Fund) ===
     
     @Transactional
-    private Map<String, Object> handleLevelFund(Long roleId, int opType, int param1) {
-        LevelFund fund = levelFundRepo.findByRoleId(roleId).orElseGet(() ->
+    private Map<String, Object> handleLevelFund(Long roleId, int opType, int param1, int param2) {
+        LevelFund fund = getOrCreateLevelFund(roleId);
+        LevelFundConfig config = getLevelFundConfig();
+
+        // client flow: opType 0=GET_INFO, 1=CLAIM_REWARD (param1=0 common / 1 senior, param2=seq)
+        // legacy flow: opType 2=BUY_PHASE, 3=CLAIM_COMMON, 4=CLAIM_SENIOR
+        switch (opType) {
+            case 1 -> claimLevelFundReward(roleId, fund, config, param1, param2);
+            case 2 -> buyLevelFundPhase(roleId, fund, config, param1);
+            case 3 -> claimLevelFundReward(roleId, fund, config, 0, param1);
+            case 4 -> claimLevelFundReward(roleId, fund, config, 1, param1);
+        }
+
+        return levelFundSnapshot(fund);
+    }
+
+    private LevelFund getOrCreateLevelFund(Long roleId) {
+        return levelFundRepo.findByRoleId(roleId).orElseGet(() ->
                 levelFundRepo.save(LevelFund.builder()
                         .roleId(roleId)
                         .phaseBuyFlag(0)
                         .commonFetchFlag(0L)
                         .seniorFetchFlag(0L)
                         .build()));
+    }
 
-        // opType: 1=GET_INFO, 2=BUY_PHASE, 3=CLAIM_COMMON, 4=CLAIM_SENIOR
-        switch (opType) {
-            case 2 -> {
-                int bit = 1 << param1;
-                if ((fund.getPhaseBuyFlag() & bit) == 0) {
-                    fund.setPhaseBuyFlag(fund.getPhaseBuyFlag() | bit);
-                    levelFundRepo.save(fund);
-                }
-            }
-            case 3 -> {
-                long bit = 1L << param1;
-                if ((fund.getCommonFetchFlag() & bit) == 0) {
-                    fund.setCommonFetchFlag(fund.getCommonFetchFlag() | bit);
-                    levelFundRepo.save(fund);
-                }
-            }
-            case 4 -> {
-                long bit = 1L << param1;
-                if ((fund.getSeniorFetchFlag() & bit) == 0) {
-                    fund.setSeniorFetchFlag(fund.getSeniorFetchFlag() | bit);
-                    levelFundRepo.save(fund);
-                }
-            }
+    private void buyLevelFundPhase(Long roleId, LevelFund fund, LevelFundConfig config, int phase) {
+        if (phase <= 0 || !config.phaseShowLevels.containsKey(phase)) {
+            log.warn("[LevelFund] roleId={} invalid phase buy request phase={}", roleId, phase);
+            return;
+        }
+        int roleLevel = getRoleLevel(roleId);
+        int showLevel = config.phaseShowLevels.getOrDefault(phase, Integer.MAX_VALUE);
+        if (roleLevel < showLevel) {
+            log.warn("[LevelFund] roleId={} phase={} locked by roleLevel={} showLevel={}",
+                    roleId, phase, roleLevel, showLevel);
+            return;
+        }
+        int bit = 1 << phase;
+        if ((fund.getPhaseBuyFlag() & bit) != 0) {
+            return;
+        }
+        fund.setPhaseBuyFlag(fund.getPhaseBuyFlag() | bit);
+        levelFundRepo.save(fund);
+    }
+
+    private void claimLevelFundReward(Long roleId, LevelFund fund, LevelFundConfig config, int rewardType, int seq) {
+        LevelFundGiftConfig gift = config.giftsBySeq.get(seq);
+        if (gift == null) {
+            log.warn("[LevelFund] roleId={} invalid claim seq={} rewardType={}", roleId, seq, rewardType);
+            return;
         }
 
+        int roleLevel = getRoleLevel(roleId);
+        if (roleLevel < gift.level()) {
+            log.warn("[LevelFund] roleId={} seq={} blocked by roleLevel<requiredLevel {}<{}",
+                    roleId, seq, roleLevel, gift.level());
+            return;
+        }
+
+        long bit = 1L << seq;
+        if (rewardType == 0) {
+            if ((fund.getCommonFetchFlag() & bit) != 0) {
+                return;
+            }
+            if (!grantLevelFundItems(roleId, gift.ordinaryItems(), "level_fund_common")) {
+                return;
+            }
+            fund.setCommonFetchFlag(fund.getCommonFetchFlag() | bit);
+            levelFundRepo.save(fund);
+            return;
+        }
+
+        int phaseBit = 1 << gift.phase();
+        if ((fund.getPhaseBuyFlag() & phaseBit) == 0) {
+            log.warn("[LevelFund] roleId={} seq={} senior claim without purchase for phase={}",
+                    roleId, seq, gift.phase());
+            return;
+        }
+        if ((fund.getSeniorFetchFlag() & bit) != 0) {
+            return;
+        }
+        if (!grantLevelFundItems(roleId, gift.seniorItems(), "level_fund_senior")) {
+            return;
+        }
+        fund.setSeniorFetchFlag(fund.getSeniorFetchFlag() | bit);
+        levelFundRepo.save(fund);
+    }
+
+    private boolean grantLevelFundItems(Long roleId, List<BagDTOs.GrantItem> items, String reason) {
+        if (items == null || items.isEmpty()) {
+            return true;
+        }
+        if (bagFeign == null) {
+            log.error("[LevelFund] bagFeign unavailable for roleId={} reason={}", roleId, reason);
+            return false;
+        }
+        try {
+            BagDTOs.GrantReq request = new BagDTOs.GrantReq();
+            request.setRoleId(String.valueOf(roleId));
+            request.setItems(items);
+            request.setReason(reason);
+            bagFeign.grantItems(request);
+            return true;
+        } catch (Exception e) {
+            log.error("[LevelFund] grant failed roleId={} reason={} items={}", roleId, reason, items, e);
+            return false;
+        }
+    }
+
+    private Map<String, Object> levelFundSnapshot(LevelFund fund) {
         Map<String, Object> result = new HashMap<>();
         result.put("phaseBuyFlag", fund.getPhaseBuyFlag());
         result.put("commonFetchFlag", fund.getCommonFetchFlag());
         result.put("seniorFetchFlag", fund.getSeniorFetchFlag());
         return result;
+    }
+
+    private LevelFundConfig getLevelFundConfig() {
+        LevelFundConfig cached = levelFundConfigCache;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (this) {
+            if (levelFundConfigCache == null) {
+                levelFundConfigCache = loadLevelFundConfig();
+            }
+            return levelFundConfigCache;
+        }
+    }
+
+    private LevelFundConfig loadLevelFundConfig() {
+        if (configFeign == null) {
+            log.error("[LevelFund] configFeign unavailable, using empty config");
+            return LevelFundConfig.empty();
+        }
+        try {
+            ResponseEntity<byte[]> response = configFeign.getFile(LEVEL_FUND_CONFIG_PATH, null);
+            byte[] body = response != null ? response.getBody() : null;
+            if (body == null || body.length == 0) {
+                log.error("[LevelFund] empty config body path={}", LEVEL_FUND_CONFIG_PATH);
+                return LevelFundConfig.empty();
+            }
+            JsonNode root = objectMapper.readTree(new String(body, StandardCharsets.UTF_8));
+            Map<Integer, LevelFundGiftConfig> giftsBySeq = new HashMap<>();
+            Map<Integer, Integer> phaseShowLevels = new HashMap<>();
+
+            JsonNode giftConfigure = root.path("gift_configure");
+            if (giftConfigure.isArray()) {
+                for (JsonNode node : giftConfigure) {
+                    LevelFundGiftConfig gift = new LevelFundGiftConfig(
+                            readInt(node, "seq"),
+                            readInt(node, "phase"),
+                            readInt(node, "level"),
+                            parseGrantItems(node.get("ordinary_item")),
+                            parseGrantItems(node.get("senior_item"))
+                    );
+                    giftsBySeq.put(gift.seq(), gift);
+                }
+            }
+
+            JsonNode phaseConfigure = root.path("phase_configure");
+            if (phaseConfigure.isArray()) {
+                for (JsonNode node : phaseConfigure) {
+                    phaseShowLevels.put(readInt(node, "phase"), readInt(node, "show_level"));
+                }
+            }
+
+            return new LevelFundConfig(giftsBySeq, phaseShowLevels);
+        } catch (Exception e) {
+            log.error("[LevelFund] failed to load config path={}", LEVEL_FUND_CONFIG_PATH, e);
+            return LevelFundConfig.empty();
+        }
     }
 
     // === Type 22: 评分基金 (Capacity Fund) ===
@@ -634,61 +1079,283 @@ public class ActivityService {
                 dailyGiftRepo.save(DailyGift.builder()
                         .roleId(roleId)
                         .buyFlag(0L)
+                        .buyCountJson("[]")
                         .build()));
 
-        // opType: 1=GET_INFO, 2=BUY(param1=itemIndex)
-        if (opType == 2) {
-            long bit = 1L << param1;
-            if ((gift.getBuyFlag() & bit) == 0) {
-                gift.setBuyFlag(gift.getBuyFlag() | bit);
-                dailyGiftRepo.save(gift);
+        List<Integer> buyCount = parseIntArraySafe(gift.getBuyCountJson());
+        if (buyCount.isEmpty() && gift.getBuyFlag() != null && gift.getBuyFlag() != 0L) {
+            buyCount = migrateBuyFlagToBuyCount(gift.getBuyFlag(), 64);
+            gift.setBuyCountJson(writeIntArraySafe(buyCount));
+            dailyGiftRepo.save(gift);
+        }
+
+        // DailyGift counters reset every day.
+        LocalDate today = LocalDate.now();
+        LocalDate updatedDate = gift.getUpdatedAt() != null ? gift.getUpdatedAt().toLocalDate() : today;
+        if (gift.getUpdatedAt() != null && !updatedDate.equals(today)) {
+            buyCount = new ArrayList<>();
+            gift.setBuyFlag(0L);
+            gift.setBuyCountJson("[]");
+            dailyGiftRepo.save(gift);
+        }
+
+        int roleLevel = getRoleLevel(roleId);
+
+        // Client contract: opType 0 = GET_INFO, 1 = BUY (param1 = package type).
+        // Keep compatibility with legacy clients that may send opType 2 for BUY.
+        if ((opType == 1 || opType == 2) && param1 >= 0) {
+            DailyGiftCfgEntry cfg = findDailyGiftCfg(roleLevel, param1);
+            if (cfg == null) {
+                log.warn("[DailyGift] roleId={} no config for type={} level={}", roleId, param1, roleLevel);
+            } else {
+                ensureArraySize(buyCount, param1 + 1);
+                int alreadyBought = buyCount.get(param1);
+                if (alreadyBought >= cfg.limitConvertCount()) {
+                    log.warn("[DailyGift] roleId={} type={} buy limit reached {}/{}",
+                            roleId, param1, alreadyBought, cfg.limitConvertCount());
+                } else {
+                    boolean paid = consumeDailyGiftCost(roleId, cfg, param1, alreadyBought);
+                    if (paid) {
+                        boolean granted = grantBoxFundItems(roleId, cfg.rewardItems(), "daily_gift_buy_type" + param1);
+                        if (granted) {
+                            buyCount.set(param1, alreadyBought + 1);
+                            gift.setBuyCountJson(writeIntArraySafe(buyCount));
+
+                            // Keep legacy bitflag in sync for old readers.
+                            if (param1 < Long.SIZE) {
+                                long bit = 1L << param1;
+                                gift.setBuyFlag((gift.getBuyFlag() == null ? 0L : gift.getBuyFlag()) | bit);
+                            }
+                            dailyGiftRepo.save(gift);
+                        }
+                    }
+                }
             }
         }
 
+        // Ensure client-side index reads are safe even when cfg type indexes are sparse.
+        ensureArraySize(buyCount, 64);
+
         Map<String, Object> result = new HashMap<>();
-        result.put("buyFlag", gift.getBuyFlag());
+        result.put("level", roleLevel);
+        result.put("buyCount", buyCount);
         return result;
     }
+
+    private DailyGiftCfgEntry findDailyGiftCfg(int roleLevel, int giftType) {
+        List<DailyGiftCfgEntry> cfg = getDailyGiftConfig();
+        for (DailyGiftCfgEntry e : cfg) {
+            boolean levelMatched = roleLevel >= e.startLevel() && (roleLevel <= e.endLevel() || e.endLevel() == 0);
+            if (levelMatched && e.type() == giftType) {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    private boolean consumeDailyGiftCost(Long roleId, DailyGiftCfgEntry cfg, int giftType, int alreadyBought) {
+        // price_type: 1=diamond, 2=gold, 3=real-money(order flow)
+        if (cfg.price() <= 0) return true;
+        if (cfg.priceType() != 1 && cfg.priceType() != 2) {
+            return true;
+        }
+        if (walletFeign == null) {
+            log.error("[DailyGift] walletFeign unavailable for roleId={} type={}", roleId, giftType);
+            return false;
+        }
+
+        long currencyItemId = cfg.priceType() == 1 ? 2L : 1L; // 2=diamond, 1=gold
+        try {
+            WalletDTOs.BatchReq req = WalletDTOs.BatchReq.builder()
+                    .roleId(String.valueOf(roleId))
+                    .changes(List.of(WalletDTOs.Change.builder()
+                            .itemId(currencyItemId)
+                            .amount(-cfg.price())
+                            .build()))
+                    .reason(302)
+                    .idemKey("daily-gift-buy-" + roleId + "-" + giftType + "-" + alreadyBought)
+                    .build();
+            walletFeign.batchAdd(req);
+            return true;
+        } catch (Exception e) {
+            log.error("[DailyGift] roleId={} type={} failed to deduct price={} priceType={}: {}",
+                    roleId, giftType, cfg.price(), cfg.priceType(), e.getMessage());
+            return false;
+        }
+    }
+
+    private List<DailyGiftCfgEntry> getDailyGiftConfig() {
+        List<DailyGiftCfgEntry> cached = dailyGiftConfigCache;
+        if (cached != null) return cached;
+        synchronized (this) {
+            if (dailyGiftConfigCache == null) {
+                dailyGiftConfigCache = loadDailyGiftConfig();
+            }
+            return dailyGiftConfigCache;
+        }
+    }
+
+    private List<DailyGiftCfgEntry> loadDailyGiftConfig() {
+        if (configFeign == null) {
+            log.error("[DailyGift] configFeign unavailable, using empty config");
+            return List.of();
+        }
+        try {
+            ResponseEntity<byte[]> response = configFeign.getFile(DAILY_GIFT_CONFIG_PATH, null);
+            byte[] body = response != null ? response.getBody() : null;
+            if (body == null || body.length == 0) {
+                log.error("[DailyGift] empty config body path={}", DAILY_GIFT_CONFIG_PATH);
+                return List.of();
+            }
+
+            JsonNode root = objectMapper.readTree(new String(body, StandardCharsets.UTF_8));
+            JsonNode reward = root.path("reward");
+            if (!reward.isArray()) {
+                return List.of();
+            }
+
+            List<DailyGiftCfgEntry> cfg = new ArrayList<>();
+            for (JsonNode node : reward) {
+                int startLevel = readInt(node, "start_level");
+                int endLevel = readInt(node, "end_level");
+                int type = readInt(node, "type");
+                int limit = Math.max(readInt(node, "limit_convert_count"), 0);
+                int priceType = readInt(node, "price_type");
+                int price = Math.max(readInt(node, "price"), 0);
+                List<BagDTOs.GrantItem> rewardItems = parseGrantItems(node.get("reward_item"));
+                cfg.add(new DailyGiftCfgEntry(startLevel, endLevel, type, limit, priceType, price, rewardItems));
+            }
+            log.info("[DailyGift] loaded {} reward entries from config", cfg.size());
+            return cfg;
+        } catch (Exception e) {
+            log.error("[DailyGift] failed to load config path={}", DAILY_GIFT_CONFIG_PATH, e);
+            return List.of();
+        }
+    }
+
+    private List<Integer> parseIntArraySafe(String json) {
+        if (json == null || json.isBlank()) return new ArrayList<>();
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<Integer>>() {});
+        } catch (Exception e) {
+            log.warn("[DailyGift] parse buyCountJson failed: {}", e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    private String writeIntArraySafe(List<Integer> values) {
+        try {
+            return objectMapper.writeValueAsString(values != null ? values : List.of());
+        } catch (Exception e) {
+            log.warn("[DailyGift] write buyCountJson failed: {}", e.getMessage());
+            return "[]";
+        }
+    }
+
+    private List<Integer> migrateBuyFlagToBuyCount(Long buyFlag, int minSize) {
+        List<Integer> counts = new ArrayList<>(Collections.nCopies(Math.max(minSize, 0), 0));
+        long flags = buyFlag != null ? buyFlag : 0L;
+        for (int i = 0; i < Long.SIZE; i++) {
+            if (((flags >> i) & 1L) == 1L) {
+                ensureArraySize(counts, i + 1);
+                counts.set(i, 1);
+            }
+        }
+        return counts;
+    }
+
+    private void ensureArraySize(List<Integer> values, int size) {
+        while (values.size() < size) {
+            values.add(0);
+        }
+    }
+
+    private record DailyGiftCfgEntry(int startLevel,
+                                     int endLevel,
+                                     int type,
+                                     int limitConvertCount,
+                                     int priceType,
+                                     int price,
+                                     List<BagDTOs.GrantItem> rewardItems) {}
 
     // === Type 19: 山洞夺宝 (Cave Loot) ===
     
     @Transactional
-    private Map<String, Object> handleCaveLoot(Long roleId, int opType, int param1) {
+    private Map<String, Object> handleCaveLoot(Long roleId, int opType, int param1, int param2) {
         CaveLoot loot = caveLootRepo.findByRoleId(roleId).orElseGet(() ->
                 caveLootRepo.save(CaveLoot.builder()
                         .roleId(roleId)
-                        .freeNum(0)
-                        .chongzhiFetchFlag(0)
+                        .lotteryCount(0)
+                        .chongzhiReceiveFlag(0)
                         .taskFetchFlag(0L)
+                        .openLevel(1)
+                        .totalChongzhi(0)
+                        .buyTimesJson("[]")
+                        .taskParamJson("[]")
+                        .rewardReceiveJson("[]")
                         .build()));
 
-        // opType: 1=GET_INFO, 2=LOTTERY, 3=CLAIM_RECHARGE_REWARD, 4=CLAIM_TASK_REWARD
-        switch (opType) {
-            case 2 -> {
-                loot.setFreeNum(loot.getFreeNum() + 1);
-                caveLootRepo.save(loot);
-            }
-            case 3 -> {
-                int bit = 1 << param1;
-                if ((loot.getChongzhiFetchFlag() & bit) == 0) {
-                    loot.setChongzhiFetchFlag(loot.getChongzhiFetchFlag() | bit);
+        // opType: 0=GET_INFO, 1=BUY_GIFT(param1=seq), 2=DRAW_ONE, 3=DRAW_TEN,
+        //         4=CLAIM_TASK(param1=task_type), 5=CLAIM_RECHARGE(param1=seq)
+        try {
+            switch (opType) {
+                case 1 -> {
+                    // Buy shop gift — increment buyTimes[seq]
+                    List<Integer> buyTimes = parseCaveLootArray(loot.getBuyTimesJson());
+                    while (buyTimes.size() <= param1) buyTimes.add(0);
+                    buyTimes.set(param1, buyTimes.get(param1) + 1);
+                    loot.setBuyTimesJson(objectMapper.writeValueAsString(buyTimes));
                     caveLootRepo.save(loot);
                 }
-            }
-            case 4 -> {
-                long bit = 1L << param1;
-                if ((loot.getTaskFetchFlag() & bit) == 0) {
-                    loot.setTaskFetchFlag(loot.getTaskFetchFlag() | bit);
+                case 2 -> {
+                    // Draw once
+                    loot.setLotteryCount((loot.getLotteryCount() != null ? loot.getLotteryCount() : 0) + 1);
                     caveLootRepo.save(loot);
                 }
+                case 3 -> {
+                    // Draw ten
+                    loot.setLotteryCount((loot.getLotteryCount() != null ? loot.getLotteryCount() : 0) + 10);
+                    caveLootRepo.save(loot);
+                }
+                case 4 -> {
+                    // Claim task reward — increment rewardReceive[task_type]
+                    List<Integer> rewardReceive = parseCaveLootArray(loot.getRewardReceiveJson());
+                    while (rewardReceive.size() <= param1) rewardReceive.add(0);
+                    rewardReceive.set(param1, rewardReceive.get(param1) + 1);
+                    loot.setRewardReceiveJson(objectMapper.writeValueAsString(rewardReceive));
+                    caveLootRepo.save(loot);
+                }
+                case 5 -> {
+                    // Claim recharge reward — set bitmask bit at seq position
+                    int bit = 1 << param1;
+                    if ((loot.getChongzhiReceiveFlag() & bit) == 0) {
+                        loot.setChongzhiReceiveFlag(loot.getChongzhiReceiveFlag() | bit);
+                        caveLootRepo.save(loot);
+                    }
+                }
             }
+        } catch (Exception e) {
+            log.error("[CaveLoot] failed to update roleId={} opType={} param1={}", roleId, opType, param1, e);
         }
 
         Map<String, Object> result = new HashMap<>();
-        result.put("freeNum", loot.getFreeNum());
-        result.put("chongzhiFetchFlag", loot.getChongzhiFetchFlag());
-        result.put("taskFetchFlag", loot.getTaskFetchFlag());
+        result.put("openLevel",          loot.getOpenLevel()          != null ? loot.getOpenLevel()          : 1);
+        result.put("lotteryCount",       loot.getLotteryCount()       != null ? loot.getLotteryCount()       : 0);
+        result.put("totalChongzhi",      loot.getTotalChongzhi()      != null ? loot.getTotalChongzhi()      : 0);
+        result.put("chongzhiReceiveFlag",loot.getChongzhiReceiveFlag()!= null ? loot.getChongzhiReceiveFlag(): 0);
+        result.put("buyTimes",     parseCaveLootArraySafe(loot.getBuyTimesJson()));
+        result.put("taskParam",    parseCaveLootArraySafe(loot.getTaskParamJson()));
+        result.put("rewardReceive",parseCaveLootArraySafe(loot.getRewardReceiveJson()));
         return result;
+    }
+
+    private List<Integer> parseCaveLootArray(String json) throws Exception {
+        if (json == null || json.isBlank()) return new ArrayList<>();
+        return objectMapper.readValue(json, new TypeReference<List<Integer>>() {});
+    }
+
+    private List<Integer> parseCaveLootArraySafe(String json) {
+        try { return parseCaveLootArray(json); } catch (Exception e) { return List.of(); }
     }
 
     // === Type 20: 好友邀请 (Friend Invite) ===
@@ -747,7 +1414,7 @@ public class ActivityService {
                 String emptyTimes = objectMapper.writeValueAsString(new ArrayList<>());
                 return commodityGuildRepo.save(CommodityGuild.builder()
                         .roleId(roleId)
-                        .curDiscount(100)
+                        .curDiscount(10)  // 100% of price by default
                         .openLevel(1)
                         .purchasedTimesJson(emptyTimes)
                         .build());
@@ -756,16 +1423,29 @@ public class ActivityService {
             }
         });
 
-        // opType: 1=GET_INFO, 2=BUY(param1=itemIndex)
-        if (opType == 2) {
+        // opType:
+        // 0 = GET_INFO (default, return current state)
+        // 1 = DRAW_DISCOUNT (draw random discount from config)
+        // 2 = BUY (param1=itemSeq, increment purchase count)
+        if (opType == 1) {
+            // Draw discount: randomly select from discount configuration
+            // Config discounts are typically: 7 (70%), 8 (80%), 9 (90%), 10 (100%)
+            // For now, using a simple random draw from [7, 8, 9, 10]
+            int[] discounts = {7, 8, 9, 10};
+            int randomDiscount = discounts[ThreadLocalRandom.current().nextInt(discounts.length)];
+            guild.setCurDiscount(randomDiscount);
+            commodityGuildRepo.save(guild);
+        } else if (opType == 2) {
+            // Buy: increment purchasedTimes for the given item seq
             try {
                 List<Integer> times = objectMapper.readValue(guild.getPurchasedTimesJson(), new TypeReference<>() {});
+                // Ensure list is large enough to hold this seq index
                 while (times.size() <= param1) times.add(0);
                 times.set(param1, times.get(param1) + 1);
                 guild.setPurchasedTimesJson(objectMapper.writeValueAsString(times));
                 commodityGuildRepo.save(guild);
             } catch (Exception e) {
-                log.error("Failed to update purchasedTimes", e);
+                log.error("Failed to update purchasedTimes for seq={}", param1, e);
             }
         }
 
@@ -856,16 +1536,63 @@ public class ActivityService {
             }
         });
 
-        // opType: 1=GET_INFO, 2=BUY(param1=chestIndex)
+        // opType: 1=GET_INFO, 2=BUY(param1=seq)
         if (opType == 2) {
             try {
-                List<Integer> times = objectMapper.readValue(manor.getBuyTimesJson(), new TypeReference<>() {});
-                while (times.size() <= param1) times.add(0);
-                times.set(param1, times.get(param1) + 1);
-                manor.setBuyTimesJson(objectMapper.writeValueAsString(times));
-                chestManorRepo.save(manor);
+                Map<Integer, JsonNode> cfg = getChestManorConfig();
+                JsonNode entry = cfg.get(param1);
+                if (entry == null) {
+                    log.warn("[ChestManor] roleId={} invalid seq={}", roleId, param1);
+                } else {
+                    int configBuyTimes = entry.path("buy_times").asInt(1);
+                    int priceType = entry.path("price_type").asInt(0);
+
+                    List<Integer> times = objectMapper.readValue(manor.getBuyTimesJson(), new TypeReference<>() {});
+                    while (times.size() <= param1) times.add(0);
+                    int alreadyBought = times.get(param1);
+
+                    if (alreadyBought >= configBuyTimes) {
+                        log.warn("[ChestManor] roleId={} seq={} buy limit reached {}/{}", roleId, param1, alreadyBought, configBuyTimes);
+                    } else {
+                        boolean canGrant = true;
+                        // price_type 1=Diamond, 2=Gold — deduct currency
+                        if (priceType == 1 || priceType == 2) {
+                            int buyMoney = entry.path("buy_money").asInt(0);
+                            long currencyItemId = priceType == 1 ? 2L : 1L; // 2=paid_gold(diamond), 1=gold
+                            if (walletFeign != null && buyMoney > 0) {
+                                try {
+                                    WalletDTOs.BatchReq req = WalletDTOs.BatchReq.builder()
+                                            .roleId(String.valueOf(roleId))
+                                            .changes(List.of(WalletDTOs.Change.builder()
+                                                    .itemId(currencyItemId)
+                                                    .amount(-buyMoney)
+                                                    .build()))
+                                            .reason(302) // 302 = activity purchase
+                                            .idemKey("manor-buy-" + roleId + "-" + param1 + "-" + alreadyBought)
+                                            .build();
+                                    walletFeign.batchAdd(req);
+                                } catch (Exception e) {
+                                    log.error("[ChestManor] roleId={} seq={} failed to deduct currency: {}", roleId, param1, e.getMessage());
+                                    canGrant = false;
+                                }
+                            }
+                        }
+                        // price_type 3 = real money (order flow handles payment, just record and grant)
+                        if (canGrant) {
+                            // Grant reward items
+                            JsonNode rewardItems = entry.get("reward_item");
+                            List<BagDTOs.GrantItem> grantList = parseGrantItems(rewardItems);
+                            if (!grantList.isEmpty()) {
+                                grantBoxFundItems(roleId, grantList, "chest_manor_buy_seq" + param1);
+                            }
+                            times.set(param1, alreadyBought + 1);
+                            manor.setBuyTimesJson(objectMapper.writeValueAsString(times));
+                            chestManorRepo.save(manor);
+                        }
+                    }
+                }
             } catch (Exception e) {
-                log.error("Failed to update buyTimes", e);
+                log.error("[ChestManor] Failed to process buy for roleId={} seq={}", roleId, param1, e);
             }
         }
 
@@ -878,6 +1605,46 @@ public class ActivityService {
             result.put("buyTimes", List.of());
         }
         return result;
+    }
+
+    private Map<Integer, JsonNode> getChestManorConfig() {
+        Map<Integer, JsonNode> cached = chestManorConfigCache;
+        if (cached != null) return cached;
+        synchronized (this) {
+            if (chestManorConfigCache == null) {
+                chestManorConfigCache = loadChestManorConfig();
+            }
+            return chestManorConfigCache;
+        }
+    }
+
+    private Map<Integer, JsonNode> loadChestManorConfig() {
+        if (configFeign == null) {
+            log.error("[ChestManor] configFeign unavailable, using empty config");
+            return Map.of();
+        }
+        try {
+            ResponseEntity<byte[]> response = configFeign.getFile(CHEST_MANOR_CONFIG_PATH, null);
+            byte[] body = response != null ? response.getBody() : null;
+            if (body == null || body.length == 0) {
+                log.error("[ChestManor] empty config body path={}", CHEST_MANOR_CONFIG_PATH);
+                return Map.of();
+            }
+            JsonNode root = objectMapper.readTree(new String(body, StandardCharsets.UTF_8));
+            Map<Integer, JsonNode> map = new HashMap<>();
+            JsonNode reward = root.path("reward");
+            if (reward.isArray()) {
+                for (JsonNode node : reward) {
+                    int seq = node.path("seq").asInt(-1);
+                    if (seq >= 0) map.put(seq, node);
+                }
+            }
+            log.info("[ChestManor] loaded {} reward entries from config", map.size());
+            return map;
+        } catch (Exception e) {
+            log.error("[ChestManor] failed to load config path={}", CHEST_MANOR_CONFIG_PATH, e);
+            return Map.of();
+        }
     }
 
     // === Type 24: 法阵盛典 (FaZhen Gala) ===
@@ -900,12 +1667,40 @@ public class ActivityService {
             }
         });
 
-        // opType: 1=GET_INFO, 2=CLAIM_REWARD(param1=rewardIndex)
-        if (opType == 2) {
-            int bit = 1 << param1;
-            if ((gala.getFetchFlag() & bit) == 0) {
-                gala.setFetchFlag(gala.getFetchFlag() | bit);
+        List<Integer> taskNum = readIntegerList(gala.getTaskNumJson());
+        List<Integer> giftNum = readIntegerList(gala.getGiftNumJson());
+        boolean dirty = syncFaZhenTaskProgress(roleId, gala, taskNum);
+
+        // client flow: 0=GET_INFO, 1=FETCH_TASK_REWARD(param1=taskId), 2=BUY_OR_FETCH_GIFT(param1=giftSeq)
+        switch (opType) {
+            case 1 -> {
+                if (param1 >= 0) {
+                    int bit = 1 << param1;
+                    if ((gala.getFetchFlag() & bit) == 0) {
+                        gala.setFetchFlag(gala.getFetchFlag() | bit);
+                        dirty = true;
+                    }
+                }
+            }
+            case 2 -> {
+                if (param1 >= 0) {
+                    ensureListSize(giftNum, param1 + 1);
+                    giftNum.set(param1, giftNum.get(param1) + 1);
+                    dirty = true;
+                }
+            }
+            default -> {
+                // info only
+            }
+        }
+
+        if (dirty) {
+            try {
+                gala.setTaskNumJson(objectMapper.writeValueAsString(taskNum));
+                gala.setGiftNumJson(objectMapper.writeValueAsString(giftNum));
                 faZhenGalaRepo.save(gala);
+            } catch (Exception e) {
+                log.error("Failed to persist FaZhenGala state for roleId={}", roleId, e);
             }
         }
 
@@ -913,16 +1708,101 @@ public class ActivityService {
         result.put("level", gala.getLevel());
         result.put("endTimestamp", gala.getEndTimestamp());
         result.put("fetchFlag", gala.getFetchFlag());
-        try {
-            List<Integer> taskNum = objectMapper.readValue(gala.getTaskNumJson(), new TypeReference<>() {});
-            List<Integer> giftNum = objectMapper.readValue(gala.getGiftNumJson(), new TypeReference<>() {});
-            result.put("taskNum", taskNum);
-            result.put("giftNum", giftNum);
-        } catch (Exception e) {
-            result.put("taskNum", List.of());
-            result.put("giftNum", List.of());
-        }
+        result.put("taskNum", taskNum);
+        result.put("giftNum", giftNum);
         return result;
+    }
+
+    private boolean syncFaZhenTaskProgress(Long roleId, FaZhenGala gala, List<Integer> taskNum) {
+        if (angelFeign == null) {
+            return false;
+        }
+
+        try {
+            Map<String, Object> angelData = angelFeign.getAngelData(roleId);
+            if (!readBoolean(angelData.get("success"))) {
+                return false;
+            }
+
+            List<Map<String, Object>> angels = objectMapper.convertValue(
+                    angelData.getOrDefault("angels", List.of()), new TypeReference<>() {});
+            if (angels.isEmpty()) {
+                return false;
+            }
+
+            Map<String, Object> primaryAngel = pickPrimaryAngel(angels);
+            int fazhenLevel = Math.max(readInt(primaryAngel.get("level")), 1);
+            int soulStoneTotal = readInt(primaryAngel.get("skill1Level"))
+                    + readInt(primaryAngel.get("skill2Level"))
+                    + readInt(primaryAngel.get("skill3Level"))
+                    + readInt(primaryAngel.get("skill4Level"));
+
+            boolean dirty = false;
+            dirty |= fillRange(taskNum, 0, 9, fazhenLevel);
+            dirty |= fillRange(taskNum, 10, 19, soulStoneTotal);
+            if (!Objects.equals(gala.getLevel(), fazhenLevel)) {
+                gala.setLevel(fazhenLevel);
+                dirty = true;
+            }
+            return dirty;
+        } catch (Exception e) {
+            log.debug("FaZhenGala progress sync skipped for roleId={}", roleId, e);
+            return false;
+        }
+    }
+
+    private Map<String, Object> pickPrimaryAngel(List<Map<String, Object>> angels) {
+        for (Map<String, Object> angel : angels) {
+            if (readBoolean(angel.get("isEquipped"))) {
+                return angel;
+            }
+        }
+        for (Map<String, Object> angel : angels) {
+            if (readBoolean(angel.get("isActive"))) {
+                return angel;
+            }
+        }
+        return angels.get(0);
+    }
+
+    private boolean fillRange(List<Integer> values, int startIdx, int endIdx, int value) {
+        ensureListSize(values, endIdx + 1);
+        boolean dirty = false;
+        for (int idx = startIdx; idx <= endIdx; idx++) {
+            if (!Objects.equals(values.get(idx), value)) {
+                values.set(idx, value);
+                dirty = true;
+            }
+        }
+        return dirty;
+    }
+
+    private List<Integer> readIntegerList(String json) {
+        try {
+            if (json == null || json.isBlank()) {
+                return new ArrayList<>();
+            }
+            return new ArrayList<>(objectMapper.readValue(json, new TypeReference<List<Integer>>() {}));
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    private void ensureListSize(List<Integer> values, int size) {
+        while (values.size() < size) {
+            values.add(0);
+        }
+    }
+
+    private int readInt(Object value) {
+        return value instanceof Number n ? n.intValue() : 0;
+    }
+
+    private boolean readBoolean(Object value) {
+        if (value instanceof Boolean b) {
+            return b;
+        }
+        return value != null && Boolean.parseBoolean(String.valueOf(value));
     }
 
     // === Type 25: 星图盛典 (StarMap Gala) ===
@@ -1020,36 +1900,63 @@ public class ActivityService {
     private Map<String, Object> handleChaoZhiXianLi(Long roleId, int opType, int param1) {
         ChaoZhiXianLi gift = chaoZhiXianLiRepo.findByRoleId(roleId).orElseGet(() -> {
             try {
-                String emptyArray = objectMapper.writeValueAsString(new ArrayList<>());
+                String zeroArray = objectMapper.writeValueAsString(new ArrayList<>(Collections.nCopies(5, 0)));
                 return chaoZhiXianLiRepo.save(ChaoZhiXianLi.builder()
                         .roleId(roleId)
                         .level(1)
                         .buyMark(0)
-                        .itemNumJson(emptyArray)
+                        .itemNumJson(zeroArray)
                         .build());
             } catch (Exception e) {
                 throw new RuntimeException("Failed to init ChaoZhiXianLi", e);
             }
         });
 
-        // opType: 1=GET_INFO, 2=BUY(param1=itemIndex)
-        if (opType == 2) {
-            int bit = 1 << param1;
-            if ((gift.getBuyMark() & bit) == 0) {
-                gift.setBuyMark(gift.getBuyMark() | bit);
-                chaoZhiXianLiRepo.save(gift);
+        boolean dirty = false;
+        if (gift.getBuyMark() == null) {
+            gift.setBuyMark(0);
+            dirty = true;
+        } else if (gift.getBuyMark() > 0 && gift.getBuyMark() != 1) {
+            gift.setBuyMark(1);
+            dirty = true;
+        }
+
+        List<Integer> itemNum;
+        try {
+            itemNum = new ArrayList<>(objectMapper.readValue(gift.getItemNumJson(), new TypeReference<>() {}));
+        } catch (Exception e) {
+            itemNum = new ArrayList<>();
+            dirty = true;
+        }
+        while (itemNum.size() < 5) {
+            itemNum.add(0);
+            dirty = true;
+        }
+
+        // client contract: 0=GET_INFO, 1=CLAIM_DAILY_REWARD(param1=seq), 2=MARK_PURCHASED (legacy compatibility)
+        if (opType == 1) {
+            if (gift.getBuyMark() > 0 && param1 >= 0 && param1 < itemNum.size() && itemNum.get(param1) <= 0) {
+                itemNum.set(param1, 1);
+                dirty = true;
             }
+        } else if (opType == 2 && gift.getBuyMark() == 0) {
+            gift.setBuyMark(1);
+            dirty = true;
+        }
+
+        if (dirty) {
+            try {
+                gift.setItemNumJson(objectMapper.writeValueAsString(itemNum));
+            } catch (Exception e) {
+                log.error("Failed to persist ChaoZhiXianLi itemNumJson for roleId={}", roleId, e);
+            }
+            chaoZhiXianLiRepo.save(gift);
         }
 
         Map<String, Object> result = new HashMap<>();
         result.put("level", gift.getLevel());
-        result.put("buyMark", gift.getBuyMark());
-        try {
-            List<Integer> itemNum = objectMapper.readValue(gift.getItemNumJson(), new TypeReference<>() {});
-            result.put("itemNum", itemNum);
-        } catch (Exception e) {
-            result.put("itemNum", List.of());
-        }
+        result.put("buyMark", gift.getBuyMark() != null && gift.getBuyMark() > 0 ? 1 : 0);
+        result.put("itemNum", itemNum);
         return result;
     }
 
@@ -1316,11 +2223,47 @@ public class ActivityService {
                     .build())
         );
 
-        // opType: 1=GET_INFO, 2=BUY_SUBSCRIPTION, 3=CLAIM_DAILY_REWARD(param1=rewardIndex)
+        int now = (int) Instant.now().getEpochSecond();
+        boolean dirty = false;
 
-        if (opType == 2) {
-            // Purchase subscription
-            equity.setIsBuy(1);
+        if (equity.getRefreshTime() > 0 && now > equity.getRefreshTime()) {
+            if (equity.getFetchFlag() != 0 || equity.getRefreshTime() != 0) {
+                equity.setFetchFlag(0);
+                equity.setRefreshTime(0);
+                dirty = true;
+            }
+        }
+
+        // client flow: 0=GET_INFO, 1=FETCH_NEXT_REWARD
+        // external/legacy flow: 2=BUY_SUBSCRIPTION, 3=FETCH_NEXT_REWARD
+        switch (opType) {
+            case 1, 3 -> {
+                if (equity.getRefreshTime() <= now) {
+                    equity.setFetchFlag(0);
+                    equity.setRefreshTime(now + 12 * 3600);
+                    dirty = true;
+                }
+                int nextSeq = nextKnightCardSeq(equity.getFetchFlag());
+                if (nextSeq > 0) {
+                    int bit = 1 << nextSeq;
+                    if ((equity.getFetchFlag() & bit) == 0) {
+                        equity.setFetchFlag(equity.getFetchFlag() | bit);
+                        dirty = true;
+                    }
+                }
+            }
+            case 2 -> {
+                if (equity.getIsBuy() != 1) {
+                    equity.setIsBuy(1);
+                    dirty = true;
+                }
+            }
+            default -> {
+                // info only
+            }
+        }
+
+        if (dirty) {
             advertisementEquityRepo.save(equity);
         }
 
@@ -1329,6 +2272,18 @@ public class ActivityService {
         result.put("fetchFlag", equity.getFetchFlag());
         result.put("refreshTime", equity.getRefreshTime());
         return result;
+    }
+
+    private int nextKnightCardSeq(int fetchFlag) {
+        for (int seq = 1; seq <= 5; seq++) {
+            int bit = 1 << seq;
+            boolean alreadyFetched = (fetchFlag & bit) != 0;
+            boolean previousFetched = seq == 1 || (fetchFlag & (1 << (seq - 1))) != 0;
+            if (!alreadyFetched && previousFetched) {
+                return seq;
+            }
+        }
+        return 0;
     }
 
     // === Type 36: 新服比拼排行榜 (New Server Competition Ranking) ===
@@ -1440,12 +2395,12 @@ public class ActivityService {
             }
         });
 
-        // opType: 1=GET_INFO, 2=CLAIM_FREE, 3=BUY(param1=seq)
+        // opType: 0=GET_INFO (client), 2=CLAIM_FREE (client=FETCH_FREE_GIFT), 1=BUY_GIFT (client) | legacy: 1=GET_INFO, 2=CLAIM_FREE, 3=BUY
 
         if (opType == 2) {
             gift.setHasFetchFreeGift(true);
             tianxuanGiftRepo.save(gift);
-        } else if (opType == 3 && param1 > 0) {
+        } else if ((opType == 3 || opType == 1) && param1 > 0) {
             // Buy gift
             try {
                 List<Map<String, Object>> gifts = objectMapper.readValue(
@@ -1581,19 +2536,31 @@ public class ActivityService {
             }
         });
 
-        // opType: 1=GET_INFO, 2=BUY(param1=giftIndex), 3=CLAIM(param1=flagIndex)
+        // opType: 0=GET_INFO (client), 2=BUY (internal bridge), 1=CLAIM (client) | legacy: 3=CLAIM
 
         if (opType == 2) {
+            // BUY: called by internal bridge; mark gift bought and set all rewards to OK_TO_FETCH
             gift.setHasBuyGift(true);
-            customizedGiftRepo.save(gift);
-        } else if (opType == 3 && param1 >= 0) {
-            // Add fetch flag
             try {
-                List<Integer> flags = objectMapper.readValue(
-                        gift.getFetchFlagsJson(), new TypeReference<>() {});
-                if (!flags.contains(param1)) {
-                    flags.add(param1);
+                List<Integer> flags = objectMapper.readValue(gift.getFetchFlagsJson(), new TypeReference<>() {});
+                // Upgrade CAN_NOT_FETCH (0) to OK_TO_FETCH (1) for all existing entries
+                for (int i = 0; i < flags.size(); i++) {
+                    if (flags.get(i) == 0) flags.set(i, 1);
                 }
+                // Ensure at least 5 entries (matches shouchongzhuanshu config gift_configure count)
+                while (flags.size() < 5) flags.add(1);
+                gift.setFetchFlagsJson(objectMapper.writeValueAsString(flags));
+            } catch (Exception e) {
+                log.error("Failed to init fetchFlags on buy", e);
+            }
+            customizedGiftRepo.save(gift);
+        } else if ((opType == 3 || opType == 1) && param1 >= 0) {
+            // CLAIM: set per-reward state at param1 index to FETCHED (2)
+            try {
+                List<Integer> flags = objectMapper.readValue(gift.getFetchFlagsJson(), new TypeReference<>() {});
+                // Extend array if needed
+                while (flags.size() <= param1) flags.add(gift.getHasBuyGift() ? 1 : 0);
+                if (flags.get(param1) == 1) flags.set(param1, 2);
                 gift.setFetchFlagsJson(objectMapper.writeValueAsString(flags));
                 customizedGiftRepo.save(gift);
             } catch (Exception e) {
@@ -1606,8 +2573,13 @@ public class ActivityService {
         result.put("isOpen", gift.getIsOpen());
         result.put("hasBuyGift", gift.getHasBuyGift());
         try {
-            List<Integer> flags = objectMapper.readValue(
-                    gift.getFetchFlagsJson(), new TypeReference<>() {});
+            List<Integer> flags = objectMapper.readValue(gift.getFetchFlagsJson(), new TypeReference<>() {});
+            // Ensure hasBuyGift state is reflected: any 0-state becomes 1 if bought
+            if (gift.getHasBuyGift()) {
+                for (int i = 0; i < flags.size(); i++) {
+                    if (flags.get(i) == 0) flags.set(i, 1);
+                }
+            }
             result.put("fetchFlags", flags);
         } catch (Exception e) {
             result.put("fetchFlags", List.of());
@@ -1631,28 +2603,50 @@ public class ActivityService {
             }
         });
 
-        // opType: 1=GET_INFO, 2=BUY(param1=seq)
+        // opType: 0/1=GET_INFO, 2=BUY(param1=seq)
 
-        if (opType == 2 && param1 > 0) {
+        int now = (int) (System.currentTimeMillis() / 1000);
+        int defaultEndTimestamp = now + 86400; // 24 hours
+        List<Map<String, Object>> gifts = new ArrayList<>();
+        try {
+            gifts = objectMapper.readValue(gift.getGiftsJson(), new TypeReference<>() {});
+        } catch (Exception e) {
+            log.warn("[ExclusiveGift] roleId={} parse giftsJson failed, reset to defaults: {}", roleId, e.getMessage());
+        }
+
+        if (gifts.isEmpty()) {
+            gifts.add(new HashMap<>(Map.of(
+                    "seq", 0,
+                    "alreadyBuyTimes", 0,
+                    "endTimestamp", defaultEndTimestamp
+            )));
+            gifts.add(new HashMap<>(Map.of(
+                    "seq", 1,
+                    "alreadyBuyTimes", 0,
+                    "endTimestamp", defaultEndTimestamp
+            )));
+        }
+
+        if (opType == 2 && param1 >= 0) {
             // Buy exclusive gift
             try {
-                List<Map<String, Object>> gifts = objectMapper.readValue(
-                        gift.getGiftsJson(), new TypeReference<>() {});
                 boolean found = false;
                 for (Map<String, Object> g : gifts) {
                     if (g.get("seq") instanceof Number n && n.intValue() == param1) {
                         int buyTimes = g.get("alreadyBuyTimes") instanceof Number bt ? bt.intValue() : 0;
                         g.put("alreadyBuyTimes", buyTimes + 1);
+                        if (!(g.get("endTimestamp") instanceof Number)) {
+                            g.put("endTimestamp", defaultEndTimestamp);
+                        }
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    int now = (int) (System.currentTimeMillis() / 1000);
                     gifts.add(Map.of(
                             "seq", param1,
                             "alreadyBuyTimes", 1,
-                            "endTimestamp", now + 86400 // 24 hours expiration
+                            "endTimestamp", defaultEndTimestamp
                     ));
                 }
                 gift.setGiftsJson(objectMapper.writeValueAsString(gifts));
@@ -1660,13 +2654,20 @@ public class ActivityService {
             } catch (Exception e) {
                 log.error("Failed to update exclusive gift", e);
             }
+        } else {
+            try {
+                gift.setGiftsJson(objectMapper.writeValueAsString(gifts));
+                exclusiveGiftRepo.save(gift);
+            } catch (Exception e) {
+                log.warn("[ExclusiveGift] roleId={} failed to persist default gifts: {}", roleId, e.getMessage());
+            }
         }
 
         Map<String, Object> result = new HashMap<>();
         try {
-            List<Map<String, Object>> gifts = objectMapper.readValue(
+            List<Map<String, Object>> savedGifts = objectMapper.readValue(
                     gift.getGiftsJson(), new TypeReference<>() {});
-            result.put("gifts", gifts);
+            result.put("gifts", savedGifts);
         } catch (Exception e) {
             result.put("gifts", List.of());
         }
@@ -1809,6 +2810,7 @@ public class ActivityService {
 
     @Transactional
     private Map<String, Object> handleFillBlank(Long roleId, int opType, int param1) {
+        final int blanksPerPuzzle = 8;
         FillBlank fb = fillBlankRepo.findByRoleId(roleId).orElseGet(() -> {
             FillBlank n = new FillBlank();
             n.setRoleId(roleId);
@@ -1816,17 +2818,17 @@ public class ActivityService {
         });
 
         // opType: 1=GET_INFO, 2=FILL(param1=blankIndex), 3=CLAIM_REWARD(param1=tier), 4=USE_HINT
-        if (opType == 2 && param1 >= 0) {
+        if (opType == 2 && param1 >= 0 && param1 < blanksPerPuzzle) {
             long bit = 1L << param1;
             fb.setFilledMask(fb.getFilledMask() | bit);
             // Check if puzzle complete (assume 8 blanks)
-            if (Long.bitCount(fb.getFilledMask()) >= 8) {
+            if (Long.bitCount(fb.getFilledMask()) >= blanksPerPuzzle) {
                 fb.setCompletedCount(fb.getCompletedCount() + 1);
                 fb.setPuzzleIndex(fb.getPuzzleIndex() + 1);
                 fb.setFilledMask(0L);
             }
             fillBlankRepo.save(fb);
-        } else if (opType == 3 && param1 > 0) {
+        } else if (opType == 3 && param1 > 0 && param1 <= Long.SIZE) {
             long bit = 1L << (param1 - 1);
             if ((fb.getFetchFlag() & bit) == 0) {
                 fb.setFetchFlag(fb.getFetchFlag() | bit);

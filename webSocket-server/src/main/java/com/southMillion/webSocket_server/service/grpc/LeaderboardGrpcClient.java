@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class LeaderboardGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LeaderboardGrpcClient.class);
+
     @GrpcClient("leaderboard-service")
     private LeaderboardGrpcServiceGrpc.LeaderboardGrpcServiceBlockingStub leaderboardStub;
 

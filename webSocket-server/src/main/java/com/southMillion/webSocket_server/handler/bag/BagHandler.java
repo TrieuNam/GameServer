@@ -1,11 +1,16 @@
 package com.SouthMillion.webSocket_server.handler.bag;
 
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.handler.role.RoleServiceHandler;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.net.MsgIds;
+import com.SouthMillion.webSocket_server.service.client.ActivityFeign;
 import com.SouthMillion.webSocket_server.service.client.BagFeign;
+import com.SouthMillion.webSocket_server.service.client.ShiZhuangFeign;
 import com.SouthMillion.webSocket_server.service.client.WalletHttpClient;
 import com.SouthMillion.webSocket_server.utils.FeignCall;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +22,8 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Xử lý PB_CSKnapsackReq (MsgId: 1500)
@@ -31,11 +38,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BagHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BagHandler.class);
+
     private final BagFeign bagFeign;
     private final WalletHttpClient walletHttpClient;
+    private final ShiZhuangFeign shiZhuangFeign;
+    private final RoleServiceHandler roleServiceHandler;
+    private final ActivityFeign activityFeign;
+    private static final ObjectMapper JSON = new ObjectMapper();
 
-    private static final int REQ_USE  = 0;
-    private static final int REQ_SELL = 1;
+    private static final int REQ_USE                  = 0;
+    private static final int REQ_SELL                 = 1;
+    private static final int REQ_SHI_ZHUANG_LEVEL_UP = 2;
+    private static final int REQ_SHI_ZHUANG_USE      = 3;
 
     @Override
     public int[] interests() { return new int[]{ MsgIds.CS_KNAPSACK_REQ, MsgIds.CS_BUY_CMD_REQ }; }
@@ -65,8 +80,10 @@ public class BagHandler implements MessageHandler {
         List<Integer> p = req.getParamList();
 
         return switch (type) {
-            case REQ_USE  -> handleUse(ps, roleId, p);
-            case REQ_SELL -> handleSell(ps, roleId, p);
+            case REQ_USE                  -> handleUse(ps, roleId, p);
+            case REQ_SELL                 -> handleSell(ps, roleId, p);
+            case REQ_SHI_ZHUANG_LEVEL_UP -> handleShiZhuangLevelUp(ps, roleId, p);
+            case REQ_SHI_ZHUANG_USE      -> handleShiZhuangUse(ps, roleId, p);
             default -> { log.info("[bag] unsupported req_type={}", type); yield Mono.empty(); }
         };
     }
@@ -117,6 +134,149 @@ public class BagHandler implements MessageHandler {
                 .then(Mono.fromRunnable(() -> pushWalletBalance(ps, roleId)));
     }
 
+    private Mono<Void> handleShiZhuangLevelUp(PlayerSession ps, Long roleId, List<Integer> p) {
+        if (p.isEmpty()) return Mono.empty();
+        int clothesId = safe(p, 0);
+        int consumeMode = p.size() >= 2 ? safe(p, 1) : 0;
+        if (clothesId <= 0) return Mono.empty();
+
+        return FeignCall.withToken(ps.getSessionId(), "shizhuang.levelup",
+                        () -> {
+                            shiZhuangFeign.levelUpFashion(String.valueOf(roleId), clothesId, consumeMode);
+                            return null;
+                        })
+                .doOnSuccess(ignored -> log.debug("[bag] shizhuang levelUp clothesId={}, consumeMode={}, roleId={}", clothesId, consumeMode, roleId))
+                .then(refreshShiZhuangState(ps, roleId, clothesId))
+                .onErrorResume(ex -> {
+                    log.warn("[bag] shizhuang levelUp failed roleId={}, clothesId={}: {}", roleId, clothesId, ex.getMessage());
+                    sendFashionNotEnoughNotice(ps, ex);
+                    pushWalletBalance(ps, roleId);
+                    return refreshShiZhuangState(ps, roleId, clothesId);
+                });
+    }
+
+    private Mono<Void> handleShiZhuangUse(PlayerSession ps, Long roleId, List<Integer> p) {
+        if (p.isEmpty()) return Mono.empty();
+        int clothesId = safe(p, 0);
+        if (clothesId <= 0) return Mono.empty();
+
+        return FeignCall.withToken(ps.getSessionId(), "shizhuang.appearance",
+                        () -> shiZhuangFeign.getCurrentAppearance(String.valueOf(roleId)))
+                .onErrorReturn(Map.of())
+                .flatMap(appearance -> {
+                    boolean currentlyWorn = isClothesCurrentlyWorn(appearance, clothesId);
+                    String action = currentlyWorn ? "shizhuang.unwear" : "shizhuang.wear";
+                    return FeignCall.withToken(ps.getSessionId(), action,
+                            () -> {
+                                if (currentlyWorn) {
+                                    shiZhuangFeign.unwearFashion(String.valueOf(roleId), clothesId);
+                                } else {
+                                    shiZhuangFeign.wearFashion(String.valueOf(roleId), clothesId);
+                                }
+                                return null;
+                            });
+                })
+                .then(refreshShiZhuangState(ps, roleId, clothesId))
+                .onErrorResume(ex -> {
+                    log.warn("[bag] shizhuang use failed roleId={}, clothesId={}: {}", roleId, clothesId, ex.getMessage());
+                    sendFashionNotEnoughNotice(ps, ex);
+                    return refreshShiZhuangState(ps, roleId, clothesId);
+                });
+    }
+
+    private Mono<Void> refreshShiZhuangState(PlayerSession ps, Long roleId, int clothesId) {
+        return FeignCall.withToken(ps.getSessionId(), "shizhuang.list",
+                        () -> shiZhuangFeign.getRoleFashions(String.valueOf(roleId)))
+                .doOnNext(fashions -> {
+                    sendShiZhuangList(ps, fashions);
+                    sendShiZhuangOne(ps, fashions, clothesId);
+                })
+                .then(roleServiceHandler.pushRoleState(ps)
+                        .onErrorResume(ex -> {
+                            log.warn("[bag] role-state refresh after shizhuang change failed roleId={}: {}", roleId, ex.getMessage());
+                            return Mono.empty();
+                        }))
+                .onErrorResume(ex -> {
+                    log.warn("[bag] shizhuang refresh failed roleId={}, clothesId={}: {}", roleId, clothesId, ex.getMessage());
+                    sendShiZhuangList(ps, List.of());
+                    sendShiZhuangOne(ps, List.of(), clothesId);
+                    return roleServiceHandler.pushRoleState(ps)
+                            .onErrorResume(roleEx -> Mono.empty());
+                });
+    }
+
+    private void sendShiZhuangList(PlayerSession ps, List<Map<String, Object>> fashions) {
+        var builder = Msgknapsack.PB_SCAllShiZhuangInfo.newBuilder();
+        if (fashions != null) {
+            for (Map<String, Object> fashion : fashions) {
+                Msgknapsack.PB_ShiZhuangData data = toShiZhuangData(fashion);
+                if (data != null) {
+                    builder.addShizhuangList(data);
+                }
+            }
+        }
+        Emitters.emit(ps, MsgIds.SC_ALL_SHIZHUANG_INFO, builder.build().toByteArray());
+    }
+
+    private void sendShiZhuangOne(PlayerSession ps, List<Map<String, Object>> fashions, int clothesId) {
+        if (clothesId <= 0) return;
+        Msgknapsack.PB_ShiZhuangData data = null;
+        if (fashions != null) {
+            for (Map<String, Object> fashion : fashions) {
+                int currentClothesId = getInt(fashion, "clothesId", 0);
+                if (currentClothesId == clothesId) {
+                    data = Msgknapsack.PB_ShiZhuangData.newBuilder()
+                            .setId(clothesId)
+                            .setLevel(Math.max(getInt(fashion, "level", 0), 0))
+                            .build();
+                    break;
+                }
+            }
+        }
+
+        if (data == null) {
+            return;
+        }
+
+        Emitters.emit(ps, MsgIds.SC_SHIZHUANG_INFO,
+                Msgknapsack.PB_SCShiZhuangInfo.newBuilder().setShizhuang(data).build().toByteArray());
+    }
+
+    private Msgknapsack.PB_ShiZhuangData toShiZhuangData(Map<String, Object> fashion) {
+        int clothesId = getInt(fashion, "clothesId", getInt(fashion, "id", 0));
+        if (clothesId <= 0) {
+            return null;
+        }
+        return Msgknapsack.PB_ShiZhuangData.newBuilder()
+                .setId(clothesId)
+                .setLevel(Math.max(getInt(fashion, "level", 0), 0))
+                .build();
+    }
+
+    private boolean isClothesCurrentlyWorn(Map<String, Object> appearance, int clothesId) {
+        if (appearance == null || appearance.isEmpty() || clothesId <= 0) {
+            return false;
+        }
+        return getInt(appearance, "surfaceWeapon", 0) == clothesId
+                || getInt(appearance, "surfaceShield", 0) == clothesId
+                || getInt(appearance, "surfaceHead", 0) == clothesId
+                || getInt(appearance, "surfaceBody", 0) == clothesId;
+    }
+
+    private int getInt(Map<String, Object> map, String key, int defaultValue) {
+        if (map == null) return defaultValue;
+        Object value = map.get(key);
+        if (value instanceof Number number) return number.intValue();
+        if (value instanceof String str) {
+            try {
+                return Integer.parseInt(str);
+            } catch (Exception ignored) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    }
+
     private Mono<Void> handleBuyCmd(PlayerSession ps, byte[] payload) {
         return Mono.fromSupplier(() -> {
             try {
@@ -137,6 +297,7 @@ public class BagHandler implements MessageHandler {
             int itemId = buyCmdReq.getItemId();
             return FeignCall.withToken(ps.getSessionId(), "bag.buyCmd",
                             () -> bagFeign.buyCmd(String.valueOf(roleId), buyCmdReq))
+                    .doOnNext(ignored -> notifyActivityBuy(roleId, buyCmdReq.getBuyType(), buyCmdReq.getItemId()))
                     .onErrorResume(ex -> {
                         if (itemId > 0) Emitters.sendItemNotEnoughNotice(ps, itemId);
                         return Mono.empty();
@@ -146,6 +307,30 @@ public class BagHandler implements MessageHandler {
                     .doOnNext(list -> Emitters.sendKnapsackAllInfo(ps, list))
                     .then(Mono.fromRunnable(() -> pushWalletBalance(ps, roleId)));
         });
+    }
+
+    /**
+     * After a successful BuyCmd for an activity-type purchase (TianXuanZhiLi/ShouChongDingZhi),
+     * notify activity-service so it can update the buy/gift state for that activity.
+     * buyType = client ACTIVITY_TYPE value (2075 or 2078).
+     * param1  = gift seq for TianXuan; 0 for ShouChong.
+     */
+    private void notifyActivityBuy(Long roleId, int buyType, int param1) {
+        int dispatchType;
+        if (buyType == 2078) dispatchType = 41;       // ShouChongDingZhi
+        else if (buyType == 2075) dispatchType = 38;  // TianXuanZhiLi
+        else return;
+        try {
+            java.util.Map<String, Object> body = new java.util.HashMap<>();
+            body.put("activityType", dispatchType);
+            body.put("operaType", 2); // BUY op in server convention
+            body.put("param1", param1);
+            body.put("param2", 0);
+            body.put("param3", 0);
+            activityFeign.randActivity(String.valueOf(roleId), body);
+        } catch (Exception e) {
+            log.warn("[bag] activity bridge failed for buyType={} roleId={}: {}", buyType, roleId, e.getMessage());
+        }
     }
 
     /**
@@ -184,6 +369,52 @@ public class BagHandler implements MessageHandler {
 
     private static int safe(List<Integer> p, int i) {
         return (i < p.size() && p.get(i) != null) ? p.get(i) : 0;
+    }
+
+    private void sendFashionNotEnoughNotice(PlayerSession ps, Throwable ex) {
+        extractFashionErrorItemId(ex)
+                .filter(itemId -> itemId > 0)
+                .ifPresent(itemId -> Emitters.sendItemNotEnoughNotice(ps, itemId));
+    }
+
+    private Optional<Integer> extractFashionErrorItemId(Throwable ex) {
+        Throwable current = ex;
+        while (current != null) {
+            if (current instanceof feign.FeignException fe) {
+                if (fe.status() >= 400 && fe.status() < 500) {
+                    Integer fromBody = parseItemIdFromErrorBody(fe.contentUTF8());
+                    if (fromBody != null && fromBody > 0) {
+                        return Optional.of(fromBody);
+                    }
+                }
+                break;
+            }
+            current = current.getCause();
+        }
+        return Optional.empty();
+    }
+
+    private Integer parseItemIdFromErrorBody(String body) {
+        if (body == null || body.isBlank()) {
+            return null;
+        }
+        try {
+            JsonNode node = JSON.readTree(body);
+            JsonNode itemIdNode = node.get("itemId");
+            if (itemIdNode != null && itemIdNode.canConvertToInt()) {
+                return itemIdNode.intValue();
+            }
+            JsonNode dataNode = node.get("data");
+            if (dataNode != null && dataNode.isObject()) {
+                JsonNode nestedItemIdNode = dataNode.get("itemId");
+                if (nestedItemIdNode != null && nestedItemIdNode.canConvertToInt()) {
+                    return nestedItemIdNode.intValue();
+                }
+            }
+        } catch (Exception ignored) {
+            // Ignore malformed upstream error payloads.
+        }
+        return null;
     }
 }
 

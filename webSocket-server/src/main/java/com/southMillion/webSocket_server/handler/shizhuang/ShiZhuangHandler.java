@@ -32,6 +32,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ShiZhuangHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ShiZhuangHandler.class);
+
     private final ShiZhuangFeign shiZhuangFeign;
     private final EquipFumoFeign equipFumoFeign;
     private final RoleServiceHandler roleServiceHandler;

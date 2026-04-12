@@ -8,6 +8,7 @@ import com.SouthMillion.webSocket_server.service.grpc.MainFbGrpcClient;
 import org.SouthMillion.proto.Msgbattle.Msgbattle;
 import org.SouthMillion.proto.Msgmainfb.Msgmainfb;
 import org.SouthMillion.proto.mainfb.EnterStageResponse;
+import org.SouthMillion.proto.mainfb.FinishStageResponse;
 import org.SouthMillion.proto.mainfb.GetCurrentTaskResponse;
 import org.SouthMillion.proto.mainfb.GetProgressResponse;
 import org.junit.jupiter.api.Test;
@@ -92,6 +93,44 @@ class MainFbHandlerTest {
             Msgbattle.PB_SCBattleReport report = Msgbattle.PB_SCBattleReport.parseFrom(payloadRef.get());
             assertThat(report.getBattleModeType()).isEqualTo(0);
             assertThat(report.getBattleFileName()).isEqualTo("1675231914_0_2");
+        }
+    }
+
+    @Test
+    void handleFinish_afterChallenge_callsFinishStageAndRefreshesState() {
+        PlayerSession session = org.mockito.Mockito.mock(PlayerSession.class);
+        when(session.getRoleId()).thenReturn(2001L);
+        when(mainFbGrpcClient.getCurrentTask("2001"))
+                .thenReturn(GetCurrentTaskResponse.newBuilder()
+                        .setStage(1)
+                        .setLevel(1)
+                        .setAllDone(false)
+                        .build());
+        when(mainFbGrpcClient.getProgress("2001"))
+                .thenReturn(GetProgressResponse.newBuilder().build());
+        when(mainFbGrpcClient.enterStage("2001", 1, 1))
+                .thenReturn(EnterStageResponse.newBuilder()
+                        .setBattleId("1675231914_0_2")
+                        .build());
+        when(mainFbGrpcClient.finishStage("2001", "1675231914_0_2", 1, 1, 0))
+                .thenReturn(FinishStageResponse.newBuilder().build());
+        when(bagFeign.list("2001")).thenReturn(List.of());
+        when(walletHttpClient.info("2001")).thenReturn(null);
+
+        Msgmainfb.PB_CSMainFbReq challengeReq = Msgmainfb.PB_CSMainFbReq.newBuilder()
+                .setType(0)
+                .build();
+        Msgmainfb.PB_CSMainFbReq finishReq = Msgmainfb.PB_CSMainFbReq.newBuilder()
+                .setType(5)
+                .build();
+
+        try (MockedStatic<Emitters> emitters = mockStatic(Emitters.class)) {
+            mainFbHandler.handle(session, 2005, challengeReq.toByteArray()).block();
+            mainFbHandler.handle(session, 2005, finishReq.toByteArray()).block();
+
+            verify(mainFbGrpcClient).finishStage("2001", "1675231914_0_2", 1, 1, 0);
+            verify(bagFeign, after(400).times(1)).list("2001");
+            verify(walletHttpClient, after(400).times(1)).info("2001");
         }
     }
 }

@@ -14,6 +14,9 @@ import org.SouthMillion.proto.angel.*;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 /**
  * Angel系统处理器 - P3优先级
  * 负责处理天使相关的所有操作
@@ -22,6 +25,8 @@ import reactor.core.publisher.Mono;
 @Component
 @RequiredArgsConstructor
 public class AngelHandler implements MessageHandler {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(AngelHandler.class);
 
     private final AngelGrpcClient angelGrpcClient;
     private final RoleServiceHandler roleServiceHandler;
@@ -101,15 +106,35 @@ public class AngelHandler implements MessageHandler {
                         sendRet(session, RET_EQUIP_LEVEL, equipValue, param);
                     }
                     case REQ_APPEARANCE_LEVEL_UP -> {
-                        AppearanceLevelUpResponse r = angelGrpcClient.appearanceLevelUp(userId, param, param2);
+                        GetUserAngelsResponse snapshot = angelGrpcClient.getUserAngels(userId);
+                        AngelData primaryAngel = pickPrimaryAngel(snapshot);
+                        int angelIndex = primaryAngel != null ? primaryAngel.getAngelIndex() : 0;
+                        int currentAppearanceId = primaryAngel != null ? primaryAngel.getAppearanceId() : -1;
+                        int currentAppearanceLevel = readAppearanceLevel(primaryAngel);
+
+                        if (currentAppearanceId != param) {
+                            UseAppearanceResponse select = angelGrpcClient.useAppearance(userId, angelIndex, param);
+                            if (select.hasStatus() && select.getStatus().getSuccess()) {
+                                currentAppearanceLevel = 0;
+                            } else {
+                                log.warn("[Angel] useAppearance failed before appearance upgrade roleId={} angelIndex={} appearanceSeq={}",
+                                        session.getRoleId(), angelIndex, param);
+                            }
+                        }
+
+                        int targetLevel = Math.max(1, currentAppearanceLevel + 1);
+                        AppearanceLevelUpResponse r = angelGrpcClient.appearanceLevelUp(userId, angelIndex, targetLevel);
                         if (r.getStatus().getSuccess()) {
                             publishTaskProgress(session.getRoleId(), taskActionConditionMapping.angelAppearanceLevelUpTaskKey(), "websocket-angel-appearance-level-up");
                         }
-                        int newLevel = r.getNewAppearanceLevel() > 0 ? r.getNewAppearanceLevel() : param;
-                        sendRet(session, RET_APPEARANCE_LEVEL, newLevel, 0);
+                        int newLevel = r.getNewAppearanceLevel() > 0 ? r.getNewAppearanceLevel() : targetLevel;
+                        sendRet(session, RET_APPEARANCE_LEVEL, param, newLevel);
                     }
                     case REQ_USE_APPEARANCE -> {
-                        UseAppearanceResponse r = angelGrpcClient.useAppearance(userId, 0, param);
+                        GetUserAngelsResponse snapshot = angelGrpcClient.getUserAngels(userId);
+                        AngelData primaryAngel = pickPrimaryAngel(snapshot);
+                        int angelIndex = primaryAngel != null ? primaryAngel.getAngelIndex() : 0;
+                        UseAppearanceResponse r = angelGrpcClient.useAppearance(userId, angelIndex, param);
                         if (r.getStatus().getSuccess()) {
                             roleServiceHandler.pushRoleState(session).subscribe();
                         }
@@ -138,18 +163,30 @@ public class AngelHandler implements MessageHandler {
         }
 
         Msgangel.PB_SCAngelInfo.Builder sc = Msgangel.PB_SCAngelInfo.newBuilder()
-                .setAngelLevel(0).setAngelGrade(0).setUseAppearance(0);
+                .setAngelLevel(0)
+                .setAngelGrade(0)
+                .setUseAppearance(-1)
+                .addAngelEquipId(0)
+                .addAngelEquipId(0)
+                .addAngelEquipId(0)
+                .addAngelEquipId(0);
 
+        Map<Integer, Integer> appearanceLevels = new LinkedHashMap<>();
         for (AngelData a : resp.getAngelsList()) {
             sc.setAngelLevel(Math.max(sc.getAngelLevel(), a.getLevel()));
             sc.setAngelGrade(Math.max(sc.getAngelGrade(), a.getGrade()));
-            sc.addAngelEquipId(a.getAngelId());
             if (a.getIsEquipped()) {
                 sc.setUseAppearance(a.getAppearanceId());
             }
-            sc.addAppearanceData(Msgangel.PB_AngelAppearanceData.newBuilder()
-                    .setId(a.getAngelId()).setLevel(a.getLevel()).build());
+            if (a.getAppearanceId() >= 0) {
+                appearanceLevels.merge(a.getAppearanceId(), readAppearanceLevel(a), Math::max);
+            }
         }
+        appearanceLevels.forEach((appearanceId, level) -> sc.addAppearanceData(
+                Msgangel.PB_AngelAppearanceData.newBuilder()
+                        .setId(appearanceId)
+                        .setLevel(level)
+                        .build()));
         Emitters.emit(session, SC_ANGEL_INFO, sc.build().toByteArray());
     }
 
@@ -157,6 +194,30 @@ public class AngelHandler implements MessageHandler {
         byte[] bytes = Msgangel.PB_SCAngelOpRet.newBuilder()
                 .setRetType(retType).setParam1(code).setParam2(param1).build().toByteArray();
         Emitters.emit(session, SC_ANGEL_RET, bytes);
+    }
+
+    private AngelData pickPrimaryAngel(GetUserAngelsResponse resp) {
+        if (resp == null || resp.getAngelsCount() == 0) {
+            return null;
+        }
+        for (AngelData angel : resp.getAngelsList()) {
+            if (angel.getIsEquipped()) {
+                return angel;
+            }
+        }
+        return resp.getAngels(0);
+    }
+
+    private int readAppearanceLevel(AngelData angel) {
+        if (angel == null) {
+            return 0;
+        }
+        try {
+            Object value = angel.getClass().getMethod("getAppearanceLevel").invoke(angel);
+            return value instanceof Number number ? number.intValue() : 0;
+        } catch (ReflectiveOperationException ignored) {
+            return 0;
+        }
     }
 
     private void publishTaskProgress(Long roleId, String taskKey, String source) {

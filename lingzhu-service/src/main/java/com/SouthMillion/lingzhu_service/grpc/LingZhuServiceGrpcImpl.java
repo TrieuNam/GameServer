@@ -72,6 +72,24 @@ public class LingZhuServiceGrpcImpl extends LingZhuServiceGrpc.LingZhuServiceImp
         }
     }
 
+    @Override
+    public void finishChallenge(FinishChallengeRequest request, StreamObserver<GenericResponse> observer) {
+        log.info("[LingZhuGrpc] FinishChallenge: roleId={} stage={} level={}", request.getRoleId(), request.getStage(), request.getLevel());
+        try {
+            Map<String, Object> result = lingZhuService.finishChallenge(request.getRoleId(), request.getStage(), request.getLevel());
+            boolean ok = Boolean.TRUE.equals(result.get("success"));
+            observer.onNext(GenericResponse.newBuilder()
+                    .setSuccess(ok)
+                    .setMessage(ok ? "OK" : String.valueOf(result.getOrDefault("message", "failed")))
+                    .build());
+            observer.onCompleted();
+        } catch (Exception e) {
+            log.error("[LingZhuGrpc] FinishChallenge error", e);
+            observer.onNext(GenericResponse.newBuilder().setSuccess(false).setMessage(e.getMessage()).build());
+            observer.onCompleted();
+        }
+    }
+
     private LingZhuProgressData toLingZhuProgressData(LingZhuProgress p) {
         return LingZhuProgressData.newBuilder()
                 .setId(p.getId() != null ? p.getId() : 0L)

@@ -10,17 +10,13 @@ import com.SouthMillion.bag_service.repository.RecycleProgressRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagDTOs;
-import org.SouthMillion.dto.event.bag.BagChangedEvent;
 import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,12 +37,6 @@ public class BagDomainService {
     @Autowired(required = false)
     private WalletFeign walletFeign;
 
-    @Autowired(required = false)
-    private KafkaTemplate<String, Object> kafkaTemplate;
-
-    @Value("${app.kafka.bag-changed-topic:gameh5.bag.changed}")
-    private String bagChangedTopic;
-
     // ====== Query ======
     @Cacheable(cacheNames = "bag:items", key = "#roleId")
     public List<BagDTOs.ItemView> list(Long roleId) {
@@ -60,14 +50,6 @@ public class BagDomainService {
     @CacheEvict(cacheNames = "bag:items", key = "#roleId")
     public List<BagDTOs.ItemView> grant(String userId, Long roleId,
                                         List<BagDTOs.GrantItem> items, String eventId) {
-        return grant(userId, roleId, items, eventId, true);
-    }
-
-    @Transactional
-    @CacheEvict(cacheNames = "bag:items", key = "#roleId")
-    public List<BagDTOs.ItemView> grant(String userId, Long roleId,
-                                        List<BagDTOs.GrantItem> items, String eventId,
-                                        boolean publishChangedEvent) {
         if (!dedupRepo.insertIgnore(eventId)) {
             log.info("Grant ignored (idempotent): eventId={}", eventId);
             return List.of();
@@ -111,10 +93,6 @@ public class BagDomainService {
                     .bagType(bi.getBagType())
                     .build());
 
-            if (publishChangedEvent) {
-                publishBagChanged(eventId, userId, roleId, bi.getItemId(), delta,
-                        bi.getNum() == null ? 0L : bi.getNum(), "grant");
-            }
         }
         return out;
     }
@@ -135,8 +113,6 @@ public class BagDomainService {
         }
         log.info("[bag.use] roleId={} itemId={} requested={} remaining={}",
                 roleId, req.getItemId(), requested, newNum);
-        publishBagChanged(UUID.randomUUID().toString(), String.valueOf(roleId), roleId,
-                req.getItemId(), -req.getNum().longValue(), newNum, "use");
     }
 
     // ====== Sell/Discard ======
@@ -167,8 +143,6 @@ public class BagDomainService {
                 log.warn("[bag] Failed to credit wallet after sell for roleId={}: {}", roleId, e.getMessage());
             }
         }
-        publishBagChanged(UUID.randomUUID().toString(), String.valueOf(roleId), roleId,
-            req.getItemId(), -requested, newNum, "sell");
         return new BagDTOs.SellResult(gold, req.getNum());
     }
 
@@ -192,10 +166,6 @@ public class BagDomainService {
         for (Integer itemId : itemIds) {
             try {
                 long newNum = consumeExactly(roleId, itemId, 1);
-                if (newNum >= 0) {
-                    publishBagChanged(UUID.randomUUID().toString(), String.valueOf(roleId), roleId,
-                            itemId, -1L, newNum, "recycle");
-                }
             } catch (Exception e) {
                 log.warn("[Recycle] Could not consume itemId={} for role={}: {}", itemId, roleId, e.getMessage());
             }
@@ -213,6 +183,15 @@ public class BagDomainService {
 
         log.info("[Recycle] roleId={} recycled {} items, gained {} exp, now level={} exp={}",
                 roleId, itemIds.size(), gained, p.getLevel(), p.getExp());
+        return buildRecycleResult(p);
+    }
+
+    /**
+     * Trả về level và exp hiện tại của recycling — không thay đổi dữ liệu.
+     * Dùng cho push bootstrap (1686).
+     */
+    public Map<String, Object> getRecycleProgress(Long roleId) {
+        RecycleProgress p = getOrCreateRecycle(roleId);
         return buildRecycleResult(p);
     }
 
@@ -284,26 +263,6 @@ public class BagDomainService {
         return currentNum;
     }
 
-    private void publishBagChanged(String eventId, String userId, Long roleId,
-                                   Integer itemId, Long delta, Long newNum, String reason) {
-        if (kafkaTemplate == null || itemId == null) return;
-        try {
-            BagChangedEvent event = BagChangedEvent.builder()
-                    .eventId(eventId)
-                    .userId(userId)
-                    .roleId(String.valueOf(roleId))
-                    .itemId(itemId)
-                    .delta(delta)
-                    .newNum(newNum)
-                    .reason(reason)
-                    .at(Instant.now())
-                    .build();
-            kafkaTemplate.send(bagChangedTopic, String.valueOf(roleId), event);
-        } catch (Exception e) {
-            log.warn("[bag] Failed to publish bag.changed event reason={} roleId={} itemId={}: {}",
-                    reason, roleId, itemId, e.getMessage());
-        }
-    }
     @Transactional
     @CacheEvict(cacheNames = "bag:items", key = "#roleId")
     public BagDTOs.SellResult buyCmd(Long roleId, BagDTOs.BuyCmdReq req) {

@@ -81,12 +81,22 @@ public class EquipController {
         return fumoService.reset(req);
     }
 
+    @PostMapping(value = "/fumo/transform", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public EquipFumoDTOs.OkResp fumoTransform(@RequestBody Map<String, Object> req) {
+        String roleId = String.valueOf(req.get("roleId"));
+        int count1 = req.containsKey("count1") ? ((Number) req.get("count1")).intValue() : 0;
+        int count2 = req.containsKey("count2") ? ((Number) req.get("count2")).intValue() : 0;
+        int count3 = req.containsKey("count3") ? ((Number) req.get("count3")).intValue() : 0;
+        return fumoService.transform(roleId, count1, count2, count3);
+    }
+
     @PostMapping(value = "/bag-sell", consumes = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
     public EquipDTOs.OkResp bagSell(@RequestBody Map<String, Object> req) {
-        Long roleId   = Long.parseLong(req.get("roleId").toString());
-        int equipType = ((Number) req.get("equipType")).intValue();
-        return equipService.bagSell(roleId, equipType);
+        Long roleId = Long.parseLong(req.get("roleId").toString());
+        Integer itemId = req.containsKey("itemId") ? ((Number) req.get("itemId")).intValue() : null;
+        int equipType = req.containsKey("equipType") ? ((Number) req.get("equipType")).intValue() : -1;
+        return equipService.bagSell(roleId, equipType, itemId);
     }
 
     @PostMapping(value = "/transform", consumes = MediaType.APPLICATION_JSON_VALUE)

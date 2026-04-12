@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class MailGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(MailGrpcClient.class);
+
     @GrpcClient("mail-service")
     private MailServiceGrpc.MailServiceBlockingStub stub;
 

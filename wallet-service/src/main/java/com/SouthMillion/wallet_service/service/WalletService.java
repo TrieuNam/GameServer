@@ -190,7 +190,9 @@ public class WalletService {
 
     // ===== đã có sẵn trong code bạn đưa (nhắc lại ở đây để liền mạch) =====
     private Map<Long, Boolean> ensureVirtual(Collection<Long> ids) {
-        if (ids.isEmpty()) return Map.of();
+        if (ids == null || ids.isEmpty()) {
+            return Map.of();
+        }
         List<Integer> itemIds = ids.stream()
                 .filter(Objects::nonNull)
                 .map(Math::toIntExact)
@@ -202,10 +204,42 @@ public class WalletService {
         Map<Long, Boolean> out = new HashMap<>();
         for (Long id : ids) {
             Map<String, Object> v = metas == null ? Map.of() : metas.getOrDefault(Math.toIntExact(id), Map.of());
-            boolean virt = ((Number) v.getOrDefault("isVirtual", 0)).intValue() == 1;
+            boolean virt = asBooleanFlag(v.get("isVirtual"));
             out.put(id, virt);
         }
         log.debug("[wallet.virtual] result={}", out);
         return out;
+    }
+
+    private boolean asBooleanFlag(Object value) {
+        if (value == null) {
+            return false;
+        }
+        if (value instanceof Boolean bool) {
+            return bool;
+        }
+        if (value instanceof Number number) {
+            return number.intValue() != 0;
+        }
+        if (value instanceof String text) {
+            String normalized = text.trim();
+            if (normalized.isEmpty()) {
+                return false;
+            }
+            if ("true".equalsIgnoreCase(normalized) || "yes".equalsIgnoreCase(normalized)) {
+                return true;
+            }
+            if ("false".equalsIgnoreCase(normalized) || "no".equalsIgnoreCase(normalized)) {
+                return false;
+            }
+            try {
+                return Integer.parseInt(normalized) != 0;
+            } catch (NumberFormatException ignored) {
+                log.debug("[wallet.virtual] unsupported string value={}", normalized);
+                return false;
+            }
+        }
+        log.debug("[wallet.virtual] unsupported flag type={} value={}", value.getClass().getName(), value);
+        return false;
     }
 }

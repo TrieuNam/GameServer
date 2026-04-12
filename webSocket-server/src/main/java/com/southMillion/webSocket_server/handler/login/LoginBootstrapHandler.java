@@ -34,6 +34,7 @@ import com.SouthMillion.webSocket_server.handler.territory.TerritoryHandler;
 import com.SouthMillion.webSocket_server.handler.escort.EscortHandler;
 import com.SouthMillion.webSocket_server.handler.mainfb.MainFbHandler;
 import com.SouthMillion.webSocket_server.handler.skill.SkillHandler;
+import com.SouthMillion.webSocket_server.handler.other.OtherHandler;
 import com.SouthMillion.webSocket_server.service.InMemoryPlayerSessionRegistry;
 import com.SouthMillion.webSocket_server.service.LoginSnapshotService;
 import com.SouthMillion.webSocket_server.service.client.*;
@@ -72,6 +73,8 @@ import reactor.util.retry.Retry;
 @Component
 @RequiredArgsConstructor
 public class LoginBootstrapHandler implements MessageHandler {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(LoginBootstrapHandler.class);
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -122,6 +125,7 @@ public class LoginBootstrapHandler implements MessageHandler {
     private final EscortHandler escortHandler;
     private final MainFbHandler mainFbHandler;
     private final SkillHandler skillHandler;
+    private final OtherHandler otherHandler;
 
     // ===== Guard =====
     private static final Semaphore LOGIN_LIMITER = new Semaphore(128);
@@ -519,7 +523,10 @@ public class LoginBootstrapHandler implements MessageHandler {
                 safe(() -> escortHandler.pushAll(ps), "escort", ps, t0Bootstrap),
                 safe(() -> territoryHandler.pushAll(ps), "territory", ps, t0Bootstrap),
                 safe(() -> guildHandler.pushAll(ps), "guild", ps, t0Bootstrap),
-                safe(() -> mainFbHandler.pushAll(ps), "mainfb", ps, t0Bootstrap)
+                safe(() -> mainFbHandler.pushAll(ps), "mainfb", ps, t0Bootstrap),
+                safe(() -> otherHandler.pushLimitCoreInfo(ps), "limitcore", ps, t0Bootstrap),
+                safe(() -> otherHandler.pushRecycleInfo(ps), "recycle.info", ps, t0Bootstrap),
+                safe(() -> otherHandler.pushRecycleListInfo(ps), "recycle.list", ps, t0Bootstrap)
         );
     }
 

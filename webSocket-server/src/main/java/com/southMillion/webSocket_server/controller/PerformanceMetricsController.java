@@ -27,6 +27,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PerformanceMetricsController {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PerformanceMetricsController.class);
+
     private final LoginSnapshotService loginSnapshotService;
 
     /**

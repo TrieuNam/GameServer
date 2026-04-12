@@ -42,6 +42,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class GuildHandler implements MessageHandler, LazyLoadHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(GuildHandler.class);
+
     private final GuildFeign guildFeign;
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;

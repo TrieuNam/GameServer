@@ -83,6 +83,12 @@ public interface PetFeign {
         @RequestBody Map<String, Object> request
     );
 
+    @PostMapping("/api/pet/{roleId}/treasure")
+    Map<String, Object> drawTreasure(
+            @PathVariable("roleId") String roleId,
+            @RequestParam("type") Integer type
+    );
+
     // === Pet Dungeon ===
 
     /** GET /api/pet/{roleId}/dungeon – thông tin pet dungeon */

@@ -29,6 +29,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class PagodaHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PagodaHandler.class);
+
     private final PagodaGrpcClient pagodaGrpcClient;
     private final ObjectMapper objectMapper;
     private final TaskProgressPublisher taskProgressPublisher;

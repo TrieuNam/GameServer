@@ -18,6 +18,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class StarMapHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StarMapHandler.class);
+
     private final StarMapGrpcClient starMapGrpcClient;
     private final TaskProgressPublisher taskProgressPublisher;
 

@@ -23,6 +23,7 @@
     "error_report_url": "http://localhost:8080/api/error_report",
     "update_notice_query_url": "http://localhost:8080/config-service/api/c2s/fetch_privacy_notice",
     "user_protocol_url": "http://localhost:8080/config-service/api/c2s/fetch_privacy_notice",
+    "fightdata_url": "http://localhost:8080/gameworld-service/h02_{1}_s{2}/fightdata/common_",
     "sensitive_words_url": "http://localhost:8080/api/sensitive_words_list",
     "wx_getShareInfo_url": "http://localhost:8080/api/dev/get_share_info",
     "wx_shareplay_url": "http://localhost:8080/api/dev/share_user_play",

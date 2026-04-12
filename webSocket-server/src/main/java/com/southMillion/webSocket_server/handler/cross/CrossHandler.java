@@ -65,6 +65,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CrossHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(CrossHandler.class);
+
     private final CrossServerService crossServerService;
     private final RoleFeign roleFeign;
 

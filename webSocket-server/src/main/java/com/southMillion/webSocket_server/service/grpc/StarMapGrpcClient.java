@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class StarMapGrpcClient {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StarMapGrpcClient.class);
+
     @GrpcClient("starmap-service")
     private StarmapGrpcServiceGrpc.StarmapGrpcServiceBlockingStub stub;
 

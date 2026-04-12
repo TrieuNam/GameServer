@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import org.SouthMillion.dto.bag.BagAddItemReq;
 import org.SouthMillion.dto.bag.BagAddItemResp;
+import org.SouthMillion.dto.bag.BagOkResp;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -142,6 +143,29 @@ class ShopServiceTest {
             ResultDTO<ShopDTOs.BuyResp> result = shopService.buy(req);
 
             assertThat(result.ok()).isTrue();
+        }
+
+        @Test
+        @DisplayName("TC-SHOP-004A [P] Mua CLOTH kind voi root shop object – tim dung config that")
+        void buy_clothKind_shopRootObject_configFound() throws Exception {
+            JsonNode config = mapper.readTree(
+                    "{\"shop\":[{\"seq\":1,\"shop_type\":0,\"quota_type\":0,\"param\":0," +
+                    "\"buy_item\":40001,\"buy_item_num\":1600,\"discount\":0.7," +
+                    "\"item_id\":61073,\"item_num\":1}]}"
+            );
+            given(cfg.cloth()).willReturn(config);
+            given(itemMeta.batchMeta("40001")).willReturn(Map.of("40001", Map.of("isVirtual", 0)));
+            given(itemMeta.batchMeta("61073")).willReturn(Map.of("61073", Map.of("isVirtual", 0, "quality", 1)));
+            given(bagFeign.consume(any())).willReturn(BagOkResp.ok());
+            given(bagFeign.add(any(BagAddItemReq.class))).willReturn(BagAddItemResp.ok(List.of()));
+
+            ShopDTOs.BuyReq req = new ShopDTOs.BuyReq("role-001", ShopDTOs.Kind.CLOTH, 1, 1, 0, 0);
+            ResultDTO<ShopDTOs.BuyResp> result = shopService.buy(req);
+
+            assertThat(result.ok()).isTrue();
+            assertThat(result.data().getCost()).isEqualTo(1120);
+            then(bagFeign).should().consume(any());
+            then(bagFeign).should().add(any(BagAddItemReq.class));
         }
 
         @Test
@@ -309,6 +333,31 @@ class ShopServiceTest {
 
             assertThat(result.ok()).isTrue();
             assertThat(result.data().items()).hasSize(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("listCloth()")
+    class ListCloth {
+
+        @Test
+        @DisplayName("TC-SHOP-LC-001 [P] Doc cloth config voi root shop object")
+        void listCloth_shopRootObject_success() throws Exception {
+            JsonNode config = mapper.readTree(
+                    "{\"shop\":[{" +
+                    "\"seq\":1,\"shop_type\":0,\"buy_item\":40001,\"buy_item_num\":1600,\"discount\":0.7," +
+                    "\"item_id\":61073,\"item_num\":1},{" +
+                    "\"seq\":2,\"shop_type\":1,\"buy_item\":40001,\"buy_item_num\":400,\"discount\":1," +
+                    "\"item_id\":70001,\"item_num\":1}]}"
+            );
+            given(cfg.cloth()).willReturn(config);
+
+            ResultDTO<ShopDTOs.ShopListResp> result = shopService.listCloth(new ShopDTOs.ListClothReq("role-001", 1, 0));
+
+            assertThat(result.ok()).isTrue();
+            assertThat(result.data().items()).hasSize(1);
+            assertThat(result.data().items().getFirst().idOrIndex()).isEqualTo("1");
+            assertThat(result.data().items().getFirst().priceNum()).isEqualTo(1120);
         }
     }
 }

@@ -25,6 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class EquipHandler implements MessageHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(EquipHandler.class);
+
     private final EquipHttpClient equipHttpClient;
     private final TaskProgressPublisher taskProgressPublisher;
     private final reactor.core.scheduler.Scheduler feignVtScheduler;
@@ -172,13 +174,27 @@ public class EquipHandler implements MessageHandler {
     }
 
     private void handleBagSell(PlayerSession session, Long roleId, int indexOrItemId) {
+        List<BagSlot> slots = fetchBagSlots(roleId);
+        BagSlot target = findBagSlot(slots, indexOrItemId);
+        if (target == null) {
+            log.warn("[Equip] bag_sell target not found, p1={}, roleId={}", indexOrItemId, roleId);
+            sendBagList(session, slots);
+            return;
+        }
+
         try {
-            equipHttpClient.bagSell(Map.of("roleId", String.valueOf(roleId), "equipType", indexOrItemId));
+            equipHttpClient.bagSell(Map.of(
+                    "roleId", String.valueOf(roleId),
+                    "itemId", target.itemId(),
+                    "equipType", target.equipType(),
+                    "index", target.index()
+            ));
             reportTaskProgress(roleId, TaskCondition.SELL_EQUIP_NUM.taskKey(), 1);
             invalidateBagSlotsCache(roleId);
         } catch (Exception e) {
             log.warn("[Equip] bagSell failed roleId={}: {}", roleId, e.getMessage());
         }
+        sendBagOneEmpty(session, target.index(), target.equipType());
         sendBagList(session, fetchBagSlots(roleId));
     }
 
@@ -193,13 +209,13 @@ public class EquipHandler implements MessageHandler {
     }
 
     private void handleFuMo(PlayerSession session, Long roleId, int equipType) {
-        if (equipType <= 0) {
+        if (equipType < 0) {
             log.warn("[Equip] fumo invalid equipType={}, roleId={}", equipType, roleId);
             return;
         }
         try {
             EquipFumoDTOs.FumoOneResp one = equipHttpClient.fumoAddExp(
-                    new EquipFumoDTOs.AddExpReq(String.valueOf(roleId), equipType, 1, Map.of())
+                    new EquipFumoDTOs.AddExpReq(String.valueOf(roleId), equipType, 20, Map.of())
             );
             sendFuMoOne(session, equipType, one);
         } catch (Exception e) {
@@ -209,7 +225,7 @@ public class EquipHandler implements MessageHandler {
     }
 
     private void handleCancelFuMo(PlayerSession session, Long roleId, int equipType) {
-        if (equipType <= 0) {
+        if (equipType < 0) {
             log.warn("[Equip] cancel_fumo invalid equipType={}, roleId={}", equipType, roleId);
             return;
         }
@@ -226,7 +242,12 @@ public class EquipHandler implements MessageHandler {
 
     private void handleTransform(PlayerSession session, Long roleId, int num1, int num2, int num3) {
         try {
-            equipHttpClient.transform(Map.of("roleId", String.valueOf(roleId), "equipType", num1, "targetRank", num2));
+            equipHttpClient.fumoTransform(Map.of(
+                    "roleId", String.valueOf(roleId),
+                    "count1", Math.max(0, num1),
+                    "count2", Math.max(0, num2),
+                    "count3", Math.max(0, num3)
+            ));
             invalidateBagSlotsCache(roleId);
         } catch (Exception e) {
             log.warn("[Equip] transform failed roleId={}: {}", roleId, e.getMessage());

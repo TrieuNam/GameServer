@@ -65,6 +65,14 @@ public class PetController {
         return ResponseEntity.ok(pet);
     }
 
+    @PostMapping("/{userId}/treasure")
+    public ResponseEntity<Map<String, Object>> drawTreasure(
+            @PathVariable String userId,
+            @RequestParam Integer type) {
+        log.info("POST /api/pet/{}/treasure - type={}", userId, type);
+        return ResponseEntity.ok(petService.drawTreasure(userId, type));
+    }
+
     /**
      * Level up a pet
      */
