@@ -24,6 +24,19 @@
 	<!-- BOM của Spring Cloud để quản lý version cloud starters, OpenFeign,... -->
 	<dependencyManagement>
 		<dependencies>
+                            <dependency>
+                                <groupId>org.springframework.boot</groupId>
+                                <artifactId>spring-boot-starter-data-jpa</artifactId>
+                            </dependency>
+                    <dependency>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-starter-data-jpa</artifactId>
+                    </dependency>
+                    <dependency>
+                        <groupId>jakarta.persistence</groupId>
+                        <artifactId>jakarta.persistence-api</artifactId>
+                        <version>3.1.0</version>
+                    </dependency>
 			<!-- Force a single gRPC line across websocket + common-lib + grpc starter. -->
 			<dependency>
 				<groupId>io.grpc</groupId>
@@ -182,6 +195,7 @@
                         <testInclude>**/EquipHandlerTest.java</testInclude>
                         <testInclude>**/TaskHandlerTest.java</testInclude>
                         <testInclude>**/BagChangedConsumerTest.java</testInclude>
+                        <testInclude>**/WaBaoHandlerTest.java</testInclude>
                         <testInclude>**/ArenaHandlerTest.java</testInclude>
                         <testInclude>**/TrialHandlerTest.java</testInclude>
                         <testInclude>**/EscortHandlerTest.java</testInclude>
@@ -205,6 +219,7 @@
                         <include>**/EquipHandlerTest.java</include>
                         <include>**/TaskHandlerTest.java</include>
                         <include>**/BagChangedConsumerTest.java</include>
+                        <include>**/WaBaoHandlerTest.java</include>
                         <include>**/ArenaHandlerTest.java</include>
                         <include>**/TrialHandlerTest.java</include>
                         <include>**/EscortHandlerTest.java</include>

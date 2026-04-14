@@ -84,6 +84,17 @@ public class ActivityController {
         return activityService.handleRandActivity(roleId, activityType, operaType, param1, param2, param3);
     }
 
+    @PostMapping("/internal/friend-invite/share-play")
+    public java.util.Map<String, Object> recordFriendInviteShare(
+            @RequestBody java.util.Map<String, Object> request) {
+        Long roleId = request.get("roleId") instanceof Number n ? n.longValue() : null;
+        Long userId = request.get("userId") instanceof Number n ? n.longValue() : null;
+        Long shareRoleId = request.get("shareRoleId") instanceof Number n ? n.longValue() : null;
+        Long shareUserId = request.get("shareUserId") instanceof Number n ? n.longValue() : null;
+        Integer shareServerId = request.get("shareServerId") instanceof Number n ? n.intValue() : null;
+        return activityService.recordFriendInviteShare(roleId, userId, shareRoleId, shareUserId, shareServerId);
+    }
+
     // === Advertisement Reward ===
     @PostMapping("/{roleId}/ad-reward")
     public java.util.Map<String, Object> claimAdReward(

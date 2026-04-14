@@ -23,6 +23,7 @@ import org.SouthMillion.dto.box.BoxDTOs;
 import org.SouthMillion.dto.role.RoleDTOs;
 import org.SouthMillion.dto.wallet.WalletDTOs;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +53,7 @@ public class ActivityService {
     private final DailyGiftRepository dailyGiftRepo;
     private final CaveLootRepository caveLootRepo;
     private final FriendInviteRepository friendInviteRepo;
+    private final FriendInviteShareProgressRepository friendInviteShareProgressRepo;
     private final DailySharingRepository dailySharingRepo;
     private final CommodityGuildRepository commodityGuildRepo;
     private final LuckCourtesyRepository luckCourtesyRepo;
@@ -110,6 +112,12 @@ public class ActivityService {
     private static final String CHEST_MANOR_CONFIG_PATH = "config/gameworld/logicconfig/randactivity/baoxiangzhuangyuan.json";
     // Map<seq, JsonNode> loaded from baoxiangzhuangyuan.json "reward" array
     private volatile Map<Integer, JsonNode> chestManorConfigCache;
+    private static final String INVITE_FRIEND_CONFIG_PATH = "config/gameworld/logicconfig/randactivity/baozilaile.json";
+    private volatile InviteFriendConfig inviteFriendConfigCache;
+    private static final String JIFEN_ZHUANPAN_CONFIG_PATH = "config/gameworld/logicconfig/randactivity/jifenzhuanpan_auto.json";
+    private volatile JifenZhuanpanConfig jifenZhuanpanConfigCache;
+    private static final String KNIGHT_CARD_CONFIG_PATH = "config/gameworld/logicconfig/randactivity/knight_card.json";
+    private volatile JsonNode knightCardConfigCache;
 
     // ===== SevenDaySign =====
     public SevenDaySign getSevenDay(Long roleId) {
@@ -443,7 +451,10 @@ public class ActivityService {
     }
 
     // === Type 13: 累充 (Accumulated Recharge) ===
-    
+
+    /** Max supported milestone index — bitmask stored in int64. */
+    private static final int LEI_CHONG_MAX_INDEX = 63;
+
     @Transactional
     private Map<String, Object> handleAccumulatedRecharge(Long roleId, int opType, int param1) {
         AccumulatedRecharge acc = accumulatedRechargeRepo.findByRoleId(roleId).orElseGet(() ->
@@ -454,10 +465,23 @@ public class ActivityService {
 
         // opType: 0=GET_INFO (client), 1=CLAIM_MILESTONE (client) | legacy: 1=GET_INFO, 2=CLAIM_MILESTONE
         if (opType == 1 || opType == 2) {
-            long bit = 1L << param1;
-            if ((acc.getFetchFlag() & bit) == 0) {
-                acc.setFetchFlag(acc.getFetchFlag() | bit);
-                accumulatedRechargeRepo.save(acc);
+            // [L1] Guard: param1 must be a valid bitmask index
+            if (param1 < 0 || param1 > LEI_CHONG_MAX_INDEX) {
+                log.warn("[LeiChong] invalid param1={} for roleId={}, skip claim", param1, roleId);
+            } else {
+                // [H3] Guard: player must have recharged at least once before claiming any milestone
+                long historyChongzhi = rechargeInfoRepo.findByRoleId(roleId)
+                        .map(RechargeInfo::getHistoryChongzhi)
+                        .orElse(0L);
+                if (historyChongzhi <= 0) {
+                    log.warn("[LeiChong] roleId={} has no recharge history, reject claim for index={}", roleId, param1);
+                } else {
+                    long bit = 1L << param1;
+                    if ((acc.getFetchFlag() & bit) == 0) {
+                        acc.setFetchFlag(acc.getFetchFlag() | bit);
+                        accumulatedRechargeRepo.save(acc);
+                    }
+                }
             }
         }
 
@@ -802,6 +826,33 @@ public class ActivityService {
                                    Map<Integer, Integer> phaseShowLevels) {
         private static LevelFundConfig empty() {
             return new LevelFundConfig(Map.of(), Map.of());
+        }
+    }
+
+    private record JzpLevelConfig(int startLevel, int endLevel, int rewardGroup, int type) {}
+
+    private record JzpLuckDrawReward(int seq, int rewardGroup, int rate, int baoDiId,
+                                     List<BagDTOs.GrantItem> rewardItems) {}
+
+    private record JzpDrawConfig(int firstConsumeScore, int tenConsumeScore,
+                                 int baoDiTimes, int canCumulativeBaoDi) {}
+
+    private record JifenZhuanpanConfig(
+            List<JzpLevelConfig> levelConfigs,
+            List<JzpLuckDrawReward> rewards,
+            JzpDrawConfig drawConfig) {
+        static JifenZhuanpanConfig empty() {
+            return new JifenZhuanpanConfig(List.of(), List.of(), new JzpDrawConfig(10, 100, 70, 1));
+        }
+    }
+
+    private record InviteFriendRewardCfg(int type, int invitationFriendNum,
+                                         List<BagDTOs.GrantItem> rewardItems) {
+    }
+
+    private record InviteFriendConfig(Map<Integer, InviteFriendRewardCfg> rewardsByType) {
+        private static InviteFriendConfig empty() {
+            return new InviteFriendConfig(Map.of());
         }
     }
 
@@ -1362,6 +1413,7 @@ public class ActivityService {
     
     @Transactional
     private Map<String, Object> handleFriendInvite(Long roleId, int opType, int param1) {
+        InviteFriendConfig config = getInviteFriendConfig();
         FriendInvite invite = friendInviteRepo.findByRoleId(roleId).orElseGet(() ->
                 friendInviteRepo.save(FriendInvite.builder()
                         .roleId(roleId)
@@ -1369,18 +1421,165 @@ public class ActivityService {
                         .fetchFlag(0L)
                         .build()));
 
-        // opType: 1=GET_INFO, 2=CLAIM_REWARD(param1=milestoneIndex)
-        if (opType == 2) {
+        // client flow: opType 0=GET_INFO, 1=CLAIM_REWARD(param1=milestone type)
+        // legacy compatibility: opType 2=CLAIM_REWARD
+        if (opType == 1 || opType == 2) {
+            InviteFriendRewardCfg rewardCfg = config.rewardsByType().get(param1);
+            if (rewardCfg == null) {
+                log.warn("[FriendInvite] roleId={} invalid milestone type={}", roleId, param1);
+                return friendInviteSnapshot(invite);
+            }
+
+            int inviteCount = invite.getInviteCount() != null ? invite.getInviteCount() : 0;
+            if (inviteCount < rewardCfg.invitationFriendNum()) {
+                log.warn("[FriendInvite] roleId={} claim blocked type={} inviteCount={} required={}",
+                        roleId, param1, inviteCount, rewardCfg.invitationFriendNum());
+                return friendInviteSnapshot(invite);
+            }
+
             long bit = 1L << param1;
-            if ((invite.getFetchFlag() & bit) == 0) {
-                invite.setFetchFlag(invite.getFetchFlag() | bit);
+            long fetchFlag = invite.getFetchFlag() != null ? invite.getFetchFlag() : 0L;
+            if ((fetchFlag & bit) == 0) {
+                if (!grantInviteFriendReward(roleId, rewardCfg)) {
+                    return friendInviteSnapshot(invite);
+                }
+                invite.setFetchFlag(fetchFlag | bit);
                 friendInviteRepo.save(invite);
             }
         }
 
+        return friendInviteSnapshot(invite);
+    }
+
+    private Map<String, Object> friendInviteSnapshot(FriendInvite invite) {
         Map<String, Object> result = new HashMap<>();
-        result.put("inviteCount", invite.getInviteCount());
-        result.put("fetchFlag", invite.getFetchFlag());
+        int friendCount = invite.getInviteCount() != null ? invite.getInviteCount() : 0;
+        long rewardFlag = invite.getFetchFlag() != null ? invite.getFetchFlag() : 0L;
+
+        // Keep both canonical and legacy keys for handler compatibility.
+        result.put("friendCount", friendCount);
+        result.put("rewardFlag", rewardFlag);
+        result.put("inviteCount", friendCount);
+        result.put("fetchFlag", rewardFlag);
+        return result;
+    }
+
+    private boolean grantInviteFriendReward(Long roleId, InviteFriendRewardCfg rewardCfg) {
+        if (rewardCfg.rewardItems() == null || rewardCfg.rewardItems().isEmpty()) {
+            return true;
+        }
+        if (bagFeign == null) {
+            log.error("[FriendInvite] bagFeign unavailable for roleId={} type={}", roleId, rewardCfg.type());
+            return false;
+        }
+        try {
+            BagDTOs.GrantReq request = new BagDTOs.GrantReq();
+            request.setRoleId(String.valueOf(roleId));
+            request.setItems(rewardCfg.rewardItems());
+            request.setReason("friend_invite_claim");
+            bagFeign.grantItems(request);
+            return true;
+        } catch (Exception e) {
+            log.error("[FriendInvite] grant failed roleId={} type={} rewards={}",
+                    roleId, rewardCfg.type(), rewardCfg.rewardItems(), e);
+            return false;
+        }
+    }
+
+    private InviteFriendConfig getInviteFriendConfig() {
+        InviteFriendConfig cached = inviteFriendConfigCache;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (this) {
+            if (inviteFriendConfigCache == null) {
+                inviteFriendConfigCache = loadInviteFriendConfig();
+            }
+            return inviteFriendConfigCache;
+        }
+    }
+
+    private InviteFriendConfig loadInviteFriendConfig() {
+        if (configFeign == null) {
+            log.error("[FriendInvite] configFeign unavailable, using empty config");
+            return InviteFriendConfig.empty();
+        }
+        try {
+            ResponseEntity<byte[]> response = configFeign.getFile(INVITE_FRIEND_CONFIG_PATH, null);
+            byte[] body = response != null ? response.getBody() : null;
+            if (body == null || body.length == 0) {
+                log.error("[FriendInvite] empty config body path={}", INVITE_FRIEND_CONFIG_PATH);
+                return InviteFriendConfig.empty();
+            }
+
+            JsonNode root = objectMapper.readTree(new String(body, StandardCharsets.UTF_8));
+            Map<Integer, InviteFriendRewardCfg> rewardsByType = new HashMap<>();
+            JsonNode rewardNode = root.path("reward");
+            if (rewardNode.isArray()) {
+                for (JsonNode node : rewardNode) {
+                    int type = readInt(node, "type");
+                    rewardsByType.put(type, new InviteFriendRewardCfg(
+                            type,
+                            readInt(node, "invitation_friend_num"),
+                            parseGrantItems(node.get("reward_item"))
+                    ));
+                }
+            }
+
+            return new InviteFriendConfig(rewardsByType);
+        } catch (Exception e) {
+            log.error("[FriendInvite] failed to load config path={}", INVITE_FRIEND_CONFIG_PATH, e);
+            return InviteFriendConfig.empty();
+        }
+    }
+
+    @Transactional
+    public Map<String, Object> recordFriendInviteShare(
+            Long roleId,
+            Long userId,
+            Long shareRoleId,
+            Long shareUserId,
+            Integer shareServerId) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("ret", 0);
+        result.put("added", 0);
+
+        if (roleId == null || shareRoleId == null || roleId <= 0 || shareRoleId <= 0 || roleId.equals(shareRoleId)) {
+            result.put("reason", "invalid_role_params");
+            return result;
+        }
+
+        boolean firstBind = false;
+        try {
+            if (!friendInviteShareProgressRepo.existsByInviterRoleIdAndInvitedRoleId(shareRoleId, roleId)) {
+                friendInviteShareProgressRepo.save(FriendInviteShareProgress.builder()
+                        .inviterRoleId(shareRoleId)
+                        .invitedRoleId(roleId)
+                        .inviterUserId(shareUserId)
+                        .invitedUserId(userId)
+                        .shareServerId(shareServerId)
+                        .build());
+                firstBind = true;
+            }
+        } catch (DataIntegrityViolationException dup) {
+            firstBind = false;
+        }
+
+        FriendInvite invite = friendInviteRepo.findByRoleId(shareRoleId).orElseGet(() ->
+                friendInviteRepo.save(FriendInvite.builder()
+                        .roleId(shareRoleId)
+                        .inviteCount(0)
+                        .fetchFlag(0L)
+                        .build()));
+
+        if (firstBind) {
+            int current = invite.getInviteCount() != null ? invite.getInviteCount() : 0;
+            invite.setInviteCount(current + 1);
+            friendInviteRepo.save(invite);
+            result.put("added", 1);
+        }
+
+        result.putAll(friendInviteSnapshot(invite));
         return result;
     }
 
@@ -2217,7 +2416,7 @@ public class ActivityService {
         AdvertisementEquity equity = advertisementEquityRepo.findByRoleId(roleId).orElseGet(() ->
             advertisementEquityRepo.save(AdvertisementEquity.builder()
                     .roleId(roleId)
-                    .isBuy(0) // 0=not purchased
+                    .isBuy(0)
                     .fetchFlag(0)
                     .refreshTime(0)
                     .build())
@@ -2226,21 +2425,31 @@ public class ActivityService {
         int now = (int) Instant.now().getEpochSecond();
         boolean dirty = false;
 
+        // Auto-reset when the 12h window has expired
         if (equity.getRefreshTime() > 0 && now > equity.getRefreshTime()) {
-            if (equity.getFetchFlag() != 0 || equity.getRefreshTime() != 0) {
-                equity.setFetchFlag(0);
-                equity.setRefreshTime(0);
-                dirty = true;
+            equity.setFetchFlag(0);
+            equity.setRefreshTime(0);
+            dirty = true;
+        }
+
+        // Load knight_card config (cached)
+        JsonNode knightCfg = loadKnightCardConfig();
+        int configHours = 12;
+        if (knightCfg != null && knightCfg.has("knight_card")) {
+            JsonNode arr = knightCfg.get("knight_card");
+            if (arr.isArray() && arr.size() > 0) {
+                configHours = arr.get(0).path("time").asInt(12);
             }
         }
 
-        // client flow: 0=GET_INFO, 1=FETCH_NEXT_REWARD
-        // external/legacy flow: 2=BUY_SUBSCRIPTION, 3=FETCH_NEXT_REWARD
+        // client flow: 0=GET_INFO, 1=FETCH_NEXT_REWARD, 2=BUY_SUBSCRIPTION
+        // legacy/external flow: 3=FETCH_NEXT_REWARD
         switch (opType) {
             case 1, 3 -> {
+                // Start a new cycle if no active window
                 if (equity.getRefreshTime() <= now) {
                     equity.setFetchFlag(0);
-                    equity.setRefreshTime(now + 12 * 3600);
+                    equity.setRefreshTime(now + configHours * 3600);
                     dirty = true;
                 }
                 int nextSeq = nextKnightCardSeq(equity.getFetchFlag());
@@ -2249,13 +2458,19 @@ public class ActivityService {
                     if ((equity.getFetchFlag() & bit) == 0) {
                         equity.setFetchFlag(equity.getFetchFlag() | bit);
                         dirty = true;
+                        // Grant the reward item for this seq
+                        grantKnightCardReward(roleId, nextSeq, knightCfg);
                     }
                 }
             }
             case 2 -> {
                 if (equity.getIsBuy() != 1) {
-                    equity.setIsBuy(1);
-                    dirty = true;
+                    boolean paid = deductKnightCardPrice(roleId, knightCfg);
+                    if (paid) {
+                        equity.setIsBuy(1);
+                        dirty = true;
+                        grantKnightCardFirstBuyReward(roleId, knightCfg);
+                    }
                 }
             }
             default -> {
@@ -2284,6 +2499,160 @@ public class ActivityService {
             }
         }
         return 0;
+    }
+
+    private JsonNode loadKnightCardConfig() {
+        if (knightCardConfigCache != null) {
+            return knightCardConfigCache;
+        }
+        if (configFeign == null) {
+            log.warn("[KnightCard] configFeign unavailable");
+            return null;
+        }
+        try {
+            ResponseEntity<byte[]> response = configFeign.getFile(KNIGHT_CARD_CONFIG_PATH, null);
+            if (response.getBody() == null || response.getBody().length == 0) {
+                log.error("[KnightCard] empty config body path={}", KNIGHT_CARD_CONFIG_PATH);
+                return null;
+            }
+            knightCardConfigCache = objectMapper.readTree(new String(response.getBody(), StandardCharsets.UTF_8));
+            return knightCardConfigCache;
+        } catch (Exception e) {
+            log.error("[KnightCard] failed to load config path={}", KNIGHT_CARD_CONFIG_PATH, e);
+            return null;
+        }
+    }
+
+    /**
+     * Looks up the knight_zheng entry matching the player's level and the given seq,
+     * then calls bagFeign.grantItems to award the guanggao_item.
+     */
+    private void grantKnightCardReward(Long roleId, int seq, JsonNode knightCfg) {
+        if (bagFeign == null) {
+            log.error("[KnightCard] bagFeign unavailable, cannot grant reward roleId={} seq={}", roleId, seq);
+            return;
+        }
+        if (knightCfg == null || !knightCfg.has("knight_zheng")) {
+            log.error("[KnightCard] config missing knight_zheng, roleId={} seq={}", roleId, seq);
+            return;
+        }
+
+        // Fetch player level
+        int roleLevel = 1;
+        try {
+            Optional<RoleDTOs.RoleResp> roleOpt = roleFeign.detail(roleId);
+            roleLevel = roleOpt.map(RoleDTOs.RoleResp::getLevel).orElse(1);
+        } catch (Exception e) {
+            log.warn("[KnightCard] failed to fetch role level roleId={}, defaulting to 1: {}", roleId, e.getMessage());
+        }
+
+        // Find the matching knight_zheng entry
+        JsonNode zhengArr = knightCfg.get("knight_zheng");
+        JsonNode matched = null;
+        for (JsonNode entry : zhengArr) {
+            int entrySeq = entry.path("seq").asInt(-1);
+            int levelMin = entry.path("level_min").asInt(0);
+            int levelMax = entry.path("level_max").asInt(0);
+            if (entrySeq == seq && roleLevel >= levelMin && roleLevel <= levelMax) {
+                matched = entry;
+                break;
+            }
+        }
+
+        if (matched == null) {
+            log.error("[KnightCard] no knight_zheng entry for seq={} level={} roleId={}", seq, roleLevel, roleId);
+            return;
+        }
+
+        List<BagDTOs.GrantItem> items = parseGrantItems(matched.get("guanggao_item"));
+        if (items.isEmpty()) {
+            log.warn("[KnightCard] guanggao_item is empty for seq={} level={}", seq, roleLevel);
+            return;
+        }
+
+        try {
+            BagDTOs.GrantReq req = new BagDTOs.GrantReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setItems(items);
+            req.setReason("knight_card_seq" + seq);
+            bagFeign.grantItems(req);
+            log.info("[KnightCard] granted seq={} level={} items={} roleId={}", seq, roleLevel, items, roleId);
+        } catch (Exception e) {
+            log.error("[KnightCard] grantItems failed roleId={} seq={}: {}", roleId, seq, e.getMessage());
+        }
+    }
+
+    /**
+     * Deducts the buy_money (diamond) from the player's wallet.
+     * Returns true if deduction succeeded (or no price configured), false otherwise.
+     */
+    private boolean deductKnightCardPrice(Long roleId, JsonNode knightCfg) {
+        if (knightCfg == null || !knightCfg.has("knight_card")) {
+            return true; // no config = no charge
+        }
+        JsonNode arr = knightCfg.get("knight_card");
+        if (!arr.isArray() || arr.size() == 0) {
+            return true;
+        }
+        int buyMoney = arr.get(0).path("buy_money").asInt(0);
+        if (buyMoney <= 0) {
+            return true;
+        }
+        if (walletFeign == null) {
+            log.error("[KnightCard] walletFeign unavailable for purchase roleId={}", roleId);
+            return false;
+        }
+        try {
+            WalletDTOs.BatchReq req = WalletDTOs.BatchReq.builder()
+                    .roleId(String.valueOf(roleId))
+                    .changes(List.of(WalletDTOs.Change.builder()
+                            .itemId(2L) // 2 = paid_gold (diamond)
+                            .amount(-buyMoney)
+                            .build()))
+                    .reason(302) // 302 = activity purchase
+                    .idemKey("knight-card-buy-" + roleId)
+                    .build();
+            var resp = walletFeign.batchAdd(req);
+            boolean ok = resp != null && resp.getData() != null && resp.getData().ok();
+            if (!ok) {
+                log.warn("[KnightCard] purchase deduct failed roleId={} buyMoney={} resp={}", roleId, buyMoney, resp);
+            }
+            return ok;
+        } catch (Exception e) {
+            log.error("[KnightCard] wallet deduct failed roleId={} buyMoney={}: {}", roleId, buyMoney, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Grants the first_buy_reward_item after a successful subscription purchase.
+     */
+    private void grantKnightCardFirstBuyReward(Long roleId, JsonNode knightCfg) {
+        if (knightCfg == null || !knightCfg.has("knight_card")) {
+            return;
+        }
+        JsonNode arr = knightCfg.get("knight_card");
+        if (!arr.isArray() || arr.size() == 0) {
+            return;
+        }
+        List<BagDTOs.GrantItem> items = parseGrantItems(arr.get(0).get("first_buy_reward_item"));
+        if (items.isEmpty()) {
+            return; // config currently has no first_buy rewards
+        }
+        if (bagFeign == null) {
+            log.error("[KnightCard] bagFeign unavailable for first_buy_reward roleId={}", roleId);
+            return;
+        }
+        try {
+            BagDTOs.GrantReq req = new BagDTOs.GrantReq();
+            req.setRoleId(String.valueOf(roleId));
+            req.setItems(items);
+            req.setReason("knight_card_first_buy");
+            bagFeign.grantItems(req);
+            log.info("[KnightCard] granted first_buy_reward items={} roleId={}", items, roleId);
+        } catch (Exception e) {
+            log.error("[KnightCard] first_buy grantItems failed roleId={}: {}", roleId, e.getMessage());
+        }
     }
 
     // === Type 36: 新服比拼排行榜 (New Server Competition Ranking) ===
@@ -2372,16 +2741,30 @@ public class ActivityService {
     }
 
     // === Type 38: 天选之礼 (TianXuan Gift / Chosen Gift) ===
-    
+
+    /** Safety cap: no single gift can be purchased more than this many times. */
+    private static final int TIANXUAN_BUY_MAX = 99;
+
     @Transactional
     private Map<String, Object> handleTianxuanGift(Long roleId, int opType, int param1) {
         TianxuanGift gift = tianxuanGiftRepo.findByRoleId(roleId).orElseGet(() -> {
+            // [H1] Fetch real roleLevel from role-service on first init
+            int realLevel = 1;
+            try {
+                if (roleFeign != null) {
+                    realLevel = roleFeign.detail(roleId)
+                            .map(r -> r.getLevel() != null ? r.getLevel() : 1)
+                            .orElse(1);
+                }
+            } catch (Exception e) {
+                log.warn("[TianXuan] roleFeign unavailable for roleId={}, defaulting level=1", roleId);
+            }
             try {
                 String emptyArray = objectMapper.writeValueAsString(new ArrayList<>());
                 int now = (int) (System.currentTimeMillis() / 1000);
                 return tianxuanGiftRepo.save(TianxuanGift.builder()
                         .roleId(roleId)
-                        .roleLevel(1)
+                        .roleLevel(realLevel)
                         .giftOpenTimestamp(now)
                         .giftCloseTimestamp(now + 86400) // 24 hours
                         .giftCdEndTimestamp(0)
@@ -2395,34 +2778,59 @@ public class ActivityService {
             }
         });
 
-        // opType: 0=GET_INFO (client), 2=CLAIM_FREE (client=FETCH_FREE_GIFT), 1=BUY_GIFT (client) | legacy: 1=GET_INFO, 2=CLAIM_FREE, 3=BUY
+        int now = (int) (System.currentTimeMillis() / 1000);
 
+        // opType: 0=GET_INFO, 2=FETCH_FREE_GIFT (client), 3=BUY_GIFT (BagHandler bridge), 1=BUY_GIFT (legacy SendAngelReq path)
         if (opType == 2) {
-            gift.setHasFetchFreeGift(true);
-            tianxuanGiftRepo.save(gift);
-        } else if ((opType == 3 || opType == 1) && param1 > 0) {
-            // Buy gift
-            try {
-                List<Map<String, Object>> gifts = objectMapper.readValue(
-                        gift.getGiftsJson(), new TypeReference<>() {});
-                boolean found = false;
-                for (Map<String, Object> g : gifts) {
-                    if (g.get("seq") instanceof Number n && n.intValue() == param1) {
-                        int buyNum = g.get("buyNum") instanceof Number bn ? bn.intValue() : 0;
-                        g.put("buyNum", buyNum + 1);
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) {
-                    gifts.add(Map.of("seq", param1, "buyNum", 1));
-                }
-                gift.setGiftsJson(objectMapper.writeValueAsString(gifts));
+            // [M3] Validate time window before allowing FETCH_FREE_GIFT
+            if (gift.getGiftOpenTimestamp() > 0 && gift.getGiftCloseTimestamp() > 0
+                    && (now < gift.getGiftOpenTimestamp() || now > gift.getGiftCloseTimestamp())) {
+                log.warn("[TianXuan] FETCH_FREE_GIFT outside time window for roleId={}", roleId);
+            } else {
+                gift.setHasFetchFreeGift(true);
                 tianxuanGiftRepo.save(gift);
-            } catch (Exception e) {
-                log.error("Failed to update gift buyNum", e);
+            }
+        } else if ((opType == 3 || opType == 1) && param1 > 0) {
+            // [M3] Validate time window before allowing BUY
+            if (gift.getGiftOpenTimestamp() > 0 && gift.getGiftCloseTimestamp() > 0
+                    && (now < gift.getGiftOpenTimestamp() || now > gift.getGiftCloseTimestamp())) {
+                log.warn("[TianXuan] BUY_GIFT outside time window for roleId={} seq={}", roleId, param1);
+            } else {
+                // [M1] Enforce purchase cap per gift
+                try {
+                    List<Map<String, Object>> gifts = objectMapper.readValue(
+                            gift.getGiftsJson(), new TypeReference<>() {});
+                    boolean found = false;
+                    for (Map<String, Object> g : gifts) {
+                        if (g.get("seq") instanceof Number n && n.intValue() == param1) {
+                            int buyNum = g.get("buyNum") instanceof Number bn ? bn.intValue() : 0;
+                            if (buyNum >= TIANXUAN_BUY_MAX) {
+                                log.warn("[TianXuan] roleId={} already reached buy cap for seq={}", roleId, param1);
+                            } else {
+                                g.put("buyNum", buyNum + 1);
+                            }
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        Map<String, Object> entry = new HashMap<>();
+                        entry.put("seq", param1);
+                        entry.put("buyNum", 1);
+                        gifts.add(entry);
+                    }
+                    gift.setGiftsJson(objectMapper.writeValueAsString(gifts));
+                    tianxuanGiftRepo.save(gift);
+                } catch (Exception e) {
+                    log.error("[TianXuan] Failed to update gift buyNum for roleId={} seq={}", roleId, param1, e);
+                }
             }
         }
+
+        // [H2] Always return up-to-date accumulatedChongzhiNum from recharge table (not stale DB value)
+        long accumulatedChongzhi = rechargeInfoRepo.findByRoleId(roleId)
+                .map(RechargeInfo::getHistoryChongzhi)
+                .orElse(0L);
 
         Map<String, Object> result = new HashMap<>();
         result.put("roleLevel", gift.getRoleLevel());
@@ -2431,7 +2839,7 @@ public class ActivityService {
         result.put("giftCdEndTimestamp", gift.getGiftCdEndTimestamp());
         result.put("hasFetchFreeGift", gift.getHasFetchFreeGift());
         result.put("groupId", gift.getGroupId());
-        result.put("accumulatedChongzhiNum", gift.getAccumulatedChongzhiNum());
+        result.put("accumulatedChongzhiNum", (int) Math.min(accumulatedChongzhi, Integer.MAX_VALUE));
         try {
             List<Map<String, Object>> gifts = objectMapper.readValue(
                     gift.getGiftsJson(), new TypeReference<>() {});
@@ -2474,14 +2882,17 @@ public class ActivityService {
     
     @Transactional
     private Map<String, Object> handleJifenZhuanpan(Long roleId, int opType, int param1) {
+        JifenZhuanpanConfig config = getJifenZhuanpanConfig();
+        JzpDrawConfig drawConfig = config.drawConfig();
+
         JifenZhuanpan zhuanpan = jifenZhuanpanRepo.findByRoleId(roleId).orElseGet(() -> {
             try {
                 String emptyArray = objectMapper.writeValueAsString(new ArrayList<>());
                 return jifenZhuanpanRepo.save(JifenZhuanpan.builder()
                         .roleId(roleId)
-                        .roleLevel(1)
+                        .roleLevel(0)
                         .rewardGroup(1)
-                        .timesToBigPrize(10) // 10 spins until guaranteed big prize
+                        .timesToBigPrize(Math.max(1, drawConfig.baoDiTimes()))
                         .jifen(0)
                         .rewardSeqsJson(emptyArray)
                         .build());
@@ -2490,26 +2901,216 @@ public class ActivityService {
             }
         });
 
-        // opType: 1=GET_INFO, 2=SPIN(param1=spinType: 1=single, 10=multi)
+        int roleLevel = getRoleLevel(roleId);
+        if (roleLevel <= 0) {
+            roleLevel = zhuanpan.getRoleLevel() != null && zhuanpan.getRoleLevel() > 0
+                    ? zhuanpan.getRoleLevel() : 1;
+        }
+        zhuanpan.setRoleLevel(roleLevel);
+        zhuanpan.setRewardGroup(resolveRewardGroup(config, roleLevel, zhuanpan.getRewardGroup()));
+        if (zhuanpan.getTimesToBigPrize() == null || zhuanpan.getTimesToBigPrize() <= 0) {
+            zhuanpan.setTimesToBigPrize(Math.max(1, drawConfig.baoDiTimes()));
+        }
 
-        if (opType == 2) {
-            // Spin wheel
-            int spins = (param1 == 10) ? 10 : 1;
-            int newJifen = zhuanpan.getJifen() + (spins * 10); // 10 points per spin
-            int newTimes = Math.max(0, zhuanpan.getTimesToBigPrize() - spins);
-            zhuanpan.setJifen(newJifen);
-            zhuanpan.setTimesToBigPrize(newTimes);
+        // opType: 0=GET_INFO, 1=DRAW(param1=1|10), 2=CONFIRM/CLEAR_LAST_DRAW
+        if (opType == 1 && (param1 == 1 || param1 == 10)) {
+            int spins = param1;
+            int consume = (spins == 10)
+                    ? Math.max(0, drawConfig.tenConsumeScore())
+                    : Math.max(0, drawConfig.firstConsumeScore());
+
+            int currentJifen = zhuanpan.getJifen() != null ? zhuanpan.getJifen() : 0;
+            if (currentJifen < consume) {
+                log.warn("[JifenZhuanpan] insufficient jifen roleId={} jifen={} consume={} spins={}",
+                        roleId, currentJifen, consume, spins);
+                return buildJifenZhuanpanResult(zhuanpan);
+            }
+
+            List<JzpLuckDrawReward> groupRewards = config.rewards().stream()
+                    .filter(r -> r.rewardGroup() == zhuanpan.getRewardGroup())
+                    .toList();
+            List<JzpLuckDrawReward> pityRewards = groupRewards.stream()
+                    .filter(r -> r.baoDiId() == 1)
+                    .toList();
+
+            int pityCountdown = zhuanpan.getTimesToBigPrize() != null
+                    ? zhuanpan.getTimesToBigPrize() : Math.max(1, drawConfig.baoDiTimes());
+            int pityReset = Math.max(1, drawConfig.baoDiTimes());
+
+            List<Integer> rewardSeqs = new ArrayList<>(spins);
+            List<BagDTOs.GrantItem> grantItems = new ArrayList<>();
+            for (int i = 0; i < spins; i++) {
+                boolean shouldPity = pityCountdown <= 1;
+                JzpLuckDrawReward drawn = shouldPity
+                        ? weightedDraw(!pityRewards.isEmpty() ? pityRewards : groupRewards)
+                        : weightedDraw(groupRewards);
+                if (drawn == null) {
+                    continue;
+                }
+
+                rewardSeqs.add(drawn.seq());
+                if (drawn.rewardItems() != null && !drawn.rewardItems().isEmpty()) {
+                    grantItems.addAll(drawn.rewardItems());
+                }
+
+                if (drawn.baoDiId() == 1) {
+                    pityCountdown = pityReset;
+                } else {
+                    pityCountdown = Math.max(1, pityCountdown - 1);
+                }
+            }
+
+            if (!grantItems.isEmpty() && bagFeign != null) {
+                try {
+                    BagDTOs.GrantReq request = new BagDTOs.GrantReq();
+                    request.setRoleId(String.valueOf(roleId));
+                    request.setItems(grantItems);
+                    request.setReason("jifen_zhuanpan_draw");
+                    bagFeign.grantItems(request);
+                } catch (Exception e) {
+                    log.error("[JifenZhuanpan] grant failed roleId={} rewards={}", roleId, rewardSeqs, e);
+                    return buildJifenZhuanpanResult(zhuanpan);
+                }
+            }
+
+            zhuanpan.setJifen(currentJifen - consume);
+            zhuanpan.setTimesToBigPrize(pityCountdown);
+            try {
+                zhuanpan.setRewardSeqsJson(objectMapper.writeValueAsString(rewardSeqs));
+            } catch (Exception e) {
+                zhuanpan.setRewardSeqsJson("[]");
+            }
+            jifenZhuanpanRepo.save(zhuanpan);
+        } else if (opType == 2) {
+            // Client sends this after showing draw animation/reward popup.
+            zhuanpan.setRewardSeqsJson("[]");
             jifenZhuanpanRepo.save(zhuanpan);
         }
 
+        return buildJifenZhuanpanResult(zhuanpan);
+    }
+
+    private JifenZhuanpanConfig getJifenZhuanpanConfig() {
+        JifenZhuanpanConfig cached = jifenZhuanpanConfigCache;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (this) {
+            if (jifenZhuanpanConfigCache == null) {
+                jifenZhuanpanConfigCache = loadJifenZhuanpanConfig();
+            }
+            return jifenZhuanpanConfigCache;
+        }
+    }
+
+    private JifenZhuanpanConfig loadJifenZhuanpanConfig() {
+        if (configFeign == null) {
+            log.error("[JifenZhuanpan] configFeign unavailable, using empty config");
+            return JifenZhuanpanConfig.empty();
+        }
+        try {
+            ResponseEntity<byte[]> response = configFeign.getFile(JIFEN_ZHUANPAN_CONFIG_PATH, null);
+            byte[] body = response != null ? response.getBody() : null;
+            if (body == null || body.length == 0) {
+                log.error("[JifenZhuanpan] empty config body path={}", JIFEN_ZHUANPAN_CONFIG_PATH);
+                return JifenZhuanpanConfig.empty();
+            }
+
+            JsonNode root = objectMapper.readTree(new String(body, StandardCharsets.UTF_8));
+            List<JzpLevelConfig> levelConfigs = new ArrayList<>();
+            List<JzpLuckDrawReward> rewards = new ArrayList<>();
+
+            JsonNode levelConfigNode = root.path("level_configuration");
+            if (levelConfigNode.isArray()) {
+                for (JsonNode node : levelConfigNode) {
+                    levelConfigs.add(new JzpLevelConfig(
+                            readInt(node, "start_level"),
+                            readInt(node, "end_level"),
+                            readInt(node, "reward_group"),
+                            readInt(node, "type")
+                    ));
+                }
+            }
+
+            JsonNode rewardNode = root.path("luck_draw_reward");
+            if (rewardNode.isArray()) {
+                for (JsonNode node : rewardNode) {
+                    rewards.add(new JzpLuckDrawReward(
+                            readInt(node, "seq"),
+                            readInt(node, "reward_group"),
+                            readInt(node, "rate"),
+                            readInt(node, "bao_di_id"),
+                            parseGrantItems(node.get("reward"))
+                    ));
+                }
+            }
+
+            JzpDrawConfig drawConfig = new JzpDrawConfig(10, 100, 70, 1);
+            JsonNode drawConfigNode = root.path("luck_draw_configuration");
+            if (drawConfigNode.isArray() && !drawConfigNode.isEmpty()) {
+                JsonNode first = drawConfigNode.get(0);
+                drawConfig = new JzpDrawConfig(
+                        readInt(first, "first_consume_score"),
+                        readInt(first, "ten_consume_score"),
+                        Math.max(1, readInt(first, "bao_di_times")),
+                        readInt(first, "can_cumulative_bao_di")
+                );
+            }
+
+            return new JifenZhuanpanConfig(levelConfigs, rewards, drawConfig);
+        } catch (Exception e) {
+            log.error("[JifenZhuanpan] failed to load config path={}", JIFEN_ZHUANPAN_CONFIG_PATH, e);
+            return JifenZhuanpanConfig.empty();
+        }
+    }
+
+    private int resolveRewardGroup(JifenZhuanpanConfig config, int roleLevel, Integer fallbackRewardGroup) {
+        for (JzpLevelConfig levelConfig : config.levelConfigs()) {
+            if (roleLevel >= levelConfig.startLevel() && roleLevel <= levelConfig.endLevel()) {
+                return Math.max(1, levelConfig.rewardGroup());
+            }
+        }
+        if (fallbackRewardGroup != null && fallbackRewardGroup > 0) {
+            return fallbackRewardGroup;
+        }
+        return 1;
+    }
+
+    private JzpLuckDrawReward weightedDraw(List<JzpLuckDrawReward> candidates) {
+        if (candidates == null || candidates.isEmpty()) {
+            return null;
+        }
+
+        int totalWeight = 0;
+        for (JzpLuckDrawReward candidate : candidates) {
+            totalWeight += Math.max(0, candidate.rate());
+        }
+
+        if (totalWeight <= 0) {
+            return candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
+        }
+
+        int roll = ThreadLocalRandom.current().nextInt(totalWeight) + 1;
+        int cumulative = 0;
+        for (JzpLuckDrawReward candidate : candidates) {
+            cumulative += Math.max(0, candidate.rate());
+            if (roll <= cumulative) {
+                return candidate;
+            }
+        }
+        return candidates.get(candidates.size() - 1);
+    }
+
+    private Map<String, Object> buildJifenZhuanpanResult(JifenZhuanpan zhuanpan) {
         Map<String, Object> result = new HashMap<>();
-        result.put("roleLevel", zhuanpan.getRoleLevel());
-        result.put("rewardGroup", zhuanpan.getRewardGroup());
-        result.put("timesToBigPrize", zhuanpan.getTimesToBigPrize());
-        result.put("jifen", zhuanpan.getJifen());
+        result.put("roleLevel", zhuanpan.getRoleLevel() != null ? zhuanpan.getRoleLevel() : 1);
+        result.put("rewardGroup", zhuanpan.getRewardGroup() != null ? zhuanpan.getRewardGroup() : 1);
+        result.put("timesToBigPrize", zhuanpan.getTimesToBigPrize() != null ? zhuanpan.getTimesToBigPrize() : 1);
+        result.put("jifen", zhuanpan.getJifen() != null ? zhuanpan.getJifen() : 0);
         try {
             List<Integer> rewardSeqs = objectMapper.readValue(
-                    zhuanpan.getRewardSeqsJson(), new TypeReference<>() {});
+                    zhuanpan.getRewardSeqsJson() != null ? zhuanpan.getRewardSeqsJson() : "[]",
+                    new TypeReference<>() {});
             result.put("rewardSeqs", rewardSeqs);
         } catch (Exception e) {
             result.put("rewardSeqs", List.of());
@@ -2519,14 +3120,28 @@ public class ActivityService {
 
     // === Type 41: 个性化礼包 (Customized Gift) ===
     
+    /** Duration within which ShouChong activity is open after character creation (seconds). */
+    private static final long SHOUCHONG_OPEN_SECONDS = 3L * 86400; // 3 days
+
     @Transactional
     private Map<String, Object> handleCustomizedGift(Long roleId, int opType, int param1) {
         CustomizedGift gift = customizedGiftRepo.findByRoleId(roleId).orElseGet(() -> {
+            // [H1] Fetch real roleLevel from role-service on first init
+            int realLevel = 1;
+            try {
+                if (roleFeign != null) {
+                    realLevel = roleFeign.detail(roleId)
+                            .map(r -> r.getLevel() != null ? r.getLevel() : 1)
+                            .orElse(1);
+                }
+            } catch (Exception e) {
+                log.warn("[ShouChong] roleFeign unavailable for roleId={}, defaulting level=1", roleId);
+            }
             try {
                 String emptyArray = objectMapper.writeValueAsString(new ArrayList<>());
                 return customizedGiftRepo.save(CustomizedGift.builder()
                         .roleId(roleId)
-                        .roleLevel(1)
+                        .roleLevel(realLevel)
                         .isOpen(true)
                         .hasBuyGift(false)
                         .fetchFlagsJson(emptyArray)
@@ -2551,20 +3166,39 @@ public class ActivityService {
                 while (flags.size() < 5) flags.add(1);
                 gift.setFetchFlagsJson(objectMapper.writeValueAsString(flags));
             } catch (Exception e) {
-                log.error("Failed to init fetchFlags on buy", e);
+                log.error("[ShouChong] Failed to init fetchFlags on buy for roleId={}", roleId, e);
             }
             customizedGiftRepo.save(gift);
         } else if ((opType == 3 || opType == 1) && param1 >= 0) {
-            // CLAIM: set per-reward state at param1 index to FETCHED (2)
+            // [M2] Validate 3-day creation window before allowing CLAIM
+            boolean withinWindow = true;
             try {
-                List<Integer> flags = objectMapper.readValue(gift.getFetchFlagsJson(), new TypeReference<>() {});
-                // Extend array if needed
-                while (flags.size() <= param1) flags.add(gift.getHasBuyGift() ? 1 : 0);
-                if (flags.get(param1) == 1) flags.set(param1, 2);
-                gift.setFetchFlagsJson(objectMapper.writeValueAsString(flags));
-                customizedGiftRepo.save(gift);
+                if (roleFeign != null) {
+                    long createTime = roleFeign.detail(roleId)
+                            .map(r -> r.getCreateTimeEpochSec() != null ? r.getCreateTimeEpochSec() : 0L)
+                            .orElse(0L);
+                    if (createTime > 0) {
+                        long now = System.currentTimeMillis() / 1000;
+                        withinWindow = (now - createTime) <= SHOUCHONG_OPEN_SECONDS;
+                    }
+                }
             } catch (Exception e) {
-                log.error("Failed to update fetchFlags", e);
+                log.warn("[ShouChong] roleFeign unavailable for 3-day check, roleId={}, allowing claim", roleId);
+            }
+            if (!withinWindow) {
+                log.warn("[ShouChong] roleId={} is outside 3-day window, reject CLAIM for index={}", roleId, param1);
+            } else {
+                // CLAIM: set per-reward state at param1 index to FETCHED (2)
+                try {
+                    List<Integer> flags = objectMapper.readValue(gift.getFetchFlagsJson(), new TypeReference<>() {});
+                    // Extend array if needed
+                    while (flags.size() <= param1) flags.add(gift.getHasBuyGift() ? 1 : 0);
+                    if (flags.get(param1) == 1) flags.set(param1, 2);
+                    gift.setFetchFlagsJson(objectMapper.writeValueAsString(flags));
+                    customizedGiftRepo.save(gift);
+                } catch (Exception e) {
+                    log.error("[ShouChong] Failed to update fetchFlags for roleId={} index={}", roleId, param1, e);
+                }
             }
         }
 

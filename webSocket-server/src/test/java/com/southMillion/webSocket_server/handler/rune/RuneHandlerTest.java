@@ -10,7 +10,7 @@ import org.SouthMillion.proto.Msgrune.Msgrune;
 import org.SouthMillion.proto.rune.EquipRuneResponse;
 import org.SouthMillion.proto.rune.GetAllRunesResponse;
 import org.SouthMillion.proto.rune.GetEquippedRunesResponse;
-import org.SouthMillion.proto.rune.UnequipRuneResponse;
+import org.SouthMillion.proto.rune.UnequipBySlotResponse;
 import org.SouthMillion.grpc.common.ResponseStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -87,7 +87,7 @@ class RuneHandlerTest {
         lenient().when(outbound.tryEmitNext(any(byte[].class))).thenReturn(Sinks.EmitResult.OK);
 
         when(runeGrpcClient.offRune("2001", 7)).thenReturn(
-            UnequipRuneResponse.newBuilder()
+            UnequipBySlotResponse.newBuilder()
                 .setStatus(ResponseStatus.newBuilder().setCode(200).setSuccess(true).build())
                 .build());
         when(runeGrpcClient.getAllRunes("2001")).thenReturn(GetAllRunesResponse.newBuilder().build());

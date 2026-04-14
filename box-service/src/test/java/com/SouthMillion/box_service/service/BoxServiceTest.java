@@ -1119,4 +1119,167 @@ class BoxServiceTest {
             then(compareStateRepo).should().delete(ROLE_ID);
         }
     }
+
+    // =========================================================
+    // WaBao ops 5/6/12/13/14/15/16
+    // =========================================================
+    @Nested
+    @DisplayName("WaBao ops 5/6/12/13/14/15/16")
+    class WaBaoOps {
+
+        private BoxState state;
+
+        @BeforeEach
+        void setupState() {
+            state = buildState();
+            given(boxRepo.findByRoleIdForUpdate(ROLE_ID)).willReturn(Optional.of(state));
+            given(boxRepo.findById(ROLE_ID)).willReturn(Optional.of(state));
+            Mockito.lenient().when(boxRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        }
+
+        @Test
+        @DisplayName("TC-WABAO-005 [P] putCollection dat pending item vao dung o va xoa compare/pending")
+        void putCollection_placesPendingItemIntoCollectionSlot() {
+            given(compareStateRepo.find(ROLE_ID)).willReturn(Optional.of(buildCompareState(100, 1, true)));
+
+            BoxDTOs.OkResp result = boxService.putCollection(buildPutCollectionReq("1", 2, 3));
+            BoxDTOs.WaBaoCollectionInfo collectionInfo = boxService.getWaBaoCollection(ROLE_ID);
+
+            assertThat(result.isOk()).isTrue();
+            assertThat(result.getMessage()).isEqualTo("Item placed in collection");
+            assertThat(state.getPendingJson()).isNull();
+            assertThat(collectionInfo.getDataList())
+                    .anyMatch(node -> node.getItemType() == 2 && node.getIndex() == 3 && node.getItemId() == 100);
+            then(compareStateRepo).should().delete(ROLE_ID);
+        }
+
+        @Test
+        @DisplayName("TC-WABAO-006 [P] collectionSell lam rong dung o collection da dat truoc do")
+        void collectionSell_clearsExistingCollectionSlot() {
+            given(compareStateRepo.find(ROLE_ID)).willReturn(Optional.of(buildCompareState(100, 1, true)));
+            boxService.putCollection(buildPutCollectionReq("1", 2, 3));
+
+            BoxDTOs.OkResp result = boxService.collectionSell(buildCollectionSellReq("1", 2, 3));
+            BoxDTOs.WaBaoCollectionInfo collectionInfo = boxService.getWaBaoCollection(ROLE_ID);
+
+            assertThat(result.isOk()).isTrue();
+            assertThat(result.getMessage()).isEqualTo("Collection item sold");
+            assertThat(collectionInfo.getDataList())
+                    .anyMatch(node -> node.getItemType() == 2 && node.getIndex() == 3 && node.getItemId() == 0);
+        }
+
+        @Test
+        @DisplayName("TC-WABAO-012 [P] toolUpLevel tang toolLevel va conditionNum cho dung tool")
+        void toolUpLevel_updatesToolLevelAndConditionNum() {
+            BoxDTOs.OkResp result = boxService.toolUpLevel(buildToolUpLevelReq("1", 2));
+            BoxDTOs.WaBaoToolInfo info = boxService.getWaBaoToolInfo(ROLE_ID);
+
+            assertThat(result.isOk()).isTrue();
+            assertThat(result.getMessage()).isEqualTo("Tool level upgraded");
+            assertThat(info.getToolLevel().get(2)).isEqualTo(2);
+            assertThat(info.getConditionNum().get(2)).isEqualTo(1);
+            assertThat(info.getToolGrade().get(2)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("TC-WABAO-013 [P] toolUpGrade tang toolGrade va reset conditionNum")
+        void toolUpGrade_updatesGradeAndResetsConditionNum() {
+            boxService.toolUpLevel(buildToolUpLevelReq("1", 2));
+
+            BoxDTOs.OkResp result = boxService.toolUpGrade(buildToolUpGradeReq("1", 2));
+            BoxDTOs.WaBaoToolInfo info = boxService.getWaBaoToolInfo(ROLE_ID);
+
+            assertThat(result.isOk()).isTrue();
+            assertThat(result.getMessage()).isEqualTo("Tool grade upgraded");
+            assertThat(info.getToolGrade().get(2)).isEqualTo(2);
+            assertThat(info.getConditionNum().get(2)).isEqualTo(0);
+        }
+
+        @Test
+        @DisplayName("TC-WABAO-014 [P] putCollectionBook khoi tao level handbook = 1")
+        void putCollectionBook_initializesBookLevel() {
+            BoxDTOs.OkResp result = boxService.putCollectionBook(buildPutCollectionBookReq("1", 4));
+            BoxDTOs.WaBaoCollectionBookInfo info = boxService.getWaBaoCollectionBookInfo(ROLE_ID);
+
+            assertThat(result.isOk()).isTrue();
+            assertThat(result.getMessage()).isEqualTo("Item placed in handbook");
+            assertThat(info.getLevel().get(4)).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("TC-WABAO-015 [P] collectionBookLevelUp tang level handbook len 2")
+        void collectionBookLevelUp_incrementsBookLevel() {
+            boxService.putCollectionBook(buildPutCollectionBookReq("1", 4));
+
+            BoxDTOs.OkResp result = boxService.collectionBookLevelUp(buildCollectionBookLevelUpReq("1", 4));
+            BoxDTOs.WaBaoCollectionBookInfo info = boxService.getWaBaoCollectionBookInfo(ROLE_ID);
+
+            assertThat(result.isOk()).isTrue();
+            assertThat(result.getMessage()).isEqualTo("Handbook level upgraded");
+            assertThat(info.getLevel().get(4)).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("TC-WABAO-016 [P] activateBook bat dung bit trong activateFlagList")
+        void activateBook_setsActivationBit() {
+            BoxDTOs.OkResp result = boxService.activateBook(buildActivateBookReq("1", 2, 5));
+            BoxDTOs.WaBaoBookListInfo info = boxService.getWaBaoBookListInfo(ROLE_ID);
+
+            assertThat(result.isOk()).isTrue();
+            assertThat(result.getMessage()).isEqualTo("Handbook activated");
+            assertThat(info.getActivateFlagList().get(2) & (1 << 5)).isEqualTo(1 << 5);
+        }
+
+        private BoxDTOs.PutCollectionReq buildPutCollectionReq(String roleId, int itemType, int index) {
+            BoxDTOs.PutCollectionReq req = new BoxDTOs.PutCollectionReq();
+            req.setRoleId(roleId);
+            req.setItemType(itemType);
+            req.setIndex(index);
+            return req;
+        }
+
+        private BoxDTOs.CollectionSellReq buildCollectionSellReq(String roleId, int itemType, int index) {
+            BoxDTOs.CollectionSellReq req = new BoxDTOs.CollectionSellReq();
+            req.setRoleId(roleId);
+            req.setItemType(itemType);
+            req.setIndex(index);
+            return req;
+        }
+
+        private BoxDTOs.ToolUpLevelReq buildToolUpLevelReq(String roleId, int toolType) {
+            BoxDTOs.ToolUpLevelReq req = new BoxDTOs.ToolUpLevelReq();
+            req.setRoleId(roleId);
+            req.setToolType(toolType);
+            return req;
+        }
+
+        private BoxDTOs.ToolUpGradeReq buildToolUpGradeReq(String roleId, int toolType) {
+            BoxDTOs.ToolUpGradeReq req = new BoxDTOs.ToolUpGradeReq();
+            req.setRoleId(roleId);
+            req.setToolType(toolType);
+            return req;
+        }
+
+        private BoxDTOs.PutCollectionBookReq buildPutCollectionBookReq(String roleId, int handbookType) {
+            BoxDTOs.PutCollectionBookReq req = new BoxDTOs.PutCollectionBookReq();
+            req.setRoleId(roleId);
+            req.setHandbookType(handbookType);
+            return req;
+        }
+
+        private BoxDTOs.CollectionBookLevelUpReq buildCollectionBookLevelUpReq(String roleId, int handbookType) {
+            BoxDTOs.CollectionBookLevelUpReq req = new BoxDTOs.CollectionBookLevelUpReq();
+            req.setRoleId(roleId);
+            req.setHandbookType(handbookType);
+            return req;
+        }
+
+        private BoxDTOs.ActivateBookReq buildActivateBookReq(String roleId, int orbMap, int handbookType) {
+            BoxDTOs.ActivateBookReq req = new BoxDTOs.ActivateBookReq();
+            req.setRoleId(roleId);
+            req.setOrbMap(orbMap);
+            req.setHandbookType(handbookType);
+            return req;
+        }
+    }
 }

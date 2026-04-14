@@ -3,6 +3,7 @@ package com.SouthMillion.webSocket_server.handler.box;
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
 import com.SouthMillion.webSocket_server.handler.LazyLoadHandler;
 import com.SouthMillion.webSocket_server.handler.bag.BagHandler;
+import com.SouthMillion.webSocket_server.handler.common.FloatingTextHelper;
 import com.SouthMillion.webSocket_server.handler.role.RoleServiceHandler;
 import com.SouthMillion.webSocket_server.handler.task.TaskHandler;
 import com.SouthMillion.webSocket_server.net.Emitters;
@@ -68,6 +69,7 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
     private final TaskProgressPublisher taskProgressPublisher;
     private final WalletHttpClient walletHttpClient;
     private final reactor.core.scheduler.Scheduler feignVtScheduler;
+    private final FloatingTextHelper floatingTextHelper;
 
     private static final int REQ_OPEN     = 1;
     private static final int REQ_EQUIP    = 2;
@@ -507,6 +509,7 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
                 // BoxService.wear() auto-sells the replaced old equip, so refresh both role attrs
                 // and wallet immediately to keep the top bar and exp state in sync.
                 refreshRoleAndWalletAfterSell(session, roleId);
+                floatingTextHelper.emitEquipped(session);
             } else {
                 String msg = (wearResp == null) ? "NULL_RESP" : String.valueOf(wearResp.getMessage());
                 log.warn("[Box] wear not ok roleId={} msg={}", roleId, msg);
@@ -536,6 +539,11 @@ public class BoxHandler implements MessageHandler, LazyLoadHandler {
                 }
                 // Đồng bộ role/wallet theo 2 nhịp để tránh race khi service cập nhật chậm hơn 1 tick.
                 refreshRoleAndWalletAfterSell(session, roleId);
+                // Emit floating text for sell reward
+                floatingTextHelper.batch()
+                        .coin(sellResp.getSellCoin())
+                        .exp(sellResp.getSellExp())
+                        .send(session);
             } else {
                 String msg = (sellResp == null) ? "NULL_RESP" : String.valueOf(sellResp.getMessage());
                 log.warn("[Box] sell not ok roleId={} msg={}", roleId, msg);

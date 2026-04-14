@@ -136,7 +136,25 @@ public class BoxService {
     private static final int SRC_OP_LEVEL = 3004;
     private static final int SRC_OP_CONSUME = 3005;
     private static final String MSG_NOT_REACHED = "NOT_REACHED";
+    private static final int WABAO_COLLECTION_TYPE_MAX = 4;
+    private static final int WABAO_COLLECTION_SLOT_MAX = 6;
+    private static final int WABAO_TOOL_COUNT = 5;
+    private static final int WABAO_BOOK_LEVEL_SIZE = 32;
+    private static final int WABAO_BOOK_FLAG_SIZE = 8;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Map<Long, WaBaoRuntimeState> waBaoRuntimeState = new java.util.concurrent.ConcurrentHashMap<>();
+
+    private static final class WaBaoRuntimeState {
+        private int curMap;
+        private int unlockedMap;
+        private final Map<Integer, Map<Integer, BoxDTOs.WaBaoCollectionNode>> collection = new HashMap<>();
+        private final int[] toolGrade = new int[WABAO_TOOL_COUNT];
+        private final int[] toolLevel = new int[WABAO_TOOL_COUNT];
+        private final int[] conditionType = new int[WABAO_TOOL_COUNT];
+        private final int[] conditionNum = new int[WABAO_TOOL_COUNT];
+        private final int[] collectionBookLevel = new int[WABAO_BOOK_LEVEL_SIZE];
+        private final int[] activateFlag = new int[WABAO_BOOK_FLAG_SIZE];
+    }
 
 
     // ========= PUBLIC APIS =========
@@ -2192,7 +2210,10 @@ public class BoxService {
         try {
             log.info("[wabao.unlock-map] roleId={} mapId={}", roleId, mapId);
             var s = getOrCreateForUpdate(roleId);
-            // TODO: persist map unlock state
+            WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+            int safeMap = Math.max(1, mapId);
+            ws.unlockedMap = Math.max(ws.unlockedMap, safeMap);
+            ws.curMap = Math.max(1, ws.curMap);
             return BoxDTOs.OkResp.builder().ok(true).message("Map unlocked").build();
         } catch (Exception e) {
             log.error("[wabao.unlock-map] error roleId={} mapId={}", roleId, mapId, e);
@@ -2205,7 +2226,12 @@ public class BoxService {
         try {
             log.info("[wabao.enter-map] roleId={} mapId={}", roleId, mapId);
             var s = getOrCreateForUpdate(roleId);
-            // TODO: persist current map state
+            WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+            int safeMap = Math.max(1, mapId);
+            if (safeMap > ws.unlockedMap) {
+                return BoxDTOs.OkResp.builder().ok(false).message("MAP_LOCKED").build();
+            }
+            ws.curMap = safeMap;
             return BoxDTOs.OkResp.builder().ok(true).message("Map entered").build();
         } catch (Exception e) {
             log.error("[wabao.enter-map] error roleId={} mapId={}", roleId, mapId, e);
@@ -2218,7 +2244,22 @@ public class BoxService {
         try {
             Long roleId = Long.valueOf(req.getRoleId());
             log.info("[wabao.put-collection] roleId={} itemType={} index={}", roleId, req.getItemType(), req.getIndex());
-            // TODO: persist collection cabinet item placement
+            BoxState s = getOrCreateForUpdate(roleId);
+            EquipDTOs.WearFromBoxItem activeItem = resolveWearItem(roleId, s);
+            if (activeItem == null || activeItem.getItemId() == null || activeItem.getItemId() <= 0) {
+                return BoxDTOs.OkResp.builder().ok(false).message("NO_PENDING_ITEM").build();
+            }
+
+            WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+            int itemType = clamp(req.getItemType(), 0, WABAO_COLLECTION_TYPE_MAX - 1);
+            int index = clamp(req.getIndex(), 0, WABAO_COLLECTION_SLOT_MAX - 1);
+            ensureCollectionInitialized(ws);
+            ws.collection.get(itemType).put(index, toCollectionNode(itemType, index, activeItem));
+
+            // Move item from pending popup into collection cabinet.
+            s.setPendingJson(null);
+            boxRepo.save(s);
+            compareStateRepo.delete(roleId);
             return BoxDTOs.OkResp.builder().ok(true).message("Item placed in collection").build();
         } catch (Exception e) {
             log.error("[wabao.put-collection] error roleId={}", req.getRoleId(), e);
@@ -2231,7 +2272,12 @@ public class BoxService {
         try {
             Long roleId = Long.valueOf(req.getRoleId());
             log.info("[wabao.collection-sell] roleId={} itemType={} index={}", roleId, req.getItemType(), req.getIndex());
-            // TODO: remove from collection, compute credit, add to wallet
+            BoxState s = getOrCreateForUpdate(roleId);
+            WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+            int itemType = clamp(req.getItemType(), 0, WABAO_COLLECTION_TYPE_MAX - 1);
+            int index = clamp(req.getIndex(), 0, WABAO_COLLECTION_SLOT_MAX - 1);
+            ensureCollectionInitialized(ws);
+            ws.collection.get(itemType).put(index, emptyCollectionNode(itemType, index));
             return BoxDTOs.OkResp.builder().ok(true).message("Collection item sold").build();
         } catch (Exception e) {
             log.error("[wabao.collection-sell] error roleId={}", req.getRoleId(), e);
@@ -2303,7 +2349,11 @@ public class BoxService {
         try {
             Long roleId = Long.valueOf(req.getRoleId());
             log.info("[wabao.tool-up-level] roleId={} toolType={}", roleId, req.getToolType());
-            // TODO: increment tool level, consume resources
+            BoxState s = getOrCreateForUpdate(roleId);
+            WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+            int toolIdx = clamp(req.getToolType(), 0, WABAO_TOOL_COUNT - 1);
+            ws.toolLevel[toolIdx] = Math.max(1, ws.toolLevel[toolIdx] + 1);
+            ws.conditionNum[toolIdx] = Math.max(0, ws.conditionNum[toolIdx] + 1);
             return BoxDTOs.OkResp.builder().ok(true).message("Tool level upgraded").build();
         } catch (Exception e) {
             log.error("[wabao.tool-up-level] error roleId={}", req.getRoleId(), e);
@@ -2316,7 +2366,11 @@ public class BoxService {
         try {
             Long roleId = Long.valueOf(req.getRoleId());
             log.info("[wabao.tool-up-grade] roleId={} toolType={}", roleId, req.getToolType());
-            // TODO: increment tool grade, consume resources
+            BoxState s = getOrCreateForUpdate(roleId);
+            WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+            int toolIdx = clamp(req.getToolType(), 0, WABAO_TOOL_COUNT - 1);
+            ws.toolGrade[toolIdx] = Math.max(1, ws.toolGrade[toolIdx] + 1);
+            ws.conditionNum[toolIdx] = 0;
             return BoxDTOs.OkResp.builder().ok(true).message("Tool grade upgraded").build();
         } catch (Exception e) {
             log.error("[wabao.tool-up-grade] error roleId={}", req.getRoleId(), e);
@@ -2329,7 +2383,10 @@ public class BoxService {
         try {
             Long roleId = Long.valueOf(req.getRoleId());
             log.info("[wabao.put-collection-book] roleId={} handbookType={}", roleId, req.getHandbookType());
-            // TODO: persist handbook item placement
+            BoxState s = getOrCreateForUpdate(roleId);
+            WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+            int handbookType = clamp(req.getHandbookType(), 0, WABAO_BOOK_LEVEL_SIZE - 1);
+            ws.collectionBookLevel[handbookType] = Math.max(1, ws.collectionBookLevel[handbookType]);
             return BoxDTOs.OkResp.builder().ok(true).message("Item placed in handbook").build();
         } catch (Exception e) {
             log.error("[wabao.put-collection-book] error roleId={}", req.getRoleId(), e);
@@ -2342,7 +2399,10 @@ public class BoxService {
         try {
             Long roleId = Long.valueOf(req.getRoleId());
             log.info("[wabao.collection-book-level-up] roleId={} handbookType={}", roleId, req.getHandbookType());
-            // TODO: increment handbook level, consume resources
+            BoxState s = getOrCreateForUpdate(roleId);
+            WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+            int handbookType = clamp(req.getHandbookType(), 0, WABAO_BOOK_LEVEL_SIZE - 1);
+            ws.collectionBookLevel[handbookType] = Math.max(1, ws.collectionBookLevel[handbookType]) + 1;
             return BoxDTOs.OkResp.builder().ok(true).message("Handbook level upgraded").build();
         } catch (Exception e) {
             log.error("[wabao.collection-book-level-up] error roleId={}", req.getRoleId(), e);
@@ -2355,7 +2415,11 @@ public class BoxService {
         try {
             Long roleId = Long.valueOf(req.getRoleId());
             log.info("[wabao.activate-book] roleId={} orbMap={} handbookType={}", roleId, req.getOrbMap(), req.getHandbookType());
-            // TODO: set handbook activation flag, consume orb
+            BoxState s = getOrCreateForUpdate(roleId);
+            WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+            int orbMap = clamp(req.getOrbMap(), 0, WABAO_BOOK_FLAG_SIZE - 1);
+            int handbookType = clamp(req.getHandbookType(), 0, 30);
+            ws.activateFlag[orbMap] = ws.activateFlag[orbMap] | (1 << handbookType);
             return BoxDTOs.OkResp.builder().ok(true).message("Handbook activated").build();
         } catch (Exception e) {
             log.error("[wabao.activate-book] error roleId={}", req.getRoleId(), e);
@@ -2381,14 +2445,16 @@ public class BoxService {
     /** SC 1643 PB_SCWaBaoMapInfo */
     public BoxDTOs.WaBaoMapInfo getWaBaoMapInfo(Long roleId) {
         BoxState s = getOrCreate(roleId);
-        int level = s.getBoxLevel();
+        WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
         List<Integer> conditions = new ArrayList<>();
-        try {
-            var rows = unpackCfg.fixedReward();
-            if (rows != null && !rows.isEmpty()) conditions.add(rows.size());
-        } catch (Exception ignore) {}
+        for (int i = 0; i < 6; i++) {
+            conditions.add(0);
+        }
         return BoxDTOs.WaBaoMapInfo.builder()
-                .curMap(level).unlockedMap(level).mapConditionNum(conditions).build();
+                .curMap(ws.curMap)
+                .unlockedMap(ws.unlockedMap)
+                .mapConditionNum(conditions)
+                .build();
     }
 
     /** SC 1645 PB_SCWaBaoIntegrityInfo */
@@ -2398,12 +2464,38 @@ public class BoxService {
 
     /** SC 1646 PB_SCWaBaoCollectionListInfo */
     public BoxDTOs.WaBaoCollectionInfo getWaBaoCollection(Long roleId) {
-        return BoxDTOs.WaBaoCollectionInfo.builder().isLogin(1).dataList(List.of()).build();
+        BoxState s = getOrCreate(roleId);
+        WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+        ensureCollectionInitialized(ws);
+        List<BoxDTOs.WaBaoCollectionNode> list = new ArrayList<>();
+        for (int type = 0; type < WABAO_COLLECTION_TYPE_MAX; type++) {
+            for (int index = 0; index < WABAO_COLLECTION_SLOT_MAX; index++) {
+                list.add(ws.collection.get(type).get(index));
+            }
+        }
+        return BoxDTOs.WaBaoCollectionInfo.builder().isLogin(1).dataList(list).build();
     }
 
     /** SC 1647 PB_SCWaBaoToolInfo */
     public BoxDTOs.WaBaoToolInfo getWaBaoToolInfo(Long roleId) {
-        return BoxDTOs.WaBaoToolInfo.builder().toolList(List.of()).build();
+        BoxState s = getOrCreate(roleId);
+        WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+        return BoxDTOs.WaBaoToolInfo.builder()
+                .toolGrade(toIntList(ws.toolGrade))
+                .toolLevel(toIntList(ws.toolLevel))
+                .conditionType(toIntList(ws.conditionType))
+                .conditionNum(toIntList(ws.conditionNum))
+                .toolList(List.of())
+                .build();
+    }
+
+    /** SC 1650 PB_SCWaBaoCollectionBookInfo */
+    public BoxDTOs.WaBaoCollectionBookInfo getWaBaoCollectionBookInfo(Long roleId) {
+        BoxState s = getOrCreate(roleId);
+        WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
+        return BoxDTOs.WaBaoCollectionBookInfo.builder()
+                .level(toIntList(ws.collectionBookLevel))
+                .build();
     }
 
     /** SC 1648 PB_SCWaBaoTaskInfo
@@ -2427,9 +2519,81 @@ public class BoxService {
      *  proto: repeated int32 activate_flag  (bit-flags per book)
      */
     public BoxDTOs.WaBaoBookListInfo getWaBaoBookListInfo(Long roleId) {
+        BoxState s = getOrCreate(roleId);
+        WaBaoRuntimeState ws = getOrCreateWaBaoRuntimeState(roleId, s);
         return BoxDTOs.WaBaoBookListInfo.builder()
-                .activateFlagList(List.of())
+                .activateFlagList(toIntList(ws.activateFlag))
                 .build();
+    }
+
+    private WaBaoRuntimeState getOrCreateWaBaoRuntimeState(Long roleId, BoxState state) {
+        return waBaoRuntimeState.computeIfAbsent(roleId, ignored -> {
+            WaBaoRuntimeState ws = new WaBaoRuntimeState();
+            int initialMap = Math.max(1, state != null ? state.getBoxLevel() : 1);
+            ws.curMap = initialMap;
+            ws.unlockedMap = initialMap;
+            Arrays.fill(ws.toolGrade, 1);
+            Arrays.fill(ws.toolLevel, 1);
+            Arrays.fill(ws.conditionType, 0);
+            Arrays.fill(ws.conditionNum, 0);
+            Arrays.fill(ws.collectionBookLevel, 0);
+            Arrays.fill(ws.activateFlag, 0);
+            ensureCollectionInitialized(ws);
+            return ws;
+        });
+    }
+
+    private void ensureCollectionInitialized(WaBaoRuntimeState ws) {
+        for (int type = 0; type < WABAO_COLLECTION_TYPE_MAX; type++) {
+            Map<Integer, BoxDTOs.WaBaoCollectionNode> slots = ws.collection.computeIfAbsent(type, key -> new HashMap<>());
+            for (int index = 0; index < WABAO_COLLECTION_SLOT_MAX; index++) {
+                final int itemType = type;
+                final int slotIndex = index;
+                slots.computeIfAbsent(index, key -> emptyCollectionNode(itemType, slotIndex));
+            }
+        }
+    }
+
+    private BoxDTOs.WaBaoCollectionNode toCollectionNode(int itemType, int index, EquipDTOs.WearFromBoxItem item) {
+        return BoxDTOs.WaBaoCollectionNode.builder()
+                .itemType(itemType)
+                .index(index)
+                .itemId(nz(item.getItemId()))
+                .integrity(0)
+                .attrType1(nz(item.getAttrType1()))
+                .attrValue1(nz(item.getAttrValue1()))
+                .attrType2(nz(item.getAttrType2()))
+                .attrValue2(nz(item.getAttrValue2()))
+                .build();
+    }
+
+    private BoxDTOs.WaBaoCollectionNode emptyCollectionNode(int itemType, int index) {
+        return BoxDTOs.WaBaoCollectionNode.builder()
+                .itemType(itemType)
+                .index(index)
+                .itemId(0)
+                .integrity(0)
+                .attrType1(0)
+                .attrValue1(0)
+                .attrType2(0)
+                .attrValue2(0)
+                .build();
+    }
+
+    private List<Integer> toIntList(int[] values) {
+        List<Integer> list = new ArrayList<>(values.length);
+        for (int value : values) {
+            list.add(value);
+        }
+        return list;
+    }
+
+    private int nz(Integer value) {
+        return value == null ? 0 : value;
+    }
+
+    private int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 }
 

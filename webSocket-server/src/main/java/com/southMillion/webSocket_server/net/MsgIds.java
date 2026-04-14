@@ -56,8 +56,9 @@ public interface MsgIds {
     int SC_CMD_TO_CLIENT_CMD       = 1466; // PB_SCCmdToClientCmd
 
     // ===== Limit Core / Breakthrough (msgother.hpp: 1467-1468)
-    int CS_LIMIT_CORE_REQ          = 1467; // PB_CSLimitCoreReq
     int SC_LIMIT_CORE_INFO         = 1468; // PB_SCLimitCoreInfo
+        int CS_LIMIT_CORE_REQ          = 1467; // PB_CSLimitCoreReq
+        int SC_ENCHANT_INFO            = 1641; // PB_SCEnChantInfo
 
     // ===== Mail (giữ theo client: 9551/950x)
     int CS_MAIL_REQ                = 9551; // PB_CSMailReq
@@ -90,6 +91,9 @@ public interface MsgIds {
     int SC_CRAFT_START               = 1702; // PB_SCCraftStart
     int SC_CRAFT_STATUS              = 1703; // PB_SCCraftStatus
     int SC_CRAFT_CLAIM               = 1704; // PB_SCCraftClaim
+
+    // ===== Floating Text (server-push UI notifications)
+    int SC_FLOATING_TEXT_EVENT       = 1710; // PB_SCFloatingTextEvent
 
     // ===== Chat
     int CS_CHAT_REQ                  = 1800; // PB_CSChatReq

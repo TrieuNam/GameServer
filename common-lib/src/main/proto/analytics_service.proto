@@ -3,9 +3,9 @@ syntax = "proto3";
 package analytics;
 
 option java_package = "org.SouthMillion.proto.analytics";
-option java_outer_classname = "AnalyticsProto";
 
 import "common.proto";
+option java_outer_classname = "AnalyticsProto";
 
 service AnalyticsService {
   rpc TrackEvent(TrackEventRequest) returns (common.ResponseStatus);

@@ -128,12 +128,34 @@ public class RuneHandler implements MessageHandler {
 
     // ── op=1 FETCHDAYREWARD ───────────────────────────────────────────────────
     private void handleFetchDayReward(PlayerSession session, String userId) {
-        sendRet(session, RET_DAILY_REWARD, -1);
+        TowerStateResponse r = runeGrpcClient.fetchDayReward(userId);
+        if (r.getStatus().getSuccess()) {
+            TowerStateData state = r.getState();
+            // daily_reward=1 means claimed; send the new state value to client
+            sendRet(session, RET_DAILY_REWARD, state.getDailyReward());
+            sendRuneInfo(session, userId);
+        } else {
+            log.warn("[Rune] fetchDayReward failed userId={} msg={}", userId, r.getStatus().getMessage());
+            sendRet(session, RET_DAILY_REWARD, -1);
+        }
     }
 
     // ── op=2 TURNTABLE ────────────────────────────────────────────────────────
     private void handleTurntable(PlayerSession session, String userId, int count) {
-        sendRet(session, RET_TURNTABLE_NUM, -1);
+        if (count <= 0) count = 1;
+        TurntableResponse r = runeGrpcClient.turntable(userId, count);
+        if (r.getStatus().getSuccess()) {
+            // Send RET_TURNTABLE_RET for each spin (slot bit drawn this spin)
+            for (TurntableSpinResult spin : r.getSpinResultsList()) {
+                sendRet(session, RET_TURNTABLE_RET, spin.getSlotBit());
+            }
+            // Send updated remaining spin count
+            sendRet(session, RET_TURNTABLE_NUM, r.getState().getTurntableNum());
+            sendRuneInfo(session, userId);
+        } else {
+            log.warn("[Rune] turntable failed userId={} msg={}", userId, r.getStatus().getMessage());
+            sendRet(session, RET_TURNTABLE_NUM, -1);
+        }
     }
 
     // ── op=3 WEARRUNE ─────────────────────────────────────────────────────────
@@ -145,31 +167,34 @@ public class RuneHandler implements MessageHandler {
             sendRet(session, RET_RUNE_WEAR, slotIndex, knapsackIndex);
             sendRuneInfo(session, userId);
         } else {
+            log.warn("[Rune] equipRune failed userId={} slot={} msg={}", userId, slotIndex, r.getStatus().getMessage());
             sendRet(session, RET_RUNE_WEAR, -1);
         }
     }
 
     // ── op=4 OFFRUNE ──────────────────────────────────────────────────────────
     private void handleOffRune(PlayerSession session, String userId, int slotIndex) {
-        UnequipRuneResponse r = runeGrpcClient.offRune(userId, slotIndex);
+        UnequipBySlotResponse r = runeGrpcClient.offRune(userId, slotIndex);
         if (r.getStatus().getSuccess()) {
             // ret type RET_RUNE_WEAR with knapsack_index = -1 signals unequipped
             sendRet(session, RET_RUNE_WEAR, slotIndex, -1);
             sendRuneInfo(session, userId);
         } else {
+            log.warn("[Rune] offRune failed userId={} slot={} msg={}", userId, slotIndex, r.getStatus().getMessage());
             sendRet(session, RET_RUNE_WEAR, -1);
         }
     }
 
     // ── op=5 UPRUNE ───────────────────────────────────────────────────────────
     private void handleUpRune(PlayerSession session, String userId, Long roleId, int knapsackIndex) {
-        LevelUpRuneResponse r = runeGrpcClient.levelUpRune(userId, knapsackIndex);
+        UpRuneResponse r = runeGrpcClient.upRune(userId, knapsackIndex);
         if (r.getStatus().getSuccess()) {
             publishTaskProgress(roleId, taskActionConditionMapping.runeLevelUpTaskKey(), "websocket-rune-up");
             RuneData rd = r.getRune();
             sendRet(session, RET_RUNE_CHANGE, rd.getRuneIndex(), rd.getRuneId(), rd.getLevel());
             sendRuneInfo(session, userId);
         } else {
+            log.warn("[Rune] upRune failed userId={} idx={} msg={}", userId, knapsackIndex, r.getStatus().getMessage());
             sendRet(session, RET_RUNE_CHANGE, -1);
         }
     }
@@ -177,12 +202,27 @@ public class RuneHandler implements MessageHandler {
     // ── op=6 DECOMPOSE ────────────────────────────────────────────────────────
     private void handleDecompose(PlayerSession session, String userId,
                                   List<Integer> knapsackIndices, List<Integer> crystalItemIds) {
-        sendRet(session, OP_DECOMPOSE, -1);
+        DecomposeRunesResponse r = runeGrpcClient.decomposeRunes(userId, knapsackIndices, crystalItemIds);
+        if (r.getStatus().getSuccess()) {
+            // Client has no dedicated decompose ret type — it refreshes UI via RuneInfo
+            sendRuneInfo(session, userId);
+        } else {
+            log.warn("[Rune] decomposeRunes failed userId={} msg={}", userId, r.getStatus().getMessage());
+            sendRet(session, RET_RUNE_CHANGE, -1);
+        }
     }
 
     // ── op=7 PASS_REWARD ──────────────────────────────────────────────────────
     private void handlePassReward(PlayerSession session, String userId) {
-        sendRet(session, RET_PASS_REWARD, -1);
+        TowerStateResponse r = runeGrpcClient.passReward(userId);
+        if (r.getStatus().getSuccess()) {
+            TowerStateData state = r.getState();
+            sendRet(session, RET_PASS_REWARD, state.getPassRewardIndex());
+            sendRuneInfo(session, userId);
+        } else {
+            log.warn("[Rune] passReward failed userId={} msg={}", userId, r.getStatus().getMessage());
+            sendRet(session, RET_PASS_REWARD, -1);
+        }
     }
 
     // ── op=8 RUNE_BOX ─────────────────────────────────────────────────────────
@@ -211,16 +251,29 @@ public class RuneHandler implements MessageHandler {
      */
     private void sendRuneInfo(PlayerSession session, String userId) {
         GetAllRunesResponse allRunes = runeGrpcClient.getAllRunes(userId);
-        Msgrune.PB_SCRuneInfo.Builder sc = Msgrune.PB_SCRuneInfo.newBuilder()
-            .setTowerLevel(0)
-            .setTurntableNum(0)
-            .setTurntableFlag(0)
-            .setTurntableRound(0)
-            .setDailyReward(0)
-            .setPassRewardIndex(0);
+        TowerStateResponse towerState = runeGrpcClient.getTowerState(userId);
+
+        Msgrune.PB_SCRuneInfo.Builder sc = Msgrune.PB_SCRuneInfo.newBuilder();
+
+        // Populate tower state fields
+        if (towerState.getStatus().getSuccess()) {
+            TowerStateData s = towerState.getState();
+            sc.setTowerLevel(s.getTowerLevel())
+              .setTurntableNum(s.getTurntableNum())
+              .setTurntableFlag(s.getTurntableFlag())
+              .setTurntableRound(s.getTurntableRound())
+              .setDailyReward(s.getDailyReward())
+              .setPassRewardIndex(s.getPassRewardIndex());
+        } else {
+            sc.setTowerLevel(0)
+              .setTurntableNum(0)
+              .setTurntableFlag(0)
+              .setTurntableRound(0)
+              .setDailyReward(0)
+              .setPassRewardIndex(0);
+        }
 
         // Build rune_wear_list: 20 slots, each = knapsack index of equipped rune (-1 if empty)
-        // Proto repeated field: we add entries in slot order
         int[] wearList = new int[20];
         Arrays.fill(wearList, -1);
         for (RuneData rune : allRunes.getRunesList()) {
@@ -250,16 +303,6 @@ public class RuneHandler implements MessageHandler {
         Msgrune.PB_SCRuneRet.Builder b = Msgrune.PB_SCRuneRet.newBuilder().setRetType(retType);
         for (int p : params) b.addParam(p);
         Emitters.emit(session, SC_RUNE_RET, b.build().toByteArray());
-    }
-
-    private void sendItemNotice(PlayerSession session, int itemId, int num) {
-        if (itemId <= 0 || num <= 0) return;
-        Msgknapsack.PB_SCGetItemNotice notice = Msgknapsack.PB_SCGetItemNotice.newBuilder()
-                .setGetType(111)
-                .addItemList(Msgknapsack.PB_ItemData.newBuilder()
-                        .setItemId(itemId).setNum(num).build())
-                .build();
-        Emitters.emit(session, MsgIds.SC_GET_ITEM_NOTICE, notice.toByteArray());
     }
 
     @SuppressWarnings("unchecked")

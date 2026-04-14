@@ -1,3 +1,26 @@
+// Enchant messages for EnchantHandler
+//!<MsgId:1640
+
+message PB_CSEnChantReq {
+	optional int32 op_type = 1; // 1=enchant, 2=reroll, 3=lock
+	optional int64 equip_uid = 2;
+	repeated int64 material_item_ids = 3;
+}
+
+//!<MsgId:1641
+
+message PB_SCEnChantInfo {
+	optional int64 equip_uid = 1;
+	repeated PB_EnChantAttr attrs = 2;
+	optional int32 result_code = 3; // 0=success
+}
+
+
+message PB_EnChantAttr {
+	optional int32 attr_type = 1;
+	optional int64 attr_val  = 2;
+	optional bool  locked    = 3;
+}
 option java_package = "org.SouthMillion.proto.Msgequip";
 // syntax = "proto3";
 

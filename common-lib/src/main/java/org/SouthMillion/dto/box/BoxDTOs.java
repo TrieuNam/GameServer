@@ -486,7 +486,18 @@ public class BoxDTOs {
     @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class WaBaoToolInfo {
+        private List<Integer> toolGrade;
+        private List<Integer> toolLevel;
+        private List<Integer> conditionType;
+        private List<Integer> conditionNum;
         private List<WaBaoToolNode> toolList;
+    }
+
+    /** SC 1650 PB_SCWaBaoCollectionBookInfo */
+    @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class WaBaoCollectionBookInfo {
+        private List<Integer> level;
     }
 
     /** One task for SC 1648 */

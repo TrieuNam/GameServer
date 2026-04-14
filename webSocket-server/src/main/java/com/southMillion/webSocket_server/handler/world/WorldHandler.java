@@ -1,12 +1,15 @@
 package com.SouthMillion.webSocket_server.handler.world;
 
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.handler.task.TaskHandler;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.net.PacketCodec;
 import com.SouthMillion.webSocket_server.service.PlayerSessionRegistry;
 import com.SouthMillion.webSocket_server.service.client.BagFeign;
+import com.SouthMillion.webSocket_server.service.client.GmFeign;
 import com.SouthMillion.webSocket_server.service.client.RoleFeign;
+import com.SouthMillion.webSocket_server.service.client.ShopFeign;
 import com.SouthMillion.webSocket_server.service.grpc.GameWorldGrpcClient;
 import com.SouthMillion.webSocket_server.service.grpc.InteractNpcResponse;
 import com.SouthMillion.webSocket_server.service.grpc.PickupItemResponse;
@@ -14,7 +17,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.SouthMillion.dto.bag.BagDTOs;
 import org.SouthMillion.dto.role.other.OtherRoleDTOs;
+import org.SouthMillion.dto.shop.ResultDTO;
+import org.SouthMillion.dto.shop.ShopDTOs;
 import org.SouthMillion.grpc.gameworld.*;
+import org.SouthMillion.proto.Msgother.Msgother;
 import org.SouthMillion.proto.Msgworld.Msgworld;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -67,6 +73,9 @@ public class WorldHandler implements MessageHandler {
     private final BagFeign bagFeign;
     private final RoleFeign roleFeign;
     private final PlayerSessionRegistry sessionRegistry;
+    private final TaskHandler taskHandler;
+    private final ShopFeign shopFeign;
+    private final GmFeign gmFeign;
 
     /**
      * Virtual-thread scheduler cho Feign/gRPC blocking calls.
@@ -369,14 +378,20 @@ public class WorldHandler implements MessageHandler {
             SpeedViolationTracker tracker = violationTrackers.computeIfAbsent(roleId, k -> new SpeedViolationTracker());
             tracker.recordViolation();
 
-            // TODO: Implement kick/ban logic
             if (tracker.shouldBan()) {
                 log.error("[AntiCheat] BANNING player roleId={} for {} speed violations", roleId, tracker.violationCount);
-                // banPlayer(roleId, "Speed hacking");
-                // kickPlayer(session);
+                try {
+                    String userId = session.getUserId();
+                    if (userId != null) {
+                        gmFeign.banUser(Long.parseLong(userId), "speed_hack_auto", 1);
+                    }
+                } catch (Exception banEx) {
+                    log.warn("[AntiCheat] ban call failed roleId={}: {}", roleId, banEx.getMessage());
+                }
+                kickSession(session, 2);
             } else if (tracker.shouldKick()) {
-                log.warn("[AntiCheat] Should kick player roleId={} for {} speed violations", roleId, tracker.violationCount);
-                // kickPlayer(session);
+                log.warn("[AntiCheat] KICKING player roleId={} for {} speed violations", roleId, tracker.violationCount);
+                kickSession(session, 2);
             }
 
             return false;
@@ -602,28 +617,32 @@ public class WorldHandler implements MessageHandler {
             // Route to appropriate subsystem based on NPC type
             switch (npcType) {
                 case "QUEST":
-                    // TODO: Forward to quest handler when quest system is implemented
+                    // Push current task state so client shows updated objectives after NPC interaction
                     log.debug("[World] Quest NPC interaction for roleId={}, npcId={}", roleId, npcId);
+                    taskHandler.pushCurrentTaskProgress(session);
                     break;
 
                 case "SHOP":
-                    // TODO: Forward to shop handler when shop system is implemented
+                    // Push shop item list (use roleId for purchase-limit state)
                     log.debug("[World] Shop NPC interaction for roleId={}, npcId={}", roleId, npcId);
+                    pushNpcShopInfo(session, roleId);
                     break;
 
                 case "DIALOGUE":
-                    // TODO: Send dialogue content to client
-                    log.debug("[World] Dialogue NPC interaction for roleId={}, npcId={}", roleId, npcId);
+                    // Dialogue NPC: the ACK (2041) already signals success; client shows
+                    // the scripted dialogue via its own NPC config lookup using npcId.
+                    log.info("[World] Dialogue NPC interaction — roleId={}, npcId={}", roleId, npcId);
                     break;
 
                 case "TELEPORT":
-                    // TODO: Handle teleport to target location
-                    log.debug("[World] Teleport NPC interaction for roleId={}, npcId={}", roleId, npcId);
+                    // Teleport NPC: use npcId as target sceneId (1-to-1 mapping in config)
+                    log.info("[World] Teleport NPC interaction — roleId={}, npcId={} → entering scene {}", roleId, npcId, npcId);
+                    handleNpcTeleport(session, roleId, npcId);
                     break;
 
                 case "BUFF":
-                    // TODO: Apply buff to player
-                    log.debug("[World] Buff NPC interaction for roleId={}, npcId={}", roleId, npcId);
+                    // Buff NPC: no direct buff API yet; log for future integration
+                    log.info("[World] Buff NPC interaction — roleId={}, npcId={} (buff grant pending buff-service)", roleId, npcId);
                     break;
 
                 default:
@@ -708,6 +727,64 @@ public class WorldHandler implements MessageHandler {
             Emitters.emit(session, MSGID_INTERACT_NPC_ACK, ackBuilder.build().toByteArray());
         } catch (Exception e) {
             log.error("[World] Error sending interact NPC error: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Kick a player session with a disconnect reason code.
+     *   reason 2 = speed hack enforcement
+     */
+    private void kickSession(PlayerSession session, int reason) {
+        try {
+            Emitters.sendDisconnectNotice(session, reason);
+            session.getWs().close().subscribe();
+            violationTrackers.remove(session.getRoleId());
+            log.info("[AntiCheat] Kicked session roleId={} reason={}", session.getRoleId(), reason);
+        } catch (Exception e) {
+            log.warn("[AntiCheat] kickSession error roleId={}: {}", session.getRoleId(), e.getMessage());
+        }
+    }
+
+    /**
+     * Push shop item list to client when player interacts with a merchant NPC.
+     * Uses roleId to fetch per-player purchase limits from shop-service.
+     */
+    private void pushNpcShopInfo(PlayerSession session, Long roleId) {
+        try {
+            ResultDTO<ShopDTOs.InfoResp> result = shopFeign.info(String.valueOf(roleId), null, null);
+            Msgother.PB_SCShopInfo.Builder builder = Msgother.PB_SCShopInfo.newBuilder();
+            if (result != null && result.isSuccess() && result.getData() != null
+                    && result.getData().getItems() != null) {
+                for (ShopDTOs.ShopItem item : result.getData().getItems()) {
+                    Msgother.PB_ShopData.Builder sd = Msgother.PB_ShopData.newBuilder();
+                    if (item.idOrIndex() != null) {
+                        try { sd.setIndex(Integer.parseInt(item.idOrIndex())); } catch (NumberFormatException ignored) {}
+                    }
+                    builder.addDataList(sd.build());
+                }
+            }
+            Emitters.emit(session, 1621, builder.build().toByteArray());
+            log.debug("[World] Pushed NPC shop info for roleId={}", roleId);
+        } catch (Exception e) {
+            log.warn("[World] pushNpcShopInfo failed roleId={}: {}", roleId, e.getMessage());
+            // Emit empty shop info so client shows empty shop panel rather than hanging
+            Emitters.emit(session, 1621, Msgother.PB_SCShopInfo.newBuilder().build().toByteArray());
+        }
+    }
+
+    /**
+     * Teleport NPC handler: enter the target scene identified by npcId.
+     * The npcId-to-sceneId mapping is a 1:1 convention in server config.
+     * After entering, re-push scene info so the client renders the new area.
+     */
+    private void handleNpcTeleport(PlayerSession session, Long roleId, int npcId) {
+        try {
+            // npcId used as target sceneId (convention: teleport NPC id == destination scene id)
+            gameWorldGrpcClient.enterZone(roleId, npcId, 100.0f, 0.0f, 100.0f);
+            sendSceneInfo(session, npcId);
+            log.info("[World] Teleport completed — roleId={} → sceneId={}", roleId, npcId);
+        } catch (Exception e) {
+            log.warn("[World] handleNpcTeleport failed roleId={} npcId={}: {}", roleId, npcId, e.getMessage());
         }
     }
 

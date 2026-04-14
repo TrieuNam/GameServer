@@ -5,4 +5,5 @@ import java.util.*;
 public interface GemDataRepository extends JpaRepository<GemData, Long> {
     List<GemData> findByRoleId(Long roleId);
     Optional<GemData> findByRoleIdAndGemId(Long roleId, Integer gemId);
+    List<GemData> findByRoleIdAndIsInlaid(Long roleId, Boolean isInlaid);
 }

@@ -310,20 +310,38 @@ public class BagHandler implements MessageHandler {
     }
 
     /**
-     * After a successful BuyCmd for an activity-type purchase (TianXuanZhiLi/ShouChongDingZhi),
-     * notify activity-service so it can update the buy/gift state for that activity.
-     * buyType = client ACTIVITY_TYPE value (2075 or 2078).
-     * param1  = gift seq for TianXuan; 0 for ShouChong.
+     * After a successful BuyCmd for an activity-type purchase, notify activity-service
+     * so it can update the buy/gift state for that activity.
+     * buyType = client ACTIVITY_TYPE value.
+     * param1  = phase for fund purchases; gift seq for TianXuan; 0 for ShouChong.
+     *
+     * operaType convention (server-side):
+     *   2 = BUY_PHASE for BoxFund (type 10) / LevelFund (type 11)
+     *   2 = BUY for ShouChongDingZhi (type 41)
+     *   3 = BUY for TianXuanZhiLi (type 38) — must NOT be 2 which server maps to FETCH_FREE_GIFT
      */
     private void notifyActivityBuy(Long roleId, int buyType, int param1) {
         int dispatchType;
-        if (buyType == 2078) dispatchType = 41;       // ShouChongDingZhi
-        else if (buyType == 2075) dispatchType = 38;  // TianXuanZhiLi
-        else return;
+        int operaType;
+        if (buyType == 2049) {
+            dispatchType = 10;
+            operaType    = 2; // BoxFund: opType=2 → BUY_PHASE, param1=phase
+        } else if (buyType == 2050) {
+            dispatchType = 11;
+            operaType    = 2; // LevelFund: opType=2 → BUY_PHASE, param1=phase
+        } else if (buyType == 2078) {
+            dispatchType = 41;
+            operaType    = 2; // ShouChongDingZhi: opType=2 → BUY
+        } else if (buyType == 2075) {
+            dispatchType = 38;
+            operaType    = 3; // TianXuanZhiLi: opType=3 → BUY (opType=2 is reserved for FETCH_FREE_GIFT)
+        } else {
+            return;
+        }
         try {
             java.util.Map<String, Object> body = new java.util.HashMap<>();
             body.put("activityType", dispatchType);
-            body.put("operaType", 2); // BUY op in server convention
+            body.put("operaType", operaType);
             body.put("param1", param1);
             body.put("param2", 0);
             body.put("param3", 0);

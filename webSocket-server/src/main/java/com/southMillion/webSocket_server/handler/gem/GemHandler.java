@@ -35,10 +35,13 @@ public class GemHandler implements MessageHandler {
     private final TaskProgressPublisher taskProgressPublisher;
     private final TaskActionConditionMapping taskActionConditionMapping;
 
-    private static final int OP_GET_INFO = 1;
-    private static final int OP_INLAY    = 2;
-    private static final int OP_REMOVE   = 3;
-    private static final int OP_COMPOSE  = 4;
+    // Op types phải khớp với enum GEM_ATELIER_REQ_TYPE phía client
+    private static final int OP_INLAY     = 1;
+    private static final int OP_REMOVE    = 2;
+    private static final int OP_COMPOSE   = 3;
+    private static final int OP_MOVE      = 4;
+    private static final int OP_TRANSFORM = 5;
+    private static final int OP_LEVEL_UP  = 6;
 
     @Override
     public int[] interests() {
@@ -76,27 +79,47 @@ public class GemHandler implements MessageHandler {
         });
     }
 
-    // msgId=1660: Gem operation (get info, inlay, remove, compose)
+    // msgId=1660: Gem operation
     private void handleGemReq(PlayerSession session, Long roleId, byte[] payload) {
         try {
             Msgother.PB_CSGemReq req = Msgother.PB_CSGemReq.parseFrom(payload);
-            int opType = req.hasOpType() ? req.getOpType() : OP_GET_INFO;
+            int opType = req.hasOpType() ? req.getOpType() : 0;
             int param1 = req.hasParam1() ? req.getParam1() : 0;
             int param2 = req.hasParam2() ? req.getParam2() : 0;
+            int param3 = req.hasParam3() ? req.getParam3() : 0;
+            int param4 = req.hasParam4() ? req.getParam4() : 0;
 
-            log.debug("[Gem] op={}, param1={}, roleId={}", opType, param1, roleId);
+            log.debug("[Gem] op={} p1={} p2={} p3={} p4={} roleId={}", opType, param1, param2, param3, param4, roleId);
 
             switch (opType) {
-                case OP_INLAY   -> {
-                    boolean ok = gemGrpcClient.inlay(roleId, param1, param2).getSuccess();
+                case OP_INLAY -> {
+                    // param1=drawing_id(unused), param2=item_id, param3=y, param4=x → slotType = x*100+y
+                    boolean ok = gemGrpcClient.inlay(roleId, param2, param4 * 100 + param3).getSuccess();
                     publishTaskProgress(roleId, ok, taskActionConditionMapping.gemInlayTaskKey(), "websocket-gem-inlay");
                 }
-                case OP_REMOVE  -> gemGrpcClient.remove(roleId, param1);
+                case OP_REMOVE -> {
+                    // param1=drawing_id(unused), param2=gem_list_index
+                    gemGrpcClient.remove(roleId, param2);
+                }
                 case OP_COMPOSE -> {
-                    boolean ok = gemGrpcClient.compose(roleId, List.of(param1)).getSuccess();
+                    // param1=main_gem_id, param2=material1_id, param3=material2_id
+                    boolean ok = gemGrpcClient.compose(roleId, List.of(param1, param2, param3)).getSuccess();
                     publishTaskProgress(roleId, ok, taskActionConditionMapping.gemComposeTaskKey(), "websocket-gem-compose");
                 }
-                default         -> {} // OP_GET_INFO
+                case OP_MOVE -> {
+                    // param1=drawing_id, param2=gem_list_index, param3=y, param4=x
+                    gemGrpcClient.move(roleId, param1, param2, param4, param3);
+                }
+                case OP_TRANSFORM -> {
+                    // param1=source_gem_id, param2=target_gem_id
+                    gemGrpcClient.transform(roleId, param1, param2);
+                }
+                case OP_LEVEL_UP -> {
+                    // param1=gem_id
+                    boolean ok = gemGrpcClient.levelUp(roleId, param1).getSuccess();
+                    publishTaskProgress(roleId, ok, taskActionConditionMapping.gemUpgradeTaskKey(), "websocket-gem-levelup");
+                }
+                default -> {} // GET_INFO: chỉ trả về thông tin gem
             }
 
             sendGemInfo(session, roleId);

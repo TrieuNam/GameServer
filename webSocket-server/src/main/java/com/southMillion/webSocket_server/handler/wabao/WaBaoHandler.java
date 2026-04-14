@@ -744,7 +744,28 @@ public class WaBaoHandler implements MessageHandler {
             BoxDTOs.WaBaoCollectionInfo data = boxFeign.getWaBaoCollection(session.getRoleId());
             Msgwabao.PB_SCWaBaoCollectionListInfo.Builder b =
                     Msgwabao.PB_SCWaBaoCollectionListInfo.newBuilder();
-            if (data != null) b.setIsLogin(data.getIsLogin());
+            if (data != null) {
+                b.setIsLogin(data.getIsLogin());
+                if (data.getDataList() != null) {
+                    for (BoxDTOs.WaBaoCollectionNode node : data.getDataList()) {
+                        if (node == null) {
+                            continue;
+                        }
+                        Msgwabao.PB_WaBaoItemData.Builder itemBuilder = Msgwabao.PB_WaBaoItemData.newBuilder()
+                                .setItemId(Math.max(0, node.getItemId()))
+                                .setIntegrity(Math.max(0, node.getIntegrity()))
+                                .setAttrType1(Math.max(0, node.getAttrType1()))
+                                .setAttrValue1(Math.max(0, node.getAttrValue1()))
+                                .setAttrType2(Math.max(0, node.getAttrType2()))
+                                .setAttrValue2(Math.max(0, node.getAttrValue2()));
+                        b.addDataList(Msgwabao.PB_WaBaoCollectionNode.newBuilder()
+                                .setItemType(Math.max(0, node.getItemType()))
+                                .setIndex(Math.max(0, node.getIndex()))
+                                .setItemData(itemBuilder.build())
+                                .build());
+                    }
+                }
+            }
             Emitters.emit(session, 1646, b.build().toByteArray());
         } catch (Exception e) {
             log.error("[WaBao] sendCollectionList failed", e);
@@ -755,8 +776,23 @@ public class WaBaoHandler implements MessageHandler {
     /** SC 1647 PB_SCWaBaoToolInfo — real data from box-service */
     private void sendToolInfo(PlayerSession session) {
         try {
-            boxFeign.getWaBaoToolInfo(session.getRoleId()); // fetch (stub empty list)
-            Emitters.emit(session, 1647, Msgwabao.PB_SCWaBaoToolInfo.newBuilder().build().toByteArray());
+            BoxDTOs.WaBaoToolInfo data = boxFeign.getWaBaoToolInfo(session.getRoleId());
+            Msgwabao.PB_SCWaBaoToolInfo.Builder b = Msgwabao.PB_SCWaBaoToolInfo.newBuilder();
+            if (data != null) {
+                if (data.getToolGrade() != null) {
+                    data.getToolGrade().forEach(v -> b.addToolGrade(Math.max(0, v)));
+                }
+                if (data.getToolLevel() != null) {
+                    data.getToolLevel().forEach(v -> b.addToolLevel(Math.max(0, v)));
+                }
+                if (data.getConditionType() != null) {
+                    data.getConditionType().forEach(v -> b.addConditionType(Math.max(0, v)));
+                }
+                if (data.getConditionNum() != null) {
+                    data.getConditionNum().forEach(v -> b.addConditionNum(Math.max(0, v)));
+                }
+            }
+            Emitters.emit(session, 1647, b.build().toByteArray());
         } catch (Exception e) {
             log.error("[WaBao] sendToolInfo failed", e);
             try { Emitters.emit(session, 1647, Msgwabao.PB_SCWaBaoToolInfo.newBuilder().build().toByteArray()); } catch (Exception ignored) {}
@@ -790,8 +826,16 @@ public class WaBaoHandler implements MessageHandler {
 
     /** SC 1650 PB_SCWaBaoCollectionBookInfo (empty stub — book data N/A) */
     private void sendCollectionBookInfo(PlayerSession session) {
-        try { Emitters.emit(session, 1650, Msgwabao.PB_SCWaBaoCollectionBookInfo.newBuilder().build().toByteArray()); }
-        catch (Exception e) { log.error("[WaBao] sendCollectionBookInfo failed", e); }
+        try {
+            BoxDTOs.WaBaoCollectionBookInfo data = boxFeign.getWaBaoCollectionBookInfo(session.getRoleId());
+            Msgwabao.PB_SCWaBaoCollectionBookInfo.Builder b = Msgwabao.PB_SCWaBaoCollectionBookInfo.newBuilder();
+            if (data != null && data.getLevel() != null) {
+                data.getLevel().forEach(v -> b.addLevel(Math.max(0, v)));
+            }
+            Emitters.emit(session, 1650, b.build().toByteArray());
+        } catch (Exception e) {
+            log.error("[WaBao] sendCollectionBookInfo failed", e);
+        }
     }
 
     /** SC 1651 PB_SCWaBaoBookListInfo — repeated int32 activate_flag (proto field) */

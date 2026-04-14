@@ -55,6 +55,59 @@ public class RuneGrpcClient {
         }
     }
 
+    // ── Tower state ───────────────────────────────────────────────────────────
+
+    /** Get full tower state (tower_level, turntable_num, daily_reward, etc.) */
+    public TowerStateResponse getTowerState(String userId) {
+        long id = parseUserId(userId);
+        if (id < 0) return TowerStateResponse.getDefaultInstance();
+        try {
+            return stub.getTowerState(TowerStateRequest.newBuilder().setUserId(id).build());
+        } catch (Exception e) {
+            log(e, "getTowerState", userId);
+            return TowerStateResponse.getDefaultInstance();
+        }
+    }
+
+    /** op=1 FETCHDAYREWARD: claim daily tower reward */
+    public TowerStateResponse fetchDayReward(String userId) {
+        long id = parseUserId(userId);
+        if (id < 0) return TowerStateResponse.getDefaultInstance();
+        try {
+            return stub.fetchDayReward(TowerStateRequest.newBuilder().setUserId(id).build());
+        } catch (Exception e) {
+            log(e, "fetchDayReward", userId);
+            return TowerStateResponse.getDefaultInstance();
+        }
+    }
+
+    /** op=7 PASS_REWARD: claim chapter/pass reward */
+    public TowerStateResponse passReward(String userId) {
+        long id = parseUserId(userId);
+        if (id < 0) return TowerStateResponse.getDefaultInstance();
+        try {
+            return stub.passReward(TowerStateRequest.newBuilder().setUserId(id).build());
+        } catch (Exception e) {
+            log(e, "passReward", userId);
+            return TowerStateResponse.getDefaultInstance();
+        }
+    }
+
+    /** Called by battle-service after winning INSCRIPTION_TOWER battle */
+    public TowerStateResponse winTowerLevel(String userId) {
+        long id = parseUserId(userId);
+        if (id < 0) {
+            log.warn("[grpc-rune] winTowerLevel: invalid userId '{}'", userId);
+            return TowerStateResponse.getDefaultInstance();
+        }
+        try {
+            return stub.winTowerLevel(TowerStateRequest.newBuilder().setUserId(id).build());
+        } catch (Exception e) {
+            log(e, "winTowerLevel", userId);
+            return TowerStateResponse.getDefaultInstance();
+        }
+    }
+
     // ── Equipment ops ─────────────────────────────────────────────────────────
 
     /** op=3 WEARRUNE: p1=slotIndex, p2=knapsackIndex */
@@ -70,43 +123,34 @@ public class RuneGrpcClient {
         }
     }
 
-    /**
-     * op=4 OFFRUNE.
-     * Current grpc contract does not have unequip-by-slot, so resolve runeIndex by slot first.
-     */
-    public UnequipRuneResponse offRune(String userId, int slotIndex) {
+    /** op=4 OFFRUNE: unequip rune by slot index (uses UnequipRuneBySlot RPC) */
+    public UnequipBySlotResponse offRune(String userId, int slotIndex) {
         long id = parseUserId(userId);
-        if (id < 0) return UnequipRuneResponse.getDefaultInstance();
+        if (id < 0) return UnequipBySlotResponse.getDefaultInstance();
         try {
-            GetAllRunesResponse allRunes = getAllRunes(userId);
-            int runeIndex = allRunes.getRunesList().stream()
-                    .filter(r -> r.getIsEquipped() && r.getEquipSlot() == slotIndex)
-                    .map(RuneData::getRuneIndex)
-                    .findFirst()
-                    .orElse(-1);
-            if (runeIndex < 0) {
-                return UnequipRuneResponse.getDefaultInstance();
-            }
-            return stub.unequipRune(UnequipRuneRequest.newBuilder()
-                    .setUserId(id).setRuneIndex(runeIndex).build());
+            return stub.unequipRuneBySlot(UnequipBySlotRequest.newBuilder()
+                    .setUserId(id).setEquipSlot(slotIndex).build());
         } catch (Exception e) {
             log(e, "offRune", userId);
-            return UnequipRuneResponse.getDefaultInstance();
+            return UnequipBySlotResponse.getDefaultInstance();
         }
     }
 
     // ── Upgrade ops ───────────────────────────────────────────────────────────
 
-    /** op=5 UPRUNE mapped to currently available levelUpRune rpc. */
-    public LevelUpRuneResponse levelUpRune(String userId, int runeIndex) {
+    /**
+     * op=5 UPRUNE: upgrade rune by consuming item 70100 (inscription crystal),
+     * cost determined by config (color × level).
+     */
+    public UpRuneResponse upRune(String userId, int runeIndex) {
         long id = parseUserId(userId);
-        if (id < 0) return LevelUpRuneResponse.getDefaultInstance();
+        if (id < 0) return UpRuneResponse.getDefaultInstance();
         try {
-            return stub.levelUpRune(LevelUpRuneRequest.newBuilder()
+            return stub.upRune(UpRuneRequest.newBuilder()
                     .setUserId(id).setRuneIndex(runeIndex).build());
         } catch (Exception e) {
-            log(e, "levelUpRune", userId);
-            return LevelUpRuneResponse.getDefaultInstance();
+            log(e, "upRune", userId);
+            return UpRuneResponse.getDefaultInstance();
         }
     }
 
@@ -123,18 +167,43 @@ public class RuneGrpcClient {
         }
     }
 
-    /** Tower level up (inscription tower win event) */
-    public void winTowerLevel(String userId) {
+    // ── Decompose (op=6) ──────────────────────────────────────────────────────
+
+    /**
+     * op=6 DECOMPOSE: decompose runes and/or exp-crystals.
+     * Returns refund amount of item 70100 added back to bag.
+     */
+    public DecomposeRunesResponse decomposeRunes(String userId,
+                                                  List<Integer> knapsackIndices,
+                                                  List<Integer> crystalItemIds) {
         long id = parseUserId(userId);
-        if (id < 0) {
-            log.warn("[grpc-rune] winTowerLevel: invalid userId '{}'", userId);
-            return;
-        }
+        if (id < 0) return DecomposeRunesResponse.getDefaultInstance();
         try {
-            // Notification-only call; no response needed
-            log.info("[grpc-rune] winTowerLevel: userId={}", userId);
+            DecomposeRunesRequest.Builder req = DecomposeRunesRequest.newBuilder().setUserId(id);
+            if (knapsackIndices != null) req.addAllKnapsackIndices(knapsackIndices);
+            if (crystalItemIds != null)  req.addAllCrystalItemIds(crystalItemIds);
+            return stub.decomposeRunes(req.build());
         } catch (Exception e) {
-            log(e, "winTowerLevel", userId);
+            log(e, "decomposeRunes", userId);
+            return DecomposeRunesResponse.getDefaultInstance();
+        }
+    }
+
+    // ── Turntable (op=2) ──────────────────────────────────────────────────────
+
+    /**
+     * op=2 TURNTABLE: spin turntable `count` times.
+     * Consumes spin cost, gives prizes, updates turntable_flag / turntable_round.
+     */
+    public TurntableResponse turntable(String userId, int count) {
+        long id = parseUserId(userId);
+        if (id < 0) return TurntableResponse.getDefaultInstance();
+        try {
+            return stub.turntable(TurntableRequest.newBuilder()
+                    .setUserId(id).setCount(count).build());
+        } catch (Exception e) {
+            log(e, "turntable", userId);
+            return TurntableResponse.getDefaultInstance();
         }
     }
 

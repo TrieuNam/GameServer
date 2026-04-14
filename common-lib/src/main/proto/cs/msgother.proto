@@ -221,3 +221,17 @@ message PB_SCPetFbInfo {						//!< 1491 宠物副本信息
 	optional int32 pass_level = 1;				//通关关卡
 	optional int64 fetch_flag = 2;				//领取标识 位运算
 }
+
+
+//====飘字通知========================================================================================================
+message PB_FloatingTextItem {					//!< 飘字单项
+	optional int32  type  = 1;					//!< 类型: 1=damage 2=loot 3=exp 4=buff 5=coin
+	optional string text  = 2;					//!< 文本内容或 icon key
+	optional int32  color = 3;					//!< 颜色 hex (e.g. 0xFFD700=gold, 0xFF4444=red)
+	optional float  val   = 4;					//!< 附带数值 (金额/经验等)
+}
+
+//!<MsgId:1710
+message PB_SCFloatingTextEvent {				//!< 1710 服务器推送飘字事件
+	repeated PB_FloatingTextItem items = 1;		//!< 飘字列表
+}

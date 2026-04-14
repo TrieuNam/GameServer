@@ -78,6 +78,9 @@ public interface BoxFeign {
     @GetMapping("/wabao/task")
     BoxDTOs.WaBaoTaskInfo getWaBaoTaskInfo(@RequestParam("roleId") Long roleId);
 
+    @GetMapping("/wabao/collection-book")
+    BoxDTOs.WaBaoCollectionBookInfo getWaBaoCollectionBookInfo(@RequestParam("roleId") Long roleId);
+
     @GetMapping("/wabao/book")
     BoxDTOs.WaBaoBookListInfo getWaBaoBookListInfo(@RequestParam("roleId") Long roleId);
 

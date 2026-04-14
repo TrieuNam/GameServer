@@ -120,6 +120,11 @@ public class BoxController {
         return svc.getWaBaoTaskInfo(roleId);
     }
 
+    @GetMapping("/wabao/collection-book")
+    public BoxDTOs.WaBaoCollectionBookInfo wabaoCollectionBook(@RequestParam("roleId") Long roleId) {
+        return svc.getWaBaoCollectionBookInfo(roleId);
+    }
+
     @GetMapping("/wabao/book")
     public BoxDTOs.WaBaoBookListInfo wabaoBook(@RequestParam("roleId") Long roleId) {
         return svc.getWaBaoBookListInfo(roleId);

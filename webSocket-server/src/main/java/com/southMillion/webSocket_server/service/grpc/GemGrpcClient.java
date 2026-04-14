@@ -81,4 +81,37 @@ public class GemGrpcClient {
             return GenericResponse.newBuilder().setSuccess(false).build();
         }
     }
+
+    public GenericResponse move(long roleId, int drawingId, int gemIndex, int x, int y) {
+        try {
+            return stub.move(MoveRequest.newBuilder()
+                    .setRoleId(roleId).setDrawingId(drawingId)
+                    .setGemIndex(gemIndex).setX(x).setY(y).build());
+        } catch (Exception e) {
+            if (isUnavailable(e)) log.warn("[grpc-gem] move: gem-service unavailable");
+            else log.error("[grpc-gem] move error: {}", e.getMessage());
+            return GenericResponse.newBuilder().setSuccess(false).build();
+        }
+    }
+
+    public GenericResponse transform(long roleId, int sourceGemId, int targetGemId) {
+        try {
+            return stub.transform(TransformRequest.newBuilder()
+                    .setRoleId(roleId).setSourceGemId(sourceGemId).setTargetGemId(targetGemId).build());
+        } catch (Exception e) {
+            if (isUnavailable(e)) log.warn("[grpc-gem] transform: gem-service unavailable");
+            else log.error("[grpc-gem] transform error: {}", e.getMessage());
+            return GenericResponse.newBuilder().setSuccess(false).build();
+        }
+    }
+
+    public GenericResponse levelUp(long roleId, int gemId) {
+        try {
+            return stub.levelUp(LevelUpRequest.newBuilder().setRoleId(roleId).setGemId(gemId).build());
+        } catch (Exception e) {
+            if (isUnavailable(e)) log.warn("[grpc-gem] levelUp: gem-service unavailable");
+            else log.error("[grpc-gem] levelUp error: {}", e.getMessage());
+            return GenericResponse.newBuilder().setSuccess(false).build();
+        }
+    }
 }

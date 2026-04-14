@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package petguard_service;
+
+message PB_CSPetFbReq {
+    int32 type = 1; // 1: FIGHT, 2: REWARD
+    int32 p1 = 2;   // level
+    int64 role_id = 3;
+}
+
+message PB_SCPetFbInfo {
+    int32 passLevel = 1;
+    int64 fetchFlag = 2;
+    map<int32, int64> rewards = 3;
+    string message = 4;
+}

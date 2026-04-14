@@ -50,6 +50,13 @@ public class AdvertisementService {
     }
 
     private void creditWallet(AdvertisementDTOs.AdFetchReq req) {
+        // seq=8 is AdType.knight_card — rewards are granted by activity-service via
+        // handleAdvertisementEquity(opType=1) which reads knight_zheng config per player level.
+        // Giving a generic gold reward here would double-reward the player.
+        if (req.seq() == 8) {
+            log.debug("[Ad] skipping generic credit for knight_card seq=8 userId={}", req.userId());
+            return;
+        }
         if (walletFeign == null) {
             log.warn("[Ad] walletFeign not available, skipping reward credit for userId={} seq={}", req.userId(), req.seq());
             return;

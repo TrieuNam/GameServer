@@ -66,7 +66,15 @@ public class RoleServiceHandler implements MessageHandler {
         if (blank(ps.getUserId()) || ps.getRoleId() == null) return Mono.empty();
         return FeignCall.withToken(ps.getSessionId(), "role-attr.self",
                         () -> roleFeign.getOtherRole(ps.getUserId(), String.valueOf(ps.getRoleId())))
-                .doOnNext(info -> emitAttrListFromOtherRoleInfo(ps, info, 0))
+                .doOnNext(info -> {
+                    // Khởi tạo session cache để emitLevelChangeFromSessionCacheIfAny
+                    // hoạt động đúng ngay từ action đầu tiên sau login.
+                    if (info != null && info.attributes() != null) {
+                        ps.setLastKnownRoleLevel(info.attributes().level());
+                        ps.setLastKnownRoleExp(info.attributes().exp());
+                    }
+                    emitAttrListFromOtherRoleInfo(ps, info, 0);
+                })
                 .onErrorResume(e -> {
                     log.warn("[role-attr] pushAll error: {}", e.toString());
                     return Mono.empty();

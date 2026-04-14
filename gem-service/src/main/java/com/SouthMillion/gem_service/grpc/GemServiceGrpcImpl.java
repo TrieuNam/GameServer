@@ -120,6 +120,59 @@ public class GemServiceGrpcImpl extends GemServiceGrpc.GemServiceImplBase {
         }
     }
 
+    @Override
+    public void move(MoveRequest request, StreamObserver<GenericResponse> observer) {
+        log.info("[GemGrpc] Move: roleId={} drawingId={} gemIndex={} x={} y={}",
+                request.getRoleId(), request.getDrawingId(), request.getGemIndex(), request.getX(), request.getY());
+        try {
+            Map<String, Object> result = gemService.move(
+                    request.getRoleId(), request.getDrawingId(),
+                    request.getGemIndex(), request.getX(), request.getY());
+            boolean ok = Boolean.TRUE.equals(result.get("success"));
+            observer.onNext(GenericResponse.newBuilder().setSuccess(ok)
+                    .setMessage(ok ? "OK" : String.valueOf(result.get("reason"))).build());
+            observer.onCompleted();
+        } catch (Exception e) {
+            log.error("[GemGrpc] Move error", e);
+            observer.onNext(GenericResponse.newBuilder().setSuccess(false).setMessage(e.getMessage()).build());
+            observer.onCompleted();
+        }
+    }
+
+    @Override
+    public void transform(TransformRequest request, StreamObserver<GenericResponse> observer) {
+        log.info("[GemGrpc] Transform: roleId={} source={} target={}",
+                request.getRoleId(), request.getSourceGemId(), request.getTargetGemId());
+        try {
+            Map<String, Object> result = gemService.transform(
+                    request.getRoleId(), request.getSourceGemId(), request.getTargetGemId());
+            boolean ok = Boolean.TRUE.equals(result.get("success"));
+            observer.onNext(GenericResponse.newBuilder().setSuccess(ok)
+                    .setMessage(ok ? "OK" : String.valueOf(result.get("reason"))).build());
+            observer.onCompleted();
+        } catch (Exception e) {
+            log.error("[GemGrpc] Transform error", e);
+            observer.onNext(GenericResponse.newBuilder().setSuccess(false).setMessage(e.getMessage()).build());
+            observer.onCompleted();
+        }
+    }
+
+    @Override
+    public void levelUp(LevelUpRequest request, StreamObserver<GenericResponse> observer) {
+        log.info("[GemGrpc] LevelUp: roleId={} gemId={}", request.getRoleId(), request.getGemId());
+        try {
+            Map<String, Object> result = gemService.levelUp(request.getRoleId(), request.getGemId());
+            boolean ok = Boolean.TRUE.equals(result.get("success"));
+            observer.onNext(GenericResponse.newBuilder().setSuccess(ok)
+                    .setMessage(ok ? "OK" : String.valueOf(result.get("reason"))).build());
+            observer.onCompleted();
+        } catch (Exception e) {
+            log.error("[GemGrpc] LevelUp error", e);
+            observer.onNext(GenericResponse.newBuilder().setSuccess(false).setMessage(e.getMessage()).build());
+            observer.onCompleted();
+        }
+    }
+
     private org.SouthMillion.proto.gem.GemData toGemData(GemData g) {
         return org.SouthMillion.proto.gem.GemData.newBuilder()
                 .setId(g.getId() != null ? g.getId() : 0L)

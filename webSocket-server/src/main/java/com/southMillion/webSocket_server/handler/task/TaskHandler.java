@@ -1,6 +1,7 @@
 package com.SouthMillion.webSocket_server.handler.task;
 
 import com.SouthMillion.webSocket_server.dto.PlayerSession;
+import com.SouthMillion.webSocket_server.handler.common.FloatingTextHelper;
 import com.SouthMillion.webSocket_server.net.Emitters;
 import com.SouthMillion.webSocket_server.net.MessageHandler;
 import com.SouthMillion.webSocket_server.service.LoginSnapshotService;
@@ -57,6 +58,7 @@ public class TaskHandler implements MessageHandler {
     private final BagFeign bagFeign;
     private final WalletHttpClient walletHttpClient;
     private final LoginSnapshotService loginSnapshotService;
+    private final FloatingTextHelper floatingTextHelper;
     private final ConcurrentHashMap<Long, TaskProgressSnapshot> lastKnownProgress = new ConcurrentHashMap<>();
 
     private static final int MSGID_CLAIM_TASK_REWARD_REQ = 1451;  // PB_CSFetchTaskRewardReq
@@ -149,6 +151,7 @@ public class TaskHandler implements MessageHandler {
                     // Phase 6: Invalidate task cache when task state changes
                     loginSnapshotService.invalidateModule(roleId, "task");
                     syncPostClaimState(session, roleId);
+                    floatingTextHelper.emitLoot(session, "Task Reward!");
                 }
 
             } catch (Exception e) {
