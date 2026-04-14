@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # GameServer — Microservices Architecture
 
 **Version**: 1.1.0 | **Java**: 21 | **Spring Boot**: 3.5.3 | **Spring Cloud**: 2025.0.0  
@@ -350,3 +351,7 @@ wscat -c "ws://localhost:8080/websocket-server/ws/game?token={jwt}"
 
 **Status**: ✅ 57/57 services implemented  
 **Last Updated**: 2026-03-16
+=======
+# GameServer
+server game h5 (java) migrate from game Vô hạn Bối Lạp H5 (c++)
+>>>>>>> main
