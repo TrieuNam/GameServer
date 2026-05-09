@@ -1,35 +1,41 @@
 package com.SouthMillion.activity_service.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
-
-/**
- * Daily Gift (每日特惠) for RandActivity type 14.
- * Daily special gift shop with item purchase tracking.
- */
-@Entity
-@Table(name = "daily_gift")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class DailyGift {
+    private int id;
+    private String name;
+    private int days;
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    public DailyGift(int id, String name, int days) {
+        this.id = id;
+        this.name = name;
+        this.days = days;
+    }
 
-    @Column(name = "role_id", nullable = false, unique = true)
-    private Long roleId;
+    public int getId() {
+        return id;
+    }
 
-    /** Purchase flags (购买标识): bitmask for purchased items */
-    @Column(name = "buy_flag", nullable = false)
-    private Long buyFlag;
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    /** Per-package purchase counts by package type index, encoded as JSON array. */
-    @Column(name = "buy_count_json", columnDefinition = "TEXT")
-    private String buyCountJson;
+    public String getName() {
+        return name;
+    }
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getDays() {
+        return days;
+    }
+
+    public void setDays(int days) {
+        this.days = days;
+    }
+
+    public void giveGift(Object player) {
+        // Placeholder until Player model is introduced.
+    }
 }

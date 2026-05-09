@@ -5,8 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Repository
 public interface DailyGiftRepository extends JpaRepository<DailyGift, Long> {
-    Optional<DailyGift> findByRoleId(Long roleId);
+    CompletableFuture<Optional<DailyGift>> findByRoleIdAsync(Long roleId);
 }

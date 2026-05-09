@@ -42,7 +42,10 @@ public class SecurityConfig {
     public org.springframework.web.cors.reactive.CorsWebFilter corsWebFilter() {
         var cors = new org.springframework.web.cors.CorsConfiguration();
         cors.setAllowCredentials(true);
-        cors.setAllowedOriginPatterns(List.of("http://localhost:7456","http://127.0.0.1:7456")); // dùng *patterns* khi allowCredentials=true
+        cors.setAllowedOriginPatterns(List.of(
+                "http://localhost:7456","http://127.0.0.1:7456",
+                "http://localhost:8080","http://127.0.0.1:8080"
+        )); // dùng *patterns* khi allowCredentials=true
         cors.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
         cors.setAllowedHeaders(List.of("*"));
         cors.setExposedHeaders(List.of("X-Request-Id","X-Session-Id","X-User-Id","ETag","Cache-Control","Last-Modified","Content-Type"));

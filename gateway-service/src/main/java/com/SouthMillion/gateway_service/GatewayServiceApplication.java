@@ -1,18 +1,15 @@
 package com.SouthMillion.gateway_service;
 
-import com.SouthMillion.gateway_service.config.AppAuthProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
-@SpringBootApplication(scanBasePackages = "com.SouthMillion")
-@EnableConfigurationProperties(AppAuthProperties.class)
+@SpringBootApplication
+@EnableDiscoveryClient
 public class GatewayServiceApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(GatewayServiceApplication.class, args);
-
-
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(GatewayServiceApplication.class, args);
+    }
 
 }

@@ -5,11 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Type 42: 专属礼包 (Exclusive Gift)
- * Player-specific exclusive gift packs with expiration times.
- */
 @Data
 @Builder
 @NoArgsConstructor
@@ -34,5 +31,11 @@ public class ExclusiveGift {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = java.time.LocalDateTime.now();
+    }
+
+    @Transactional
+    public void updateScoreAndReward(Long newScore, String rewardItem) {
+        // Update score logic
+        // Grant reward logic
     }
 }

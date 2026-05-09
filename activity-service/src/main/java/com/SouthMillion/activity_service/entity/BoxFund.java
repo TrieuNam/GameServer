@@ -1,39 +1,31 @@
 package com.SouthMillion.activity_service.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.UpdateTimestamp;
+import java.math.BigDecimal;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
-import java.time.LocalDateTime;
-
-/**
- * Box Fund (宝箱基金) for RandActivity type 10.
- * Two-tier fund system: common and senior (premium).
- */
 @Entity
 @Table(name = "box_fund")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class BoxFund {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
     private Long id;
 
-    @Column(name = "role_id", nullable = false, unique = true)
-    private Long roleId;
+    private BigDecimal amount;
 
-    /** Phase purchase flags (分期购买标识): bitmask for purchase phases */
-    @Column(name = "phase_buy_flag", nullable = false)
-    private Integer phaseBuyFlag;
+    // constructors
+    public BoxFund() {}
 
-    /** Common tier rewards claimed (普通奖励领取标识): bitmask */
-    @Column(name = "common_fetch_flag", nullable = false)
-    private Long commonFetchFlag;
+    public BoxFund(Long id, BigDecimal amount) {
+        this.id = id;
+        this.amount = amount;
+    }
 
-    /** Senior/Premium tier rewards claimed (高级奖励领取标识): bitmask */
-    @Column(name = "senior_fetch_flag", nullable = false)
-    private Long seniorFetchFlag;
+    // getters/setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
 }

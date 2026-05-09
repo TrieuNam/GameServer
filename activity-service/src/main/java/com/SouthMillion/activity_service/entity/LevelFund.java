@@ -1,39 +1,76 @@
 package com.SouthMillion.activity_service.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
-/**
- * Level Fund (等级基金) for RandActivity type 11.
- * Two-tier fund system unlocked as player level increases.
- */
 @Entity
 @Table(name = "level_fund")
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class LevelFund {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(name = "role_id", nullable = false, unique = true)
-    private Long roleId;
+	@Column(name = "role_id", nullable = false, unique = true)
+	private Long roleId;
 
-    /** Phase purchase flags (分期购买标识): bitmask for purchase phases */
-    @Column(name = "phase_buy_flag", nullable = false)
-    private Integer phaseBuyFlag;
+	@Enumerated(EnumType.STRING)
+	@Column(name = "phase_buy_flag", nullable = false)
+	private FundState phaseBuyFlag;
 
-    /** Common tier rewards claimed (普通奖励领取标识): bitmask */
-    @Column(name = "common_fetch_flag", nullable = false)
-    private Long commonFetchFlag;
+	@Column(name = "common_fetch_flag", nullable = false)
+	private Long commonFetchFlag;
 
-    /** Senior/Premium tier rewards claimed (高级奖励领取标识): bitmask */
-    @Column(name = "senior_fetch_flag", nullable = false)
-    private Long seniorFetchFlag;
+	@Column(name = "senior_fetch_flag", nullable = false)
+	private Long seniorFetchFlag;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+	@UpdateTimestamp
+	@Column(name = "updated_at")
+	private LocalDateTime updatedAt;
+
+	public boolean isRewardClaimable(Map<String, Integer> levelThresholds) {
+		return levelThresholds != null && !levelThresholds.isEmpty();
+	}
+
+	public void unlock() {
+		if (this.phaseBuyFlag != FundState.UNLOCKED) {
+			this.phaseBuyFlag = FundState.UNLOCKED;
+		} else {
+			throw new IllegalStateException("Already unlocked.");
+		}
+	}
+
+	public void claim() {
+		if (this.phaseBuyFlag == FundState.UNLOCKED) {
+			this.phaseBuyFlag = FundState.CLAIMED;
+		} else {
+			throw new IllegalStateException("Invalid transition to CLAIMED.");
+		}
+	}
+
+	public void complete() {
+		if (this.phaseBuyFlag == FundState.CLAIMED) {
+			this.phaseBuyFlag = FundState.COMPLETED;
+		} else {
+			throw new IllegalStateException("Invalid transition to COMPLETED.");
+		}
+	}
 }

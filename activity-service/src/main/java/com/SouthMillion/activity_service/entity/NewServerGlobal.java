@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Type 31: 新服比拼全局 (New Server Competition Global)
@@ -17,6 +19,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Entity
 @Table(name = "new_server_global")
+@Component
 public class NewServerGlobal {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +33,12 @@ public class NewServerGlobal {
 
     @Column(name = "updated_at", nullable = false)
     private java.time.LocalDateTime updatedAt;
+
+    @Value("${gameplay.reward.amount}")
+    private int rewardAmount;
+
+    @Value("${gameplay.unlock.threshold}")
+    private int unlockThreshold;
 
     @PrePersist
     @PreUpdate

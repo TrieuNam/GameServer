@@ -7,6 +7,5 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface LuckCourtesyRepository extends JpaRepository<LuckCourtesy, Long> {
-    Optional<LuckCourtesy> findByRoleId(Long roleId);
+public interface LuckCourtesyRepository extends JpaRepository<LuckCourtesy, Long>, RoleIdLookupRepository<LuckCourtesy, Long> {
 }
